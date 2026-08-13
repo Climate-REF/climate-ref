@@ -1,16 +1,20 @@
 import json
 import pathlib
 import shutil
+from functools import partial
 
 import pytest
+from attrs import evolve
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from climate_ref.executor.result_handling import (
+    ExecutionFuture,
     handle_execution_result,
     ingest_execution_result,
     ingest_scalar_values,
     ingest_series_values,
+    record_resource_usage,
     register_execution_outputs,
 )
 from climate_ref.models import ScalarMetricValue, SeriesMetricValue
@@ -32,6 +36,7 @@ from climate_ref_core.output_files import copy_output_file
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.resources import ResourceUsage
 
 
 @pytest.fixture
@@ -39,6 +44,9 @@ def mock_execution_result(mocker):
     mock_result = mocker.Mock(spec=Execution)
     mock_result.id = 1
     mock_result.output_fragment = "output_fragment"
+    # Bound to the real implementation so the resource columns are actually written.
+    # Everything else on the row stays mocked.
+    mock_result.apply_resource_usage = partial(Execution.apply_resource_usage, mock_result)
     return mock_result
 
 
@@ -333,6 +341,217 @@ def test_handle_execution_result_missing_output_marks_failed(
     mock_execution_result.mark_successful.assert_not_called()
 
 
+@pytest.fixture
+def resource_usage():
+    return ResourceUsage(
+        wall_seconds=12.5,
+        cpu_seconds=41.0,
+        peak_memory_bytes=8 * 1024**3,
+        memory_source="cgroup",
+        cgroup_peak_bytes=8 * 1024**3,
+        proc_tree_peak_bytes=6 * 1024**3,
+        memory_limit_bytes=40 * 1024**3,
+        cpu_limit=4.0,
+        exclusive=True,
+        context={"host": "gus", "cpu_count": 8},
+    )
+
+
+def _assert_usage_persisted(execution, usage):
+    assert execution.wall_seconds == usage.wall_seconds
+    assert execution.cpu_seconds == usage.cpu_seconds
+    assert execution.peak_memory_bytes == usage.peak_memory_bytes
+    assert execution.memory_source == usage.memory_source
+    assert execution.memory_limit_bytes == usage.memory_limit_bytes
+    assert execution.cpu_limit == usage.cpu_limit
+    assert execution.resources_exclusive == usage.exclusive
+    assert execution.resource_context == usage.context
+
+
+class TestResourceUsagePersistence:
+    """The measurements must survive every path through ``handle_execution_result``."""
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*CalendarMonths.*:UserWarning")
+    def test_successful_result_persists_every_field(
+        self, db, config, mock_execution_result, mocker, mock_definition, test_data_dir, resource_usage
+    ):
+        metric_bundle_filename = pathlib.Path("bundle.json")
+        result = ExecutionResult(
+            definition=mock_definition,
+            successful=True,
+            metric_bundle_filename=metric_bundle_filename,
+            resource_usage=resource_usage,
+        )
+        shutil.copy(
+            test_data_dir / "cmec-output" / "pr_v3-LR_0101_1x1_esmf_metrics_default_v20241023_cmec.json",
+            mock_definition.to_output_path(metric_bundle_filename),
+        )
+        mocker.patch("climate_ref.executor.result_handling.copy_output_file")
+        mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+
+        handle_execution_result(config, db, mock_execution_result, result, queue_seconds=3.25)
+
+        mock_execution_result.mark_successful.assert_called_once()
+        _assert_usage_persisted(mock_execution_result, resource_usage)
+        assert mock_execution_result.queue_seconds == 3.25
+
+    @pytest.mark.parametrize("retryable", [True, False])
+    def test_failed_result_still_persists_every_field(
+        self, config, db, mock_execution_result, mock_definition, resource_usage, retryable
+    ):
+        """The run that hit the ceiling is the one worth measuring.
+
+        Every failure path returns early,
+        so an assignment placed after any of them would drop exactly these rows.
+        """
+        result = ExecutionResult(
+            definition=mock_definition,
+            successful=False,
+            metric_bundle_filename=None,
+            retryable=retryable,
+            resource_usage=resource_usage,
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result, queue_seconds=1.5)
+
+        mock_execution_result.mark_failed.assert_called_once()
+        _assert_usage_persisted(mock_execution_result, resource_usage)
+        assert mock_execution_result.queue_seconds == 1.5
+
+    def test_missing_log_file_still_persists_every_field(
+        self, config, db, mock_execution_result, mocker, definition_factory, resource_usage
+    ):
+        """The earliest early return, taken before the log file is even found."""
+        definition = definition_factory(diagnostic=mocker.Mock())
+        definition.output_directory.mkdir(parents=True, exist_ok=True)
+
+        result = ExecutionResult(
+            definition=definition,
+            successful=True,
+            metric_bundle_filename=pathlib.Path("diagnostic.json"),
+            resource_usage=resource_usage,
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_failed.assert_called_once()
+        _assert_usage_persisted(mock_execution_result, resource_usage)
+
+    def test_missing_output_still_persists_every_field(
+        self, config, db, mock_execution_result, mock_definition, resource_usage
+    ):
+        result = ExecutionResult(
+            definition=mock_definition,
+            successful=True,
+            metric_bundle_filename=pathlib.Path("diagnostic.json"),
+            resource_usage=resource_usage,
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_failed.assert_called_once()
+        _assert_usage_persisted(mock_execution_result, resource_usage)
+
+    def test_ingestion_failure_still_persists_every_field(
+        self, config, db, mock_execution_result, mocker, mock_definition, resource_usage
+    ):
+        result = ExecutionResult(
+            definition=mock_definition,
+            successful=True,
+            metric_bundle_filename=pathlib.Path("bundle.json"),
+            resource_usage=resource_usage,
+        )
+        mocker.patch("climate_ref.executor.result_handling.copy_output_file")
+        mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+        mocker.patch(
+            "climate_ref.executor.result_handling.ingest_execution_result",
+            side_effect=RuntimeError("boom"),
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_failed.assert_called_once()
+        _assert_usage_persisted(mock_execution_result, resource_usage)
+
+    def test_no_measurement_leaves_the_columns_untouched(
+        self, config, db, mock_execution_result, mock_definition
+    ):
+        execution = Execution(execution_group_id=1, dataset_hash="hash", output_fragment="fragment")
+        result = ExecutionResult(
+            definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=False
+        )
+
+        record_resource_usage(execution, result.resource_usage, None)
+
+        assert execution.wall_seconds is None
+        assert execution.cpu_seconds is None
+        assert execution.peak_memory_bytes is None
+        assert execution.memory_source is None
+        assert execution.memory_limit_bytes is None
+        assert execution.cpu_limit is None
+        assert execution.resources_exclusive is None
+        assert execution.queue_seconds is None
+        assert execution.resource_context is None
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*CalendarMonths.*:UserWarning")
+    def test_a_broken_measurement_does_not_fail_ingest(
+        self, db, config, mock_execution_result, mocker, mock_definition, test_data_dir
+    ):
+        """Measurement is diagnostic metadata, so it must never take the pipeline down."""
+
+        class BrokenUsage:
+            @property
+            def wall_seconds(self):
+                raise RuntimeError("boom")
+
+        metric_bundle_filename = pathlib.Path("bundle.json")
+        result = evolve(
+            ExecutionResult(
+                definition=mock_definition,
+                successful=True,
+                metric_bundle_filename=metric_bundle_filename,
+            ),
+            resource_usage=BrokenUsage(),
+        )
+        shutil.copy(
+            test_data_dir / "cmec-output" / "pr_v3-LR_0101_1x1_esmf_metrics_default_v20241023_cmec.json",
+            mock_definition.to_output_path(metric_bundle_filename),
+        )
+        mocker.patch("climate_ref.executor.result_handling.copy_output_file")
+        mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_successful.assert_called_once()
+        scalars = list(db.session.execute(select(ScalarMetricValue)).scalars())
+        assert scalars
+
+    def test_an_unusable_value_writes_none_of_the_fields(self, resource_usage):
+        """A value the column cannot store would otherwise only raise at flush."""
+        execution = Execution(execution_group_id=1, dataset_hash="hash", output_fragment="fragment")
+
+        record_resource_usage(execution, evolve(resource_usage, peak_memory_bytes="enormous"), 2.0)
+
+        assert execution.wall_seconds is None
+        assert execution.peak_memory_bytes is None
+        # The latency is written independently of the measurements.
+        assert execution.queue_seconds == 2.0
+
+
+class TestExecutionFutureQueueSeconds:
+    def test_none_until_a_start_is_observed(self, mocker):
+        future = ExecutionFuture(mocker.Mock(), definition=mocker.Mock(), submitted_at=100.0)
+
+        assert future.queue_seconds is None
+
+    def test_measured_from_submission_to_start(self, mocker):
+        future = ExecutionFuture(
+            mocker.Mock(), definition=mocker.Mock(), submitted_at=100.0, started_at=104.5
+        )
+
+        assert future.queue_seconds == pytest.approx(4.5)
+
+
 @pytest.mark.parametrize("is_relative", [True, False])
 @pytest.mark.parametrize("filename", ("bundle.zip", "nested/bundle.zip"))
 def test_copy_file_to_results_success(filename, is_relative, tmp_path):
@@ -515,7 +734,7 @@ class TestIngestScalarValues:
     ):
         """Should ingest scalar metric values from a real CMEC bundle."""
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_scalar_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
         _ingestion_db.session.commit()
@@ -536,7 +755,7 @@ class TestIngestSeriesValues:
     ):
         """Should ingest series metric values from a real series file."""
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_series_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
         _ingestion_db.session.commit()
@@ -558,7 +777,7 @@ class TestIngestKind:
     ):
         """A series defaults to kind ``model`` and that role is persisted."""
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_series_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
         _ingestion_db.session.commit()
@@ -588,7 +807,7 @@ class TestIngestKind:
         mocker.patch.object(TSeries, "load_from_json", return_value=[bad])
 
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         with pytest.raises(ResultValidationError, match="Invalid metric-value kind"):
             ingest_series_values(
@@ -613,7 +832,7 @@ class TestIngestKind:
         mocker.patch.object(CMECMetric, "iter_results", return_value=[bad])
 
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         with pytest.raises(ResultValidationError, match="Invalid metric-value kind"):
             ingest_scalar_values(
@@ -655,7 +874,7 @@ class TestIngestKind:
         TSeries.dump_to_json(scratch_dir_with_data / "series.json", [ref_a1, ref_a2, ref_b, model])
 
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_series_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
         _ingestion_db.session.commit()
@@ -684,7 +903,7 @@ class TestIngestExecutionResult:
     ):
         """Should ingest scalars, series, and register outputs in one call."""
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_execution_result(
             _ingestion_db,
@@ -716,7 +935,7 @@ class TestIngestExecutionResult:
         mock_result = mock_result_factory(
             scratch_dir_with_data, output_bundle_filename=None, series_filename=None
         )
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_execution_result(
             _ingestion_db,
@@ -737,3 +956,68 @@ class TestIngestExecutionResult:
 
         outputs = _ingestion_db.session.query(ExecutionOutput).filter_by(execution_id=execution_id).all()
         assert len(outputs) == 0, "Should have no registered outputs"
+
+
+class TestInferStartedAt:
+    """Back-filling the start of a task that finished between two polls."""
+
+    def _future(self, mocker, submitted_at=1000.0, started_at=None):
+        return ExecutionFuture(
+            future=mocker.Mock(),
+            definition=mocker.Mock(),
+            submitted_at=submitted_at,
+            started_at=started_at,
+        )
+
+    def test_places_the_start_using_the_measured_wall_time(self, mocker, mock_definition, resource_usage):
+        # A short task can be submitted and finish without a poll ever seeing it running,
+        # which is exactly when the queue latency would otherwise be lost.
+        future = self._future(mocker)
+        result = ExecutionResult(
+            definition=mock_definition,
+            successful=True,
+            metric_bundle_filename=None,
+            resource_usage=resource_usage,
+        )
+
+        future.infer_started_at(result, observed_at=1020.0)
+
+        assert future.started_at == 1020.0 - resource_usage.wall_seconds
+        assert future.queue_seconds == pytest.approx(1020.0 - resource_usage.wall_seconds - 1000.0)
+
+    def test_leaves_an_observed_start_alone(self, mocker, mock_definition, resource_usage):
+        future = self._future(mocker, started_at=1005.0)
+        result = ExecutionResult(
+            definition=mock_definition,
+            successful=True,
+            metric_bundle_filename=None,
+            resource_usage=resource_usage,
+        )
+
+        future.infer_started_at(result, observed_at=1020.0)
+
+        assert future.started_at == 1005.0
+
+    def test_never_places_the_start_before_submission(self, mocker, mock_definition, resource_usage):
+        # A worker clock running behind the submitter's would otherwise yield a negative wait.
+        future = self._future(mocker)
+        result = ExecutionResult(
+            definition=mock_definition,
+            successful=True,
+            metric_bundle_filename=None,
+            resource_usage=evolve(resource_usage, wall_seconds=10_000.0),
+        )
+
+        future.infer_started_at(result, observed_at=1020.0)
+
+        assert future.started_at == 1000.0
+        assert future.queue_seconds == 0.0
+
+    def test_unmeasured_result_leaves_the_start_unknown(self, mocker, mock_definition):
+        future = self._future(mocker)
+        result = ExecutionResult(definition=mock_definition, successful=False, metric_bundle_filename=None)
+
+        future.infer_started_at(result, observed_at=1020.0)
+
+        assert future.started_at is None
+        assert future.queue_seconds is None

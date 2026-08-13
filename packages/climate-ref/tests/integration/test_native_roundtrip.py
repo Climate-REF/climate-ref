@@ -1,9 +1,9 @@
 """
 Integration tests for the RFC-0005 native-baseline round-trip.
 
-These tests prove the native-baseline lifecycle ``run -> mint -> sync -> replay``
+These tests prove the native-baseline lifecycle ``run -> mint -> replay``
 end-to-end against a *local* content-addressed store
-(:class:`~climate_ref_core.regression.LocalFilesystemStore`) created inside ``tmp_path``.
+(:class:`~climate_ref_core.regression.NativeStore`) created inside ``tmp_path``.
 
 This runs offline, without any credentials.
 
@@ -14,7 +14,7 @@ For a ``result`` from a run, ``defn = result.definition``;
 ``output_dir = defn.output_directory``; ``fragment = defn.output_fragment()`` (a
 method); ``scratch_root = output_dir.parent``.
 A *separate* temporary directory is used as the ``results_base`` for
-``capture_execution`` (it must differ from the scratch root), and the captured
+``_capture_execution`` (it must differ from the scratch root), and the captured
 native blob bytes live at ``results_base / fragment / <relpath>``.
 """
 
@@ -43,18 +43,19 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.output_files import PlaceholderMap
+from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_core.regression import (
-    LocalFilesystemStore,
     Manifest,
     NativeEntry,
+    NativeStore,
     Tolerance,
     assert_bundle_regression,
-    capture_execution,
+    build_native_snapshot,
     materialise_native,
+    write_committed_bundle,
 )
 from climate_ref_core.regression.gate import Action, decide_coupling
 from climate_ref_core.regression.manifest import SCHEMA_VERSION
@@ -270,6 +271,42 @@ def _run_synthetic(tmp_path: Path) -> ExecutionResult:
     return runner.run(diag, "default", tmp_path / "output", clean=True)
 
 
+def _capture_execution(
+    scratch_directory: Path,
+    results_directory: Path,
+    fragment: Path | str,
+    result: ExecutionResult,
+    *,
+    regression_dir: Path,
+    placeholders: PlaceholderMap,
+    include_log: bool = False,
+    extra_globs: tuple[str, ...] = (),
+) -> tuple[dict[str, str], dict[str, NativeEntry]]:
+    """
+    Persist a successful execution and capture its committed bundle + native snapshot.
+
+    Mirrors the capture-path mechanics used by ``ref test-cases mint``
+    (:mod:`climate_ref.cli.test_cases._stages`), composed here from the shipped
+    building blocks (``copy_execution_outputs``, ``write_committed_bundle``,
+    ``build_native_snapshot``) for exercising the full round trip in one call.
+    """
+    relpaths = copy_execution_outputs(
+        scratch_directory,
+        results_directory,
+        fragment,
+        result,
+        include_log=include_log,
+        extra_globs=extra_globs,
+    )
+    base_dir = results_directory / fragment
+    committed = write_committed_bundle(base_dir, regression_dir, placeholders=placeholders)
+    # Digest the native set over sanitised bytes, matching the mint contract in
+    # climate_ref.cli.test_cases._stages.snapshot_native.
+    placeholders.sanitise(base_dir)
+    native = build_native_snapshot(base_dir, relpaths)
+    return committed, native
+
+
 def _capture_synthetic(
     result: ExecutionResult,
     *,
@@ -304,7 +341,7 @@ def _capture_synthetic(
     fragment = defn.output_fragment()
     scratch_root = output_dir.parent
 
-    return capture_execution(
+    return _capture_execution(
         scratch_root,
         results_base,
         fragment,
@@ -316,20 +353,20 @@ def _capture_synthetic(
 
 class TestSyntheticNestedRoundTrip:
     """
-    Full ``run -> mint -> sync -> replay`` on the synthetic nested-output diagnostic.
+    Full ``run -> mint -> replay`` on the synthetic nested-output diagnostic.
 
     This exercises every layer of the native-baseline system on nested native outputs
     with absolute-path dict keys.
     """
 
-    def test_run_mint_sync_replay(self, tmp_path: Path) -> None:
+    def test_run_mint_replay(self, tmp_path: Path) -> None:
         """
         Replay of minted blobs matches the committed bundle within tolerance.
 
         Steps
         -----
         1. **Run** the synthetic diagnostic.
-        2. **Capture + Mint**: ``capture_execution`` writes the committed bundle and
+        2. **Capture + Mint**: ``_capture_execution`` writes the committed bundle and
            snapshots the curated native files; ``store.put`` PUTs each native blob;
            a ``Manifest`` is authored carrying the native block.
         3. **Sync**: every blob in the manifest is reachable from the store.
@@ -337,7 +374,7 @@ class TestSyntheticNestedRoundTrip:
            placeholders, rebuild the result, and tolerantly compare each committed
            artefact.
         """
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         regression_dir = tmp_path / "regression"
         regression_dir.mkdir()
         test_data_dir = tmp_path / "test-data"
@@ -386,11 +423,9 @@ class TestSyntheticNestedRoundTrip:
         assert reloaded.committed == manifest.committed
         assert set(reloaded.native) == set(manifest.native)
 
-        # Step 3: sync — every referenced blob must be in the store.
+        # Step 3: every referenced blob must be in the store.
         for relpath, entry in reloaded.native.items():
-            assert store.has(entry.sha256), (
-                f"Sync failed: blob {entry.sha256} not in store (relpath={relpath!r})"
-            )
+            assert store.has(entry.sha256), f"Blob {entry.sha256} not in store (relpath={relpath!r})"
 
         # Step 4: replay
         replay_dir = tmp_path / "replay_output"
@@ -503,7 +538,7 @@ class TestExampleSmokeRoundTrip:
 
     def test_example_roundtrip(self, tmp_path: Path) -> None:  # noqa: PLR0915
         """
-        Run -> mint -> sync -> replay the example diagnostic, or skip clearly.
+        Run -> mint -> replay the example diagnostic, or skip clearly.
 
         The skip message names the reason so CI / developers know what data is
         needed.
@@ -562,7 +597,7 @@ class TestExampleSmokeRoundTrip:
         results_base = tmp_path / "results-base"
         regression_dir = tmp_path / "example_regression"
         regression_dir.mkdir()
-        store = LocalFilesystemStore(root=tmp_path / "example_store")
+        store = NativeStore(url=str(tmp_path / "example_store"))
 
         # Mint
         committed_digests, native = _capture_synthetic(
@@ -587,11 +622,9 @@ class TestExampleSmokeRoundTrip:
             native=native,
         )
 
-        # Sync
+        # Every minted blob must be in the store.
         for relpath, entry in manifest.native.items():
-            assert store.has(entry.sha256), (
-                f"Example sync failed: blob {entry.sha256} not in store (relpath={relpath!r})"
-            )
+            assert store.has(entry.sha256), f"Example blob {entry.sha256} not in store (relpath={relpath!r})"
 
         # Replay
         replay_dir = tmp_path / "example_replay"
@@ -707,9 +740,9 @@ class TestNegativeFloatDrift:
 class TestNegativeMissingBlob:
     """Deleting a referenced blob causes a loud, actionable failure."""
 
-    def _mint(self, tmp_path: Path) -> tuple[LocalFilesystemStore, Manifest, dict[str, NativeEntry]]:
+    def _mint(self, tmp_path: Path) -> tuple[NativeStore, Manifest, dict[str, NativeEntry]]:
         """Run + capture + PUT, returning the store, manifest, and native snapshot."""
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         regression_dir = tmp_path / "regression"
         regression_dir.mkdir()
         test_data_dir = tmp_path / "test-data"
@@ -737,7 +770,7 @@ class TestNegativeMissingBlob:
         )
         return store, manifest, native
 
-    def test_missing_blob_detected_on_sync(self, tmp_path: Path) -> None:
+    def test_missing_blob_detected_by_has(self, tmp_path: Path) -> None:
         """
         A blob deleted after minting is caught when verifying ``store.has``.
 
@@ -746,7 +779,7 @@ class TestNegativeMissingBlob:
         store, manifest, native = self._mint(tmp_path)
 
         some_relpath, some_entry = next(iter(native.items()))
-        store._blob_path(some_entry.sha256).unlink()
+        _blob_path(store, some_entry.sha256).unlink()
 
         missing: list[tuple[str, str]] = [
             (relpath, entry.sha256)
@@ -765,7 +798,7 @@ class TestNegativeMissingBlob:
         store, manifest, native = self._mint(tmp_path)
 
         _some_relpath, some_entry = next(iter(native.items()))
-        store._blob_path(some_entry.sha256).unlink()
+        _blob_path(store, some_entry.sha256).unlink()
 
         replay_dir = tmp_path / "replay_output"
         replay_dir.mkdir()
@@ -798,13 +831,20 @@ def _synthetic_cli_case(tmp_path: Path) -> tuple[MagicMock, Diagnostic, MagicMoc
     return registry, diag, tc
 
 
+def _blob_path(store: NativeStore, digest: str) -> Path:
+    """Return the on-disk path of a blob in a local store, for tests that corrupt or delete one."""
+    root = store.root
+    assert root is not None
+    return root / digest[:2] / digest
+
+
 def _local_store_config(tmp_path: Path) -> Config:
     """
     Build a :class:`Config` whose ``native_store`` points at a local writable path.
 
     Uses a ``file://`` URL so :func:`~climate_ref_core.regression.build_native_store`
-    returns a :class:`LocalFilesystemStore` for both the writable mint path and the
-    read-only sync/replay path.
+    returns a :class:`NativeStore` for both the writable mint path and the
+    read-only replay path.
     """
     config = Config.default()
     config.paths.results = tmp_path / "results"
@@ -816,7 +856,7 @@ def _local_store_config(tmp_path: Path) -> Config:
 
 
 class TestNativeStoreConfig:
-    """The local-store config maps to a LocalFilesystemStore for both directions."""
+    """The local-store config maps to a NativeStore for both directions."""
 
     def test_file_url_builds_local_store(self, tmp_path: Path) -> None:
         """A ``file://`` native-store URL yields a writable and readable local store."""
@@ -825,8 +865,8 @@ class TestNativeStoreConfig:
         config = _local_store_config(tmp_path)
         writable = build_native_store(config.native_store, writable=True)
         readable = build_native_store(config.native_store, writable=False)
-        assert isinstance(writable, LocalFilesystemStore)
-        assert isinstance(readable, LocalFilesystemStore)
+        assert writable.root is not None
+        assert readable.root == writable.root
 
         blob = tmp_path / "blob.bin"
         blob.write_bytes(b"abc")
@@ -834,15 +874,15 @@ class TestNativeStoreConfig:
         assert readable.has(digest)
 
 
-class TestCliMintSyncReplay:
-    """Drive ``ref test-cases mint`` / ``sync`` / ``replay`` against a local store."""
+class TestCliMintReplay:
+    """Drive ``ref test-cases mint`` and ``replay`` against a local store."""
 
-    def test_mint_sync_replay_succeeds(self, invoke_cli: Any, mocker: Any, tmp_path: Path) -> None:
+    def test_mint_replay_succeeds(self, invoke_cli: Any, mocker: Any, tmp_path: Path) -> None:
         """
         The full CLI lifecycle exits 0 on the synthetic case against a local store.
 
-        ``mint`` PUTs blobs and authors the manifest; ``sync`` confirms every blob
-        is reachable; ``replay`` materialises and tolerantly compares.
+        ``mint`` PUTs blobs and authors the manifest, then ``replay`` materialises them
+        and tolerantly compares.
         """
         registry, diag, _tc = _synthetic_cli_case(tmp_path)
         config = _local_store_config(tmp_path)
@@ -876,9 +916,6 @@ class TestCliMintSyncReplay:
         manifest = Manifest.load(paths.manifest)
         assert manifest.native, "mint must author a non-empty native block"
         assert _NATIVE_DATA_RELPATH in manifest.native
-
-        # Sync
-        invoke_cli(["test-cases", "sync", "--provider", "synthetic-test"], expected_exit_code=0)
 
         # Replay
         invoke_cli(
@@ -1038,7 +1075,7 @@ class TestReconstructionInputRoundTrip:
     ) -> tuple[dict[str, str], dict[str, NativeEntry]]:
         defn = result.definition
         output_dir = defn.output_directory
-        return capture_execution(
+        return _capture_execution(
             output_dir.parent,
             results_base,
             defn.output_fragment(),
@@ -1052,8 +1089,8 @@ class TestReconstructionInputRoundTrip:
 
     def _store_native(
         self, native: dict[str, NativeEntry], *, results_base: Path, fragment: Path, store_root: Path
-    ) -> LocalFilesystemStore:
-        store = LocalFilesystemStore(root=store_root)
+    ) -> NativeStore:
+        store = NativeStore(url=str(store_root))
         base_dir = results_base / fragment
         for relpath in native:
             store.put(base_dir / relpath)

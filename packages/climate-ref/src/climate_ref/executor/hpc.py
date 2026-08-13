@@ -153,12 +153,20 @@ def limit_from_env(*args: Any, **kwargs: Any) -> float | None:
 
 @python_app
 @with_memory_limit(limit_from_env)
-def _process_run(definition: ExecutionDefinition, log_level: str) -> ExecutionResult:
+def _process_run(
+    definition: ExecutionDefinition, log_level: str, measure: bool = True, exclusive: bool = False
+) -> ExecutionResult:
     """Run the function on computer nodes"""
     # This is a catch-all for any exceptions that occur in the process and need to raise for
     # parsl retries to work
     try:
-        return execute_locally(definition=definition, log_level=log_level, raise_error=True)
+        return execute_locally(
+            definition=definition,
+            log_level=log_level,
+            raise_error=True,
+            measure=measure,
+            exclusive=exclusive,
+        )
     except DiagnosticError as e:  # pragma: no cover
         # any diagnostic error will be caught here
         logger.exception("Error running diagnostic")
@@ -256,11 +264,17 @@ class HPCExecutor:
         if self.scheduler == "slurm":
             self.slurm_config = SlurmConfig.model_validate(executor_config)
             hours, minutes, seconds = map(int, self.slurm_config.walltime.split(":"))
+            workers_per_node = self.slurm_config.max_workers_per_node
 
             if self.slurm_config.validation and HAS_REAL_SLURM:
                 self._validate_slurm_params()
         else:
             hours, minutes, seconds = map(int, self.walltime.split(":"))
+            workers_per_node = _to_int(executor_config.get("max_workers_per_node", 16)) or 16
+
+        # Workers on the same node share a cgroup,
+        # so a cgroup reading is only attributable to one execution when a node runs one worker.
+        self._exclusive = workers_per_node == 1
 
         total_minutes = hours * 60 + minutes + seconds / 60
         self.total_minutes = total_minutes
@@ -482,10 +496,15 @@ class HPCExecutor:
             If provided, the result will be updated in the database when completed.
         """
         # Submit the execution to the process pool
-        # and track the future so we can wait for it to complete
+        # and track the future so we can wait for it to complete.
+        # The timestamp is taken before the submission,
+        # because the future can start running before the call returns.
+        submitted_at = time.time()
         future = _process_run(
             definition=definition,
             log_level=self.config.log_level,
+            measure=self.config.executor.measure_resources,
+            exclusive=self._exclusive,
         )
 
         self.parsl_results.append(
@@ -493,6 +512,7 @@ class HPCExecutor:
                 future=future,
                 definition=definition,
                 execution_id=execution.id if execution else None,
+                submitted_at=submitted_at,
             )
         )
 
@@ -536,6 +556,9 @@ class HPCExecutor:
             while results:
                 # Iterate over a copy of the list and remove finished tasks
                 for result in results[:]:
+                    if result.started_at is None and result.future.running():
+                        result.started_at = time.time()
+
                     if not result.future.done():
                         continue
 
@@ -568,6 +591,9 @@ class HPCExecutor:
                     assert isinstance(execution_result, ExecutionResult), (
                         "Execution result should be of type ExecutionResult"
                     )
+
+                    result.infer_started_at(execution_result, time.time())
+
                     # Process the result in the main process
                     # The results should be committed after each execution
                     with self.database.session.begin():
@@ -576,7 +602,13 @@ class HPCExecutor:
                             if result.execution_id
                             else None
                         )
-                        process_result(self.config, self.database, execution_result, execution)
+                        process_result(
+                            self.config,
+                            self.database,
+                            execution_result,
+                            execution,
+                            queue_seconds=result.queue_seconds,
+                        )
                     logger.debug(f"Execution completed: {result}")
                     t.update(n=1)
                     results.remove(result)

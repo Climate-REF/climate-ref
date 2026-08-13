@@ -2,11 +2,14 @@
 Unit tests for the helpers in the standard module.
 """
 
+from types import SimpleNamespace
+
 import ilamb3
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+from climate_ref_ilamb import standard
 from climate_ref_ilamb.standard import (
     ILAMBStandard,
     _build_cmec_bundle,
@@ -16,9 +19,11 @@ from climate_ref_ilamb.standard import (
     _RelationshipTimeTransform,
     _set_ilamb3_options,
 )
-from ilamb3.dataset import coarsen_dataset
+from ilamb3.dataset import coarsen_dataset, convert
+from ilamb3.transform.amoc import msftmz_to_rapid
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
+from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 
 
 class TestRelationshipTimeTransform:
@@ -162,6 +167,69 @@ class TestCoarsenSpatial:
 
         assert transform._cache_path(ds) is None
         assert not list(tmp_path.rglob("*.nc"))
+
+
+class TestMsftmzToRapid:
+    """
+    The RAPID-2023-1a obs4REF reference has no `basin` dimension.
+    """
+
+    def _dataset(self, *, with_basin: bool) -> xr.Dataset:
+        time = pd.date_range("2000-01-01", periods=4, freq="MS")
+        lat = np.array([20.0, 26.5, 30.0])
+        depth = np.array([100.0, 1000.0])
+        # A distinct value per (lat, depth) so the 26.5N maximum-over-depth is identifiable.
+        values = 1.0e10 * (
+            1.0
+            + np.arange(len(time) * len(depth) * len(lat), dtype=float).reshape(
+                len(time), len(depth), len(lat)
+            )
+        )
+        dims = ("time", "depth", "lat")
+        coords = {"time": time, "depth": depth, "lat": lat}
+        if with_basin:
+            # CMIP orders msftmz as (time, basin, depth, lat); basin 0 is the Atlantic.
+            values = np.stack([values, values + 5.0e10], axis=1)
+            dims = ("time", "basin", "depth", "lat")
+            coords["basin"] = np.array([0, 1])
+        ds = xr.Dataset({"msftmz": (dims, values)}, coords=coords)
+        ds["msftmz"].attrs["units"] = "kg s-1"
+        ds["lat"].attrs.update({"units": "degrees_north", "standard_name": "latitude"})
+        ds["depth"].attrs.update({"units": "m", "positive": "down"})
+        return ds
+
+    def test_reference_without_basin_is_transformed(self):
+        transform = ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"]()
+
+        result = transform(self._dataset(with_basin=False))
+
+        assert "amoc" in result
+        assert "msftmz" not in result
+        assert "basin" not in result["amoc"].dims
+        assert result["amoc"].sizes["time"] == 4
+
+    def test_matches_upstream_when_basin_is_present(self):
+        """The guard must not alter data that already has a basin dimension."""
+        ds = self._dataset(with_basin=True)
+
+        result = ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"]()(ds)
+        expected = msftmz_to_rapid()(ds)
+
+        xr.testing.assert_identical(result["amoc"], expected["amoc"])
+
+    def test_expanded_basin_selects_the_same_values(self):
+        """Restoring a length-1 basin must be value-preserving, not a different section."""
+        ds = self._dataset(with_basin=False)
+
+        amoc = ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"]()(ds)["amoc"]
+
+        # Same section and reduction as the transform, converted with ILAMB's own helper so the
+        # assertion pins the selection rather than restating the kg s-1 -> Sv factor.
+        expected = convert(ds["msftmz"].sel(lat=26.5, method="nearest").max("depth"), "Sv", "msftmz")
+        np.testing.assert_allclose(amoc.values, expected.values)
+
+        off_section = convert(ds["msftmz"].sel(lat=20.0).max("depth"), "Sv", "msftmz")
+        assert not np.allclose(amoc.values, off_section.values)
 
 
 class TestCleanUnits:
@@ -375,3 +443,79 @@ class TestRealmMaskDecoupling:
         # The merge in `execute()` must not crash on an empty ILAMB side.
         merged = diagnostic.ilamb_data.datasets.set_index(diagnostic.ilamb_data.slug_column)
         assert merged.empty
+
+
+class TestObs4MIPsSourceRewrite:
+    """
+    The obs4MIPs source rewrite in ``execute()`` must not leak between executions.
+
+    The provider shares one diagnostic instance across executions.
+    """
+
+    def _diagnostic(self) -> ILAMBStandard:
+        return ILAMBStandard(
+            realm="ocean",
+            metric_name="test-amoc-sources",
+            sources={
+                "amoc": {
+                    "obs_source": "obs4ref",
+                    "source_id": "RAPID-2023-1a",
+                    "variable_id": "msftmz",
+                }
+            },
+            analysis_variable="amoc",
+        )
+
+    def _definition(self, tmp_path, instance_id: str):
+        obs = pd.DataFrame(
+            {
+                "instance_id": [instance_id],
+                "variable_id": ["msftmz"],
+                "path": [f"/data/{instance_id}.nc"],
+            }
+        ).set_index("instance_id")
+        model = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.model"],
+                "variable_id": ["msftmz"],
+                "source_id": ["CanESM5"],
+                "path": ["/data/model.nc"],
+            }
+        )
+        datasets = ExecutionDatasetCollection(
+            {
+                SourceDatasetType.obs4MIPs: DatasetCollection(obs, "instance_id"),
+                SourceDatasetType.CMIP6: DatasetCollection(model, "instance_id"),
+            }
+        )
+        return SimpleNamespace(datasets=datasets, output_directory=tmp_path)
+
+    def _run_and_capture(self, diagnostic, definition, monkeypatch) -> dict:
+        captured: dict = {}
+
+        def _capture(slug, ref_datasets, model_datasets, output_directory, **kwargs):
+            captured.update(kwargs)
+
+        monkeypatch.setattr(standard.run, "run_single_block", _capture)
+        monkeypatch.setattr(standard.run, "set_model_colors", lambda _: None)
+        diagnostic.execute(definition)
+        return captured
+
+    def test_derived_analysis_variable_keeps_the_configured_key(self, tmp_path, monkeypatch):
+        diagnostic = self._diagnostic()
+        captured = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
+
+        # `amoc` is derived from the on-disk `msftmz`, so the configure key must survive.
+        assert captured["sources"] == {"amoc": "obs4REF.first*"}
+
+    def test_second_execution_is_unaffected_by_the_first(self, tmp_path, monkeypatch):
+        diagnostic = self._diagnostic()
+
+        first = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
+        second = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.second"), monkeypatch)
+
+        assert first["sources"] == {"amoc": "obs4REF.first*"}
+        # Without the copy this is `{"amoc": "obs4REF.first*", "msftmz": "obs4REF.second*"}`.
+        assert second["sources"] == {"amoc": "obs4REF.second*"}
+        # The diagnostic itself still holds the configured mapping.
+        assert diagnostic.ilamb_kwargs["sources"]["amoc"]["source_id"] == "RAPID-2023-1a"

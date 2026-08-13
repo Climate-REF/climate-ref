@@ -6,11 +6,13 @@ import importlib
 import shutil
 from typing import Any, Protocol, runtime_checkable
 
+from attrs import evolve
 from loguru import logger
 
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import CondaCommandError, DiagnosticError, InvalidExecutorException
 from climate_ref_core.logging import redirect_logs
+from climate_ref_core.resources import measure_resources
 
 
 def _is_system_error(exc: BaseException) -> bool:
@@ -38,6 +40,8 @@ def execute_locally(
     definition: ExecutionDefinition,
     log_level: str,
     raise_error: bool = False,
+    measure: bool = True,
+    exclusive: bool = False,
 ) -> ExecutionResult:
     """
     Run a diagnostic execution
@@ -50,41 +54,58 @@ def execute_locally(
         A description of the information needed for this execution of the diagnostic
     log_level
         The log level to use for the execution
+    measure
+        Whether to record what the execution costs in wall time, CPU time and peak memory.
+
+        When False the result carries no resource usage.
+    exclusive
+        Whether this process has its cgroup to itself for the duration of the execution.
+
+        Only the executor knows its own concurrency.
+        When False the peak memory is measured over this process tree rather than the cgroup.
     """
     logger.info(f"Executing {definition.execution_slug()!r}")
 
-    try:
-        if definition.output_directory.exists():
-            logger.warning(
-                f"Output directory {definition.output_directory} already exists. "
-                f"Removing the existing directory."
-            )
-            shutil.rmtree(definition.output_directory)
-        definition.output_directory.mkdir(parents=True, exist_ok=True)
+    deferred: Exception | None = None
 
-        with redirect_logs(definition, log_level):
-            return definition.diagnostic.run(definition=definition)
+    with measure_resources(enabled=measure, cgroup_exclusive=exclusive) as recorder:
+        try:
+            if definition.output_directory.exists():
+                logger.warning(
+                    f"Output directory {definition.output_directory} already exists. "
+                    f"Removing the existing directory."
+                )
+                shutil.rmtree(definition.output_directory)
+            definition.output_directory.mkdir(parents=True, exist_ok=True)
 
-    except CondaCommandError as e:
-        # We don't need to see the stacktrace for this error
-        # This exception string includes the stdout and stderr from the conda command
-        logger.error(f"Conda command failed for {definition.execution_slug()}: {e}")
-        return ExecutionResult.build_from_failure(definition, retryable=False)
-    except Exception as e:
-        # If the diagnostic fails, we want to log the error and return a failure result
-        retryable = _is_system_error(e)
-        if retryable:
-            logger.error(
-                f"System error running {definition.execution_slug()!r} (will be retried on next solve): {e}"
-            )
-        else:
-            logger.exception(f"Diagnostic error running {definition.execution_slug()!r}")
-        result = ExecutionResult.build_from_failure(definition, retryable=retryable)
+            with redirect_logs(definition, log_level):
+                result = definition.diagnostic.run(definition=definition)
 
-        if raise_error:
-            raise DiagnosticError(str(e), result) from e
-        else:
-            return result
+        except CondaCommandError as e:
+            # We don't need to see the stacktrace for this error
+            # This exception string includes the stdout and stderr from the conda command
+            logger.error(f"Conda command failed for {definition.execution_slug()}: {e}")
+            result = ExecutionResult.build_from_failure(definition, retryable=False)
+        except Exception as e:
+            # If the diagnostic fails, we want to log the error and return a failure result
+            retryable = _is_system_error(e)
+            if retryable:
+                logger.error(
+                    f"System error running {definition.execution_slug()!r} "
+                    f"(will be retried on next solve): {e}"
+                )
+            else:
+                logger.exception(f"Diagnostic error running {definition.execution_slug()!r}")
+            result = ExecutionResult.build_from_failure(definition, retryable=retryable)
+
+            if raise_error:
+                deferred = e
+
+    result = evolve(result, resource_usage=recorder.usage)
+
+    if deferred is not None:
+        raise DiagnosticError(str(deferred), result) from deferred
+    return result
 
 
 @runtime_checkable

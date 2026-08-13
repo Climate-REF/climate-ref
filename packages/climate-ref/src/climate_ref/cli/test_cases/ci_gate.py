@@ -2,7 +2,7 @@
 ``ref test-cases ci-gate``.
 
 Decides, per test case, how CI should verify its regression baseline (replay,
-execute, skip, or fail) by comparing the committed ``manifest.json`` against the
+skip, or fail) by comparing the committed ``manifest.json`` against the
 base branch and detecting extraction-code changes.
 """
 
@@ -17,12 +17,7 @@ from rich.table import Table
 
 from climate_ref.cli._git_utils import get_repo_for_path
 from climate_ref.cli.test_cases._app import app
-from climate_ref.cli.test_cases._common import (
-    _iter_test_cases,
-    _validate_provider_in_registry,
-    _validate_requested_filters,
-)
-from climate_ref.config import Config
+from climate_ref.cli.test_cases._common import VerbDriver
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -69,9 +64,9 @@ def _provider_source_root(diag: Diagnostic, repo_root: Path) -> str | None:
 
 def _core_extraction_roots(repo_root: Path) -> list[str]:
     """
-    Return the core paths whose change affects replay/execute for every test case.
+    Return the core paths whose change affects a replay for every test case.
 
-    ``build_execution_result`` (the function replay/execute re-run) depends on more
+    ``build_execution_result`` (the function replay re-runs) depends on more
     than the regression package: it builds and reads CMEC bundles via
     :mod:`climate_ref_core.pycmec`, persists curated outputs via
     :mod:`climate_ref_core.output_files`, and is dispatched through
@@ -142,11 +137,11 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
 
     Compares each committed ``manifest.json`` to its counterpart on the base branch
     and reports the action CI should take per case: ``replay`` (cheap, against the
-    cached native baseline), ``execute`` (full re-run, when ``test_case_version`` was
-    bumped), ``skip`` (nothing relevant changed), or ``fail`` (an unauthorised
-    baseline change). Exits non-zero if any case is gated ``fail``.
+    cached native baseline), ``skip`` (nothing relevant changed, or nothing to
+    replay against), or ``fail`` (an unauthorised baseline change). Exits non-zero
+    if any case is gated ``fail``.
 
-    The ``--json`` output is intended for CI to dispatch ``replay``/``run`` jobs.
+    The ``--json`` output is intended for CI to dispatch ``replay`` jobs.
 
     Examples
     --------
@@ -158,13 +153,10 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
 
     from git import GitCommandError
 
-    from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.regression.gate import Action, decide_coupling, paths_under
     from climate_ref_core.regression.manifest import Manifest, compute_committed_digests
     from climate_ref_core.testing import TestCasePaths, get_catalog_hash
 
-    config: Config = ctx.obj.config
-    db = ctx.obj.database
     console: Console = ctx.obj.console
 
     repo = get_repo_for_path(Path.cwd())
@@ -197,10 +189,8 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
     repo_root_resolved = repo_root.resolve()
     source_root_cache: dict[str, str | None] = {}
 
-    registry = ProviderRegistry.build_from_config(config, db)
-    _validate_provider_in_registry(registry, provider)
-    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
-    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
+    driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
+    cases = driver.cases
 
     decisions: list[dict[str, str]] = []
     has_failure = False
@@ -288,7 +278,6 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
         table.add_column("Reason")
         style_for = {
             Action.FAIL.value: "red",
-            Action.EXECUTE.value: "yellow",
             Action.REPLAY.value: "green",
             Action.SKIP.value: "dim",
         }

@@ -88,30 +88,29 @@ class TestDecideCoupling:
         assert decision.action is Action.FAIL
         assert "catalog.yaml does not match" in decision.reason
 
-    def test_native_demint_skips_with_warning(self) -> None:
-        # Native baseline removed (de-mint) with committed bundle unchanged: warn, do not fail.
+    def test_native_demint_skips(self) -> None:
+        # Native baseline removed (de-mint) with committed bundle unchanged: skip, do not fail.
         base = make_manifest(1, {"output.json": "a" * 64}, {"data.nc": NativeEntry("a" * 64, 10)})
         current = make_manifest(1, {"output.json": "a" * 64}, {})
         decision = decide_coupling(current, base)
         assert decision.action is Action.SKIP
-        assert "WARNING" in decision.reason
-        assert "de-mint" in decision.reason
+        assert "no native baseline exists to replay" in decision.reason
 
-    def test_version_bump_without_native_executes(self) -> None:
-        # No native baseline to replay against, so the bump needs a full re-run.
+    def test_version_bump_without_native_skips(self) -> None:
+        # No native baseline to replay against, so the diff review is the only signal.
         base = make_manifest(1)
         current = make_manifest(2)
         decision = decide_coupling(current, base)
-        assert decision.action is Action.EXECUTE
+        assert decision.action is Action.SKIP
         assert "1 -> 2" in decision.reason
         assert "no native baseline" in decision.reason
 
-    def test_version_bump_without_native_executes_even_with_committed_change(self) -> None:
+    def test_version_bump_without_native_skips_even_with_committed_change(self) -> None:
         # A bump authorises a new baseline, so a committed change is expected.
         base = make_manifest(1, {"output.json": "a" * 64})
         current = make_manifest(2, {"output.json": "b" * 64})
         decision = decide_coupling(current, base)
-        assert decision.action is Action.EXECUTE
+        assert decision.action is Action.SKIP
 
     def test_version_bump_with_native_replays(self) -> None:
         native = {"data.nc": NativeEntry("a" * 64, 10)}
@@ -175,7 +174,7 @@ class TestDiagnosticVersionGate:
         manifest = make_manifest(1, diagnostic_version=2)
         decision = decide_coupling(manifest, None, code_diagnostic_version=1)
         assert decision.action is Action.FAIL
-        assert "append-only" in decision.reason
+        assert "must not be below" in decision.reason
 
     def test_code_equals_manifest_falls_through(self) -> None:
         # Equality must NOT early-return: a matched baseline proceeds to the normal logic.
@@ -197,23 +196,15 @@ class TestDiagnosticVersionGate:
         assert decision.action is Action.FAIL
         assert "does not match manifest.json digests" in decision.reason
 
-    def test_diagnostic_version_decrease_bare_downgrade_fails(self) -> None:
-        # A diagnostic_version decrease with the committed bundle unchanged is a bare downgrade.
-        base = make_manifest(1, {"output.json": "a" * 64}, diagnostic_version=2)
-        current = make_manifest(1, {"output.json": "a" * 64}, diagnostic_version=1)
-        decision = decide_coupling(current, base, code_diagnostic_version=1)
-        assert decision.action is Action.FAIL
-        assert "bare downgrade" in decision.reason
-
-    def test_diagnostic_version_decrease_with_reminted_bundle_falls_through(self) -> None:
-        # A decrease that ships a re-minted bundle (committed changed) + a tcv bump is authorised.
+    def test_diagnostic_version_decrease_fails_unconditionally(self) -> None:
+        # A diagnostic_version decrease always fails, even with a re-minted bundle and a tcv bump.
         native = {"data.nc": NativeEntry("a" * 64, 10)}
         base = make_manifest(1, {"output.json": "a" * 64}, native, diagnostic_version=2)
         current = make_manifest(2, {"output.json": "b" * 64}, native, diagnostic_version=1)
         decision = decide_coupling(current, base, code_diagnostic_version=1)
-        # 2b falls through; the tcv bump with native present routes to REPLAY.
-        assert decision.action is Action.REPLAY
-        assert "1 -> 2" in decision.reason
+        assert decision.action is Action.FAIL
+        assert "diagnostic_version decreased" in decision.reason
+        assert "monotonic" in decision.reason
 
     def test_diagnostic_version_increase_proceeds(self) -> None:
         # An increase (with matching code) is not a 2b failure; normal logic applies.
@@ -229,12 +220,12 @@ class TestDiagnosticVersionGate:
         decision = decide_coupling(manifest, None, code_diagnostic_version=None)
         assert decision.action is Action.SKIP
 
-    def test_tcv_bump_with_matched_diagnostic_version_still_executes(self) -> None:
+    def test_tcv_bump_with_matched_diagnostic_version_still_skips(self) -> None:
         # A test_case_version bump with code == manifest.diagnostic_version behaves as before.
         base = make_manifest(1, diagnostic_version=2)
         current = make_manifest(2, diagnostic_version=2)
         decision = decide_coupling(current, base, code_diagnostic_version=2)
-        assert decision.action is Action.EXECUTE
+        assert decision.action is Action.SKIP
         assert "1 -> 2" in decision.reason
 
 

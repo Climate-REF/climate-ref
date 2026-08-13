@@ -15,8 +15,8 @@
 #   base             ref to diff against. Defaults to origin/${GITHUB_BASE_REF:-main}.
 #   GITHUB_BASE_REF  the PR's base branch (set automatically on pull_request events).
 #
-# Running under GitHub Actions emits log groups and ::error::/::warning:: annotations;
-# locally it prints plain, readable output instead.
+# Running under GitHub Actions emits log groups and ::error:: annotations.
+# Locally it prints plain, readable output instead.
 # Run it before pushing to catch a coupling violation or replay drift without waiting for CI.
 set -euo pipefail
 
@@ -29,12 +29,10 @@ if [ -n "${GITHUB_ACTIONS:-}" ]; then
   begin_group() { echo "::group::$*"; }
   end_group() { echo "::endgroup::"; }
   error() { echo "::error::$*"; }
-  warning() { echo "::warning::$*"; }
 else
   begin_group() { printf '\n==> %s\n' "$*"; }
   end_group() { :; }
   error() { printf 'ERROR: %s\n' "$*" >&2; }
-  warning() { printf 'WARNING: %s\n' "$*" >&2; }
 fi
 
 # CI passes the base via GITHUB_BASE_REF (and fetches origin/<ref> beforehand); locally,
@@ -66,11 +64,6 @@ if [ "${gate_rc}" -ne 0 ]; then
   exit 1
 fi
 
-
-while IFS= read -r execute_case; do
-  [ -n "${execute_case}" ] || continue
-  warning "${execute_case} bumped test_case_version with no native baseline -- review the committed bundle, then mint on the trusted tier to enable replay verification."
-done < <(printf '%s\n' "${decisions}" | jq -r '.[] | select(.action == "execute") | .case')
 
 replay_cases="$(printf '%s\n' "${decisions}" | jq -r '.[] | select(.action == "replay") | .case')"
 if [ -z "${replay_cases}" ]; then

@@ -11,6 +11,7 @@ from loguru import logger
 from rich.pretty import pretty_repr
 
 from climate_ref.config import Config
+from climate_ref_celery.serialisation import register_serialisation
 from climate_ref_core.logging import initialise_logging
 
 os.environ.setdefault("CELERY_CONFIG_MODULE", "climate_ref_celery.celeryconf.dev")
@@ -24,6 +25,8 @@ def create_celery_app(name: str) -> Celery:
     The configuration module is loaded from the environment variable `CELERY_CONFIG_MODULE`
     which defaults to `climate_ref_celery.celeryconf.dev` if not set.
     """
+    register_serialisation()
+
     app = Celery(name)
     app.config_from_envvar("CELERY_CONFIG_MODULE")
 
@@ -41,12 +44,22 @@ def setup_logging_handler(loglevel: int, **kwargs: Any) -> None:  # pragma: no c
 
 
 @worker_ready.connect
-def worker_ready_handler(**kwargs: Any) -> None:  # pragma: no cover
+def worker_ready_handler(sender: Any = None, **kwargs: Any) -> None:  # pragma: no cover
     """
     Log a message when the worker is ready
     """
     config = Config.default()
     logger.info(f"Worker ready with config {pretty_repr(config)}")
+
+    max_tasks = sender.app.conf.worker_max_tasks_per_child if sender is not None else None
+    if config.executor.measure_resources and max_tasks != 1:
+        # The bias is not recorded on the row, so it has to be said out loud here.
+        logger.warning(
+            "CELERY_WORKER_MAX_TASKS_PER_CHILD is not 1, "
+            "so worker processes are reused across executions. "
+            "A recorded peak memory can include the footprint of an earlier execution "
+            "in the same worker."
+        )
 
 
 app = create_celery_app("climate_ref_celery")

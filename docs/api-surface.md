@@ -18,15 +18,15 @@ a major version bump and a migration guide.
 
 The primary module providers interact with.
 
-| Symbol                  | Kind          | Description                                      |
-| ----------------------- | ------------- | ------------------------------------------------ |
-| `Diagnostic`            | Class         | Base class all diagnostics must subclass         |
-| `AbstractDiagnostic`    | Protocol      | Protocol defining the diagnostic interface       |
-| `CommandLineDiagnostic` | Class         | Base for diagnostics that shell out to CLI tools |
-| `DataRequirement`       | Class (attrs) | Declares what datasets a diagnostic needs        |
-| `ExecutionDefinition`   | Class (attrs) | Immutable description of a single execution      |
-| `ExecutionResult`       | Class (attrs) | Result of running a diagnostic                   |
-| `ensure_relative_path`  | Function      | Resolve a path relative to root_directory        |
+| Symbol                  | Kind          | Description                                           |
+| ----------------------- | ------------- | ----------------------------------------------------- |
+| `Diagnostic`            | Class         | Base class all diagnostics must subclass              |
+| `AbstractDiagnostic`    | Protocol      | Protocol defining the diagnostic interface            |
+| `CommandLineDiagnostic` | Class         | Base for diagnostics that shell out to CLI tools      |
+| `DataRequirement`       | Class (attrs) | Declares what datasets a diagnostic needs             |
+| `ExecutionDefinition`   | Class (attrs) | Immutable description of a single execution           |
+| `ExecutionResult`       | Class (attrs) | Result of running a diagnostic, with `resource_usage` |
+| `ensure_relative_path`  | Function      | Resolve a path relative to root_directory             |
 
 ### Key extension points
 
@@ -94,6 +94,21 @@ The primary module providers interact with.
 
 ---
 
+## `climate_ref_core.resources` (Provisional)
+
+| Symbol              | Kind            | Description                                            |
+| ------------------- | --------------- | ------------------------------------------------------ |
+| `measure_resources` | Context manager | Measure wall time, CPU time and peak memory of a block |
+| `ResourceUsage`     | Class (attrs)   | Frozen record of what one block of work cost           |
+| `ResourceRecorder`  | Class           | Handle yielded by `measure_resources`, holding `usage` |
+| `MemorySource`      | TypeAlias       | Provenance of a peak memory figure                     |
+
+Provisional because the set of measured fields is expected to grow as more hosts are covered.
+`ExecutionResult.resource_usage` carries a `ResourceUsage` back from the worker,
+and defaults to `None`, so a provider that never sets it stays valid.
+
+---
+
 ## `climate_ref_core.dataset_registry` (Stable)
 
 | Symbol                     | Kind     | Description                        |
@@ -113,7 +128,6 @@ The primary module providers interact with.
 | `TestCase`                 | Class (attrs) | A single test case definition                   |
 | `TestDataSpecification`    | Class (attrs) | Collection of test cases for a diagnostic       |
 | `TestCasePaths`            | Class (attrs) | Path resolver for test case data                |
-| `validate_cmec_bundles`    | Function      | Validate CMEC metric/output bundles             |
 | `collect_test_case_params` | Function      | Collect pytest parametrize params from provider |
 | `load_datasets_from_yaml`  | Function      | Load ExecutionDatasetCollection from YAML       |
 | `save_datasets_to_yaml`    | Function      | Save ExecutionDatasetCollection to YAML         |

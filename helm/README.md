@@ -147,7 +147,7 @@ These defaults apply to all providers unless overridden per-provider.
 | --------------------------- | ------------------------- | --------------------------------- |
 | `defaults.replicaCount`     | Number of worker replicas | `1`                               |
 | `defaults.image.repository` | Worker image repository   | `ghcr.io/climate-ref/climate-ref` |
-| `defaults.image.tag`        | Worker image tag          | `v0.16.2`                          |
+| `defaults.image.tag`        | Worker image tag          | `v0.17.0`                          |
 | `defaults.image.pullPolicy` | Image pull policy         | `IfNotPresent`                    |
 | `defaults.resources`        | Resource requests/limits  | `{}`                              |
 | `defaults.nodeSelector`     | Node selector             | `{}`                              |
@@ -182,7 +182,6 @@ Environment variables can be set via `defaults.env` or per-provider:
 | ----------------------- | ------------------------- | -------------------------------------------- |
 | `CELERY_BROKER_URL`     | Redis broker URL          | Auto-configured to Dragonfly                 |
 | `CELERY_RESULT_BACKEND` | Redis result backend URL  | Auto-configured to Dragonfly                 |
-| `CELERY_ACCEPT_CONTENT` | Accepted content types    | `["json", "pickle"]`                         |
 | `REF_EXECUTOR`          | Executor class            | `climate_ref_celery.executor.CeleryExecutor` |
 | `HOME`                  | Home directory (writable) | `/tmp`                                       |
 
@@ -196,17 +195,31 @@ via environment variables globally (in `defaults.env`) or per-provider.
 If tasks are hanging or not resolving, then the celery configuration could be the issue.
 We need to be resiliant to workers failing.
 
-| Variable                            | Description                                      | Default             |
-| ----------------------------------- | ------------------------------------------------ | ------------------- |
-| `CELERY_TASK_TIME_LIMIT`            | Hard kill timeout in seconds                     | `21600` (6 hours)   |
-| `CELERY_TASK_SOFT_TIME_LIMIT`       | Soft timeout (raises exception for cleanup)      | `19800` (5.5 hours) |
-| `CELERY_TASK_MAX_RETRIES`           | Max retries before permanent failure             | `2`                 |
-| `CELERY_VISIBILITY_TIMEOUT`         | Redis redelivery timeout (must be >= time limit) | Matches time limit  |
-| `CELERY_WORKER_PREFETCH_MULTIPLIER` | Tasks prefetched per worker process              | `1`                 |
-| `CELERY_WORKER_CONCURRENCY`         | Worker processes per pod                         | CPU count           |
-| `CELERY_RESULT_EXPIRES`             | Result expiry in seconds                         | `172800` (48 hours) |
-| `CELERY_WORKER_MAX_TASKS_PER_CHILD` | Recycle worker after N tasks (memory leak guard) | None (no limit)     |
-| `CELERY_WORKER_MAX_MEMORY_PER_CHILD`| Max resident memory per worker in KB             | None (no limit)     |
+| Variable                             | Description                                      | Default                      |
+| ------------------------------------ | ------------------------------------------------ | ---------------------------- |
+| `CELERY_TASK_TIME_LIMIT`             | Hard kill timeout in seconds                     | `21600` (6 hours)            |
+| `CELERY_TASK_SOFT_TIME_LIMIT`        | Soft timeout (raises exception for cleanup)      | `19800` (5.5 hours)          |
+| `CELERY_TASK_MAX_RETRIES`            | Max retries before permanent failure             | `2`                          |
+| `CELERY_VISIBILITY_TIMEOUT`          | Redis redelivery timeout (must be >= time limit) | Matches time limit           |
+| `CELERY_WORKER_PREFETCH_MULTIPLIER`  | Tasks prefetched per worker process              | `1`                          |
+| `CELERY_WORKER_CONCURRENCY`          | Worker processes per pod                         | CPU count                    |
+| `CELERY_RESULT_EXPIRES`              | Result expiry in seconds                         | `172800` (48 hours)          |
+| `CELERY_WORKER_MAX_TASKS_PER_CHILD`  | Recycle worker after N tasks (memory leak guard) | `1` (fresh process per task) |
+| `CELERY_WORKER_MAX_MEMORY_PER_CHILD` | Max resident memory per worker in KB             | None (no limit)              |
+| `CELERY_SOCKET_TIMEOUT`              | Blocking Redis socket timeout in seconds         | None (transport default)     |
+| `CELERY_TASK_COMPRESSION`            | Codec for task message bodies (empty to disable) | `gzip`                       |
+| `CELERY_RESULT_COMPRESSION`          | Codec for result bodies (empty to disable)       | `gzip`                       |
+| `CELERY_ACCEPT_CONTENT`              | Comma separated content types the worker accepts | `json,ref-json`              |
+
+Tasks and results are encoded as JSON (`ref-json`).
+What this release sends is fixed, so `CELERY_ACCEPT_CONTENT` only widens what a worker will decode.
+
+Upgrading from a release that still used pickle drops whatever is already queued.
+An old message carries a pickled diagnostic and provider that this release no longer defines,
+so adding `pickle` back to `CELERY_ACCEPT_CONTENT` gets the body decoded and then the task fails anyway.
+Purge the queues as part of the upgrade and re-solve, which requeues the outstanding work.
+Upgrade the workers before any client that submits tasks,
+because an old worker cannot decode `ref-json` messages.
 
 The following settings are always enabled in `base.py` and cannot be overridden via
 environment variables:

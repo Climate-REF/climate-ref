@@ -9,6 +9,21 @@ class datetime:
     minute: int
     second: int
     microsecond: int
+    calendar: str
+    has_year_zero: bool
+    def __init__(
+        self,
+        year: int,
+        month: int,
+        day: int,
+        hour: int = 0,
+        minute: int = 0,
+        second: int = 0,
+        microsecond: int = 0,
+        calendar: str = "standard",
+        has_year_zero: bool | None = None,
+    ) -> None: ...
+    def isoformat(self, sep: str = "T", timespec: str = "auto") -> str: ...
     def strftime(self, fmt: str = ...) -> str: ...
     def __str__(self) -> str: ...
     @classmethod

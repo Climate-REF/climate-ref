@@ -124,7 +124,7 @@ def _write_and_ingest(
     scratch_dir.mkdir(parents=True, exist_ok=True)
     TSeries.dump_to_json(scratch_dir / "series.json", series)
 
-    cv = CV.load_from_file(config.paths.dimensions_cv)
+    cv = CV.load(config.paths.dimensions_cv_resource)
     result = _Result(scratch_dir)
 
     with count_statements(database) as counter:

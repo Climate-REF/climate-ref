@@ -1,11 +1,11 @@
 """
 What reference data the diagnostics need, and which collection supplies it.
 
-A deployment draws its observational data from several places: the obs4REF registry, the
-obs4MIPs archive on ESGF, and the provider registries (PMP climatology, ILAMB). Which of
-them supplies a given dataset is not stated anywhere the user can read, so the answer has
-had to be reconstructed by hand from the providers' data requirements. This module works
-it out once, so that the documentation and ``ref doctor`` agree.
+A deployment draws its observational data from several places:
+the obs4REF registry, the obs4MIPs archive on ESGF, and the provider registries (PMP climatology, ILAMB).
+Which of them supplies a given dataset is not stated anywhere the user can read,
+so the answer has had to be reconstructed by hand from the providers' data requirements.
+This module works it out once, so that the documentation and ``ref doctor`` agree.
 
 Provenance is resolved per ``source_id`` rather than per variable. A registry either carries
 a dataset or it does not, and asking whether a specific (``source_id``, ``variable_id``) pair
@@ -64,9 +64,6 @@ class ReferenceDataset:
     This is the union across requirements, not a claim that the dataset publishes each one.
     """
 
-    supplier: str
-    """Where the dataset comes from: a registry name, `ESGF_OBS4MIPS`, or `UNKNOWN_SUPPLIER`."""
-
     registry_name: str | None
     """The registry that carries it, or ``None`` when it has to be fetched from ESGF."""
 
@@ -78,10 +75,22 @@ class ReferenceDataset:
         """Whether a `ref datasets fetch-data` call can retrieve this dataset."""
         return self.registry_name is not None
 
+    @property
+    def supplier(self) -> str:
+        """Where the dataset comes from: a registry name, `ESGF_OBS4MIPS`, or `UNKNOWN_SUPPLIER`."""
+        if self.registry_name is not None:
+            return self.registry_name
+        if self.source_type == SourceDatasetType.obs4MIPs.value:
+            return ESGF_OBS4MIPS
+        return UNKNOWN_SUPPLIER
 
-def _registry_key_parser(registry_name: str) -> Callable[[str], dict[str, Any]] | None:
+
+def _registry_key_parser(source_type: SourceDatasetType) -> Callable[[str], dict[str, Any]] | None:
     """
     Get the function that reads a registry's keys, or ``None`` if its keys carry no source_id.
+
+    A registry's key format follows from the source type it supplies, not from its name, so
+    every registry declaring that source type is read the same way.
 
     Imported lazily: the parsers live alongside the ESGF request machinery, which pulls in
     pandas, and this module is imported by the documentation build.
@@ -92,11 +101,10 @@ def _registry_key_parser(registry_name: str) -> Callable[[str], dict[str, Any]] 
     )
 
     parsers = {
-        "obs4ref": _parse_obs4ref_key,
-        "quickstart": _parse_obs4ref_key,
-        "pmp-climatology": _parse_pmp_climatology_key,
+        SourceDatasetType.obs4REF: _parse_obs4ref_key,
+        SourceDatasetType.PMPClimatology: _parse_pmp_climatology_key,
     }
-    return parsers.get(registry_name)
+    return parsers.get(source_type)
 
 
 def source_ids_by_registry(
@@ -130,7 +138,7 @@ def source_ids_by_registry(
         entry = manager.entry(name)
         if entry.use_case is not RegistryUseCase.reference or entry.source_type is None:
             continue
-        parser = _registry_key_parser(name)
+        parser = _registry_key_parser(entry.source_type)
         if parser is None:
             continue
         # obs4REF data is ingested under the obs4MIPs source type, so a registry declaring
@@ -195,18 +203,11 @@ def collect_required_reference_data(
     for (source_type, source_id), variable_ids in variables.items():
         registry_names = registry_of.get((source_type, source_id), [])
         registry_name = registry_names[0] if registry_names else None
-        if registry_name is not None:
-            supplier = registry_name
-        elif source_type == SourceDatasetType.obs4MIPs.value:
-            supplier = ESGF_OBS4MIPS
-        else:
-            supplier = UNKNOWN_SUPPLIER
         datasets.append(
             ReferenceDataset(
                 source_type=source_type,
                 source_id=source_id,
                 variable_ids=tuple(sorted(variable_ids)),
-                supplier=supplier,
                 registry_name=registry_name,
                 diagnostics=tuple(sorted(diagnostics[(source_type, source_id)], key=lambda r: r.sort_key)),
             )

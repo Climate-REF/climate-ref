@@ -38,8 +38,8 @@ class DataRequirementSummary:
     """
     The ``source_id``s the requirement names, empty when it does not filter on one.
 
-    Reference requirements name the observational dataset here, which is what
-    :mod:`climate_ref_core.reference_data` uses to work out where that dataset comes from.
+    Reference requirements name the observational dataset here,
+    which is what :mod:`climate_ref_core.reference_data` uses to work out where that dataset comes from.
     """
 
 

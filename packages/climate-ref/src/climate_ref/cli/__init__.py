@@ -33,7 +33,6 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("db", "history"),
     ("db", "tables"),
     ("diagnostics", "list"),
-    ("doctor", ""),
     ("executions", "list-groups"),
     ("executions", "inspect"),
     ("executions", "stats"),
@@ -52,6 +51,9 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("test-cases", "check-store"),
 }
 
+# Read-only commands that sit at the top level rather than inside a group.
+_READ_ONLY_TOP_LEVEL_COMMANDS: set[str] = {"doctor"}
+
 # Commands whose job is to create or inspect the configuration file, so they must
 # run even when that file is missing or malformed.
 _CONFIG_BOOTSTRAP_COMMANDS: set[tuple[str, str]] = {
@@ -62,16 +64,11 @@ _CONFIG_BOOTSTRAP_COMMANDS: set[tuple[str, str]] = {
 
 def _command_path_in_argv(command_paths: set[tuple[str, str]]) -> bool:
     args = sys.argv[1:]
-    # A group with an empty command name is a group that is itself the command
-    # (``ref doctor``), so seeing the group is enough to identify it.
-    bare_groups = {group for group, command in command_paths if not command}
-    for index, arg in enumerate(args):
+    for index, arg in enumerate(args[:-1]):
         if arg.startswith("-"):
             continue
-        if arg in bare_groups:
-            return True
         for group, command in command_paths:
-            if arg != group or not command:
+            if arg != group:
                 continue
             remaining = [candidate for candidate in args[index + 1 :] if not candidate.startswith("-")]
             if remaining and remaining[0] == command:
@@ -86,6 +83,8 @@ def _is_read_only_command() -> bool:
     This checks against a registry of known read-only command paths since
     the Typer callback runs before nested commands are resolved.
     """
+    if any(arg in _READ_ONLY_TOP_LEVEL_COMMANDS for arg in sys.argv[1:] if not arg.startswith("-")):
+        return True
     return _command_path_in_argv(_READ_ONLY_COMMANDS)
 
 

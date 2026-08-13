@@ -1,8 +1,8 @@
 """
 Tests for the deployment health checks behind `ref doctor`.
 
-The checks are driven through a `DoctorContext` with its catalogs and providers supplied
-directly, so no database or ingest is needed.
+The checks are driven through a `DoctorContext` with its catalogs and providers supplied directly,
+so no database or ingest is needed.
 """
 
 import pandas as pd
@@ -21,6 +21,7 @@ from climate_ref.doctor.checks.data import (
     check_missing_reference_data,
     check_unreachable_source_types,
 )
+from climate_ref.doctor.findings import pluralise
 from climate_ref_core.datasets import FacetFilter
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic
 from climate_ref_core.providers import DiagnosticProvider
@@ -117,6 +118,26 @@ class TestMissingReferenceData:
         assert "ERA-5" in findings[0].summary
         assert "needs-reference" in findings[0].detail
 
+    def test_datasets_obtained_the_same_way_share_a_remedy(self):
+        # The report states a shared remedy once, which only holds if the wording matches exactly.
+        providers = [
+            _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta"),
+            _provider_requiring(SourceDatasetType.obs4MIPs, "C3S-GTO-ECV-9-0", "toz"),
+        ]
+        context = _context({SourceDatasetType.obs4MIPs: _catalog([])}, providers)
+
+        findings = check_missing_reference_data(context)
+
+        assert len(findings) == 2
+        assert findings[0].remedy == findings[1].remedy
+        assert "ERA-5" not in findings[0].remedy
+
+    def test_the_summary_counts_the_diagnostics(self):
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
+        context = _context({SourceDatasetType.obs4MIPs: _catalog([])}, [provider])
+
+        assert "1 diagnostic will not run" in check_missing_reference_data(context)[0].summary
+
     def test_ingested_dataset_is_not_reported(self):
         provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
         catalog = _catalog([("obs4MIPs.ERA-5.ta", "ERA-5", "ta", "2000-01-01", "2000-12-01", "/d/ta.nc")])
@@ -153,7 +174,7 @@ class TestUnreachableSourceTypes:
 
         assert len(findings) == 1
         assert "obs4ref" in findings[0].summary
-        assert "--source-type obs4mips" in findings[0].detail
+        assert "--source-type obs4mips" in findings[0].remedy
 
     def test_requested_source_type_is_not_reported(self):
         provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
@@ -161,6 +182,18 @@ class TestUnreachableSourceTypes:
         context = _context({SourceDatasetType.obs4MIPs: catalog}, [provider])
 
         assert check_unreachable_source_types(context) == []
+
+
+@pytest.mark.parametrize(
+    "count, expected",
+    [(0, "0 diagnostics"), (1, "1 diagnostic"), (2, "2 diagnostics")],
+)
+def test_pluralise(count, expected):
+    assert pluralise(count, "diagnostic") == expected
+
+
+def test_pluralise_with_an_irregular_plural():
+    assert pluralise(2, "registry", "registries") == "2 registries"
 
 
 def _registered(func, slug="a-check"):

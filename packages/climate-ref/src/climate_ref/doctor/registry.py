@@ -117,28 +117,19 @@ def check(slug: str, description: str) -> Callable[[CheckFunction], CheckFunctio
     return decorate
 
 
-def load_plugin_checks(force: bool = False) -> dict[str, str]:
+def load_plugin_checks() -> dict[str, str]:
     """
     Import the check modules advertised by other packages.
 
     Importing a module runs its ``@check`` declarations. A module that cannot be imported is
-    recorded rather than raised, so one broken plugin does not take the command down; the
+    recorded rather than raised, so one broken plugin does not take the command down. The
     error is reported as a finding by `run_checks`.
-
-    Parameters
-    ----------
-    force
-        Import every plugin again, even one already loaded. Only useful in tests.
 
     Returns
     -------
     :
         The load errors, keyed by entry point name.
     """
-    if force:
-        _LOADED_PLUGINS.clear()
-        _LOAD_ERRORS.clear()
-
     for entry_point in importlib.metadata.entry_points(group=CHECK_ENTRY_POINT_GROUP):
         # Importing twice would re-run the `@check` declarations, which refuse a duplicate slug.
         if entry_point.name in _LOADED_PLUGINS:

@@ -22,8 +22,8 @@ class DoctorContext:
     """
     The deployment being checked.
 
-    Providers and catalogs are loaded lazily so a check that does not need them does not
-    pay for them, and so a failure to load one provider does not stop the other checks.
+    Providers and catalogs are loaded lazily so a check that does not need them does not pay for them,
+    and so a failure to load one provider does not stop the other checks.
     """
 
     config: Config | None
@@ -40,8 +40,8 @@ class DoctorContext:
         """
         Build a context from catalogs already in hand, with no database behind it.
 
-        Source types absent from ``catalogs`` are treated as having nothing ingested, so
-        every check can run without reaching for a database that is not there.
+        Source types absent from ``catalogs`` are treated as having nothing ingested,
+        so every check can run without reaching for a database that is not there.
 
         Parameters
         ----------
@@ -68,9 +68,6 @@ class DoctorContext:
 
             if self.config is None or self.database is None:
                 raise ValueError("This context has no configuration to load providers from")
-            # Doctor only reads a provider's metadata, so it takes neither of the side effects
-            # `build_from_config` offers: `configure` bootstraps conda, and `register` writes to
-            # the database being inspected.
             registry = ProviderRegistry.build_from_config(
                 self.config, self.database, configure=False, register=False
             )

@@ -3,12 +3,14 @@ Check a deployment for problems that a solve would otherwise hide.
 """
 
 import json
+from collections.abc import Callable
 from enum import StrEnum
 from typing import Annotated
 
 import typer
 from attrs import asdict
 from rich.console import Console
+from rich.padding import Padding
 
 from climate_ref.doctor import (
     SEVERITY_ORDER,
@@ -21,6 +23,7 @@ from climate_ref.doctor import (
     run_checks,
     worst_severity,
 )
+from climate_ref.doctor.findings import pluralise
 
 _SEVERITY_STYLE = {
     Severity.ERROR: "red",
@@ -39,13 +42,59 @@ class DoctorFormat(StrEnum):
     json = "json"
 
 
-def _print_findings(console: Console, findings: list[Finding], verbose: bool) -> None:
+def _group[K](findings: list[Finding], key: Callable[[Finding], K]) -> dict[K, list[Finding]]:
+    """Group findings, keeping both the groups and their contents in the order given."""
+    grouped: dict[K, list[Finding]] = {}
     for finding in findings:
-        style = _SEVERITY_STYLE.get(finding.severity, "white")
-        console.print(f"[{style}]{finding.severity.upper():<7}[/{style}] {finding.summary}")
-        if finding.detail and verbose:
-            console.print(f"          {finding.detail}", style="dim")
-        console.print(f"          [dim]check: {finding.check}[/dim]")
+        grouped.setdefault(key(finding), []).append(finding)
+    return grouped
+
+
+def _indented(console: Console, text: str, indent: int, style: str = "") -> None:
+    """Print text at an indent that its wrapped continuation lines keep."""
+    console.print(Padding(text, (0, 0, 0, indent), expand=False), style=style)
+
+
+def _severity_counts(findings: list[Finding]) -> str:
+    counts = {severity: sum(f.severity == severity for f in findings) for severity in SEVERITY_ORDER}
+    return ", ".join(
+        pluralise(count, severity, severity if severity == Severity.INFO else None)
+        for severity, count in counts.items()
+        if count
+    )
+
+
+def _print_findings(console: Console, findings: list[Finding], verbose: bool) -> None:
+    """
+    Print the findings grouped by the check that produced them.
+
+    Everything shared within a group is stated once: the check that found them, and the remedy
+    they have in common. A deployment missing twenty reference datasets is one instruction and
+    twenty names, not twenty copies of the instruction.
+    """
+    for check, found in _group(findings, lambda f: f.check).items():
+        worst = worst_severity(found)
+        style = _SEVERITY_STYLE.get(worst, "white") if worst else "white"
+        console.print(f"[bold {style}]{check}[/bold {style}] [dim]{_severity_counts(found)}[/dim]")
+
+        # Only worth naming a finding's severity where the group holds more than one.
+        mixed = len({f.severity for f in found}) > 1
+
+        for (remedy, command), sharing in _group(found, lambda f: (f.remedy, f.command)).items():
+            if verbose and remedy:
+                # Ahead of the findings, so a long list is read already knowing what to do about it.
+                _indented(console, remedy, indent=2, style="dim")
+            if verbose and command:
+                # Printed alone and unwrapped so it stays pasteable in a narrow terminal.
+                console.print(Padding(command, (0, 0, 0, 2), expand=False), style="cyan", soft_wrap=True)
+            if verbose and (remedy or command):
+                console.print()
+            for finding in sharing:
+                prefix = f"[{_SEVERITY_STYLE[finding.severity]}]{finding.severity}[/] " if mixed else ""
+                _indented(console, f"{prefix}{finding.summary}", indent=2)
+                if finding.detail and verbose:
+                    _indented(console, finding.detail, indent=4, style="dim")
+            console.print()
 
 
 def _print_environment(console: Console, environment: EnvironmentReport) -> None:
@@ -57,23 +106,26 @@ def _print_environment(console: Console, environment: EnvironmentReport) -> None
             console.print(f"  {key}: {value}", style="dim")
 
 
-def _summary_line(findings: list[Finding]) -> str:
-    counts = {severity: sum(f.severity == severity for f in findings) for severity in SEVERITY_ORDER}
-    summary = ", ".join(f"{count} {severity}" for severity, count in counts.items() if count)
-    return f"{len(findings)} finding(s): {summary}"
+def _summary_line(findings: list[Finding], check_count: int) -> str:
+    return (
+        f"{pluralise(len(findings), 'finding')} from {pluralise(check_count, 'check')}: "
+        f"{_severity_counts(findings)}"
+    )
 
 
 def _table_cell(finding: Finding) -> str:
     """Render a finding as one Markdown cell, neutralising what would break the table."""
-    detail = f" {finding.detail}" if finding.detail else ""
-    return f"{finding.summary}.{detail}".replace("|", "\\|").replace("\n", " ")
+    parts = [f"{finding.summary}.", finding.detail, finding.remedy]
+    if finding.command:
+        parts.append(f"`{finding.command}`")
+    return " ".join(part for part in parts if part).replace("|", "\\|").replace("\n", " ")
 
 
 def _render_markdown(findings: list[Finding], environment: EnvironmentReport | None, check_count: int) -> str:
     """Render a report that can be pasted into an issue as-is."""
     lines = ["## `ref doctor`", ""]
     if findings:
-        lines.append(_summary_line(findings))
+        lines.append(_summary_line(findings, check_count))
         lines.append("")
         lines.append("| Severity | Check | Finding |")
         lines.append("| --- | --- | --- |")
@@ -81,7 +133,7 @@ def _render_markdown(findings: list[Finding], environment: EnvironmentReport | N
             f"| {finding.severity} | `{finding.check}` | {_table_cell(finding)} |" for finding in findings
         )
     else:
-        lines.append(f"No problems found ({check_count} checks).")
+        lines.append(f"No problems found ({pluralise(check_count, 'check')}).")
 
     if environment is not None:
         lines.extend(["", "<details><summary>Environment</summary>", ""])
@@ -99,8 +151,6 @@ def _render_markdown(findings: list[Finding], environment: EnvironmentReport | N
 
 def _render_json(findings: list[Finding], environment: EnvironmentReport | None) -> str:
     report: dict[str, object] = {
-        # `asdict` rather than named fields, so a field added to `Finding` reaches the JSON
-        # output as well as the text one.
         "findings": [asdict(finding) for finding in findings],
         "worst_severity": worst_severity(findings),
     }
@@ -147,12 +197,8 @@ def doctor(  # noqa: PLR0913
     """
     Check this deployment for data and configuration problems.
 
-    Reports reference data that is missing (so its diagnostics will never run), data ingested
-    under a source type nothing asks for, datasets whose files cover the same period twice,
-    and collections that overlap.
-
-    Use `--format markdown` to produce a report, including a description of this deployment,
-    that can be pasted into a bug report.
+    Use `--format markdown` to produce a report,
+    including a description of this deployment that can be pasted into a bug report.
 
     Exits non-zero if any error is found, or any warning when --strict is used.
     """
@@ -177,10 +223,11 @@ def doctor(  # noqa: PLR0913
         print(_render_markdown(findings, report, check_count))
     else:
         if findings:
+            # Stated before the findings so the size of the problem does not need scrolling to.
+            console.print(f"[bold]{_summary_line(findings, check_count)}[/bold]")
             _print_findings(console, findings, verbose)
-            console.print(f"\n{_summary_line(findings)}")
         else:
-            console.print(f"[green]No problems found[/green] ({check_count} checks)")
+            console.print(f"[green]No problems found[/green] ({pluralise(check_count, 'check')})")
         if report is not None:
             _print_environment(console, report)
 

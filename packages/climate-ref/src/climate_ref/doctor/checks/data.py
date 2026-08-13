@@ -2,17 +2,16 @@
 Checks over the data a deployment has ingested.
 
 These look for the conditions that make a solve quietly do the wrong thing rather than fail:
-reference data that no diagnostic can reach, reference data that is missing so its diagnostics
-never run, and datasets whose files cover the same period twice.
+reference data that no diagnostic can reach,
+reference data that is missing so its diagnostics never run,
+and datasets whose files cover the same period twice.
 """
 
 from collections import defaultdict
-from collections.abc import Iterator
 
 from climate_ref.doctor.context import DoctorContext
-from climate_ref.doctor.findings import Finding, Severity
+from climate_ref.doctor.findings import Finding, Severity, pluralise
 from climate_ref.doctor.registry import check
-from climate_ref_core.diagnostics import DataRequirement, Diagnostic
 from climate_ref_core.reference_data import (
     ESGF_OBS4MIPS,
     ReferenceDataset,
@@ -20,6 +19,7 @@ from climate_ref_core.reference_data import (
     source_ids_by_registry,
 )
 from climate_ref_core.source_types import SourceDatasetType
+from climate_ref_core.summary import summarize_provider
 
 
 @check(
@@ -31,9 +31,10 @@ def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
     Find datasets holding more than one file for the same period.
 
     This happens when the same dataset is ingested from two collections at the same version:
-    the files merge into one dataset because they share an ``instance_id``, and every diagnostic
-    reading it then sees the overlapping period twice. The obs4REF registry and the obs4MIPs
-    archive both carry several datasets, so ingesting both triggers it.
+    the files merge into one dataset because they share an ``instance_id``,
+    and every diagnostic reading it then sees the overlapping period twice.
+
+    The obs4REF registry and the obs4MIPs archive both carry several datasets, so ingesting both triggers it.
 
     Parameters
     ----------
@@ -78,11 +79,11 @@ def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
                 Finding(
                     severity=Severity.ERROR,
                     summary=f"{instance_id} holds {len(spans)} files covering overlapping periods",
-                    detail=(
-                        f"{len(overlaps)} overlapping pair(s), across: {', '.join(roots)}. "
-                        "A diagnostic reading this dataset sees the overlapping period more than "
-                        "once. This usually means the same dataset was ingested from two "
-                        "collections; re-ingest from one of them only."
+                    detail=f"{pluralise(len(overlaps), 'overlapping pair')}, across: {', '.join(roots)}.",
+                    remedy=(
+                        "A diagnostic reading one of these sees the overlapping period more than once. "
+                        "This usually means the same dataset was ingested from two collections. "
+                        "Re-ingest from one of them only."
                     ),
                 )
             )
@@ -126,44 +127,47 @@ def check_missing_reference_data(context: DoctorContext) -> list[Finding]:
         catalog = context.catalog(source_type)
         if len(catalog) and "source_id" in catalog:
             ingested[source_type.value].update(catalog["source_id"].unique())
-    # Deliberately no fallback between source types. A requirement is only satisfied by data
-    # ingested under its own source type, so obs4REF data sitting in the obs4ref table does
-    # not count towards an obs4MIPs requirement -- that is the situation this check exists to
-    # surface, and `check_unreachable_source_types` names the cause.
+
     findings = []
     for dataset in sorted(required, key=lambda d: (d.supplier, d.source_id)):
         if dataset.source_id in ingested[dataset.source_type]:
             continue
+        diagnostics = ", ".join(f"{d.provider_slug}/{d.slug}" for d in dataset.diagnostics)
+        remedy, command = _how_to_obtain(dataset)
         findings.append(
             Finding(
                 severity=Severity.WARNING,
                 summary=(
-                    f"{dataset.source_id} ({dataset.source_type}) is not ingested, "
-                    f"so {len(dataset.diagnostics)} diagnostic(s) will not run"
+                    f"{dataset.source_id} ({dataset.source_type}) is not ingested, so "
+                    f"{pluralise(len(dataset.diagnostics), 'diagnostic')} will not run"
                 ),
-                detail=_how_to_obtain(dataset),
+                detail=f"Needed for {', '.join(dataset.variable_ids)} by {diagnostics}.",
+                remedy=remedy,
+                command=command,
             )
         )
     return findings
 
 
-def _how_to_obtain(dataset: ReferenceDataset) -> str:
-    """Explain where a required reference dataset comes from."""
-    diagnostics = ", ".join(f"{d.provider_slug}/{d.slug}" for d in dataset.diagnostics)
-    variables = ", ".join(dataset.variable_ids)
+def _how_to_obtain(dataset: ReferenceDataset) -> tuple[str, str]:
+    """
+    Explain where a required reference dataset comes from.
+
+    The wording holds for every dataset obtained the same way, so the report can state it once
+    for all of them.
+    """
     if dataset.registry_name is not None:
-        how = (
-            f"Fetch with `ref datasets fetch-data --registry {dataset.registry_name} "
-            "--output-directory <dir>`, then ingest that directory."
+        return (
+            "Fetch these, then ingest the directory they land in.",
+            f"ref datasets fetch-data --registry {dataset.registry_name} --output-directory <dir>",
         )
-    elif dataset.supplier == ESGF_OBS4MIPS:
-        how = (
-            "Published to obs4MIPs on ESGF; `scripts/fetch-esgf.py` has a request for it. "
-            "See the 'Download required datasets' guide."
+    if dataset.supplier == ESGF_OBS4MIPS:
+        return (
+            "These are published to obs4MIPs on ESGF, and `scripts/fetch-esgf.py` has a request "
+            "for each. See the 'Download required datasets' guide.",
+            "",
         )
-    else:
-        how = "No registry carries this dataset and it is not known to be on ESGF."
-    return f"Needed for {variables} by {diagnostics}. {how}"
+    return ("No registry carries these and they are not known to be on ESGF.", "")
 
 
 @check(
@@ -174,9 +178,11 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
     """
     Find data ingested under a source type that no enabled diagnostic asks for.
 
-    The clearest case is obs4REF: the ``obs4ref`` source type exists and can be ingested,
-    but no diagnostic declares an obs4REF data requirement, and the solver only matches a
-    requirement against its own source type. Data ingested that way is never selected.
+    The clearest case is obs4REF.
+    The ``obs4ref`` source type exists and can be ingested,
+    but no diagnostic declares an obs4REF data requirement,
+    and the solver only matches a requirement against its own source type.
+    Data ingested that way is never selected.
 
     Parameters
     ----------
@@ -188,15 +194,16 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
     :
         One finding per source type that holds data nothing asks for.
     """
-    requested: set[SourceDatasetType] = set()
+    requested: set[str] = set()
     for provider in context.providers:
-        for diagnostic in provider.diagnostics():
-            for requirement in _iter_requirements(diagnostic):
-                requested.add(requirement.source_type)
+        for diagnostic in summarize_provider(provider).diagnostics:
+            for requirement_set in diagnostic.requirement_sets:
+                for requirement in requirement_set.requirements:
+                    requested.add(requirement.source_type)
 
     findings = []
     for source_type in SourceDatasetType:
-        if source_type in requested:
+        if source_type.value in requested:
             continue
         catalog = context.catalog(source_type)
         if not len(catalog):
@@ -206,32 +213,20 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
             Finding(
                 severity=Severity.WARNING,
                 summary=(
-                    f"{count} dataset(s) are ingested as '{source_type.value}', "
-                    "which no enabled diagnostic requires"
+                    f"{pluralise(count, 'dataset')} ingested as '{source_type.value}' "
+                    "that no enabled diagnostic requires"
                 ),
                 detail=(
                     "The solver matches a data requirement against its own source type only, "
-                    f"so nothing will select these datasets. If this is obs4REF data, re-ingest "
-                    f"it with `--source-type {SourceDatasetType.obs4MIPs.value}`."
+                    "so nothing will select these datasets."
+                ),
+                remedy=(
+                    "If this is obs4REF data, re-ingest it with "
+                    f"`--source-type {SourceDatasetType.obs4MIPs.value}`."
                 ),
             )
         )
     return findings
-
-
-def _iter_requirements(diagnostic: Diagnostic) -> Iterator[DataRequirement]:
-    """
-    Yield every data requirement a diagnostic declares.
-
-    A diagnostic declares either a flat sequence of requirements, or a sequence of
-    alternative branches of them. Data for any branch may end up being selected, so every
-    branch counts as requested.
-    """
-    for item in diagnostic.data_requirements:
-        if isinstance(item, DataRequirement):
-            yield item
-        else:
-            yield from item
 
 
 @check(
@@ -242,8 +237,8 @@ def check_overlapping_registries(context: DoctorContext) -> list[Finding]:
     """
     Report datasets that more than one registry carries.
 
-    Fetching both copies is what produces the duplicate coverage that
-    `check_duplicate_coverage` finds, so this is the warning before the error.
+    Fetching both copies is what produces the duplicate coverage that `check_duplicate_coverage` finds,
+    so this is the warning before the error.
 
     Parameters
     ----------
@@ -256,8 +251,8 @@ def check_overlapping_registries(context: DoctorContext) -> list[Finding]:
         One finding per dataset carried by more than one registry.
     """
     findings = []
-    # obs4REF registries answer for two source types, so the same overlap is reported under
-    # both. Collapse to one finding per dataset and set of registries.
+    # obs4REF registries answer for two source types, so the same overlap is reported under both.
+    # Collapse to one finding per dataset and set of registries.
     seen: set[tuple[str, tuple[str, ...]]] = set()
     for (_, source_id), registries in sorted(source_ids_by_registry().items()):
         if len(registries) < 2:  # noqa: PLR2004
@@ -269,11 +264,11 @@ def check_overlapping_registries(context: DoctorContext) -> list[Finding]:
         findings.append(
             Finding(
                 severity=Severity.INFO,
-                summary=f"{source_id} is carried by {len(registries)} registries",
-                detail=(
-                    f"Carried by: {', '.join(registries)}. Fetch it from one of them only; "
-                    "ingesting two copies of the same version gives one dataset holding both "
-                    "sets of files."
+                summary=f"{source_id} is carried by {pluralise(len(registries), 'registry', 'registries')}",
+                detail=f"Carried by: {', '.join(registries)}.",
+                remedy=(
+                    "Fetch each of these from one registry only. Ingesting two copies of the same "
+                    "version gives one dataset holding both sets of files."
                 ),
             )
         )

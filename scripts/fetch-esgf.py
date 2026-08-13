@@ -129,7 +129,10 @@ class Obs4MIPsRequest:
 
 Request = CMIP6Request | Obs4MIPsRequest
 
-# TODO use the data requirements from the diagnostics directly
+# TODO use the data requirements from the diagnostics directly.
+# Until then, `tests/scripts/test_fetch_esgf_coverage.py` checks the obs4MIPs requests below
+# against those requirements, so a diagnostic cannot start asking for reference data that
+# nothing here fetches.
 requests: list[Request] = [
     CMIP6Request(
         id="esmvaltool-climate-at-global-warmings-levels",
@@ -409,7 +412,8 @@ requests: list[Request] = [
             variable_id="ts",
         ),
     ),
-    # The PMP psl modes of variability request source_id "20CR", which is the obs4REF spelling.
+    # The PMP psl modes of variability diagnostics require source_id "20CR-V2".
+    # The obs4REF registry carries an older "20CR", which does not satisfy them.
     Obs4MIPsRequest(
         id="pmp-modes-20cr-obs4mips",
         facets=dict(

@@ -54,6 +54,57 @@ In the future, these datasets will be available on ESGF and can be fetched direc
 ref datasets fetch-data --registry obs4ref --output-directory $REF_CONFIGURATION/datasets/obs4ref
 ```
 
+[](){#fetch-obs4mips-datasets}
+
+## 2. Fetching obs4MIPs datasets from ESGF
+
+The obs4REF registry does not cover every reference dataset the diagnostics need.
+The following are already published to obs4MIPs on ESGF and must be fetched from there:
+
+| `source_id` | Variables | Required by |
+| --- | --- | --- |
+| `20CR-V2` | `psl` | `pmp/extratropical-modes-of-variability-{nam,nao,npo,pna,sam}` |
+| `C3S-GTO-ECV-9-0` | `toz` | `esmvaltool/ozone-{annual-cycle,lat-time,nh-mar,sh-oct}` |
+| `CERES-EBAF-4-2-1` | `rlut`, `rlutcs`, `rsut`, `rsutcs` | `esmvaltool/cloud-radiative-effects` |
+| `ERA-5` | `psl`, `ta`, `tas`, `ua` | `esmvaltool/cloud-scatterplots-reference`, `esmvaltool/regional-historical-{annual-cycle,timeseries,trend}` |
+| `NOAA-NCEI-LAI-AVHRR-5-0` | `lai` | `ilamb/lai-avh15c1` |
+
+A diagnostic whose reference data is missing simply plans no executions,
+so an incomplete fetch shows up as a diagnostic that never runs rather than as an error.
+
+The same [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py)
+script used for the CMIP6 input data can fetch these,
+and `--kind obs4mips` restricts it to the reference data:
+
+```bash
+python scripts/fetch-esgf.py --kind obs4mips
+```
+
+This is a much smaller download than the CMIP6 input data (a few GB).
+Files land in the [intake-esgf `local_cache`](https://intake-esgf.readthedocs.io/en/latest/configure.html),
+and are ingested with the `obs4mips` source type, the same as the obs4REF collection.
+
+/// admonition | Note
+
+The script also fetches `CERES-EBAF-4-2`, `GPCP-Monthly-3-2`, `HadISST-1-1` and `TropFlux-1-0`,
+which the obs4REF registry ships as well.
+These are the ESGF-published copies of datasets that were curated for the REF before publication,
+so if you have already fetched the obs4REF registry you do not need them.
+
+Fetching both is safe. Where the two copies carry the same version they share an `instance_id`
+and ingest as a single dataset. Where the published copy is newer
+(for example `CERES-EBAF-4-2` `v20240513` on ESGF against `v20230209` in obs4REF)
+both are ingested and the catalog uses the later version.
+///
+
+/// admonition | Why one request per `source_id`?
+
+An ESGF search intersects its facets,
+so a single request naming every `source_id` and every `variable_id` would ask each source
+for variables it does not have and return nothing.
+The requests in `scripts/fetch-esgf.py` are therefore grouped by `source_id`.
+///
+
 ### Future work
 
 The Climate-REF team is working on providing a more integrated way to fetch and manage these datasets from the Next Generation ESGF infrastructure that in the process of being deployed.

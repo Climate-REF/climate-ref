@@ -23,6 +23,7 @@ import os
 import re
 import resource
 import time
+import weakref
 from collections.abc import Callable
 from typing import Annotated, Any, Literal, TypeVar, cast
 
@@ -215,7 +216,10 @@ class HPCExecutor:
         **executor_config: str | float | int,
     ) -> None:
         config = config or Config.default()
-        database = database or Database.from_config(config, run_migrations=False)
+        if database is None:
+            database = Database.from_config(config, run_migrations=False)
+            # A database we opened is ours to close, so it does not outlive this executor.
+            weakref.finalize(self, database.close)
 
         self.config = config
         self.database = database

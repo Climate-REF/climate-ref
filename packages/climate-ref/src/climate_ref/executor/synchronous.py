@@ -1,3 +1,4 @@
+import weakref
 from typing import Any
 
 from loguru import logger
@@ -30,6 +31,8 @@ class SynchronousExecutor:
             config = Config.default()
         if database is None:
             database = Database.from_config(config, run_migrations=False)
+            # A database we opened is ours to close, so it does not outlive this executor.
+            weakref.finalize(self, database.close)
 
         self.database = database
         self.config = config

@@ -1,9 +1,35 @@
-from climate_ref_celery.worker_tasks import handle_failure, handle_result
+import pytest
+from climate_ref_celery import worker_tasks
+from climate_ref_celery.worker_tasks import _worker_database, handle_failure, handle_result
 from climate_ref_example import provider as example_provider
 
 from climate_ref.database import Database
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.provider_registry import _register_provider
+
+
+@pytest.fixture(autouse=True)
+def _clear_worker_database():
+    worker_tasks._worker_database.close()
+    yield
+    worker_tasks._worker_database.close()
+
+
+def test_worker_database_is_reused_across_tasks(config):
+    first = _worker_database.get(config)
+    second = _worker_database.get(config)
+
+    assert second is first
+
+
+def test_worker_database_reopens_for_a_different_url(config, tmp_path):
+    first = _worker_database.get(config)
+
+    config.db.database_url = f"sqlite:///{tmp_path}/other.db"
+    second = _worker_database.get(config)
+
+    assert second is not first
+    assert second.url == config.db.database_url
 
 
 def test_worker_task(mocker, config):

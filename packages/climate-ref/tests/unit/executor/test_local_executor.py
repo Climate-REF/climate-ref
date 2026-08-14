@@ -203,3 +203,38 @@ class TestLocalExecutor:
         forwarded = process_spy.call_args.args[2]
         assert isinstance(forwarded, ExecutionResult)
         assert forwarded.retryable is True
+
+    def test_join_marks_outstanding_when_ingestion_fails(self, metric_definition, mocker):
+        """
+        An execution still in flight when ``join`` raises is recorded as retryable.
+
+        Otherwise it keeps ``successful=None`` and only the stale-execution reaper recovers it,
+        hours later.
+        """
+        executor = LocalExecutor(n=1)
+        completed = Future()
+        completed.set_result(
+            ExecutionResult(
+                definition=metric_definition,
+                successful=True,
+                output_bundle_filename=None,
+                metric_bundle_filename=None,
+            )
+        )
+        executor._results = [
+            ExecutionFuture(completed, definition=metric_definition, execution_id=None),
+            ExecutionFuture(Future(), definition=metric_definition, execution_id=None),
+        ]
+
+        mocker.patch("climate_ref.executor.local.process_result", side_effect=ValueError("ingest broke"))
+        failure_spy = mocker.patch("climate_ref.executor.result_handling.process_result")
+
+        with pytest.raises(ValueError, match="ingest broke"):
+            executor.join(0)
+
+        # Both are recorded: the completed one raised before it could be ingested.
+        assert len(executor._results) == 0
+        assert failure_spy.call_count == 2
+        for call in failure_spy.call_args_list:
+            assert call.args[2].successful is False
+            assert call.args[2].retryable is True

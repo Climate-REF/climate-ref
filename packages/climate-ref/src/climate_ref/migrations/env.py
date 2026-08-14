@@ -116,26 +116,33 @@ def run_migrations_online() -> None:
     """
     connectable = config.attributes.get("connection", None)
 
+    # A database opened here is ours to close. One passed in belongs to the caller,
+    # which keeps using it after the migration returns.
+    db = None
     if connectable is None:
         db = Database.from_config(ref_config, run_migrations=False)
         connectable = db._engine
 
-    with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            render_as_batch=True,
-            include_object=include_object,
-        )
+    try:
+        with connectable.connect() as connection:
+            context.configure(
+                connection=connection,
+                target_metadata=target_metadata,
+                render_as_batch=True,
+                include_object=include_object,
+            )
 
-        with context.begin_transaction():
-            context.run_migrations()
+            with context.begin_transaction():
+                context.run_migrations()
 
-            # Set up the Operations context
-            # This is needed to alter the tables
-            with op.Operations.context(context.get_context()):  # type: ignore
-                _add_dimension_columns(connection, "metric_value", MetricValue)
-                _add_dimension_columns(connection, "execution_output", ExecutionOutput)
+                # Set up the Operations context
+                # This is needed to alter the tables
+                with op.Operations.context(context.get_context()):  # type: ignore
+                    _add_dimension_columns(connection, "metric_value", MetricValue)
+                    _add_dimension_columns(connection, "execution_output", ExecutionOutput)
+    finally:
+        if db is not None:
+            db.close()
 
 
 if context.is_offline_mode():

@@ -1,6 +1,7 @@
 import concurrent.futures
 import multiprocessing
 import time
+import weakref
 from concurrent.futures import ProcessPoolExecutor
 from typing import Any
 
@@ -102,6 +103,8 @@ class LocalExecutor:
             config = Config.default()
         if database is None:
             database = Database.from_config(config, run_migrations=False)
+            # A database we opened is ours to close, so it does not outlive this executor.
+            weakref.finalize(self, database.close)
         self.n = n
 
         self.database = database
@@ -287,6 +290,11 @@ class LocalExecutor:
 
                 # Wait for a short time before checking for completed executions
                 time.sleep(refresh_time)
+        except BaseException:
+            # Handle Ctrl-C and SystemExit exceptions to mark in-flight executions as retryable
+            self._fail_outstanding(results, t)
+            self.pool.shutdown(wait=False, cancel_futures=True)
+            raise
         finally:
             t.close()
 
@@ -304,7 +312,8 @@ class LocalExecutor:
     def _fail_outstanding(self, results: list[ExecutionFuture], progress: Any) -> None:
         for outstanding in list(results):
             logger.warning(
-                f"Execution {outstanding.definition.execution_slug()} did not complete within the timeout"
+                f"Execution {outstanding.definition.execution_slug()} was not collected. "
+                "Marking it failed-retryable"
             )
             self._mark_failed(outstanding, retryable=True)
             progress.update(n=1)

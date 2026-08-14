@@ -1,0 +1,162 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":enablePreCommit"
+  ],
+  "description": [
+    "Most Python constraints here are lower bounds, so bumping a constraint is almost never required.",
+    "Freshness comes from the uv.lock instead, which is why rangeStrategy is update-lockfile.",
+    "Groups are drawn so that anything able to move a diagnostic result stays reviewable on its own."
+  ],
+  "timezone": "Australia/Melbourne",
+  "dependencyDashboardTitle": "Renovate Dependency Dashboard",
+  "labels": ["dependencies"],
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
+  "prConcurrentLimit": 3,
+  "prHourlyLimit": 2,
+  "schedule": ["on monday"],
+  "rangeStrategy": "update-lockfile",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["on monday"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["dependencies", "security"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null,
+    "groupName": null
+  },
+  "osvVulnerabilityAlerts": true,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Provider conda environments. Renovate cannot regenerate the conda-lock.yml alongside them, so these are dashboard-only",
+      "managerFilePatterns": ["/environment\\.ya?ml$/"],
+      "matchStrings": [
+        "-\\s+(?<depName>[a-zA-Z0-9_.\\-]+)\\s*=\\s*(?<currentValue>[0-9][^\\s,]*)"
+      ],
+      "datasourceTemplate": "conda",
+      "packageNameTemplate": "conda-forge/{{{depName}}}",
+      "versioningTemplate": "loose"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Everything Python that is not called out below",
+      "matchManagers": ["pep621"],
+      "groupName": "python runtime dependencies"
+    },
+    {
+      "description": "Documentation and notebook tooling cannot change a diagnostic result",
+      "matchManagers": ["pep621"],
+      "matchDepNames": [
+        "/^mkdocs/",
+        "mkdocstrings",
+        "jupyterlab",
+        "jupytext",
+        "notebook",
+        "ipython",
+        "ipywidgets",
+        "seaborn",
+        "pymdown-extensions",
+        "beautifulsoup4",
+        "prettyprinter",
+        "pandas-indexing"
+      ],
+      "groupName": "python docs dependencies"
+    },
+    {
+      "description": "Linting, typing and test tooling, safe to batch hard",
+      "matchManagers": ["pep621", "pre-commit"],
+      "matchDepNames": [
+        "/^pytest/",
+        "/^types-/",
+        "/-stubs$/",
+        "/-types$/",
+        "ruff",
+        "mypy",
+        "coverage",
+        "pre-commit",
+        "towncrier",
+        "bump-my-version",
+        "liccheck",
+        "pip",
+        "astral-sh/ruff-pre-commit",
+        "astral-sh/uv-pre-commit",
+        "pre-commit/pre-commit-hooks",
+        "citation-file-format/cffconvert"
+      ],
+      "groupName": "python dev tooling"
+    },
+    {
+      "description": "These can shift numerical output, so keep them out of the general batch",
+      "matchManagers": ["pep621"],
+      "matchDepNames": [
+        "numpy",
+        "pandas",
+        "xarray",
+        "netcdf4",
+        "netCDF4",
+        "cftime",
+        "dask",
+        "pyarrow",
+        "intake-esgf",
+        "cartopy",
+        "matplotlib",
+        "fastprogress"
+      ],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "scientific stack"
+    },
+    {
+      "description": "The ILAMB engine drives diagnostic output, so it is reviewed on its own",
+      "matchDepNames": ["ilamb3"],
+      "groupName": "ilamb3",
+      "schedule": ["at any time"]
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions"
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "groupName": "container images"
+    },
+    {
+      "description": "A major is never hidden inside a batch",
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "The workspace packages resolve locally, so PyPI has nothing to say about them",
+      "matchDepNames": [
+        "climate-ref",
+        "climate-ref-core",
+        "climate-ref-celery",
+        "climate-ref-example",
+        "climate-ref-esmvaltool",
+        "climate-ref-ilamb",
+        "climate-ref-pmp"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Conda updates are listed on the dashboard and only become a PR once approved there",
+      "matchDatasources": ["conda"],
+      "groupName": "conda providers",
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "The provider conda environments pin their own interpreter",
+      "matchDatasources": ["conda"],
+      "matchDepNames": ["python"],
+      "enabled": false
+    }
+  ]
+}

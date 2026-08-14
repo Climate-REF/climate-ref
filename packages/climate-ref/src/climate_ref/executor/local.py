@@ -312,7 +312,7 @@ class LocalExecutor:
     def _fail_outstanding(self, results: list[ExecutionFuture], progress: Any) -> None:
         for outstanding in list(results):
             logger.warning(
-                f"Execution {outstanding.definition.execution_slug()} was not collected."
+                f"Execution {outstanding.definition.execution_slug()} was not collected. "
                 "Marking it failed-retryable"
             )
             self._mark_failed(outstanding, retryable=True)

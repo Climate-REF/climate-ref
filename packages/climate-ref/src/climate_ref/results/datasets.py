@@ -153,13 +153,14 @@ class DatasetsReader:
     keeps taking a bare slug, which is globally unique and needs no ``source_type``.
     """
 
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: Database, session: Session | None = None) -> None:
         self._db = database
+        self._session = session
 
     @property
     def session(self) -> Session:
         """The underlying database session."""
-        return self._db.session
+        return self._session if self._session is not None else self._db.session
 
     def _to_view(self, dataset: Dataset, *, include_files: bool) -> DatasetView:
         adapter = get_dataset_adapter(dataset.dataset_type.value)

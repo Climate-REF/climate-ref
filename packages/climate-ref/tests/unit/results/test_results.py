@@ -435,3 +435,29 @@ class TestDetectScalarOutliers:
         ]
         flags = _flags(scalars, min_n=4)
         assert all(v is False for v in flags.values())
+
+
+class TestReaderSession:
+    def test_defaults_to_the_database_session(self, dal_db):
+        reader = Reader(dal_db)
+        assert reader.session is dal_db.session
+        assert reader.values.session is dal_db.session
+        assert reader.executions.session is dal_db.session
+        assert reader.datasets.session is dal_db.session
+        assert reader.diagnostics.session is dal_db.session
+        assert reader.resources.session is dal_db.session
+
+    def test_an_explicit_session_is_used_by_every_sub_reader(self, dal_db):
+        with dal_db.session_scope() as session:
+            reader = Reader(dal_db, session=session)
+            assert reader.session is session
+            assert reader.values.session is session
+            assert reader.executions.session is session
+            assert reader.datasets.session is session
+            assert reader.diagnostics.session is session
+            assert reader.resources.session is session
+
+    def test_reads_through_an_explicit_session(self, dal_db):
+        with dal_db.session_scope() as session:
+            values = Reader(dal_db, session=session).values.scalar_values()
+        assert len(values.items) > 0

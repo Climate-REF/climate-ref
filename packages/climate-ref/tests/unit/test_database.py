@@ -677,3 +677,45 @@ class TestMigrationStatus:
         assert status["state"] is MigrationState.BEHIND
         assert status["current"] == "not_the_head_rev"
         assert status["head"] != "not_the_head_rev"
+
+
+class TestSessionScope:
+    """Tests for ``Database.session_scope``."""
+
+    def test_concurrent_scopes_get_different_sessions(self, db):
+        with db.session_scope() as first, db.session_scope() as second:
+            assert first is not second
+            assert first is not db.session
+            assert second is not db.session
+
+    def test_closing_one_scope_leaves_the_other_usable(self, db):
+        with db.session_scope() as outer:
+            with db.session_scope() as inner:
+                inner.execute(sqlalchemy.text("SELECT 1"))
+            # The inner scope has closed, so the outer one and the shared session keep working.
+            assert outer.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
+            assert db.session.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
+
+    def test_engine_is_not_disposed_on_exit(self, db):
+        pool = db._engine.pool
+        with db.session_scope() as session:
+            session.execute(sqlalchemy.text("SELECT 1"))
+        assert db._engine.pool is pool
+        assert db.session.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
+
+    def test_exception_rolls_back_and_closes(self, db):
+        db.session.add(Provider(slug="committed", name="Committed", version="v1"))
+        db.session.commit()
+
+        escaped = None
+        with pytest.raises(RuntimeError):
+            with db.session_scope() as session:
+                escaped = session
+                session.add(Provider(slug="rolled-back", name="Rolled back", version="v1"))
+                session.flush()
+                raise RuntimeError("boom")
+
+        assert escaped is not None
+        assert not escaped.in_transaction()
+        assert db.session.query(Provider).filter_by(slug="rolled-back").first() is None
+        assert db.session.query(Provider).filter_by(slug="committed").first() is not None

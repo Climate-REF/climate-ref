@@ -239,15 +239,19 @@ class ValuesReader:
 
     Constructed from a [Database][climate_ref.database.Database], which owns the session and the
     read-only story. All read methods return detached collections that outlive the session.
+
+    Pass ``session`` to read through a caller-owned session, for example one opened by
+    [Database.session_scope][climate_ref.database.Database.session_scope].
     """
 
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: Database, session: Session | None = None) -> None:
         self._db = database
+        self._session = session
 
     @property
     def session(self) -> Session:
         """The underlying database session."""
-        return self._db.session
+        return self._session if self._session is not None else self._db.session
 
     def _facets(self, base_stmt: Any, entity: Any) -> tuple[Facet, ...]:
         facet_map = collect_facets(self.session, base_stmt, entity)
@@ -454,47 +458,55 @@ class Reader:
     measurements, and
     [artifacts][climate_ref.results.values.Reader.artifacts] for output path resolution
     (only available when a ``results`` root is supplied).
+
+    By default every sub-reader queries through the database's long-lived session.
+    Pass ``session`` to read through a caller-owned session instead, for example one opened by
+    [Database.session_scope][climate_ref.database.Database.session_scope]. A concurrent caller
+    (a web request, a thread) should do that, because the long-lived session is not safe to share.
     """
 
-    def __init__(self, database: Database, results: Path | None = None) -> None:
+    def __init__(
+        self, database: Database, results: Path | None = None, session: Session | None = None
+    ) -> None:
         self._db = database
         self._results = results
+        self._session = session
 
     @property
     def session(self) -> Session:
         """The underlying database session."""
-        return self._db.session
+        return self._session if self._session is not None else self._db.session
 
     @functools.cached_property
     def values(self) -> ValuesReader:
         """Metric-value reads (scalar/series/facets)."""
-        return ValuesReader(self._db)
+        return ValuesReader(self._db, self._session)
 
     @functools.cached_property
     def executions(self) -> ExecutionsReader:
         """Execution-group and execution reads."""
-        return ExecutionsReader(self._db)
+        return ExecutionsReader(self._db, self._session)
 
     @functools.cached_property
     def datasets(self) -> "DatasetsReader":
         """Dataset reads."""
         from climate_ref.results.datasets import DatasetsReader  # noqa: PLC0415
 
-        return DatasetsReader(self._db)
+        return DatasetsReader(self._db, self._session)
 
     @functools.cached_property
     def diagnostics(self) -> "DiagnosticsReader":
         """Diagnostic reads."""
         from climate_ref.results.diagnostics import DiagnosticsReader  # noqa: PLC0415
 
-        return DiagnosticsReader(self._db)
+        return DiagnosticsReader(self._db, self._session)
 
     @functools.cached_property
     def resources(self) -> "ResourcesReader":
         """Per-execution resource measurement reads."""
         from climate_ref.results.resources import ResourcesReader  # noqa: PLC0415
 
-        return ResourcesReader(self._db)
+        return ResourcesReader(self._db, self._session)
 
     @functools.cached_property
     def artifacts(self) -> "ArtifactsReader":

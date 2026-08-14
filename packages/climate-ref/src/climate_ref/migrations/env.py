@@ -116,8 +116,7 @@ def run_migrations_online() -> None:
     """
     connectable = config.attributes.get("connection", None)
 
-    # A database opened here is ours to close. One passed in belongs to the caller,
-    # which keeps using it after the migration returns.
+    # A database opened here is ours to close.
     db = None
     if connectable is None:
         db = Database.from_config(ref_config, run_migrations=False)

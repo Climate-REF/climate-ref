@@ -291,9 +291,7 @@ class LocalExecutor:
                 # Wait for a short time before checking for completed executions
                 time.sleep(refresh_time)
         except BaseException:
-            # Whatever went wrong, the executions still in flight are not going to be collected,
-            # so record them as retryable rather than leaving them stuck with ``successful=None``.
-            # ``_fail_outstanding`` empties the list, so the timeout path does not do this twice.
+            # Handle Ctrl-C and SystemExit exceptions to mark in-flight executions as retryable
             self._fail_outstanding(results, t)
             self.pool.shutdown(wait=False, cancel_futures=True)
             raise
@@ -314,8 +312,8 @@ class LocalExecutor:
     def _fail_outstanding(self, results: list[ExecutionFuture], progress: Any) -> None:
         for outstanding in list(results):
             logger.warning(
-                f"Execution {outstanding.definition.execution_slug()} was not collected; "
-                "marking it failed-retryable"
+                f"Execution {outstanding.definition.execution_slug()} was not collected."
+                "Marking it failed-retryable"
             )
             self._mark_failed(outstanding, retryable=True)
             progress.update(n=1)

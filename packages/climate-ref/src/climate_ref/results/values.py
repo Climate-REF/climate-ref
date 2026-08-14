@@ -244,7 +244,7 @@ class ValuesReader:
     for example one opened by [Database.session_scope][climate_ref.database.Database.session_scope].
     """
 
-    def __init__(self, database: Database, session: Session | None = None) -> None:
+    def __init__(self, database: Database, *, session: Session | None = None) -> None:
         self._db = database
         self._session = session
 
@@ -480,33 +480,33 @@ class Reader:
     @functools.cached_property
     def values(self) -> ValuesReader:
         """Metric-value reads (scalar/series/facets)."""
-        return ValuesReader(self._db, self._session)
+        return ValuesReader(self._db, session=self._session)
 
     @functools.cached_property
     def executions(self) -> ExecutionsReader:
         """Execution-group and execution reads."""
-        return ExecutionsReader(self._db, self._session)
+        return ExecutionsReader(self._db, session=self._session)
 
     @functools.cached_property
     def datasets(self) -> "DatasetsReader":
         """Dataset reads."""
         from climate_ref.results.datasets import DatasetsReader  # noqa: PLC0415
 
-        return DatasetsReader(self._db, self._session)
+        return DatasetsReader(self._db, session=self._session)
 
     @functools.cached_property
     def diagnostics(self) -> "DiagnosticsReader":
         """Diagnostic reads."""
         from climate_ref.results.diagnostics import DiagnosticsReader  # noqa: PLC0415
 
-        return DiagnosticsReader(self._db, self._session)
+        return DiagnosticsReader(self._db, session=self._session)
 
     @functools.cached_property
     def resources(self) -> "ResourcesReader":
         """Per-execution resource measurement reads."""
         from climate_ref.results.resources import ResourcesReader  # noqa: PLC0415
 
-        return ResourcesReader(self._db, self._session)
+        return ResourcesReader(self._db, session=self._session)
 
     @functools.cached_property
     def artifacts(self) -> "ArtifactsReader":

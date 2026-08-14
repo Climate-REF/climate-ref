@@ -437,7 +437,7 @@ class TestDetectScalarOutliers:
         assert all(v is False for v in flags.values())
 
 
-def _unusable_session(database):
+def _shared_session_is_off_limits(database):
     raise AssertionError("the shared session must not be used when an explicit one was given")
 
 
@@ -466,7 +466,7 @@ class TestReaderSession:
 
         with dal_db.session_scope() as session:
             # Reaching for the shared session now fails, so the read can only use the scope's one.
-            mocker.patch.object(type(dal_db), "session", property(_unusable_session), create=True)
+            mocker.patch.object(type(dal_db), "session", property(_shared_session_is_off_limits), create=True)
             values = Reader(dal_db, session=session).values.scalar_values()
 
         assert len(values.items) == len(expected.items) > 0

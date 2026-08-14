@@ -153,7 +153,7 @@ class DatasetsReader:
     keeps taking a bare slug, which is globally unique and needs no ``source_type``.
     """
 
-    def __init__(self, database: Database, session: Session | None = None) -> None:
+    def __init__(self, database: Database, *, session: Session | None = None) -> None:
         self._db = database
         self._session = session
 

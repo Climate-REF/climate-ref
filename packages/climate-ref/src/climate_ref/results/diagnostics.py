@@ -192,7 +192,7 @@ class DiagnosticsReader:
     All read methods return detached DTOs that outlive the session.
     """
 
-    def __init__(self, database: Database, session: Session | None = None) -> None:
+    def __init__(self, database: Database, *, session: Session | None = None) -> None:
         self._db = database
         self._session = session
 

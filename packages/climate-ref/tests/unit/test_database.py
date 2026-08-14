@@ -692,16 +692,23 @@ class TestSessionScope:
     def test_scopes_opened_from_separate_threads_get_different_sessions(self, db):
         started = threading.Barrier(2, timeout=10)
         sessions = []
+        failures = []
         lock = threading.Lock()
 
         def open_scope():
-            with db.session_scope() as session:
+            # A thread swallows its own exceptions, so anything that goes wrong here has to be
+            # carried back out and asserted on by the test body.
+            try:
+                with db.session_scope() as session:
+                    with lock:
+                        sessions.append(session)
+                    # Hold the scope open until the other thread has one too,
+                    # so the two are genuinely live at the same moment.
+                    started.wait()
+                    assert session.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
+            except BaseException as exc:
                 with lock:
-                    sessions.append(session)
-                # Hold the scope open until the other thread has one too,
-                # so the two are genuinely live at the same moment.
-                started.wait()
-                assert session.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
+                    failures.append(exc)
 
         threads = [threading.Thread(target=open_scope) for _ in range(2)]
         for thread in threads:
@@ -710,6 +717,7 @@ class TestSessionScope:
             thread.join(timeout=10)
             assert not thread.is_alive()
 
+        assert failures == []
         assert len(sessions) == 2
         assert sessions[0] is not sessions[1]
         assert db.session not in sessions
@@ -752,5 +760,4 @@ class TestSessionScope:
         assert rollback.call_args_list[0].args[0] is escaped
         assert not escaped.in_transaction()
         assert db.session.query(Provider).filter_by(slug="rolled-back").first() is None
-        assert db.session.query(Provider).filter_by(slug="committed").first() is not None
         assert db.session.query(Provider).filter_by(slug="committed").first() is not None

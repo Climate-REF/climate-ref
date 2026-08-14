@@ -192,13 +192,14 @@ class DiagnosticsReader:
     All read methods return detached DTOs that outlive the session.
     """
 
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: Database, *, session: Session | None = None) -> None:
         self._db = database
+        self._session = session
 
     @property
     def session(self) -> Session:
         """The underlying database session."""
-        return self._db.session
+        return self._session if self._session is not None else self._db.session
 
     def _to_view(self, row: Any, stats_by_key: Mapping[tuple[str, str], ExecutionStats]) -> DiagnosticView:
         stat = stats_by_key.get((row.provider_slug, row.slug))

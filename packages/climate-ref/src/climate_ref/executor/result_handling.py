@@ -495,7 +495,11 @@ def handle_execution_result(  # noqa: PLR0913
             EXECUTION_LOG_FILENAME,
         )
     except FileNotFoundError:
-        logger.error(
+        # An execution abandoned before a worker picked it up has no output directory,
+        # so a missing log is expected rather than a sign that something went wrong.
+        started = (config.paths.scratch / execution.output_fragment).exists()
+        report = logger.error if started else logger.debug
+        report(
             f"Could not find log file {EXECUTION_LOG_FILENAME} in scratch directory: {config.paths.scratch}. "
             f"This is likely a system error (will be retried on next solve)."
         )

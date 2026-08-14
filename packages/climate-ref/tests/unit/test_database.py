@@ -680,6 +680,10 @@ class TestMigrationStatus:
         assert status["head"] != "not_the_head_rev"
 
 
+class _Cancelled(BaseException):
+    """Stands in for the cancellation error a dropped request raises."""
+
+
 class TestSessionScope:
     """Tests for ``Database.session_scope``."""
 
@@ -743,18 +747,21 @@ class TestSessionScope:
             assert db._engine.pool.checkedout() == before + 1
         assert db._engine.pool.checkedout() == before
 
-    def test_exception_rolls_back_and_closes(self, db, mocker):
+    @pytest.mark.parametrize("raised", [RuntimeError, _Cancelled])
+    def test_exception_rolls_back_and_closes(self, db, mocker, raised):
+        # _Cancelled derives from BaseException, as a cancelled request's error does,
+        # so narrowing the catch back to Exception fails this.
         rollback = mocker.spy(sqlalchemy.orm.Session, "rollback")
         db.session.add(Provider(slug="committed", name="Committed", version="v1"))
         db.session.commit()
 
         escaped = None
-        with pytest.raises(RuntimeError):
+        with pytest.raises(raised):
             with db.session_scope() as session:
                 escaped = session
                 session.add(Provider(slug="rolled-back", name="Rolled back", version="v1"))
                 session.flush()
-                raise RuntimeError("boom")
+                raise raised("boom")
 
         assert escaped is not None
         assert rollback.call_args_list[0].args[0] is escaped

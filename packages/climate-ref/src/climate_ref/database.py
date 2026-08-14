@@ -307,6 +307,8 @@ class Database:
 
         The session is rolled back if the block raises,
         and is always closed so its connection returns to the pool.
+        Nothing is committed on the caller's behalf,
+        so a block that writes has to commit before it ends or the close discards the work.
 
         Returns
         -------

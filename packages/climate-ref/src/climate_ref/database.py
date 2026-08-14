@@ -11,6 +11,8 @@ It provides a session object that can be used to interact with the database and 
 import enum
 import importlib.resources
 import shutil
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from types import TracebackType
@@ -26,7 +28,7 @@ from alembic.script import ScriptDirectory
 from loguru import logger
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError, IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from climate_ref.models import MetricValue, Table
 from climate_ref.models.execution import ExecutionOutput
@@ -290,8 +292,39 @@ class Database:
         if connect_args:
             engine_kwargs["connect_args"] = connect_args
         self._engine = sqlalchemy.create_engine(self.url, **engine_kwargs)
+        self._session_factory = sessionmaker(bind=self._engine)
         # TODO: Set autobegin=False
         self.session = Session(self._engine)
+
+    @contextmanager
+    def session_scope(self) -> Iterator[Session]:
+        """
+        Open a short-lived session for the duration of a block
+
+        A concurrent reader, such as a web request or a thread,
+        should use this rather than the long-lived `session` attribute, which is not safe to share.
+        The engine and its connection pool stay shared, so only the session is private to the caller.
+
+        The session is rolled back if the block raises,
+        and is always closed so its connection returns to the pool.
+        Nothing is committed on the caller's behalf,
+        so a block that writes has to commit before it ends or the close discards the work.
+
+        Returns
+        -------
+        :
+            A context manager yielding a fresh session.
+        """
+        session = self._session_factory()
+        try:
+            yield session
+        except BaseException:
+            # BaseException rather than Exception, because a cancelled request raises
+            # CancelledError and its writes must not survive either.
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     def __enter__(self) -> "Database":
         return self

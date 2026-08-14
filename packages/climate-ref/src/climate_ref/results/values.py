@@ -240,8 +240,8 @@ class ValuesReader:
     Constructed from a [Database][climate_ref.database.Database], which owns the session and the
     read-only story. All read methods return detached collections that outlive the session.
 
-    Pass ``session`` to read through a caller-owned session, for example one opened by
-    [Database.session_scope][climate_ref.database.Database.session_scope].
+    Pass ``session`` to read through a caller-owned session instead,
+    for example one opened by [Database.session_scope][climate_ref.database.Database.session_scope].
     """
 
     def __init__(self, database: Database, session: Session | None = None) -> None:
@@ -460,13 +460,13 @@ class Reader:
     (only available when a ``results`` root is supplied).
 
     By default every sub-reader queries through the database's long-lived session.
-    Pass ``session`` to read through a caller-owned session instead, for example one opened by
-    [Database.session_scope][climate_ref.database.Database.session_scope]. A concurrent caller
-    (a web request, a thread) should do that, because the long-lived session is not safe to share.
+    Pass ``session`` to read through a caller-owned session instead,
+    for example one opened by [Database.session_scope][climate_ref.database.Database.session_scope].
+    The sub-readers are cached, so a reader built this way must not outlive the scope it was given.
     """
 
     def __init__(
-        self, database: Database, results: Path | None = None, session: Session | None = None
+        self, database: Database, results: Path | None = None, *, session: Session | None = None
     ) -> None:
         self._db = database
         self._results = results

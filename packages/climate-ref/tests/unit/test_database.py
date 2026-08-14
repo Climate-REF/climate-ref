@@ -1,4 +1,5 @@
 import re
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -682,17 +683,41 @@ class TestMigrationStatus:
 class TestSessionScope:
     """Tests for ``Database.session_scope``."""
 
-    def test_concurrent_scopes_get_different_sessions(self, db):
+    def test_overlapping_scopes_get_different_sessions(self, db):
         with db.session_scope() as first, db.session_scope() as second:
             assert first is not second
             assert first is not db.session
             assert second is not db.session
 
+    def test_scopes_opened_from_separate_threads_get_different_sessions(self, db):
+        started = threading.Barrier(2, timeout=10)
+        sessions = []
+        lock = threading.Lock()
+
+        def open_scope():
+            with db.session_scope() as session:
+                with lock:
+                    sessions.append(session)
+                # Hold the scope open until the other thread has one too,
+                # so the two are genuinely live at the same moment.
+                started.wait()
+                assert session.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
+
+        threads = [threading.Thread(target=open_scope) for _ in range(2)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=10)
+            assert not thread.is_alive()
+
+        assert len(sessions) == 2
+        assert sessions[0] is not sessions[1]
+        assert db.session not in sessions
+
     def test_closing_one_scope_leaves_the_other_usable(self, db):
         with db.session_scope() as outer:
             with db.session_scope() as inner:
                 inner.execute(sqlalchemy.text("SELECT 1"))
-            # The inner scope has closed, so the outer one and the shared session keep working.
             assert outer.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
             assert db.session.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
 
@@ -703,7 +728,15 @@ class TestSessionScope:
         assert db._engine.pool is pool
         assert db.session.execute(sqlalchemy.text("SELECT 1")).scalar() == 1
 
-    def test_exception_rolls_back_and_closes(self, db):
+    def test_connection_returns_to_the_pool_on_exit(self, db):
+        before = db._engine.pool.checkedout()
+        with db.session_scope() as session:
+            session.execute(sqlalchemy.text("SELECT 1"))
+            assert db._engine.pool.checkedout() == before + 1
+        assert db._engine.pool.checkedout() == before
+
+    def test_exception_rolls_back_and_closes(self, db, mocker):
+        rollback = mocker.spy(sqlalchemy.orm.Session, "rollback")
         db.session.add(Provider(slug="committed", name="Committed", version="v1"))
         db.session.commit()
 
@@ -716,6 +749,8 @@ class TestSessionScope:
                 raise RuntimeError("boom")
 
         assert escaped is not None
+        assert rollback.call_args_list[0].args[0] is escaped
         assert not escaped.in_transaction()
         assert db.session.query(Provider).filter_by(slug="rolled-back").first() is None
+        assert db.session.query(Provider).filter_by(slug="committed").first() is not None
         assert db.session.query(Provider).filter_by(slug="committed").first() is not None

@@ -437,6 +437,10 @@ class TestDetectScalarOutliers:
         assert all(v is False for v in flags.values())
 
 
+def _unusable_session(database):
+    raise AssertionError("the shared session must not be used when an explicit one was given")
+
+
 class TestReaderSession:
     def test_defaults_to_the_database_session(self, dal_db):
         reader = Reader(dal_db)
@@ -457,7 +461,12 @@ class TestReaderSession:
             assert reader.diagnostics.session is session
             assert reader.resources.session is session
 
-    def test_reads_through_an_explicit_session(self, dal_db):
+    def test_a_read_goes_through_the_explicit_session(self, dal_db, mocker):
+        expected = Reader(dal_db).values.scalar_values()
+
         with dal_db.session_scope() as session:
+            # Reaching for the shared session now fails, so the read can only use the scope's one.
+            mocker.patch.object(type(dal_db), "session", property(_unusable_session), create=True)
             values = Reader(dal_db, session=session).values.scalar_values()
-        assert len(values.items) > 0
+
+        assert len(values.items) == len(expected.items) > 0

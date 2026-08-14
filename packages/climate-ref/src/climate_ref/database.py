@@ -301,13 +301,12 @@ class Database:
         """
         Open a short-lived session for the duration of a block
 
-        The session comes from a factory bound to the shared engine, so the connection pool
-        stays shared while the session itself is private to the caller.
-        This is what a concurrent reader (a web request, a thread) should use instead of the
-        long-lived `session` attribute, which is not safe to share.
+        A concurrent reader, such as a web request or a thread,
+        should use this rather than the long-lived `session` attribute, which is not safe to share.
+        The engine and its connection pool stay shared, so only the session is private to the caller.
 
-        The session is rolled back if the block raises, and always closed so its connection
-        returns to the pool. Neither `session` nor the engine is touched.
+        The session is rolled back if the block raises,
+        and is always closed so its connection returns to the pool.
 
         Returns
         -------
@@ -317,7 +316,9 @@ class Database:
         session = self._session_factory()
         try:
             yield session
-        except Exception:
+        except BaseException:
+            # BaseException rather than Exception, because a cancelled request raises
+            # CancelledError and its writes must not survive either.
             session.rollback()
             raise
         finally:

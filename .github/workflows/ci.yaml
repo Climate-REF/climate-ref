@@ -207,7 +207,7 @@ jobs:
   # Only runs on pull requests
   check-for-changelog:
     runs-on: ubuntu-latest
-    if: github.event.pull_request && github.actor != 'dependabot[bot]'
+    if: github.event.pull_request && github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]'
     steps:
       - name: Check out repository
         uses: actions/checkout@v7

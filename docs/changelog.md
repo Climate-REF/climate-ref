@@ -21,6 +21,45 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.17.2 (2026-08-14)
+
+### Features
+
+- Added `ref doctor`, which checks a deployment for the problems that a solve hides rather than reports:
+  reference data that is missing (so its diagnostics silently never run),
+  data ingested under a source type no diagnostic requires (so nothing selects it),
+  datasets whose files cover the same period twice, and reference collections that overlap.
+
+  - Findings are grouped by check, under the remedy they share, so a deployment missing twenty reference datasets reads as one instruction and twenty names rather than twenty copies of the instruction.
+  - Added a generated [Reference data](reference-data.md) page listing every observational dataset the diagnostics require and which collection supplies it.
+      The page and `ref doctor` are built from the same function, so they cannot disagree.
+
+  ([#865](https://github.com/Climate-REF/climate-ref/pull/865))
+- Added `Database.session_scope`, a context manager that hands out a short-lived database session.
+  The session is rolled back if the block raises and always closed,
+  while the engine and its connection pool stay shared.
+  `Reader` and its sub-readers now accept an optional `session`,
+  so a concurrent caller such as a web request can read through its own scope
+  instead of the shared `Database.session`, whose behaviour is unchanged. ([#876](https://github.com/Climate-REF/climate-ref/pull/876))
+
+### Bug Fixes
+
+- Removed the password from the database URL that is logged on connection.
+  A deployment using Postgres wrote its credentials into the log at every startup,
+  and into anything that log was pasted into. ([#865](https://github.com/Climate-REF/climate-ref/pull/865))
+- Fixed `ref doctor` producing a different report on each run.
+  Diagnostics that share a name were ordered by set iteration order, so two identical runs disagreed. ([#870](https://github.com/Climate-REF/climate-ref/pull/870))
+
+### Improved Documentation
+
+- Fixed the development installation instructions, which wrote `ref.toml` by redirecting `ref config list` into a hand-made directory instead of using `ref config init`.
+  The development documentation now links to the installation and getting started guides rather than repeating them. ([#869](https://github.com/Climate-REF/climate-ref/pull/869))
+
+### Trivial/Internal Changes
+
+- [#871](https://github.com/Climate-REF/climate-ref/pull/871), [#878](https://github.com/Climate-REF/climate-ref/pull/878)
+
+
 ## climate-ref 0.17.1 (2026-08-13)
 
 ### Improvements

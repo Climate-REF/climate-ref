@@ -127,7 +127,9 @@ but is useful for auditing which provider release produced a given result.
 ### For provider authors
 
 - Pin `climate-ref-core` with a compatible release constraint: `>=X.Y.0,<X+1.0.0`
-- Only import from modules listed in the [API surface](api-surface.md)
+- Only import symbols listed in the [API surface](api-surface.md), from the module the table names.
+  Some symbols live in a submodule (e.g. `climate_ref_core.pycmec.metric`)
+  rather than the package root
 - Avoid importing from `climate_ref` (the app package) in production code;
   use `try/except ImportError` for optional integration (e.g., data ingestion)
 - Run the compatibility CI workflow to catch issues early

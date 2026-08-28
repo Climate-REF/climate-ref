@@ -173,10 +173,6 @@ def _prepare_recipe(
 ) -> None:
     """
     Prune the recipe to one diagnostic and insert the solved model dataset.
-
-    The model time ranges come from the base recipe, which is written for CMIP6.
-    CMIP7 `historical` runs through 2021 instead of 2014,
-    so diagnostics that support CMIP7 pass the time range to use there.
     """
     cmip_source = get_cmip_source_type(input_files)
     recipe_variables = dataframe_to_recipe(input_files[cmip_source])
@@ -186,13 +182,14 @@ def _prepare_recipe(
     recipe["datasets"] = [dataset]
     recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
 
+    # The recipe includes CMIP6 time ranges
     if cmip_source == SourceDatasetType.CMIP7 and cmip7_timerange is not None:
         recipe["diagnostics"][diagnostic]["variables"][variable]["timerange"] = cmip7_timerange
 
 
 class O3LatTimeMapplot(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics - zonal mean total column ozone vs. time.
+    Calculate the ozone diagnostics: zonal mean total column ozone vs. time.
     """
 
     name = "Ozone Diagnostics"
@@ -221,7 +218,7 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
 
 class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics - October SH polar mean (60S-85S) time series.
+    Calculate the ozone diagnostics: October SH polar mean (60S-85S) time series.
     """
 
     name = "Ozone Diagnostics"
@@ -325,7 +322,7 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
 
 class O3ZonalMeanProfiles(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics - stratospheric zonal mean profiles.
+    Calculate the ozone diagnostics: stratospheric zonal mean profiles.
     """
 
     name = "Ozone Diagnostics"
@@ -413,7 +410,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
 
 class O3LatMonthMapplot(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics - zonal mean total column ozone vs. annual cycle plot.
+    Calculate the ozone diagnostics: zonal mean total column ozone vs. annual cycle plot.
     """
 
     name = "Ozone Diagnostics"

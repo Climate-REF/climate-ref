@@ -5,7 +5,7 @@
     "output.json": "758c03396e0b6b00a89ace6651712a6f9dc268f5d207fe3bbb35365351b68205",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -16,24 +16,24 @@
       "size": 14596
     },
     "executions/recipe/plots/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map.png": {
-      "sha256": "0a94c85a94b0baf86a6c71ea499b711625e172ee50ddd13a38be84aafe465001",
-      "size": 168083
+      "sha256": "7d2e4f1ef38c053116c9b22d81267e1d66a5ac694b34947dbbe0d5be63879c80",
+      "size": 170624
     },
     "executions/recipe/run/lat_time_mapplot/plot/diagnostic_provenance.yml": {
-      "sha256": "e9a5b935d9649ae35e61c93ed9bc41b01bd047ad5152024ed1bddd3c443d3001",
+      "sha256": "49390b691a621c5845656cc428de4a23655f94354479d35e5eaddfc8a690add6",
       "size": 2061
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
-      "sha256": "6426b5d58587d8b1b17a5ab466f7f6c371ef4e6e293b0f1767855df8393984b4",
-      "size": 64527
+      "sha256": "3eefd2b0b708115b499b1c6ab0063f5290bee7b5be736cadd549908ea7019f41",
+      "size": 76660
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
-      "sha256": "4729d352ad9ff1e8cd2e9923c6332602f0f71e7c3f29f819557d6ce53a6f0e83",
-      "size": 64718
+      "sha256": "d9ea384afde8c9d52f750cc15aa5a56e584d3db6f599b9e89d3cf8c405393ceb",
+      "size": 76660
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
-      "sha256": "9b1813a9d073d759187002b85bcce5311dcb19233ab010782d996f28e5f6ebd0",
-      "size": 63332
+      "sha256": "5b5f90a9846f5c83bdc194b4a0737140ef7f986df00ad16dea389c20d2c40397",
+      "size": 75761
     },
     "output.json": {
       "sha256": "013dd551a76fc70a5d76833df9d75f53d3602f5d7f3b797f6c2367fa5a58e92c",
@@ -45,5 +45,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

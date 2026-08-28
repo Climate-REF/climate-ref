@@ -13,10 +13,10 @@ cmip7:
     branded_variable: toz_tavg-u-hxy-u
     branding_suffix: tavg-u-hxy-u
     calendar: noleap
-    end_time: '2014-12-16 12:00:00'
+    end_time: '2021-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: toz_tavg-u-hxy-u_mon_glb_gr1_GFDL-ESM4_historical_r1i1p1f1_195001-201412.nc
+    filename: toz_tavg-u-hxy-u_mon_glb_gr1_GFDL-ESM4_historical_r1i1p1f1_195701-202112.nc
     finalised: true
     frequency: mon
     grid_label: gr1
@@ -36,10 +36,10 @@ cmip7:
     region: glb
     source_id: GFDL-ESM4
     standard_name: equivalent_thickness_at_stp_of_atmosphere_ozone_content
-    start_time: '1950-01-16 12:00:00'
-    time_range: 1950-01-16 12:00:00-2014-12-16 12:00:00
+    start_time: '1957-01-16 12:00:00'
+    time_range: 1957-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/1310fc4c-e819-4c43-88f9-bc454ed41618
+    tracking_id: hdl:21.14107/0b220858-9a70-45b8-a87b-631ec2203563
     units: m
     variable_id: toz
     variant_label: r1i1p1f1

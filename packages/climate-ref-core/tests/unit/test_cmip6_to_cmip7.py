@@ -25,7 +25,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     get_frequency_from_table,
     get_realm,
     parse_variant_label,
-    shift_time_axis_end,
+    repeat_final_year_to,
     suppress_bounds_coordinates,
 )
 
@@ -1047,8 +1047,8 @@ def _monthly_cftime(start_year: int, start_month: int, n: int) -> list[cftime.da
     return out
 
 
-class TestShiftTimeAxisEnd:
-    """Test relabelling a monthly time axis so it ends on a target month."""
+class TestRepeatFinalYearTo:
+    """Test padding a monthly series out to a target month by repeating its final year."""
 
     def _monthly_dataset(self, start_year: int, n: int) -> xr.Dataset:
         time = _monthly_cftime(start_year, 1, n)
@@ -1066,60 +1066,87 @@ class TestShiftTimeAxisEnd:
         ds["time"].attrs["bounds"] = "time_bnds"
         return ds
 
-    def test_shifts_end_to_target(self):
+    def test_extends_end_to_target(self):
         """The last timestep lands exactly on the requested year/month."""
-        ds = self._monthly_dataset(1850, 12 * 20)  # 1850-01 .. 1869-12
-        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
+        ds = self._monthly_dataset(1950, 12 * 65)  # 1950-01 .. 2014-12
+        extended = repeat_final_year_to(ds, end_year=2021, end_month=12)
 
-        last = shifted["time"].values[-1]
-        first = shifted["time"].values[0]
+        last = extended["time"].values[-1]
         assert (last.year, last.month) == (2021, 12)
-        # 20 years of monthly data => starts 2002-01
-        assert (first.year, first.month) == (2002, 1)
 
-    def test_preserves_length_and_spacing(self):
-        """Every month is still present, one step apart, after the shift."""
-        n = 12 * 5
-        ds = self._monthly_dataset(1990, n)
-        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
+    def test_keeps_the_real_years_where_they_are(self):
+        """Padding is additive, so the real timesteps keep their dates and values."""
+        n = 12 * 65
+        ds = self._monthly_dataset(1950, n)
+        extended = repeat_final_year_to(ds, end_year=2021, end_month=12)
 
-        times = shifted["time"].values
-        assert len(times) == n
-        # Consecutive months differ by exactly one calendar month.
+        first = extended["time"].values[0]
+        assert (first.year, first.month) == (1950, 1)
+        np.testing.assert_array_equal(extended["tas"].values[:n], ds["tas"].values)
+
+    def test_pads_with_whole_months_in_sequence(self):
+        """The added months continue the series, one step apart."""
+        ds = self._monthly_dataset(1990, 12 * 5)  # 1990-01 .. 1994-12
+        extended = repeat_final_year_to(ds, end_year=2000, end_month=12)
+
+        times = extended["time"].values
+        assert len(times) == 12 * 11
         for prev, nxt in itertools.pairwise(times):
-            expected = prev.year * 12 + prev.month  # next month index
-            assert nxt.year * 12 + (nxt.month - 1) == expected
+            assert nxt.year * 12 + (nxt.month - 1) == prev.year * 12 + prev.month
+
+    def test_repeats_the_final_year_values(self):
+        """Each fabricated month reuses the same month from the final real year."""
+        n = 12 * 3
+        ds = self._monthly_dataset(1990, n)  # 1990-01 .. 1992-12
+        extended = repeat_final_year_to(ds, end_year=1994, end_month=12)
+
+        final_year = ds["tas"].values[-12:]
+        np.testing.assert_array_equal(extended["tas"].values[n : n + 12], final_year)
+        np.testing.assert_array_equal(extended["tas"].values[n + 12 :], final_year)
+
+    def test_repeats_a_short_series(self):
+        """A series shorter than a year repeats whatever it has."""
+        ds = self._monthly_dataset(1990, 3)  # 1990-01 .. 1990-03
+        extended = repeat_final_year_to(ds, end_year=1990, end_month=9)
+
+        assert len(extended["time"]) == 9
+        np.testing.assert_array_equal(extended["tas"].values, [0.0, 1.0, 2.0] * 3)
 
     def test_preserves_calendar_type(self):
-        """The shifted axis keeps its cftime calendar."""
+        """The padded axis keeps its cftime calendar."""
         ds = self._monthly_dataset(2000, 12)
         original_calendar = ds["time"].values[0].calendar
-        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
-        last = shifted["time"].values[-1]
+        extended = repeat_final_year_to(ds, end_year=2021, end_month=12)
+        last = extended["time"].values[-1]
         assert isinstance(last, cftime.datetime)
         assert last.calendar == original_calendar
 
-    def test_shifts_time_bounds(self):
-        """time_bnds are shifted in lock-step with the time coordinate."""
+    def test_pads_time_bounds(self):
+        """time_bnds are extended in lock-step with the time coordinate."""
         ds = self._monthly_dataset(1900, 24)
-        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
+        extended = repeat_final_year_to(ds, end_year=2021, end_month=12)
 
-        last_time = shifted["time"].values[-1]
-        last_bnds = shifted["time_bnds"].values[-1]
-        # Upper bound matches the final coordinate label.
+        last_time = extended["time"].values[-1]
+        last_bnds = extended["time_bnds"].values[-1]
         assert (last_bnds[1].year, last_bnds[1].month) == (last_time.year, last_time.month)
 
     def test_no_op_when_already_at_target(self):
-        """No shift when the series already ends on the target month."""
+        """No padding when the series already ends on the target month."""
         ds = self._monthly_dataset(2002, 12 * 20)  # ends 2021-12 already
-        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
-        assert (shifted["time"].values[-1].year, shifted["time"].values[-1].month) == (2021, 12)
-        assert (shifted["time"].values[0].year, shifted["time"].values[0].month) == (2002, 1)
+        extended = repeat_final_year_to(ds, end_year=2021, end_month=12)
+        assert len(extended["time"]) == len(ds["time"])
+        assert (extended["time"].values[-1].year, extended["time"].values[-1].month) == (2021, 12)
+
+    def test_no_op_when_past_target(self):
+        """A series that already runs past the target is left alone."""
+        ds = self._monthly_dataset(2002, 12 * 20)  # ends 2021-12
+        extended = repeat_final_year_to(ds, end_year=2010, end_month=6)
+        assert len(extended["time"]) == len(ds["time"])
 
     def test_no_time_coordinate_returns_unchanged(self):
         """Fixed-frequency datasets (no time coord) pass through untouched."""
         ds = xr.Dataset({"sftlf": (["lat", "lon"], np.zeros((3, 4)))})
-        result = shift_time_axis_end(ds, end_year=2021)
+        result = repeat_final_year_to(ds, end_year=2021)
         assert "time" not in result.coords
 
     def test_non_cftime_axis_raises(self):
@@ -1127,39 +1154,39 @@ class TestShiftTimeAxisEnd:
         time = np.array(["1990-01-16", "1990-02-16"], dtype="datetime64[ns]")
         ds = xr.Dataset({"tas": ("time", [1.0, 2.0])}, coords={"time": time})
         with pytest.raises(TypeError, match="cftime"):
-            shift_time_axis_end(ds, end_year=2021)
+            repeat_final_year_to(ds, end_year=2021)
 
     def test_does_not_mutate_input(self):
         """The original dataset's time axis is left unchanged."""
         ds = self._monthly_dataset(1850, 24)
-        original_last = ds["time"].values[-1]
-        shift_time_axis_end(ds, end_year=2021, end_month=12)
-        assert ds["time"].values[-1] == original_last
+        original_length = len(ds["time"])
+        repeat_final_year_to(ds, end_year=2021, end_month=12)
+        assert len(ds["time"]) == original_length
 
     @pytest.mark.parametrize("end_month", [0, 13, -1])
     def test_invalid_end_month_raises(self, end_month):
         """``end_month`` outside 1..12 fails fast rather than mislabelling."""
         ds = self._monthly_dataset(1850, 12)
         with pytest.raises(ValueError, match=r"end_month must be in 1\.\.12"):
-            shift_time_axis_end(ds, end_year=2021, end_month=end_month)
+            repeat_final_year_to(ds, end_year=2021, end_month=end_month)
 
     def test_non_december_end_month(self):
-        """A non-December target shifts month-of-year, keeping spacing."""
+        """A non-December target stops on that month, keeping spacing."""
         ds = self._monthly_dataset(1990, 12 * 3)  # 1990-01 .. 1992-12
-        shifted = shift_time_axis_end(ds, end_year=2021, end_month=6)
-        last = shifted["time"].values[-1]
-        assert (last.year, last.month) == (2021, 6)
-        for prev, nxt in itertools.pairwise(shifted["time"].values):
+        extended = repeat_final_year_to(ds, end_year=1995, end_month=6)
+        last = extended["time"].values[-1]
+        assert (last.year, last.month) == (1995, 6)
+        for prev, nxt in itertools.pairwise(extended["time"].values):
             assert nxt.year * 12 + (nxt.month - 1) == prev.year * 12 + prev.month
 
     def test_clamps_day_to_shorter_target_month(self):
-        """A day-31 label shifted onto a shorter month is clamped, not rejected."""
-        # Single Jan-31 timestep shifted forward one month -> Feb, which has no
-        # 31st (28 on the NoLeap calendar); the day must clamp instead of raising.
+        """A day-31 label copied onto a shorter month is clamped, not rejected."""
+        # Single Jan-31 timestep repeated into Feb, which has no 31st (28 on the
+        # NoLeap calendar); the day must clamp instead of raising.
         time = [cftime.DatetimeNoLeap(2000, 1, 31)]
         ds = xr.Dataset({"tas": ("time", [1.0])}, coords={"time": time})
-        shifted = shift_time_axis_end(ds, end_year=2000, end_month=2)
-        last = shifted["time"].values[-1]
+        extended = repeat_final_year_to(ds, end_year=2000, end_month=2)
+        last = extended["time"].values[-1]
         assert (last.year, last.month, last.day) == (2000, 2, 28)
 
 
@@ -1195,11 +1222,12 @@ class TestConvertCmip6DatasetExtendHistorical:
         converted = convert_cmip6_dataset(ds)
         assert list(converted["time"].values) == list(original_time)
 
-    def test_extend_relabels_end(self):
-        """With the opt-in, the converted series ends on the requested month."""
+    def test_extend_pads_to_end(self):
+        """With the opt-in, the converted series is padded out to the requested month."""
         ds = self._cmip6_monthly()
         converted = convert_cmip6_dataset(ds, extend_historical_to=(2021, 12))
         last = converted["time"].values[-1]
         first = converted["time"].values[0]
         assert (last.year, last.month) == (2021, 12)
-        assert (first.year, first.month) == (2002, 1)
+        # Only the tail is fabricated, so the real years keep their dates.
+        assert (first.year, first.month) == (1850, 1)

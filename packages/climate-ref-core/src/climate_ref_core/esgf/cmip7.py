@@ -21,7 +21,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     format_cmip7_time_range,
     get_dreq_entry,
     get_frequency_from_table,
-    shift_time_axis_end,
+    repeat_final_year_to,
     suppress_bounds_coordinates,
 )
 from climate_ref_core.data import resolve_cache_dir
@@ -51,8 +51,8 @@ def _convert_file_to_cmip7(
     cmip7_facets
         CMIP7 facets for the output path
     extend_historical_to
-        Opt-in ``(end_year, end_month)`` passed to :func:`convert_cmip6_dataset`
-        to relabel the time axis so historical coverage reaches that month.
+        Opt-in ``(end_year, end_month)``. The series is padded out to that month by
+        repeating its final year, so historical coverage reaches it.
         Defaults to ``None`` (time axis untouched).
 
     Returns
@@ -85,12 +85,12 @@ def _convert_file_to_cmip7(
 
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
     with xr.open_dataset(cmip6_path, decode_times=time_coder) as ds:
-        # When fabricating extended historical coverage, relabel the time axis first
-        # so both the filename time range and the written data reflect the new dates.
+        # When fabricating extended historical coverage, pad the series first so both the
+        # filename time range and the written data reflect the added months.
         source_ds = ds
         if extend_historical_to is not None:
             end_year, end_month = extend_historical_to
-            source_ds = shift_time_axis_end(ds, end_year=end_year, end_month=end_month)
+            source_ds = repeat_final_year_to(ds, end_year=end_year, end_month=end_month)
 
         frequency = str(cmip7_facets.get("frequency", "mon"))
         time_range = format_cmip7_time_range(source_ds, frequency)
@@ -199,11 +199,11 @@ class CMIP7Request:
         time_span
             Optional time range filter (start, end) in YYYY-MM format
         extend_historical_to
-            Opt-in ``(end_year, end_month)``. When set, each converted CMIP7 file has
-            its time axis relabelled so historical coverage ends on that month, letting
-            us fabricate CMIP7 data for years without real CMIP6 source data (e.g. the
-            fire diagnostic's 2002-2021 window). Defaults to ``None`` (time axis
-            untouched), so other CMIP7 conversions are unchanged.
+            Opt-in ``(end_year, end_month)``. When set, a converted CMIP7 file that stops
+            short has its final year repeated until it ends on that month, letting us
+            fabricate CMIP7 data for years without real CMIP6 source data (e.g. the fire
+            diagnostic's 2002-2021 window). Files that already reach it are untouched, as
+            are all conversions when this defaults to ``None``.
         """
         self.slug = slug
         self.facets = facets

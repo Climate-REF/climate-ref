@@ -262,7 +262,6 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        # The CMIP7 start is bounded by the fabricated test data, which begins in 1957.
         _prepare_recipe(
             recipe,
             input_files,
@@ -315,7 +314,6 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        # The CMIP7 start is bounded by the fabricated test data, which begins in 1957.
         _prepare_recipe(
             recipe,
             input_files,

@@ -189,7 +189,7 @@ def _prepare_recipe(
 
 class O3LatTimeMapplot(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics: zonal mean total column ozone vs. time.
+    Calculate the ozone diagnostics - zonal mean total column ozone vs. time.
     """
 
     name = "Ozone Diagnostics"
@@ -218,7 +218,7 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
 
 class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics: October SH polar mean (60S-85S) time series.
+    Calculate the ozone diagnostics - October SH polar mean (60S-85S) time series.
     """
 
     name = "Ozone Diagnostics"
@@ -270,7 +270,7 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
 
 class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics: March NH polar mean (60N-85N) time series.
+    Calculate the ozone diagnostics - March NH polar mean (60N-85N) time series.
     """
 
     name = "Ozone Diagnostics"
@@ -322,7 +322,7 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
 
 class O3ZonalMeanProfiles(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics: stratospheric zonal mean profiles.
+    Calculate the ozone diagnostics - stratospheric zonal mean profiles.
     """
 
     name = "Ozone Diagnostics"
@@ -410,7 +410,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
 
 class O3LatMonthMapplot(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics: zonal mean total column ozone vs. annual cycle plot.
+    Calculate the ozone diagnostics - zonal mean total column ozone vs. annual cycle plot.
     """
 
     name = "Ozone Diagnostics"

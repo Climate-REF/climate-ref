@@ -522,8 +522,11 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
 
     Raises
     ------
+    TypeError
+        If the time axis is not ``cftime``.
     ValueError
-        If ``end_month`` is outside 1-12, or the series is shorter than the year it repeats.
+        If ``end_month`` is outside 1-12, the series does not end in December,
+        or its final calendar year is incomplete.
     """
     if not 1 <= end_month <= _MONTHS_PER_YEAR:
         raise ValueError(f"end_month must be in 1..12, got {end_month}")
@@ -549,13 +552,21 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
 
     bounds_name = ds["time"].attrs.get("bounds")
 
+    def _restamp(t: cftime.datetime, shift: int) -> cftime.datetime:
+        year = t.year + shift
+        try:
+            return t.replace(year=year)  # type: ignore[attr-defined,no-any-return]
+        except ValueError:
+            # A leap day has no counterpart in a common year, so take the day before.
+            return t.replace(year=year, day=t.day - 1)  # type: ignore[attr-defined,no-any-return]
+
     def _relabel(block: xr.Dataset, shift: int) -> xr.Dataset:
         relabelled = block.copy()
-        # Move the bounds before the coordinate, so xarray does not align the two time axes.
         if bounds_name and bounds_name in relabelled:
-            bnds = [[b.replace(year=b.year + shift) for b in row] for row in block[bounds_name].values]
+            bnds = [[_restamp(b, shift) for b in row] for row in block[bounds_name].values]
+            # Assign as (dims, data) so the new bounds are not aligned against the old time axis.
             relabelled[bounds_name] = (block[bounds_name].dims, np.array(bnds))
-        return relabelled.assign_coords(time=[t.replace(year=t.year + shift) for t in block["time"].values])
+        return relabelled.assign_coords(time=[_restamp(t, shift) for t in block["time"].values])
 
     final_year = ds.sel(time=str(last.year))
     if len(final_year["time"]) != _MONTHS_PER_YEAR:

@@ -1184,6 +1184,16 @@ class TestRepeatFinalYearTo:
         for prev, nxt in itertools.pairwise(extended["time"].values):
             assert nxt.year * 12 + (nxt.month - 1) == prev.year * 12 + prev.month
 
+    def test_leap_day_bound_falls_back_a_day(self):
+        """A leap day has no counterpart in a common year, so it lands on the 28th."""
+        time = [cftime.DatetimeGregorian(2016, month, 29) for month in range(1, 13)]
+        ds = xr.Dataset({"tas": ("time", np.zeros(12))}, coords={"time": time})
+
+        extended = repeat_final_year_to(ds, end_year=2017, end_month=12)
+
+        february = [t for t in extended["time"].values if t.year == 2017 and t.month == 2]
+        assert february[0].day == 28
+
     def test_keeps_the_day_of_month(self):
         """Only the year label moves, so each fabricated month keeps its day."""
         ds = self._monthly_dataset(1990, 12 * 2)

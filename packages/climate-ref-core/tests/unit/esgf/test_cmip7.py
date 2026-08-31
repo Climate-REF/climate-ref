@@ -776,3 +776,66 @@ class TestLatestFile:
         xr.Dataset({"areacella": ("lat", np.zeros(2))}, coords={"lat": [0.0, 1.0]}).to_netcdf(fixed)
 
         assert _latest_file([fixed]) is None
+
+
+class TestFetchDatasetsExtendHistorical:
+    """Test that only the file ending last is extended."""
+
+    def _write_monthly_file(self, path: Path, start_year: int, end_year: int) -> Path:
+        n = (end_year - start_year + 1) * 12
+        time = [cftime.DatetimeNoLeap(start_year + index // 12, index % 12 + 1, 16) for index in range(n)]
+        xr.Dataset({"toz": ("time", np.zeros(n))}, coords={"time": time}).to_netcdf(path)
+        return path
+
+    @patch("climate_ref_core.esgf.cmip7.CMIP6Request")
+    @patch("climate_ref_core.esgf.cmip7._convert_file_to_cmip7")
+    def test_only_the_last_chunk_is_extended(self, mock_convert, mock_cmip6_request_class, tmp_path):
+        """The earlier chunks stay where they are, so the converted files do not overlap."""
+        early = self._write_monthly_file(tmp_path / "early.nc", 1850, 1949)
+        late = self._write_monthly_file(tmp_path / "late.nc", 1950, 2014)
+
+        mock_cmip6_instance = MagicMock()
+        mock_cmip6_instance.fetch_datasets.return_value = pd.DataFrame(
+            {
+                "source_id": ["GFDL-ESM4"],
+                "member_id": ["r1i1p1f1"],
+                "variable_id": ["toz"],
+                "table_id": ["AERmon"],
+                "files": [[str(early), str(late)]],
+            }
+        )
+        mock_cmip6_request_class.return_value = mock_cmip6_instance
+        mock_convert.side_effect = [tmp_path / "a.nc", tmp_path / "b.nc"]
+
+        request = CMIP7Request(
+            slug="test",
+            facets={"source_id": "GFDL-ESM4", "variable_id": "toz"},
+            extend_historical_to=(2021, 12),
+        )
+        request.fetch_datasets()
+
+        extended = {call.args[0]: call.kwargs["extend_historical_to"] for call in mock_convert.call_args_list}
+        assert extended == {early: None, late: (2021, 12)}
+
+    @patch("climate_ref_core.esgf.cmip7.CMIP6Request")
+    @patch("climate_ref_core.esgf.cmip7._convert_file_to_cmip7")
+    def test_no_extension_requested(self, mock_convert, mock_cmip6_request_class, tmp_path):
+        """Without the opt-in no file is extended, and the files are not opened to find out."""
+        only = self._write_monthly_file(tmp_path / "only.nc", 1950, 2014)
+
+        mock_cmip6_instance = MagicMock()
+        mock_cmip6_instance.fetch_datasets.return_value = pd.DataFrame(
+            {
+                "source_id": ["GFDL-ESM4"],
+                "member_id": ["r1i1p1f1"],
+                "variable_id": ["toz"],
+                "table_id": ["AERmon"],
+                "files": [[str(only)]],
+            }
+        )
+        mock_cmip6_request_class.return_value = mock_cmip6_instance
+        mock_convert.return_value = tmp_path / "a.nc"
+
+        CMIP7Request(slug="test", facets={"source_id": "GFDL-ESM4"}).fetch_datasets()
+
+        assert mock_convert.call_args_list[0].kwargs["extend_historical_to"] is None

@@ -1104,13 +1104,18 @@ class TestRepeatFinalYearTo:
         np.testing.assert_array_equal(extended["tas"].values[n : n + 12], final_year)
         np.testing.assert_array_equal(extended["tas"].values[n + 12 :], final_year)
 
-    def test_repeats_a_short_series(self):
-        """A series shorter than a year repeats whatever it has."""
-        ds = self._monthly_dataset(1990, 3)  # 1990-01 .. 1990-03
-        extended = repeat_final_year_to(ds, end_year=1990, end_month=9)
+    def test_partial_final_year_raises(self):
+        """There is no full year to repeat, so fail rather than invent a seasonal cycle."""
+        time = _monthly_cftime(1990, 10, 3)  # 1990-10 .. 1990-12
+        ds = xr.Dataset({"tas": ("time", np.zeros(3))}, coords={"time": time})
+        with pytest.raises(ValueError, match="A full final year is needed to repeat"):
+            repeat_final_year_to(ds, end_year=1995, end_month=12)
 
-        assert len(extended["time"]) == 9
-        np.testing.assert_array_equal(extended["tas"].values, [0.0, 1.0, 2.0] * 3)
+    def test_series_not_ending_in_december_raises(self):
+        """Repeating whole years only lines up when the series ends on a year boundary."""
+        ds = self._monthly_dataset(1990, 15)  # 1990-01 .. 1991-03
+        with pytest.raises(ValueError, match="must end in December"):
+            repeat_final_year_to(ds, end_year=1995, end_month=12)
 
     def test_preserves_calendar_type(self):
         """The padded axis keeps its cftime calendar."""
@@ -1179,15 +1184,13 @@ class TestRepeatFinalYearTo:
         for prev, nxt in itertools.pairwise(extended["time"].values):
             assert nxt.year * 12 + (nxt.month - 1) == prev.year * 12 + prev.month
 
-    def test_clamps_day_to_shorter_target_month(self):
-        """A day-31 label copied onto a shorter month is clamped, not rejected."""
-        # Single Jan-31 timestep repeated into Feb, which has no 31st (28 on the
-        # NoLeap calendar); the day must clamp instead of raising.
-        time = [cftime.DatetimeNoLeap(2000, 1, 31)]
-        ds = xr.Dataset({"tas": ("time", [1.0])}, coords={"time": time})
-        extended = repeat_final_year_to(ds, end_year=2000, end_month=2)
-        last = extended["time"].values[-1]
-        assert (last.year, last.month, last.day) == (2000, 2, 28)
+    def test_keeps_the_day_of_month(self):
+        """Only the year label moves, so each fabricated month keeps its day."""
+        ds = self._monthly_dataset(1990, 12 * 2)
+        extended = repeat_final_year_to(ds, end_year=1995, end_month=12)
+
+        days = {t.day for t in extended["time"].values}
+        assert days == {16}
 
 
 class TestConvertCmip6DatasetExtendHistorical:

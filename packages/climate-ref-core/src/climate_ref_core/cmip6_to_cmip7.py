@@ -20,7 +20,7 @@ import json
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from importlib import resources
 from typing import Any
 
@@ -498,16 +498,13 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
     """
     Extend a monthly series to ``end_year``-``end_month`` by repeating its final year.
 
-    The real timesteps keep their real dates and values. Only the tail is fabricated, by
-    tiling the last twelve months forward until the series reaches the requested end. This
-    gives CMIP7 ``historical`` coverage for years the CMIP6 source never ran (e.g. 2015-2021)
+    The real timesteps keep their real dates and values.
+    Any missing years are tiled from the last year.
+    This gives CMIP7 ``historical`` coverage for years the CMIP6 source never ran (e.g. 2015-2021)
     without moving the years that did.
 
-    A series shorter than a year repeats whatever it has. A series that already reaches the
-    requested end is returned unchanged.
-
-    Only monthly data with a ``cftime`` time axis is supported; datasets without a
-    ``time`` coordinate (fixed-frequency, e.g. ``sftlf``) are returned unchanged.
+    Only monthly data with a ``cftime`` time axis is supported.
+    Datasets without a ``time`` coordinate (fixed-frequency, e.g. ``sftlf``) are returned unchanged.
 
     Parameters
     ----------
@@ -522,6 +519,11 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
     -------
     xr.Dataset
         A dataset whose time axis runs to the requested end.
+
+    Raises
+    ------
+    ValueError
+        If ``end_month`` is outside 1-12, or the series is shorter than the year it repeats.
     """
     if not 1 <= end_month <= _MONTHS_PER_YEAR:
         raise ValueError(f"end_month must be in 1..12, got {end_month}")
@@ -533,68 +535,43 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
     last = time_values[-1]
     if not isinstance(last, cftime.datetime):
         raise TypeError(
-            "repeat_final_year_to requires a cftime time axis; "
-            f"got {type(last).__name__}. Decode with use_cftime=True."
+            "repeat_final_year_to requires a cftime time axis. "
+            f"Got {type(last).__name__}. Decode with use_cftime=True."
         )
 
     target_index = end_year * _MONTHS_PER_YEAR + (end_month - 1)
-    missing = target_index - _month_index(last)
-    if missing <= 0:
+    months_to_add = target_index - _month_index(last)
+    if months_to_add <= 0:
         return ds
 
-    calendar = last.calendar
+    if last.month != _MONTHS_PER_YEAR:
+        raise ValueError(f"The series must end in December to repeat whole years, ends {last}")
 
-    def _days_in_month(year: int, month: int) -> int:
-        # Last day of ``month`` = day before the first of the following month,
-        # computed via cftime arithmetic so it respects the dataset's calendar
-        # (noleap, 360_day, etc.).
-        next_year, next_month = (year + 1, 1) if month == _MONTHS_PER_YEAR else (year, month + 1)
-        first_of_next = cftime.datetime(next_year, next_month, 1, calendar=calendar)
-        last_of_month = first_of_next - timedelta(days=1)  # type: ignore[operator]
-        return int(last_of_month.day)  # type: ignore[attr-defined]
-
-    def _add_months(t: cftime.datetime, months: int) -> cftime.datetime:
-        year, month = divmod(_month_index(t) + months, _MONTHS_PER_YEAR)
-        month += 1
-        # Clamp the day to the target month/calendar: a day-31 (or leap Feb-29) label
-        # can land on a shorter month, which cftime would reject.
-        day = min(t.day, _days_in_month(year, month))
-        return cftime.datetime(year, month, day, t.hour, t.minute, t.second, t.microsecond, calendar=calendar)
-
-    # Tile the final year, so each fabricated month reuses the same month one or more years back.
-    period = min(_MONTHS_PER_YEAR, len(time_values))
-    positions = [len(time_values) - period + (step % period) for step in range(missing)]
-    offsets = [
-        _month_index(last) + 1 + step - _month_index(time_values[position])
-        for step, position in enumerate(positions)
-    ]
-
-    padding = ds.isel(time=positions)
-    padded_times = np.array(
-        [_add_months(time_values[position], offset) for position, offset in zip(positions, offsets)]
-    )
-    new_time = padding["time"].copy(data=padded_times)
-    new_time.encoding = dict(ds["time"].encoding)
-    padding = padding.assign_coords(time=new_time)
-
-    # Move the matching time bounds with their timesteps, so the axis stays self-consistent.
     bounds_name = ds["time"].attrs.get("bounds")
-    if bounds_name and bounds_name in ds:
-        bnds_values = ds[bounds_name].values
-        padded_bnds = np.array(
-            [
-                [_add_months(bound, offset) for bound in bnds_values[position]]
-                for position, offset in zip(positions, offsets)
-            ]
-        )
-        padding[bounds_name] = padding[bounds_name].copy(data=padded_bnds)
 
-    extended = xr.concat([ds, padding], dim="time", data_vars="minimal", coords="minimal")
+    def _relabel(block: xr.Dataset, shift: int) -> xr.Dataset:
+        relabelled = block.copy()
+        # Move the bounds before the coordinate, so xarray does not align the two time axes.
+        if bounds_name and bounds_name in relabelled:
+            bnds = [[b.replace(year=b.year + shift) for b in row] for row in block[bounds_name].values]
+            relabelled[bounds_name] = (block[bounds_name].dims, np.array(bnds))
+        return relabelled.assign_coords(time=[t.replace(year=t.year + shift) for t in block["time"].values])
+
+    final_year = ds.sel(time=str(last.year))
+    if len(final_year["time"]) != _MONTHS_PER_YEAR:
+        raise ValueError(f"A full final year is needed to repeat, got {len(final_year['time'])} months")
+
+    repeats = [_relabel(final_year, year - last.year) for year in range(last.year + 1, end_year + 1)]
+
+    extended = xr.concat([ds, *repeats], dim="time", data_vars="minimal", coords="minimal")
     extended["time"].attrs = dict(ds["time"].attrs)
     extended["time"].encoding = dict(ds["time"].encoding)
 
+    # The repeats are whole years, so drop anything past the requested month.
+    extended = extended.sel(time=slice(None, f"{end_year:04d}-{end_month:02d}"))
+
     logger.debug(
-        f"Repeated the final year for {missing} months so the series ends {end_year:04d}-{end_month:02d}"
+        f"Repeated {last.year} for {months_to_add} months so the series ends {end_year:04d}-{end_month:02d}"
     )
     return extended
 

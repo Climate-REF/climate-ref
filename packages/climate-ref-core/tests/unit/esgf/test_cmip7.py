@@ -3,11 +3,18 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import cftime
+import numpy as np
 import pandas as pd
 import pytest
+import xarray as xr
 
 from climate_ref_core.esgf import CMIP7Request
-from climate_ref_core.esgf.cmip7 import _convert_file_to_cmip7, _get_cmip7_cache_dir
+from climate_ref_core.esgf.cmip7 import (
+    _convert_file_to_cmip7,
+    _get_cmip7_cache_dir,
+    _latest_file,
+)
 
 
 class TestCMIP7Request:
@@ -736,3 +743,36 @@ class TestCMIP7RequestFetchEdgeCases:
         assert len(result) == 2
         assert result.iloc[0]["mip_era"] == "CMIP7"
         assert result.iloc[1]["mip_era"] == "CMIP7"
+
+
+class TestLatestFile:
+    """Test picking the file that holds a dataset's final timestep."""
+
+    def _write_monthly_file(self, path: Path, start_year: int, end_year: int) -> Path:
+        n = (end_year - start_year + 1) * 12
+        time = [cftime.DatetimeNoLeap(start_year + index // 12, index % 12 + 1, 16) for index in range(n)]
+        xr.Dataset({"toz": ("time", np.zeros(n))}, coords={"time": time}).to_netcdf(path)
+        return path
+
+    def test_picks_the_chunk_ending_last(self, tmp_path):
+        """Only the final chunk is extended, so the earlier ones stay where they are."""
+        early = self._write_monthly_file(tmp_path / "early.nc", 1850, 1949)
+        late = self._write_monthly_file(tmp_path / "late.nc", 1950, 2014)
+
+        assert _latest_file([early, late]) == late
+        assert _latest_file([late, early]) == late
+
+    def test_skips_files_without_a_time_axis(self, tmp_path):
+        """Fixed-frequency files carry no time axis, so they never win."""
+        fixed = tmp_path / "areacella.nc"
+        xr.Dataset({"areacella": ("lat", np.zeros(2))}, coords={"lat": [0.0, 1.0]}).to_netcdf(fixed)
+        monthly = self._write_monthly_file(tmp_path / "a.nc", 1950, 2014)
+
+        assert _latest_file([fixed, monthly]) == monthly
+
+    def test_no_time_axes_at_all(self, tmp_path):
+        """A dataset with nothing to extend has no latest file."""
+        fixed = tmp_path / "areacella.nc"
+        xr.Dataset({"areacella": ("lat", np.zeros(2))}, coords={"lat": [0.0, 1.0]}).to_netcdf(fixed)
+
+        assert _latest_file([fixed]) is None

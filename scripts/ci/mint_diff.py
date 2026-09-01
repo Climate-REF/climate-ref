@@ -394,6 +394,21 @@ def render_case(diff: CaseDiff, store_url: str) -> str:
     return "".join(out)
 
 
+def _omission_notice(remaining: list[CaseDiff], budget: int) -> str:
+    """
+    Render the notice naming the cases whose detail did not fit.
+
+    Falls back to a bare count when the labels themselves would not fit ``budget``, because a
+    notice that overflows the limit costs the entire comment rather than just its own text.
+    """
+    tail = "\n_The full report is attached to the workflow run as the `mint-diff` artefact._\n"
+    labels = ", ".join(f"`{d.label}`" for d in remaining)
+    listed = f"\n_Detail omitted to fit the comment size limit: {labels}._\n{tail}"
+    if _utf8_len(listed) <= budget:
+        return listed
+    return f"\n_Detail omitted for {len(remaining)} further case(s) to fit the comment size limit._\n{tail}"
+
+
 def render(diffs: list[CaseDiff], base: str, store_url: str, max_bytes: int | None = None) -> str:
     """
     Render the whole report.
@@ -410,24 +425,29 @@ def render(diffs: list[CaseDiff], base: str, store_url: str, max_bytes: int | No
 
     diffs = sorted(diffs, key=lambda d: d.label)
     total = sum(len(d.native) for d in diffs)
-    header = (
+    preamble = (
         "### Regression baseline diff\n\n"
         f"{len(diffs)} test case(s) and {total} native file(s) changed against `{base}`. "
         "Text outputs are diffed inline. NetCDF and PNG outputs are listed with a size delta "
         "and a link to each blob.\n\n"
-        f"{render_summary(diffs)}\n"
     )
+    header = f"{preamble}{render_summary(diffs)}\n"
+
+    if max_bytes is not None and _utf8_len(header) > max_bytes:
+        # Enough cases that even the summary overflows. Keep the preamble and point at the
+        # artefact, because posting a comment that names nothing beats posting none at all.
+        return preamble + _omission_notice(diffs, max_bytes - _utf8_len(preamble))
+
+    # Hold back part of the budget for the omission notice. Without it the notice can push the
+    # report past the limit, and `gh pr comment` then rejects the whole thing.
+    notice_budget = max_bytes // 10 if max_bytes is not None else 0
 
     used = _utf8_len(header)
     body = ""
     for index, diff in enumerate(diffs):
         section = render_case(diff, store_url)
-        if max_bytes is not None and used + _utf8_len(section) > max_bytes:
-            remaining = ", ".join(f"`{d.label}`" for d in diffs[index:])
-            body += (
-                f"\n_Detail omitted to fit the comment size limit: {remaining}._\n"
-                "\n_The full report is attached to the workflow run as the `mint-diff` artefact._\n"
-            )
+        if max_bytes is not None and used + _utf8_len(section) > max_bytes - notice_budget:
+            body += _omission_notice(diffs[index:], notice_budget)
             break
         body += section
         used += _utf8_len(section)

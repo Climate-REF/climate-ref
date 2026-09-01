@@ -362,12 +362,15 @@ def render_case(diff: CaseDiff, store_url: str) -> str:
     elif diff.is_new:
         headline = f"new case, {headline}"
 
-    out = [f"<details>\n<summary><b>{diff.label}</b> -- {headline}</summary>\n"]
+    # The blank line after </summary> is load-bearing: GitHub parses markdown inside an HTML
+    # block only after one, so without it the first list renders as raw text with its backticks.
+    out = [f"<details>\n<summary><b>{diff.label}</b> -- {headline}</summary>\n\n"]
 
     if diff.metadata:
         out.append("".join(f"- {line}\n" for line in diff.metadata))
     if diff.committed:
-        out.append(f"\nCommitted artefacts changed: {', '.join(diff.committed)}\n")
+        out.append("\nCommitted artefacts changed:\n\n")
+        out.append("".join(f"- {name}\n" for name in diff.committed))
 
     if binary_changes:
         out.append("\n| file | status | size | blobs |\n| --- | --- | --- | --- |\n")

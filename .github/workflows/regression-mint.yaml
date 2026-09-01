@@ -169,19 +169,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
+          # Two reports: the full one is small enough to keep as an artefact whatever the mint's
+          # size, while the capped one fits the comment and job-summary limits.
           uv run python scripts/ci/mint_diff.py \
             --base "origin/${DEFAULT_BRANCH}" \
-            --output mint-diff.md
+            --output mint-diff.md \
+            --comment-output mint-diff-comment.md
 
-          # The job summary always gets the report, whether or not a pull request exists.
-          cat mint-diff.md >> "${GITHUB_STEP_SUMMARY}"
+          # The job summary always gets a report, whether or not a pull request exists.
+          cat mint-diff-comment.md >> "${GITHUB_STEP_SUMMARY}"
 
           pr="$(gh pr list --head "${GITHUB_REF_NAME}" --state open --json number --jq '.[0].number')"
           if [ -z "${pr}" ]; then
             echo "No open pull request for ${GITHUB_REF_NAME}; the report is in the job summary only."
             exit 0
           fi
-          gh pr comment "${pr}" --body-file mint-diff.md
+          gh pr comment "${pr}" --body-file mint-diff-comment.md
       - name: Upload the full baseline diff
         # The comment is capped at GitHub's 65 KB limit, so keep the untruncated report too.
         if: ${{ !inputs.dry_run }}

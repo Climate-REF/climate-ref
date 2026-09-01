@@ -13,10 +13,11 @@ Binary outputs (NetCDF, PNG) are reported by size delta and linked, because a by
 Usage:
   uv run python scripts/ci/mint_diff.py [--base origin/main] [--output summary.md]
 
-  --base        git ref to compare against. Defaults to origin/${GITHUB_BASE_REF:-main}.
-  --output      write the markdown here as well as to stdout.
-  --store-url   base URL of the native store. Defaults to $REF_NATIVE_STORE_URL.
-  --no-fetch    skip all network access and report size deltas only.
+  --base            git ref to compare against. Defaults to origin/${GITHUB_BASE_REF:-main}.
+  --output          write the full, uncapped report here as well as to stdout.
+  --comment-output  write a copy capped to GitHub's comment size limit here.
+  --store-url       base URL of the native store. Defaults to $REF_NATIVE_STORE_URL.
+  --no-fetch        skip all network access and report size deltas only.
 
 Exits 0 whether or not anything changed. This reports, it does not gate.
 """
@@ -137,7 +138,7 @@ class CaseDiff:
     label: str
     rel_path: str
     base: Manifest | None
-    head: Manifest
+    head: Manifest | None
     native: list[FileChange] = field(default_factory=list)
     committed: list[str] = field(default_factory=list)
     metadata: list[str] = field(default_factory=list)
@@ -147,9 +148,16 @@ class CaseDiff:
         """Whether the whole test case is new on this branch."""
         return self.base is None
 
+    @property
+    def is_removed(self) -> bool:
+        """Whether the whole test case was deleted on this branch."""
+        return self.head is None
 
-def _metadata_changes(base: Manifest | None, head: Manifest) -> list[str]:
+
+def _metadata_changes(base: Manifest | None, head: Manifest | None) -> list[str]:
     """Describe the scalar manifest fields that moved."""
+    if head is None:
+        return ["test case removed"]
     if base is None:
         return [f"new test case at `test_case_version` {head.test_case_version}"]
     changes = []
@@ -160,16 +168,17 @@ def _metadata_changes(base: Manifest | None, head: Manifest) -> list[str]:
     return changes
 
 
-def _committed_changes(base: Manifest | None, head: Manifest) -> list[str]:
+def _committed_changes(base: Manifest | None, head: Manifest | None) -> list[str]:
     """Name the committed regression artefacts whose digest moved."""
     old = base.committed if base else {}
-    names = sorted(set(old) | set(head.committed))
+    new = head.committed if head else {}
+    names = sorted(set(old) | set(new))
     out = []
     for name in names:
-        if old.get(name) != head.committed.get(name):
+        if old.get(name) != new.get(name):
             if name not in old:
                 out.append(f"`{name}` (added)")
-            elif name not in head.committed:
+            elif name not in new:
                 out.append(f"`{name}` (removed)")
             else:
                 out.append(f"`{name}`")
@@ -245,12 +254,18 @@ def _text_diff(store_url: str, change: FileChange) -> tuple[str | None, str | No
 
 
 def build_case_diff(repo: Repo, base: str, rel_path: str, store_url: str, fetch: bool) -> CaseDiff | None:
-    """Collect every change to one test case, or ``None`` if its manifest was deleted."""
+    """
+    Collect every change to one test case.
+
+    A case deleted on this branch has no head manifest. It is still reported, as a removal,
+    because dropping a test case is a baseline change a reviewer needs to see.
+    Returns ``None`` only when the manifest is absent from both sides, which leaves nothing to say.
+    """
     head_path = Path(repo.working_tree_dir or ".") / rel_path
-    if not head_path.exists():
-        return None
-    head = Manifest.load(head_path)
+    head = Manifest.load(head_path) if head_path.exists() else None
     base_manifest = load_at_ref(repo, base, rel_path)
+    if head is None and base_manifest is None:
+        return None
 
     diff = CaseDiff(
         label=case_label(rel_path),
@@ -262,8 +277,9 @@ def build_case_diff(repo: Repo, base: str, rel_path: str, store_url: str, fetch:
     )
 
     old_native = base_manifest.native if base_manifest else {}
-    for name in sorted(set(old_native) | set(head.native)):
-        old, new = old_native.get(name), head.native.get(name)
+    new_native = head.native if head else {}
+    for name in sorted(set(old_native) | set(new_native)):
+        old, new = old_native.get(name), new_native.get(name)
         if old is not None and new is not None and old.sha256 == new.sha256:
             continue
         change = FileChange(name=name, old=old, new=new)
@@ -298,6 +314,11 @@ def _blob_links(store_url: str, change: FileChange) -> str:
     return " ".join(links)
 
 
+def _utf8_len(text: str) -> int:
+    """Return the UTF-8 byte length of ``text``, which is what GitHub's comment limit measures."""
+    return len(text.encode("utf-8"))
+
+
 def _counts(diff: CaseDiff) -> str:
     """Summarise a case's native changes as a short ``+a ~c -r`` string."""
     tally = {"added": 0, "changed": 0, "removed": 0}
@@ -320,11 +341,13 @@ def render_summary(diffs: list[CaseDiff]) -> str:
     """
     rows = ["| case | versions | native files |\n| --- | --- | --- |\n"]
     for diff in diffs:
-        base_manifest = diff.base
-        if base_manifest is None:
+        base_manifest, head_manifest = diff.base, diff.head
+        if head_manifest is None:
+            versions = "removed"
+        elif base_manifest is None:
             versions = "new"
         else:
-            versions = f"v{base_manifest.test_case_version} -> v{diff.head.test_case_version}"
+            versions = f"v{base_manifest.test_case_version} -> v{head_manifest.test_case_version}"
         rows.append(f"| `{diff.label}` | {versions} | {_counts(diff)} |\n")
     return "".join(rows)
 
@@ -334,7 +357,9 @@ def render_case(diff: CaseDiff, store_url: str) -> str:
     text_changes = [c for c in diff.native if c.is_text]
     binary_changes = [c for c in diff.native if not c.is_text]
     headline = f"{len(diff.native)} native file(s)"
-    if diff.is_new:
+    if diff.is_removed:
+        headline = f"removed case, {headline}"
+    elif diff.is_new:
         headline = f"new case, {headline}"
 
     out = [f"<details>\n<summary><b>{diff.label}</b> -- {headline}</summary>\n"]
@@ -366,12 +391,16 @@ def render_case(diff: CaseDiff, store_url: str) -> str:
     return "".join(out)
 
 
-def render(diffs: list[CaseDiff], base: str, store_url: str) -> str:
+def render(diffs: list[CaseDiff], base: str, store_url: str, max_bytes: int | None = None) -> str:
     """
     Render the whole report.
 
-    The summary table always covers every case. Detail sections are appended until the
-    GitHub comment size limit is in sight, then the remainder is named rather than expanded.
+    The summary table always covers every case. When ``max_bytes`` is set, detail sections are
+    appended only while the encoded report stays under it and the remainder is named rather than
+    expanded. Pass ``None`` for the full report, which is what the workflow artefact carries.
+
+    The budget counts UTF-8 bytes rather than characters, because that is what GitHub's comment
+    limit measures and a diff may carry non-ASCII content.
     """
     if not diffs:
         return f"### Regression baseline diff\n\nNo baseline manifests changed against `{base}`.\n"
@@ -386,14 +415,19 @@ def render(diffs: list[CaseDiff], base: str, store_url: str) -> str:
         f"{render_summary(diffs)}\n"
     )
 
+    used = _utf8_len(header)
     body = ""
     for index, diff in enumerate(diffs):
         section = render_case(diff, store_url)
-        if len(header) + len(body) + len(section) > MAX_COMMENT_BYTES:
+        if max_bytes is not None and used + _utf8_len(section) > max_bytes:
             remaining = ", ".join(f"`{d.label}`" for d in diffs[index:])
-            body += f"\n_Detail omitted to fit the comment size limit: {remaining}._\n"
+            body += (
+                f"\n_Detail omitted to fit the comment size limit: {remaining}._\n"
+                "\n_The full report is attached to the workflow run as the `mint-diff` artefact._\n"
+            )
             break
         body += section
+        used += _utf8_len(section)
     return header + body
 
 
@@ -401,7 +435,18 @@ def main(argv: list[str] | None = None) -> int:
     """Entry point."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", default=f"origin/{os.environ.get('GITHUB_BASE_REF', 'main')}")
-    parser.add_argument("--output", type=Path, default=None)
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="write the full, uncapped report here",
+    )
+    parser.add_argument(
+        "--comment-output",
+        type=Path,
+        default=None,
+        help="write a copy capped to GitHub's comment size limit here",
+    )
     parser.add_argument("--store-url", default=os.environ.get("REF_NATIVE_STORE_URL", DEFAULT_STORE_URL))
     parser.add_argument("--no-fetch", action="store_true")
     args = parser.parse_args(argv)
@@ -413,10 +458,13 @@ def main(argv: list[str] | None = None) -> int:
         if diff is not None:
             diffs.append(diff)
 
-    markdown = render(diffs, args.base, args.store_url)
-    sys.stdout.write(markdown)
+    full = render(diffs, args.base, args.store_url)
+    sys.stdout.write(full)
     if args.output:
-        args.output.write_text(markdown, encoding="utf-8")
+        args.output.write_text(full, encoding="utf-8")
+    if args.comment_output:
+        capped = render(diffs, args.base, args.store_url, max_bytes=MAX_COMMENT_BYTES)
+        args.comment_output.write_text(capped, encoding="utf-8")
     return 0
 
 

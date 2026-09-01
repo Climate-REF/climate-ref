@@ -320,12 +320,11 @@ def render_summary(diffs: list[CaseDiff]) -> str:
     """
     rows = ["| case | versions | native files |\n| --- | --- | --- |\n"]
     for diff in diffs:
-        if diff.is_new:
+        base_manifest = diff.base
+        if base_manifest is None:
             versions = "new"
         else:
-            base = diff.base  # narrowed by is_new
-            assert base is not None
-            versions = f"v{base.test_case_version} -> v{diff.head.test_case_version}"
+            versions = f"v{base_manifest.test_case_version} -> v{diff.head.test_case_version}"
         rows.append(f"| `{diff.label}` | {versions} | {_counts(diff)} |\n")
     return "".join(rows)
 

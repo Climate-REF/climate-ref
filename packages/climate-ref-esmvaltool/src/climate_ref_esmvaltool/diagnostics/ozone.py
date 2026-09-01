@@ -264,7 +264,7 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
             input_files,
             "polar_cap_time_series_SH",
             "toz",
-            cmip7_timerange="1960/2021",
+            cmip7_timerange="1950/2021",
         )
 
 
@@ -316,7 +316,7 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
             input_files,
             "polar_cap_time_series_NH",
             "toz",
-            cmip7_timerange="1960/2021",
+            cmip7_timerange="1950/2021",
         )
 
 

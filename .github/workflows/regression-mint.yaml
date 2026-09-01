@@ -35,9 +35,11 @@ on:
         type: boolean
         default: false
 
-# Needed to commit the regenerated manifest/bundle back to the dispatched branch.
+# `contents` to commit the regenerated manifest/bundle back to the dispatched branch,
+# `pull-requests` to post the baseline diff on the branch's open pull request.
 permissions:
   contents: write
+  pull-requests: write
 
 # Never cancel an in-flight mint: it performs object-store writes and a push.
 concurrency:
@@ -67,6 +69,9 @@ jobs:
           exit 1
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          # Full history so the baseline diff can find the merge-base with the default branch.
+          fetch-depth: 0
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
@@ -109,6 +114,13 @@ jobs:
           if [ "${BUMP_VERSION}" = "true" ]; then args+=(--bump-version); fi
           if [ "${DRY_RUN}" = "true" ]; then args+=(--dry-run); fi
           uv run ref test-cases mint "${args[@]}"
+      - name: Fetch the default branch for the baseline diff
+        if: ${{ !inputs.dry_run }}
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
       - name: Commit regenerated baselines
         if: ${{ !inputs.dry_run }}
         env:
@@ -148,3 +160,37 @@ jobs:
           done
           echo "::error::failed to push regenerated baselines after retries"
           exit 1
+      - name: Report the baseline diff
+        # Runs after the commit so HEAD carries the regenerated manifests.
+        # Reporting only, so a failure here must not fail an otherwise successful mint.
+        if: ${{ !inputs.dry_run }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          # Two reports: the full one is small enough to keep as an artefact whatever the mint's
+          # size, while the capped one fits the comment and job-summary limits.
+          uv run python scripts/ci/mint_diff.py \
+            --base "origin/${DEFAULT_BRANCH}" \
+            --output mint-diff.md \
+            --comment-output mint-diff-comment.md
+
+          # The job summary always gets a report, whether or not a pull request exists.
+          cat mint-diff-comment.md >> "${GITHUB_STEP_SUMMARY}"
+
+          pr="$(gh pr list --head "${GITHUB_REF_NAME}" --state open --json number --jq '.[0].number')"
+          if [ -z "${pr}" ]; then
+            echo "No open pull request for ${GITHUB_REF_NAME}; the report is in the job summary only."
+            exit 0
+          fi
+          gh pr comment "${pr}" --body-file mint-diff-comment.md
+      - name: Upload the full baseline diff
+        # The comment is capped at GitHub's 65 KB limit, so keep the untruncated report too.
+        if: ${{ !inputs.dry_run }}
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: mint-diff
+          path: mint-diff.md
+          if-no-files-found: ignore

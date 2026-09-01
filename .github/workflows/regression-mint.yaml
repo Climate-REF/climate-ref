@@ -189,7 +189,7 @@ jobs:
         # The comment is capped at GitHub's 65 KB limit, so keep the untruncated report too.
         if: ${{ !inputs.dry_run }}
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mint-diff
           path: mint-diff.md

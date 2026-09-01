@@ -107,7 +107,7 @@ diagnostics:
   polar_cap_time_series_NH:
     variables:
       toz:
-        timerange: 1960/2021
+        timerange: 1950/2021
         mip: aerosol
         exp: historical
         preprocessor: create_time_series_NH

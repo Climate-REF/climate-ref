@@ -1013,6 +1013,28 @@ cmip7_gn_GISS-E2-2-H_r1i1p1f1__obs4mips_CERES-EBAF-4-2-1:
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.100km.gn.v20260220
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220
+cmip7_gn_HadGEM3-GC31-LL_r1i1p1f3__obs4mips_CERES-EBAF-4-2-1:
+  cmip7:
+  - CMIP7.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.glb.mon.rlut.tavg-u-hxy-u.gn.v20190624
+  - CMIP7.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.glb.mon.rlutcs.tavg-u-hxy-u.gn.v20190624
+  - CMIP7.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.glb.mon.rsut.tavg-u-hxy-u.gn.v20190624
+  - CMIP7.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.glb.mon.rsutcs.tavg-u-hxy-u.gn.v20190624
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220
+cmip7_gn_HadGEM3-GC31-MM_r1i1p1f3__obs4mips_CERES-EBAF-4-2-1:
+  cmip7:
+  - CMIP7.CMIP.MOHC.HadGEM3-GC31-MM.historical.r1i1p1f3.glb.mon.rlut.tavg-u-hxy-u.gn.v20191207
+  - CMIP7.CMIP.MOHC.HadGEM3-GC31-MM.historical.r1i1p1f3.glb.mon.rlutcs.tavg-u-hxy-u.gn.v20191207
+  - CMIP7.CMIP.MOHC.HadGEM3-GC31-MM.historical.r1i1p1f3.glb.mon.rsut.tavg-u-hxy-u.gn.v20191207
+  - CMIP7.CMIP.MOHC.HadGEM3-GC31-MM.historical.r1i1p1f3.glb.mon.rsutcs.tavg-u-hxy-u.gn.v20191207
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220
 cmip7_gn_ICON-ESM-LR_r1i1p1f1__obs4mips_CERES-EBAF-4-2-1:
   cmip7:
   - CMIP7.CMIP.MPI-M.ICON-ESM-LR.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20220111
@@ -1174,6 +1196,28 @@ cmip7_gn_TaiESM1_r1i1p1f1__obs4mips_CERES-EBAF-4-2-1:
   - CMIP7.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.glb.mon.rlutcs.tavg-u-hxy-u.gn.v20200623
   - CMIP7.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.glb.mon.rsut.tavg-u-hxy-u.gn.v20200623
   - CMIP7.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.glb.mon.rsutcs.tavg-u-hxy-u.gn.v20200623
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220
+cmip7_gn_UKESM1-0-LL_r1i1p1f2__obs4mips_CERES-EBAF-4-2-1:
+  cmip7:
+  - CMIP7.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.glb.mon.rlut.tavg-u-hxy-u.gn.v20190406
+  - CMIP7.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.glb.mon.rlutcs.tavg-u-hxy-u.gn.v20190406
+  - CMIP7.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.glb.mon.rsut.tavg-u-hxy-u.gn.v20190627
+  - CMIP7.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.glb.mon.rsutcs.tavg-u-hxy-u.gn.v20190406
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220
+cmip7_gn_UKESM1-1-LL_r1i1p1f2__obs4mips_CERES-EBAF-4-2-1:
+  cmip7:
+  - CMIP7.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.glb.mon.rlut.tavg-u-hxy-u.gn.v20220512
+  - CMIP7.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.glb.mon.rlutcs.tavg-u-hxy-u.gn.v20220512
+  - CMIP7.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.glb.mon.rsut.tavg-u-hxy-u.gn.v20220512
+  - CMIP7.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.glb.mon.rsutcs.tavg-u-hxy-u.gn.v20220512
   obs4mips:
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
@@ -1447,6 +1491,17 @@ cmip7_gr_IPSL-CM6A-LR_r1i1p1f1__obs4mips_CERES-EBAF-4-2-1:
   - CMIP7.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.glb.mon.rlutcs.tavg-u-hxy-u.gr.v20180803
   - CMIP7.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.glb.mon.rsut.tavg-u-hxy-u.gr.v20180803
   - CMIP7.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.glb.mon.rsutcs.tavg-u-hxy-u.gr.v20180803
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.100km.gn.v20260220
+  - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220
+cmip7_gr_KACE-1-0-G_r1i1p1f1__obs4mips_CERES-EBAF-4-2-1:
+  cmip7:
+  - CMIP7.CMIP.NIMS-KMA.KACE-1-0-G.historical.r1i1p1f1.glb.mon.rlut.tavg-u-hxy-u.gr.v20190910
+  - CMIP7.CMIP.NIMS-KMA.KACE-1-0-G.historical.r1i1p1f1.glb.mon.rlutcs.tavg-u-hxy-u.gr.v20190910
+  - CMIP7.CMIP.NIMS-KMA.KACE-1-0-G.historical.r1i1p1f1.glb.mon.rsut.tavg-u-hxy-u.gr.v20190910
+  - CMIP7.CMIP.NIMS-KMA.KACE-1-0-G.historical.r1i1p1f1.glb.mon.rsutcs.tavg-u-hxy-u.gr.v20190910
   obs4mips:
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220

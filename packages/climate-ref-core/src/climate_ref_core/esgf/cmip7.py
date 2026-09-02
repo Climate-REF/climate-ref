@@ -7,9 +7,11 @@ a request class that fetches CMIP6 data and converts it to CMIP7 format.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, NamedTuple
 
+import cftime
 import pandas as pd
 import xarray as xr
 from loguru import logger
@@ -21,6 +23,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     format_cmip7_time_range,
     get_dreq_entry,
     get_frequency_from_table,
+    months_to_extend,
     repeat_final_year_to,
     suppress_bounds_coordinates,
 )
@@ -36,7 +39,14 @@ def _get_cmip7_cache_dir() -> Path:
     return cache_dir
 
 
-def _latest_file(files: list[Path]) -> Path | None:
+class LatestFile(NamedTuple):
+    """The file holding a dataset's final timestep, and that timestep."""
+
+    path: Path
+    end: cftime.datetime
+
+
+def _latest_file(files: list[Path]) -> LatestFile | None:
     """
     Find the file holding a dataset's final timestep.
 
@@ -50,21 +60,42 @@ def _latest_file(files: list[Path]) -> Path | None:
 
     Returns
     -------
-    Path | None
-        The file ending last, or ``None`` when none of them carry a time axis.
+    LatestFile | None
+        The file ending last and its final timestep, or ``None`` when none of them carry a time axis.
     """
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
 
-    latest: Path | None = None
-    latest_end = None
+    latest: LatestFile | None = None
     for path in files:
         with xr.open_dataset(path, decode_times=time_coder) as ds:
             if "time" not in ds.coords or len(ds["time"]) == 0:
                 continue
             end = ds["time"].values[-1]
-            if latest_end is None or end > latest_end:
-                latest, latest_end = path, end
+            if latest is None or end > latest.end:
+                latest = LatestFile(path, end)
     return latest
+
+
+def _bump_version(version: str) -> str:
+    """
+    Bump a DRS version so fabricated data does not share an ``instance_id`` with the real thing.
+
+    A version that is not already ``v<digits>`` is read as ``v0``,
+    which is what the ingest falls back to when it cannot parse one out of the path.
+
+    Parameters
+    ----------
+    version
+        The version the dataset would otherwise be published under.
+
+    Returns
+    -------
+    str
+        The next version.
+    """
+    match = re.fullmatch(r"v(\d+)", version)
+    current = int(match.group(1)) if match else 0
+    return f"v{current + 1}"
 
 
 def _convert_file_to_cmip7(
@@ -96,7 +127,7 @@ def _convert_file_to_cmip7(
     # CMIP6 activity_id can contain multiple activities separated by spaces
     # (e.g. "C4MIP CDRMIP"). Use only the first activity for the DRS path.
     activity_id = str(cmip7_facets.get("activity_id", "CMIP")).split()[0]
-    version = str(cmip7_facets.get("version", "v1"))
+    version = str(cmip7_facets.get("version", "v0"))
 
     # Build CMIP7 DRS path using the standard MIP-DRS7 path builder.
     # Provide defaults for fields that may not be in facets.
@@ -333,14 +364,17 @@ class CMIP7Request:
             cmip7_row = self._convert_to_cmip7_metadata(row_dict)
 
             # Get file paths and convert them
-            files = row_dict.get("files", [])
+            paths = [Path(file_path) for file_path in row_dict.get("files", [])]
             latest = None
             if self.extend_historical_to is not None:
-                latest = _latest_file([Path(f) for f in files if Path(f).exists()])
+                found = _latest_file([path for path in paths if path.exists()])
+                if found is not None and months_to_extend(found.end, *self.extend_historical_to) > 0:
+                    # if modified bump the version so they don't collide
+                    latest = found.path
+                    cmip7_row["version"] = _bump_version(str(cmip7_row.get("version", "")))
 
             converted_files = []
-            for file_path in files:
-                cmip6_path = Path(file_path)
+            for cmip6_path in paths:
                 if cmip6_path.exists():
                     try:
                         cmip7_path = _convert_file_to_cmip7(
@@ -353,7 +387,7 @@ class CMIP7Request:
                         logger.exception(f"Failed to convert {cmip6_path.name}: {e}")
                         continue
                 else:
-                    logger.warning(f"CMIP6 file not found: {file_path}")
+                    logger.warning(f"CMIP6 file not found: {cmip6_path}")
 
             if converted_files:
                 cmip7_row["files"] = converted_files

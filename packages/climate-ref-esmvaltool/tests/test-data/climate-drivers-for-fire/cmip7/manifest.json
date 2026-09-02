@@ -1,5 +1,5 @@
 {
-  "catalog_hash": "0a33e7dc76794bea1cae3db045b63d108dd41457",
+  "catalog_hash": "82ee685124acc6f4f9b7400d05fae30f2ab4cfa2",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "6a004337728d5817f91d8f308be2f589b950b2cacfdd56b5e112556db163dc5b",
@@ -32,7 +32,7 @@
       "size": 4739
     },
     "executions/recipe/work/fire_evaluation/fire_evaluation/tas_tavg-h2m-hxy-u_Amon_glb_gn_CanESM5_vpd_r1i1p1f1_2002-2021.nc": {
-      "sha256": "a7d692f13015d2172f475b19061b4c2855143f5522596da6363ded3d9a7e190a",
+      "sha256": "c5c5ea3990279764a3fdc1d3853bcb335857d91db65b40a6a4cf54621ea35acf",
       "size": 9981855
     },
     "output.json": {
@@ -45,5 +45,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

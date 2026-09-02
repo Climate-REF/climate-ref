@@ -64,8 +64,6 @@ def _convert_row(row: pd.Series) -> dict | None:
     # Build instance_id in CMIP7 DRS format
     instance_parts = [*CMIP7DatasetAdapter.dataset_id_metadata, "version"]
     attrs["instance_id"] = "CMIP7." + ".".join(str(attrs[p]) for p in instance_parts)
-
-    # The converter mints a random handle, which would rewrite every row on every regeneration.
     attrs["tracking_id"] = make_tracking_id(f"{attrs['instance_id']}/{cmip7_filename}")
 
     return attrs

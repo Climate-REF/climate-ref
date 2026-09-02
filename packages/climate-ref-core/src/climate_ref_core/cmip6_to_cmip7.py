@@ -383,8 +383,8 @@ def make_tracking_id(file_id: str) -> str:
     """
     Return the CMIP7 handle for a file, derived from ``file_id`` rather than minted at random.
 
-    A file therefore keeps its handle when a catalog is regenerated, so the regeneration
-    diff shows what actually moved.
+    A file therefore keeps its handle when a catalog is regenerated,
+    so the regeneration diff shows what actually moved.
 
     Parameters
     ----------

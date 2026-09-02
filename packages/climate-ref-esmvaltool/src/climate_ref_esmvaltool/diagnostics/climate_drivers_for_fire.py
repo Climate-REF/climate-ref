@@ -180,10 +180,8 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    # The recipe runs CMIP7 over 2002-2021, but real CanESM5
-                    # `historical` data ends in 2014. We fetch the trailing 20 years
-                    # of real data and relabel its time axis via extend_historical_to
-                    # so the fabricated CMIP7 series ends 2021-12 and covers 2002-2021.
+                    # The recipe runs CMIP7 over 2002-2021, but real CanESM5 `historical` data
+                    # ends in 2014, so extend_historical_to repeats 2014 out to 2021-12.
                     CMIP7Request(
                         slug="cmip7",
                         facets={

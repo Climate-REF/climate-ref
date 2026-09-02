@@ -3,7 +3,7 @@
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "097d07332e39889ab51b9c55a9f03e4d3dc6a442a7f1693aa15d59bba50d7086",
-    "series.json": "bb5f92524671be619ac30d8aad69c45744e333389d8fc02081944ea445dacbcc"
+    "series.json": "21a54adcc37ef04630faaccbb02d424867119898b51e148d4cd1cd623921a19c"
   },
   "diagnostic_version": 2,
   "native": {
@@ -16,70 +16,70 @@
       "size": 22125
     },
     "executions/recipe/plots/plot_maps/plot/map_lwcre_CanESM5_atmos.png": {
-      "sha256": "8fd12bec85f5941118c49478a76f19f6d0615de5c43ae1dc7597ad4b881e4ea1",
-      "size": 559519
+      "sha256": "219995af6b5cdd889b7d6677bbd47dc2c4f37ad99d76c6bcc94ff29a1cd92d10",
+      "size": 527230
     },
     "executions/recipe/plots/plot_maps/plot/map_swcre_CanESM5_atmos.png": {
-      "sha256": "c5a8894e2d90bf041087ad813e35d2eda34dc701c6f612a850feb6e32353dd3f",
-      "size": 419286
+      "sha256": "aab2c0a409042d5aadc177a36689e9a8016c0b844176b5345fbb24a2c6f902d6",
+      "size": 578771
     },
     "executions/recipe/plots/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_ambiguous_mip.png": {
-      "sha256": "f2d0d8c56184e5f1671c1eeff1612b349e7c3bf6073e833aaaa5f42932537128",
-      "size": 162036
+      "sha256": "cb8040e05150cbe0f96633b8c28b721153759558c8a98ea220aa5d03834c431a",
+      "size": 161421
     },
     "executions/recipe/plots/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_ambiguous_mip.png": {
-      "sha256": "628b66e16d91d262d2fc5d4a97734f8a2f058a809df874f86a22c66a9b1a4cb7",
-      "size": 129570
+      "sha256": "df3c3e80453a5cc549b80c68df0e3635ac3b3a1e30abeb98cd9805ee90fd7527",
+      "size": 173904
     },
     "executions/recipe/run/plot_maps/plot/diagnostic_provenance.yml": {
-      "sha256": "32560c73cc12c1825891364a6d703020512cb80c24e297d52e09495d66df4ef9",
+      "sha256": "bbdf7f91d9eddff5ae64968cb18ab31ed20eea4d05e12720887c000ee159a277",
       "size": 3682
     },
     "executions/recipe/run/plot_profiles/plot/diagnostic_provenance.yml": {
-      "sha256": "97ead21e04b280cb4b733c68f4130e5e63e6fe858beb00cd6b92852d8c92b489",
+      "sha256": "3111d6177c4dcdee98dd0c8485b9918c14975ba59c475ddf9ed5b217abd524db",
       "size": 1422
     },
     "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_bottom.nc": {
-      "sha256": "50948828bb1dd3fe053325b7860b4170dc81c83a8006b162cfbc539c74fb0a31",
+      "sha256": "2a7f1e36d1bfab0eb72f5554b6acf8b4f1c19f79a4cc0eab62fc42d31b57232a",
       "size": 299088
     },
     "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_top_left.nc": {
-      "sha256": "7d8d5a3098695ec265def4098e88c144d80d5b221b8f1b26407841d5e301b131",
+      "sha256": "528e349f329a9943a85abacf7fc977560eb9b12902c42191eee264eae4ff58f9",
       "size": 296682
     },
     "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_top_right.nc": {
-      "sha256": "daeda7c33146d0979fa2523545f03c13ee0a275c04a17eae896e14d7e1d08096",
-      "size": 293881
+      "sha256": "2c4460b73f46dde5d00dd804665728924306a07e9984dffc398374d92cdf6adf",
+      "size": 293912
     },
     "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_bottom.nc": {
-      "sha256": "982b3b16bfecbd2e04ee0ead4b59a4f079e7eab0e664f4ce6d1b072bc7e5d62c",
+      "sha256": "b64b0a69b6329f1bb33fc535c6c9bd50f07ab95120893ac477824df3852acfd2",
       "size": 299278
     },
     "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_top_left.nc": {
-      "sha256": "d3366e9e8aedfba8d8cebb6fff5547b4769abe524b7939cd08e95a76c3f46652",
+      "sha256": "a0d1409207210b6a949664a348c3e2c65fad54e803a1af0bdf4ad261280da88c",
       "size": 296966
     },
     "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_top_right.nc": {
-      "sha256": "5c1cabc02f9d451f07b15005730f29205bfebd1a5cca46ade1c584d1e652153c",
-      "size": 293881
+      "sha256": "6e0b8b24754ff89be620ec54534d84c4a7a110dfe001025da2b12e7c66eb885f",
+      "size": 293912
     },
     "executions/recipe/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_ambiguous_mip.nc": {
-      "sha256": "8cd9444fffdee52dfe0de2eec7454329552ee2557e4e979c6594b285de503e19",
-      "size": 12976
+      "sha256": "70106f8fef5ee8d5e47b3df9dc1cff8ca387613af43efd16453866c5ea434ca1",
+      "size": 12989
     },
     "executions/recipe/work/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_ambiguous_mip.nc": {
-      "sha256": "9bb4e5162adbbc284b35d32f6fa2382d9ddf9e66982a0020245c938f074977f8",
-      "size": 12978
+      "sha256": "8357638c36e8c4b43144ba439bae6b2fde6fafec1aa25a37e37f0f50aaa1106e",
+      "size": 12991
     },
     "output.json": {
       "sha256": "64e93ece3b9dc2b2bc8127681fd4c8a292cc3df8602f7ef5c9e208da6f5bb558",
       "size": 5532
     },
     "series.json": {
-      "sha256": "28fa10d62a913c9c420cc8112fca5a815c0de7d81bf2355c89a61f3f68cac9a5",
-      "size": 25525
+      "sha256": "00fd1ba06075d828010721baaa0730f81c5ecf4f9fc4faf8d6f6385281bcc75e",
+      "size": 28125
     }
   },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

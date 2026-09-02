@@ -45,6 +45,8 @@ from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionD
 from climate_ref_core.exceptions import InvalidDiagnosticException
 from climate_ref_core.providers import DiagnosticProvider
 
+_EMPTY_CATALOG = pd.DataFrame()
+
 
 @frozen
 class DiagnosticExecution:
@@ -248,6 +250,92 @@ def _process_group_constraints(
     return group
 
 
+def with_obs4ref_fallback(
+    obs4mips: pd.DataFrame | DataCatalog,
+    obs4ref: pd.DataFrame | DataCatalog,
+) -> pd.DataFrame | DataCatalog:
+    """
+    Fill an obs4MIPs catalog with the obs4REF datasets it lacks.
+
+    The obs4MIPs archive on ESGF is the official home of the reference data,
+    and the obs4REF registry carries the datasets that are not published there yet.
+    A dataset present in both is taken from obs4MIPs, whichever version each holds,
+    so publishing a dataset takes over from the registry copy without any re-ingest.
+
+    Parameters
+    ----------
+    obs4mips
+        The obs4MIPs catalog.
+    obs4ref
+        The obs4REF catalog.
+
+    Returns
+    -------
+    :
+        The obs4MIPs catalog, extended with the obs4REF datasets it does not hold.
+        The original catalog is returned untouched when there is nothing to add.
+    """
+    obs4ref_df = obs4ref.to_frame() if isinstance(obs4ref, DataCatalog) else obs4ref
+    if obs4ref_df.empty or "instance_id" not in obs4ref_df.columns:
+        return obs4mips
+    obs4mips_df = obs4mips.to_frame() if isinstance(obs4mips, DataCatalog) else obs4mips
+
+    held = set(obs_dataset_key(obs4mips_df["instance_id"])) if len(obs4mips_df) else set()
+    extra = obs4ref_df[~obs_dataset_key(obs4ref_df["instance_id"]).isin(held)]
+    if extra.empty:
+        return obs4mips
+    if obs4mips_df.empty:
+        return obs4ref
+    return DataCatalog.from_frame(pd.concat([obs4mips_df, extra]))
+
+
+def obs_dataset_key(instance_id: pd.Series) -> pd.Series:
+    """
+    Reduce an obs4MIPs or obs4REF ``instance_id`` to what identifies the dataset across the two.
+
+    The two collections build the same id apart from the leading collection components
+    and the trailing version.
+
+    Parameters
+    ----------
+    instance_id
+        Instance ids from either collection.
+
+    Returns
+    -------
+    :
+        The id with the collection prefix and version removed.
+    """
+    return instance_id.astype(str).str.split(".", n=2).str[2].str.rsplit(".", n=1).str[0]
+
+
+def apply_obs4ref_fallback(
+    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
+) -> Mapping[SourceDatasetType, pd.DataFrame | DataCatalog]:
+    """
+    Fold the obs4REF catalog into the obs4MIPs one so obs4MIPs requirements can reach it.
+
+    Parameters
+    ----------
+    data_catalog
+        Data catalogs for each source dataset type
+
+    Returns
+    -------
+    :
+        The catalogs with obs4MIPs extended by the obs4REF datasets it lacks
+        (see `with_obs4ref_fallback`).
+        The mapping is returned unchanged when nothing is ingested as obs4REF.
+    """
+    if SourceDatasetType.obs4REF not in data_catalog:
+        return data_catalog
+    obs4mips = data_catalog.get(SourceDatasetType.obs4MIPs, _EMPTY_CATALOG)
+    return {
+        **data_catalog,
+        SourceDatasetType.obs4MIPs: with_obs4ref_fallback(obs4mips, data_catalog[SourceDatasetType.obs4REF]),
+    }
+
+
 def solve_executions(
     data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
@@ -275,11 +363,12 @@ def solve_executions(
         raise ValueError(f"Diagnostic {diagnostic.slug!r} has no data requirements")
 
     first_item = next(iter(diagnostic.data_requirements))
+    catalogs = apply_obs4ref_fallback(data_catalog)
 
     if isinstance(first_item, DataRequirement):
         # We have a single collection of data requirements
         yield from _solve_from_data_requirements(
-            data_catalog,
+            catalogs,
             diagnostic,
             typing.cast(Sequence[DataRequirement], diagnostic.data_requirements),
             provider,
@@ -294,7 +383,7 @@ def solve_executions(
             # Buffer executions to check if any were actually produced
             # _solve_from_data_requirements returns empty if source types are missing
             executions = list(
-                _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
+                _solve_from_data_requirements(catalogs, diagnostic, requirement_collection, provider)
             )
             if executions:
                 any_matched = True

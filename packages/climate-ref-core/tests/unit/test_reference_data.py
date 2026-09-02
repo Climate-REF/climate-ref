@@ -78,8 +78,7 @@ class TestSourceIdsByRegistry:
 
         found = source_ids_by_registry(manager)
 
-        # An obs4REF registry answers for obs4MIPs requirements too, since that is the
-        # source type its data is ingested under.
+        # The obs4REF registry supplies obs4MIPs requirements too
         assert found[(SourceDatasetType.obs4REF.value, "WECANN-1-0")] == ["obs4ref"]
         assert found[(SourceDatasetType.obs4MIPs.value, "WECANN-1-0")] == ["obs4ref"]
 

@@ -109,7 +109,7 @@ The model data is CMIP6; the observation uses the `obs4mips` source type:
 
 ```bash
 ref datasets ingest --source-type cmip6 $REF_CONFIGURATION/datasets/sample-data/CMIP6
-ref datasets ingest --source-type obs4mips $REF_CONFIGURATION/datasets/quickstart/obs4REF
+ref datasets ingest --source-type obs4ref $REF_CONFIGURATION/datasets/quickstart/obs4REF
 ```
 
 Check the catalog:

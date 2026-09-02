@@ -102,25 +102,19 @@ but it also re-fetches four datasets the obs4REF registry already provides,
 so only use it if you are **not** using that registry — see the warning below.
 
 Files land in the [intake-esgf `local_cache`](https://intake-esgf.readthedocs.io/en/latest/configure.html),
-and are ingested with the `obs4mips` source type, the same as the obs4REF collection.
+and are ingested with the `obs4mips` source type.
+The obs4REF collection is ingested with `obs4ref` instead, so the two are never confused.
 
-/// admonition | Do not fetch these twice
-    type: warning
+/// admonition | Fetching these twice
+    type: note
 
 The script also fetches `CERES-EBAF-4-2`, `GPCP-Monthly-3-2`, `HadISST-1-1` and `TropFlux-1-0`.
 These are the ESGF-published copies of datasets that were curated for the REF before publication,
 so the obs4REF registry ships them as well.
 
-**If you have already fetched the obs4REF registry, do not fetch these from ESGF as well.**
-Where the two copies carry the same version they share an `instance_id` and ingest as a single
-dataset holding *both* sets of files, which covers the record twice.
-`GPCP-Monthly-3-2` `pr` `v20231205` is the clearest case: obs4REF ships one file spanning 1983-2023 and ESGF ships 41 yearly files spanning the same period, giving one dataset of 42 files.
-A diagnostic reading it sees every time step twice.
-
-Where the published copy carries a *newer* version, there is no such problem:
-the two ingest as separate datasets and the catalog uses the later version.
-
-This is temporary until we split the obs4REF ingest from the obs4MIPs ingest.
+If you fetch these from ESGF as well as from the obs4REF registry, the ESGF copy is the one used.
+obs4MIPs is the official home of the reference data, and the registry only fills in what is not published yet.
+`ref doctor` lists the registry copies that have been superseded this way.
 ///
 
 ### Future work

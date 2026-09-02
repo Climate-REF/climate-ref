@@ -4,15 +4,22 @@ Checks over the data a deployment has ingested.
 These look for the conditions that make a solve quietly do the wrong thing rather than fail:
 reference data that no diagnostic can reach,
 reference data that is missing so its diagnostics never run,
-and datasets whose files cover the same period twice.
+obs4REF data ingested under the obs4MIPs source type,
+obs4REF data that obs4MIPs has since published,
+datasets whose files cover the same period twice,
+and diagnostics the ingested data cannot solve at all.
 """
 
 from collections import defaultdict
+from collections.abc import Mapping
 
+from climate_ref.data_catalog import DataCatalog
 from climate_ref.doctor.context import DoctorContext
 from climate_ref.doctor.findings import Finding, Severity
 from climate_ref.doctor.registry import check
 from climate_ref.text import pluralise
+from climate_ref_core.diagnostics import Diagnostic
+from climate_ref_core.exceptions import InvalidDiagnosticException
 from climate_ref_core.reference_data import (
     ESGF_OBS4MIPS,
     ReferenceDataset,
@@ -20,7 +27,7 @@ from climate_ref_core.reference_data import (
     source_ids_by_registry,
 )
 from climate_ref_core.source_types import SourceDatasetType
-from climate_ref_core.summary import summarize_provider
+from climate_ref_core.summary import _normalize_requirement_sets, summarize_provider
 
 
 @check(
@@ -129,6 +136,9 @@ def check_missing_reference_data(context: DoctorContext) -> list[Finding]:
         if len(catalog) and "source_id" in catalog:
             ingested[source_type.value].update(catalog["source_id"].unique())
 
+    # obs4REF fills in whatever obs4MIPs lacks, so either satisfies an obs4MIPs requirement.
+    ingested[SourceDatasetType.obs4MIPs.value] |= ingested[SourceDatasetType.obs4REF.value]
+
     findings = []
     for dataset in sorted(required, key=lambda d: (d.supplier, d.source_id)):
         if dataset.source_id in ingested[dataset.source_type]:
@@ -179,11 +189,9 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
     """
     Find data ingested under a source type that no enabled diagnostic asks for.
 
-    The clearest case is obs4REF.
-    The ``obs4ref`` source type exists and can be ingested,
-    but no diagnostic declares an obs4REF data requirement,
-    and the solver only matches a requirement against its own source type.
-    Data ingested that way is never selected.
+    The solver only matches a requirement against its own source type,
+    so data ingested under a type nothing asks for is never selected.
+    The one exception is obs4REF data, which fills in for obs4MIPs requirements.
 
     Parameters
     ----------
@@ -201,6 +209,8 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
             for requirement_set in diagnostic.requirement_sets:
                 for requirement in requirement_set.requirements:
                     requested.add(requirement.source_type)
+    if SourceDatasetType.obs4MIPs.value in requested:
+        requested.add(SourceDatasetType.obs4REF.value)
 
     findings = []
     for source_type in SourceDatasetType:
@@ -222,12 +232,196 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
                     "so nothing will select these datasets."
                 ),
                 remedy=(
-                    "If this is obs4REF data, re-ingest it with "
-                    f"`--source-type {SourceDatasetType.obs4MIPs.value}`."
+                    "Re-ingest the data under the source type the diagnostics ask for, "
+                    "or enable a provider that uses it."
                 ),
             )
         )
     return findings
+
+
+@check(
+    "misfiled-obs4ref",
+    "obs4REF data ingested under the obs4MIPs source type",
+)
+def check_misfiled_obs4ref(context: DoctorContext) -> list[Finding]:
+    """
+    Find obs4REF data that was ingested as obs4MIPs.
+
+    Earlier releases ingested the obs4REF collection this way, and it still solves.
+    The cost is that the catalog no longer shows which datasets came from the registry
+    and which from the archive, and a later obs4MIPs publication cannot take over from it.
+
+    A dataset counts as obs4REF when an obs4REF registry carries its ``source_id``
+    or its files sit under an ``obs4REF`` directory.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding when any such data is present.
+    """
+    catalog = context.catalog(SourceDatasetType.obs4MIPs)
+    if not len(catalog) or not {"instance_id", "source_id", "path"}.issubset(catalog.columns):
+        return []
+
+    registry_ids = {
+        source_id
+        for (source_type, source_id) in source_ids_by_registry()
+        if source_type == SourceDatasetType.obs4REF.value
+    }
+    misfiled = catalog["source_id"].isin(registry_ids) | catalog["path"].astype(str).str.contains(
+        "/obs4REF/", regex=False
+    )
+    if not misfiled.any():
+        return []
+
+    instance_ids = sorted(catalog.loc[misfiled, "instance_id"].unique())
+    return [
+        Finding(
+            severity=Severity.WARNING,
+            summary=f"{pluralise(len(instance_ids), 'obs4REF dataset')} ingested as obs4mips",
+            detail="Affected: " + ", ".join(instance_ids) + ".",
+            remedy=(
+                "Re-ingest the obs4REF collection under its own source type, "
+                "then retract each of the obs4mips rows above with `ref datasets retract <instance_id>`."
+            ),
+            command="ref datasets ingest --source-type obs4ref <dir>",
+        )
+    ]
+
+
+@check(
+    "superseded-obs4ref",
+    "obs4REF datasets that the obs4MIPs archive has since published",
+)
+def check_superseded_obs4ref(context: DoctorContext) -> list[Finding]:
+    """
+    Find obs4REF datasets for which an obs4MIPs copy is also ingested.
+
+    The solver takes the obs4MIPs copy, so the obs4REF one is no longer used.
+    This is the signal that a dataset can be dropped from the obs4REF registry.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per superseded obs4REF dataset.
+    """
+    from climate_ref.solver import obs_dataset_key  # noqa: PLC0415
+
+    obs4mips = context.catalog(SourceDatasetType.obs4MIPs)
+    obs4ref = context.catalog(SourceDatasetType.obs4REF)
+    if not len(obs4mips) or not len(obs4ref) or "instance_id" not in obs4mips or "instance_id" not in obs4ref:
+        return []
+
+    published = set(obs_dataset_key(obs4mips["instance_id"]))
+    superseded = obs4ref[obs_dataset_key(obs4ref["instance_id"]).isin(published)]
+    return [
+        Finding(
+            severity=Severity.INFO,
+            summary=f"{instance_id} is superseded by the obs4MIPs copy",
+            remedy=(
+                "The obs4MIPs copy is used instead. "
+                "These can be retracted, and dropped from the obs4REF registry."
+            ),
+        )
+        for instance_id in sorted(superseded["instance_id"].unique())
+    ]
+
+
+@check(
+    "unsolvable-diagnostics",
+    "Enabled diagnostics for which the ingested data produces no executions",
+)
+def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
+    """
+    Find enabled diagnostics that the ingested data cannot solve at all.
+
+    This runs the solver against the ingested catalogs, diagnostic by diagnostic,
+    so it catches everything the narrower checks do not:
+    a filter no dataset matches, a constraint no group satisfies, a source type nothing was ingested under.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per diagnostic with no executions.
+    """
+    from climate_ref.solver import solve_executions  # noqa: PLC0415
+
+    catalogs: dict[SourceDatasetType, DataCatalog] = {
+        source_type: DataCatalog.from_frame(context.catalog(source_type)) for source_type in SourceDatasetType
+    }
+
+    findings = []
+    for provider in context.providers:
+        for diagnostic in provider.diagnostics():
+            try:
+                solvable = any(True for _ in solve_executions(catalogs, diagnostic, provider))
+            except InvalidDiagnosticException:
+                solvable = False
+            if solvable:
+                continue
+            findings.append(
+                Finding(
+                    severity=Severity.WARNING,
+                    summary=f"{provider.slug}/{diagnostic.slug} has no executions",
+                    detail=_why_unsolvable(diagnostic, catalogs),
+                    remedy=(
+                        "Ingest the data each diagnostic asks for. "
+                        "The findings above list the missing reference data."
+                    ),
+                )
+            )
+    return findings
+
+
+def _why_unsolvable(
+    diagnostic: Diagnostic,
+    catalogs: Mapping[SourceDatasetType, DataCatalog],
+) -> str:
+    """
+    Explain which requirement the ingested data fails to meet.
+
+    Each requirement is checked on its own, so the first one with no matching group names
+    the data to fetch. When every requirement matches something, the failure lies in how
+    they combine, which is reported as such.
+    """
+    from climate_ref.solver import apply_obs4ref_fallback, extract_covered_datasets  # noqa: PLC0415
+
+    available = apply_obs4ref_fallback(catalogs)
+
+    reasons = []
+    for requirements in _normalize_requirement_sets(diagnostic.data_requirements):
+        for requirement in requirements:
+            catalog = available[requirement.source_type]
+            frame = catalog.to_frame() if isinstance(catalog, DataCatalog) else catalog
+            if not len(frame):
+                reasons.append(f"nothing is ingested as {requirement.source_type.value}")
+                break
+            if not extract_covered_datasets(catalog, requirement):
+                facets = "; ".join(
+                    ", ".join(f"{k}={'|'.join(v)}" for k, v in sorted(f.facets.items()))
+                    for f in requirement.filters
+                )
+                reasons.append(f"no {requirement.source_type.value} datasets match {facets}")
+                break
+        else:
+            reasons.append("every requirement matches data, but no complete group satisfies the constraints")
+    return "Unmet: " + ". ".join(dict.fromkeys(reasons)) + "."
 
 
 @check(

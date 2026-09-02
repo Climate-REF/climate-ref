@@ -134,7 +134,7 @@ obs4mips:
     frequency: mon
     grid: 0.5x0.5 degree
     grid_label: gn
-    instance_id: obs4MIPs.obs4REF.ESACCI.CCI-CryoClim-FSC-1.mon.snc.0.5x0.5degree.gn.v20250519
+    instance_id: obs4REF.obs4REF.ESACCI.CCI-CryoClim-FSC-1.mon.snc.0.5x0.5degree.gn.v20250519
     institution_id: ESACCI
     long_name: Fractional Snow Cover
     nominal_resolution: 0.5x0.5 degree

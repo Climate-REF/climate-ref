@@ -21,10 +21,12 @@ from climate_ref.solver import (
     ExecutionSolver,
     SolveFilterOptions,
     apply_dataset_filters,
+    apply_obs4ref_fallback,
     extract_covered_datasets,
     matches_filter,
     solve_executions,
     solve_required_executions,
+    with_obs4ref_fallback,
 )
 from climate_ref_core.constraints import AddParentDataset, AddSupplementaryDataset, RequireFacets
 from climate_ref_core.datasets import SourceDatasetType
@@ -1284,7 +1286,7 @@ def test_solve_with_new_datasets(obs4mips_data_catalog, mock_diagnostic, provide
     assert result_2.datasets.hash != result_1.datasets.hash
 
 
-def test_solve_with_new_areacella(obs4mips_data_catalog, mock_diagnostic, provider):
+def test_solve_with_new_areacella(obs4ref_data_catalog, mock_diagnostic, provider):
     expected_dataset_key = "cmip6_ssp126_ACCESS-ESM1-5_tas__obs4mips_HadISST-1-1_ts"
     mock_diagnostic.data_requirements = (
         DataRequirement(
@@ -1315,7 +1317,7 @@ def test_solve_with_new_areacella(obs4mips_data_catalog, mock_diagnostic, provid
     result_1 = next(
         solve_executions(
             {
-                SourceDatasetType.obs4MIPs: obs4mips_data_catalog,
+                SourceDatasetType.obs4REF: obs4ref_data_catalog,
                 SourceDatasetType.CMIP6: cmip_data_catalog,
             },
             mock_diagnostic,
@@ -1340,7 +1342,7 @@ def test_solve_with_new_areacella(obs4mips_data_catalog, mock_diagnostic, provid
     result_2 = next(
         solve_executions(
             {
-                SourceDatasetType.obs4MIPs: obs4mips_data_catalog,
+                SourceDatasetType.obs4REF: obs4ref_data_catalog,
                 SourceDatasetType.CMIP6: cmip_data_catalog,
             },
             mock_diagnostic,
@@ -1953,3 +1955,61 @@ def test_drs_and_complete_parsers_produce_same_executions(config, sample_data_di
     finally:
         db_complete.close()
         db_drs.close()
+
+
+class TestObs4REFFallback:
+    """obs4MIPs requirements are filled from obs4REF, and the obs4MIPs copy wins."""
+
+    @staticmethod
+    def _frame(prefix, source_ids, version="v1", start=0):
+        return pd.DataFrame(
+            {
+                "instance_id": [f"{prefix}.{prefix}.INST.{s}.mon.ts.gn.{version}" for s in source_ids],
+                "source_id": list(source_ids),
+                "variable_id": "ts",
+            },
+            index=range(start, start + len(source_ids)),
+        )
+
+    def test_missing_datasets_are_added(self):
+        obs4mips = self._frame("obs4MIPs", ["A"])
+        obs4ref = self._frame("obs4REF", ["A", "B"], start=10)
+
+        merged = with_obs4ref_fallback(obs4mips, obs4ref).to_frame()
+
+        # A is taken from obs4MIPs only, B comes from obs4REF and keeps its dataset id.
+        assert merged["source_id"].tolist() == ["A", "B"]
+        assert merged.index.tolist() == [0, 11]
+        assert merged["instance_id"].iloc[1].startswith("obs4REF.")
+
+    def test_obs4mips_wins_whatever_the_versions(self):
+        obs4mips = self._frame("obs4MIPs", ["A"], version="v1")
+        obs4ref = self._frame("obs4REF", ["A"], version="v2", start=10)
+
+        assert with_obs4ref_fallback(obs4mips, obs4ref) is obs4mips
+
+    def test_untouched_when_nothing_to_add(self):
+        obs4mips = self._frame("obs4MIPs", ["A"])
+
+        assert with_obs4ref_fallback(obs4mips, pd.DataFrame()) is obs4mips
+
+    def test_obs4ref_alone_is_used_as_is(self):
+        obs4ref = self._frame("obs4REF", ["A"])
+
+        assert with_obs4ref_fallback(pd.DataFrame(), obs4ref) is obs4ref
+
+    def test_only_the_obs4mips_catalog_is_extended(self):
+        catalogs = {
+            SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", []),
+            SourceDatasetType.obs4REF: self._frame("obs4REF", ["A"]),
+        }
+
+        applied = apply_obs4ref_fallback(catalogs)
+
+        assert len(applied[SourceDatasetType.obs4MIPs]) == 1
+        assert applied[SourceDatasetType.obs4REF] is catalogs[SourceDatasetType.obs4REF]
+
+    def test_untouched_without_an_obs4ref_catalog(self):
+        catalogs = {SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"])}
+
+        assert apply_obs4ref_fallback(catalogs) is catalogs

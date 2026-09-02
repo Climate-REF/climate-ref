@@ -12,6 +12,8 @@ Regenerate with:
 The variable_id and table_id attributes are used to map the CMIP6 variable to its CMIP7 equivalent,
 and to determine the appropriate branding suffix and realm for the CMIP7 format.
 Grid information is not converted so the grid_labels may not be valid for CMIP7.
+
+This is a temporary work around until we have better CMIP7 coverage.
 """
 
 from __future__ import annotations
@@ -483,15 +485,24 @@ def convert_cmip6_to_cmip7_attrs(
     return attrs
 
 
+_MONTHS_PER_YEAR = 12
+
+
 def _month_index(t: Any) -> int:
     """Return the absolute month index (``year * 12 + month - 1``) of a time value."""
     if isinstance(t, cftime.datetime):
-        return t.year * 12 + t.month - 1
+        return t.year * _MONTHS_PER_YEAR + t.month - 1
     ts = pd.Timestamp(t)
-    return ts.year * 12 + ts.month - 1
+    return ts.year * _MONTHS_PER_YEAR + ts.month - 1
 
 
-_MONTHS_PER_YEAR = 12
+def months_to_extend(last: Any, end_year: int, end_month: int) -> int:
+    """
+    Return how many months short of ``end_year``-``end_month`` a series ending at ``last`` falls.
+
+    Zero or less means the series already reaches that month.
+    """
+    return end_year * _MONTHS_PER_YEAR + (end_month - 1) - _month_index(last)
 
 
 def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> xr.Dataset:
@@ -542,8 +553,7 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
             f"Got {type(last).__name__}. Decode with use_cftime=True."
         )
 
-    target_index = end_year * _MONTHS_PER_YEAR + (end_month - 1)
-    months_to_add = target_index - _month_index(last)
+    months_to_add = months_to_extend(last, end_year, end_month)
     if months_to_add <= 0:
         return ds
 

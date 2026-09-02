@@ -1,5 +1,5 @@
 _metadata:
-  hash: 0785449fa584248e1d89ab12e46ea24b4030e0ec
+  hash: 4c892beef7c743466cc65f8db266693e3cff6709
 cmip7:
   slug_column: instance_id
   selector:
@@ -57,7 +57,7 @@ cmip7:
     finalised: true
     frequency: mon
     grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rlut.tavg-u-hxy-u.gn.v0
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rlut.tavg-u-hxy-u.gn.v1
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: TOA Outgoing Longwave Radiation
@@ -76,11 +76,11 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/5d8e35e3-eb4d-4407-9ad3-05edb0773756
+    tracking_id: hdl:21.14107/de2f0e87-514f-45aa-afb0-d24bc0997814
     units: W m-2
     variable_id: rlut
     variant_label: r1i1p1f1
-    version: v0
+    version: v1
   - activity_id: CMIP
     branch_time_in_child: 0.0
     branch_time_in_parent: 1223115.0
@@ -94,7 +94,7 @@ cmip7:
     finalised: true
     frequency: mon
     grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rlutcs.tavg-u-hxy-u.gn.v0
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rlutcs.tavg-u-hxy-u.gn.v1
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: TOA Outgoing Clear-Sky Longwave Radiation
@@ -113,11 +113,11 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/6313eacb-0ec5-4659-a440-68569d8dadae
+    tracking_id: hdl:21.14107/ab10226c-19d6-4f61-8c48-de7e8f7f988d
     units: W m-2
     variable_id: rlutcs
     variant_label: r1i1p1f1
-    version: v0
+    version: v1
   - activity_id: CMIP
     branch_time_in_child: 0.0
     branch_time_in_parent: 1223115.0
@@ -131,7 +131,7 @@ cmip7:
     finalised: true
     frequency: mon
     grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rsut.tavg-u-hxy-u.gn.v0
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rsut.tavg-u-hxy-u.gn.v1
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: TOA Outgoing Shortwave Radiation
@@ -150,11 +150,11 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/f29f53fb-df74-4943-8f2a-caa7c8f8aed0
+    tracking_id: hdl:21.14107/7123fd2a-cbc1-434a-9d39-b3c82a6a1dd2
     units: W m-2
     variable_id: rsut
     variant_label: r1i1p1f1
-    version: v0
+    version: v1
   - activity_id: CMIP
     branch_time_in_child: 0.0
     branch_time_in_parent: 1223115.0
@@ -168,7 +168,7 @@ cmip7:
     finalised: true
     frequency: mon
     grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rsutcs.tavg-u-hxy-u.gn.v0
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rsutcs.tavg-u-hxy-u.gn.v1
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: TOA Outgoing Clear-Sky Shortwave Radiation
@@ -187,11 +187,11 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/327ef19b-488f-4e55-ac57-7a06d4256b31
+    tracking_id: hdl:21.14107/6fdbbb9b-0669-4044-852d-9270db623a95
     units: W m-2
     variable_id: rsutcs
     variant_label: r1i1p1f1
-    version: v0
+    version: v1
 obs4mips:
   slug_column: instance_id
   selector:

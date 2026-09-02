@@ -1,9 +1,9 @@
 {
-  "catalog_hash": "d871cb5c53da24f777a1b4c4a5535ab8fb01de3f",
+  "catalog_hash": "83717573c122607da3b482f4f058d7f4d4e8301c",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "7474e7e327a830c53b821d5320e05bff2f55c24068a4926fb49c76c484ed2c9a",
-    "series.json": "2ed6f8efe8ab07d6c70202cac1e8de07588745185c46e96af3159dfcc364a630"
+    "series.json": "2aafaec8f6644cc3884c035b4ad798c49e4be46b1a90b7837bca6b3e90e98f11"
   },
   "diagnostic_version": 3,
   "native": {
@@ -16,26 +16,26 @@
       "size": 13052
     },
     "executions/recipe/plots/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.png": {
-      "sha256": "4cc1058fd3f4c6b617a99c9ee6708b63a566a4beb78983ad95f4af892daa97f7",
-      "size": 91958
+      "sha256": "6e64f9345b9a5a6ce61b1ccbdb087916f9a0dac91d30b1f385c896b85721977c",
+      "size": 90943
     },
     "executions/recipe/run/polar_cap_time_series_SH/plot/diagnostic_provenance.yml": {
-      "sha256": "96029cd6c6286e2f09f77a2165bca67115cb93d7d09236e09889c33ca34799c0",
+      "sha256": "2ace5017c82b67bc3075a448c30ba3b0a47b550936e3cf52044d0635677a4cdc",
       "size": 658
     },
     "executions/recipe/work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc": {
-      "sha256": "92c02109c24d7c338074060d118a09841592c717d9a8778c21dc4414206cf71b",
-      "size": 9888
+      "sha256": "51ff370d38a1bb535db23abf8dae6080bc8aab30626c67d36204ebd9a79eaaba",
+      "size": 10128
     },
     "output.json": {
       "sha256": "85f5de5ad39e01de85c3bf9c35f255edf678dc014986df5e033cec81a8522f63",
       "size": 1398
     },
     "series.json": {
-      "sha256": "2d9b2f792b74c522bf99bee5adc72625ea4cc1c047019a345c6acb60f08d9743",
-      "size": 3701
+      "sha256": "1ebd16d9dc02a2dc5ded23a5694f6b7df34e37bf6d97b533f8d5f8f71bb3f9ba",
+      "size": 4209
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

@@ -20,11 +20,11 @@
       "size": 90958
     },
     "executions/recipe/run/polar_cap_time_series_SH/plot/diagnostic_provenance.yml": {
-      "sha256": "9d38b674b4c8c10152fffffe178762741bdb78096592d0953ebbe5af6706c7d6",
+      "sha256": "a3ec416d400446df8a996d5f9394fcad6aafb8bd0d7d2be1de13d9b44aee98f8",
       "size": 650
     },
     "executions/recipe/work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc": {
-      "sha256": "dbea413f59ac4bb0d5096a95905557a93c55197f4ce115a145e19e2626aea760",
+      "sha256": "a48fbb510fc0a83870948d5289c9b5dd91f877526228da2791b6f7268fd5c33a",
       "size": 10128
     },
     "output.json": {
@@ -37,5 +37,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

@@ -1,5 +1,5 @@
 {
-  "catalog_hash": "d871cb5c53da24f777a1b4c4a5535ab8fb01de3f",
+  "catalog_hash": "83717573c122607da3b482f4f058d7f4d4e8301c",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "6f71c80892ecb575a43c0ee25a77769ad779162ae4da22fc1585ee869a1d3857",
@@ -16,24 +16,24 @@
       "size": 14653
     },
     "executions/recipe/plots/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map.png": {
-      "sha256": "9907ebd4a1cace25b3be4c6d31d8a793466a77efb6ca20d11c302e42673da3c5",
-      "size": 86568
+      "sha256": "5bbb79feb693615c91e5a7a74f1416b80e4c64d2cc0ab45489e3668d052b5a10",
+      "size": 80527
     },
     "executions/recipe/run/lat_month_mapplot/plot/diagnostic_provenance.yml": {
-      "sha256": "619044183c428022e0a816e25f15634485039842bc90f5c7e5a2bd929ee4b408",
+      "sha256": "20dbf5a135f6d75c28352b1623f38e4393aa4b78dbbf82022fce1d008d6a4528",
       "size": 2003
     },
     "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
-      "sha256": "2af8f53ec6bd3c851588d955467f018da1ee6ca8dab5dba457791d413bbd6f34",
-      "size": 27730
+      "sha256": "03b1625476a5da1a2c009dc947c3539d6f2a8841913b3446d504d114423f7827",
+      "size": 27830
     },
     "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
-      "sha256": "61a9a6a4a43890783ea0b1e0f8cfbeb8eea02a3fd69da83c4af6047092efe58c",
-      "size": 27692
+      "sha256": "7c7b87672045b06543575a4e9f2018bf89b41e26338c17789afad707d2311d29",
+      "size": 27830
     },
     "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
-      "sha256": "17779c25fb4efc70e6ca6bc08fe86f49848c4da65b03470a9bf9b2fd506ef88a",
-      "size": 24002
+      "sha256": "635d3925ea3bae45af204b8d8dfe37d5553cec63f968d0aea60ecc942c033556",
+      "size": 23862
     },
     "output.json": {
       "sha256": "c4992d750bbfcb7d7ffa2e54ef418af5a4b4986a96dd0e1146178468aab58aab",
@@ -45,5 +45,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

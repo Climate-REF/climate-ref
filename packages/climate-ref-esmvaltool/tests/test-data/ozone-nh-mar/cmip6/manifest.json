@@ -24,7 +24,7 @@
       "size": 650
     },
     "executions/recipe/work/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.nc": {
-      "sha256": "c66ffac076d35dda2d4c4b037c5346d7c1771d5563097abf5169231d2b8cc1c4",
+      "sha256": "4620cfc77785204e06131aa75806872f6fc0d1ac2925dd0abf077a55f324302d",
       "size": 10128
     },
     "output.json": {
@@ -37,5 +37,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

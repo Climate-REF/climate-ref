@@ -68,7 +68,6 @@ def _convert_row(row: pd.Series) -> dict | None:
 
 
 # The canonical last monthly timestep of a full CMIP6/CMIP7 ``historical`` run.
-# The date alone, because a 360_day calendar stamps it at 00:00:00 and the rest at 12:00:00.
 FULL_HISTORICAL_END = "2014-12-16"
 
 
@@ -80,21 +79,13 @@ def _extend_historical_end(
     """
     Relabel full-length CMIP7 ``historical`` runs so their coverage reaches ``end_time``.
 
-    Only rows whose ``end_time`` falls on ``only_from`` (the canonical full historical end,
-    2014-12-16) are lifted.
-    The date is matched without its time of day, because a 360_day calendar stamps that
-    timestep at 00:00:00 and the rest at 12:00:00.
-    This deliberately narrow rule is what keeps the extension from perturbing other diagnostics.
-    Those rows already satisfy every diagnostic that requires coverage up to 2014-12 or earlier,
-    so pushing their end further out never removes them and never newly-satisfies such a constraint.
-    Only a diagnostic that requires coverage *beyond* 2014-12 (the fire diagnostic's 2002-2021 window)
-    sees any change.
+    This only adjusts the ``historical`` experiment.
+    There are other experiments that may have changed,
+    but our focus is the ``historical``.
 
-    Shorter historical runs (e.g. a 5-year GFDL slice ending 1854) are left alone so they cannot
-    suddenly satisfy another diagnostic's timerange.
     Fixed-frequency rows (``fx``, e.g. ``sftlf``) carry a null ``end_time`` and are untouched.
-    Only ``end_time`` is changed, so ``start_time``, ``instance_id``, ``path`` and every other
-    column are preserved.
+    Only ``end_time`` is changed,
+    so ``start_time``, ``instance_id``, ``path`` and every other column are preserved.
 
     Parameters
     ----------
@@ -111,6 +102,7 @@ def _extend_historical_end(
         Number of rows whose ``end_time`` was extended.
     """
     is_historical = cmip7_catalog["experiment_id"] == "historical"
+    # Check date only to avoid calendar differences
     is_full_run = cmip7_catalog["end_time"].str.startswith(only_from, na=False)
     mask = is_historical & is_full_run
 

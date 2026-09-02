@@ -80,8 +80,8 @@ def _bump_version(version: str) -> str:
     """
     Bump a DRS version so fabricated data does not share an ``instance_id`` with the real thing.
 
-    A version that is not already ``v<digits>`` is read as ``v0``, which is what the ingest
-    falls back to when it cannot parse one out of the path.
+    A version that is not already ``v<digits>`` is read as ``v0``,
+    which is what the ingest falls back to when it cannot parse one out of the path.
 
     Parameters
     ----------
@@ -369,9 +369,8 @@ class CMIP7Request:
             if self.extend_historical_to is not None:
                 found = _latest_file([path for path in paths if path.exists()])
                 if found is not None and months_to_extend(found.end, *self.extend_historical_to) > 0:
+                    # if modified bump the version so they don't collide
                     latest = found.path
-                    # Fabricated years must not be published under the version the real
-                    # data carries, so bump it for every file in the dataset.
                     cmip7_row["version"] = _bump_version(str(cmip7_row.get("version", "")))
 
             converted_files = []

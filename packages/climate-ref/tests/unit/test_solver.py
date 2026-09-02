@@ -2016,10 +2016,14 @@ class TestObs4REFFallback:
 
         assert with_obs4ref_fallback(obs4mips, pd.DataFrame()) is obs4mips
 
-    def test_obs4ref_alone_is_used_as_is(self):
-        obs4ref = self._frame("obs4REF", ["A"])
+    def test_obs4ref_alone_still_groups_as_obs4mips(self):
+        # A deployment that fetched only the registry is the ordinary case, not an edge case.
+        obs4ref = self._frame("obs4REF", ["A"]).assign(activity_id="obs4REF")
 
-        assert with_obs4ref_fallback(pd.DataFrame(), obs4ref) is obs4ref
+        merged = with_obs4ref_fallback(pd.DataFrame(), obs4ref)
+
+        assert merged["activity_id"].tolist() == ["obs4MIPs"]
+        assert merged["instance_id"].tolist() == obs4ref["instance_id"].tolist()
 
     def test_only_the_obs4mips_catalog_is_extended(self):
         catalogs = {

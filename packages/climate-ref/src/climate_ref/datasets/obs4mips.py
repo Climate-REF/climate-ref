@@ -36,7 +36,7 @@ def in_collection_directory(paths: pd.Series, activity_id: str) -> pd.Series:
     :
         A boolean mask over ``paths``.
     """
-    return paths.astype(str).str.contains(f"/{activity_id}/", regex=False)
+    return paths.astype(str).str.replace("\\", "/", regex=False).str.contains(f"/{activity_id}/", regex=False)
 
 
 def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:

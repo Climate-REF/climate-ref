@@ -288,6 +288,8 @@ def with_obs4ref_fallback(
     -------
     :
         The obs4MIPs catalog, extended with the obs4REF datasets it does not hold.
+        This includes the case of nothing being ingested as obs4MIPs at all, which is an ordinary
+        deployment that fetched only the registry.
         The original catalog is returned untouched when there is nothing to add.
         A merge of two catalogs carries no adapter, so it cannot reload itself and lose the added rows.
         The added rows carry ``activity_id`` of obs4MIPs, because that is the collection they stand in for.
@@ -302,14 +304,12 @@ def with_obs4ref_fallback(
     extra = obs4ref_df[~obs_dataset_key(obs4ref_df["instance_id"]).isin(held)]
     if extra.empty:
         return obs4mips
-    if obs4mips_df.empty:
-        return obs4ref
 
     # The rows are served as obs4MIPs data, so they must group as obs4MIPs data too.
     # A requirement grouping by activity_id would otherwise split its reference data in two.
     if "activity_id" in extra.columns:
         extra = extra.assign(activity_id=SourceDatasetType.obs4MIPs.name)
-    merged = pd.concat([obs4mips_df, extra], ignore_index=True)
+    merged = pd.concat([obs4mips_df, extra] if len(obs4mips_df) else [extra], ignore_index=True)
     if isinstance(obs4mips, DataCatalog) or isinstance(obs4ref, DataCatalog):
         # No adapter can reload the merge, so the result carries none and never reloads.
         return DataCatalog.from_frame(merged)

@@ -70,7 +70,9 @@ def _convert_row(row: pd.Series) -> dict | None:
 # The canonical last monthly timestep of a full CMIP6/CMIP7 ``historical`` run.
 # Only rows that already reach this end are lifted, which is what keeps the
 # extension from perturbing any other diagnostic (see ``_extend_historical_end``).
-FULL_HISTORICAL_END = "2014-12-16 12:00:00"
+# The date alone, because the time of day varies by calendar: a 360_day model stamps
+# mid-December at 00:00:00 rather than 12:00:00.
+FULL_HISTORICAL_END = "2014-12-16"
 
 
 def _extend_historical_end(
@@ -81,9 +83,11 @@ def _extend_historical_end(
     """
     Relabel full-length CMIP7 ``historical`` runs so their coverage reaches ``end_time``.
 
-    Only rows whose ``end_time`` is *exactly* ``only_from`` (the canonical full
-    historical end, 2014-12) are lifted. This deliberately narrow rule is what keeps
-    the extension from perturbing other diagnostics: those rows already satisfy every
+    Only rows whose ``end_time`` falls on ``only_from`` (the canonical full
+    historical end, 2014-12-16) are lifted. The date is matched without its time of day,
+    because a 360_day calendar stamps that timestep at 00:00:00 and the rest at 12:00:00.
+    This deliberately narrow rule is what keeps the extension from perturbing other
+    diagnostics: those rows already satisfy every
     diagnostic that requires coverage up to 2014-12 or earlier, so pushing their end
     further out never removes them and never newly-satisfies such a constraint. Only a
     diagnostic that requires coverage *beyond* 2014-12 (the fire diagnostic's 2002-2021
@@ -102,7 +106,7 @@ def _extend_historical_end(
     end_time
         Target ``end_time`` string (``YYYY-MM-DD HH:MM:SS``).
     only_from
-        Only rows whose ``end_time`` equals this value are extended.
+        Only rows whose ``end_time`` falls on this date (``YYYY-MM-DD``) are extended.
 
     Returns
     -------
@@ -110,7 +114,7 @@ def _extend_historical_end(
         Number of rows whose ``end_time`` was extended.
     """
     is_historical = cmip7_catalog["experiment_id"] == "historical"
-    is_full_run = cmip7_catalog["end_time"] == only_from
+    is_full_run = cmip7_catalog["end_time"].astype("string").str.slice(0, len(only_from)) == only_from
     mask = is_historical & is_full_run
 
     cmip7_catalog.loc[mask, "end_time"] = end_time

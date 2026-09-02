@@ -23,21 +23,14 @@ INVALID_ASSET = "INVALID_ASSET"
 TRACEBACK = "TRACEBACK"
 
 
-def _walk_within_depth(root: Path, depth: int | None) -> Iterator[tuple[str, list[str]]]:
+def _walk_sorted(root: Path) -> Iterator[tuple[str, list[str]]]:
     """
     Walk ``root``, descending into subdirectories in sorted order.
-
-    Yields ``(dirpath, filenames)`` for each directory visited.
-
-    Files at the depth limit are still yielded, the walk just stops descending past it.
 
     Parameters
     ----------
     root
         Directory to walk.
-    depth
-        Maximum directory depth below ``root``, or ``None`` to walk the whole tree.
-        ``0`` visits only ``root`` itself.
 
     Yields
     ------
@@ -46,15 +39,12 @@ def _walk_within_depth(root: Path, depth: int | None) -> Iterator[tuple[str, lis
     """
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames.sort()
-        if depth is not None and len(Path(dirpath).relative_to(root).parts) >= depth:
-            dirnames.clear()
         yield dirpath, filenames
 
 
 def discover_files(
     paths: list[str],
     include_patterns: list[str] | None = None,
-    depth: int | None = 0,
 ) -> list[str]:
     """
     Discover files matching the given glob patterns within the specified paths
@@ -66,11 +56,6 @@ def discover_files(
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``).
         Defaults to ``["*"]`` if not provided.
-    depth
-        Maximum directory depth below each root to search.
-        ``0`` means only files directly inside the root directory.
-        ``None`` searches the whole tree, which is needed when the depth of the
-        files below the given root is not known ahead of time.
 
     Returns
     -------
@@ -90,7 +75,7 @@ def discover_files(
                 assets.append(str(root))
             continue
 
-        for dirpath, filenames in _walk_within_depth(root, depth):
+        for dirpath, filenames in _walk_sorted(root):
             for filename in filenames:
                 if any(fnmatch.fnmatch(filename, pat) for pat in include_patterns):
                     assets.append(os.path.join(dirpath, filename))
@@ -180,7 +165,6 @@ def build_catalog(
     paths: list[str],
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
-    depth: int | None = 0,
     n_jobs: int = 1,
 ) -> pd.DataFrame:
     """
@@ -198,8 +182,6 @@ def build_catalog(
         Must return a dict with an ``INVALID_ASSET`` key on failure.
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``)
-    depth
-        Maximum directory depth to search, or ``None`` to search the whole tree
     n_jobs
         Number of parallel workers for parsing.
         ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many worker processes.
@@ -214,7 +196,7 @@ def build_catalog(
     ValueError
         If no files matching the include patterns are found in the specified paths
     """
-    assets = discover_files(paths, include_patterns=include_patterns, depth=depth)
+    assets = discover_files(paths, include_patterns=include_patterns)
 
     if not assets:
         raise ValueError(f"No files matching {include_patterns} found in {paths}")
@@ -233,7 +215,6 @@ def build_catalog(
 def iter_discovered_chunks(
     paths: list[str],
     include_patterns: list[str] | None = None,
-    depth: int | None = 0,
     chunk_size: int = 10_000,
 ) -> Iterator[list[str]]:
     """
@@ -250,8 +231,6 @@ def iter_discovered_chunks(
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``).
         Defaults to ``["*"]``.
-    depth
-        Maximum directory depth below each root to search, or ``None`` for the whole tree.
     chunk_size
         Soft target for the number of files per batch. A batch may exceed
         this if a single directory contains more matching files.
@@ -282,7 +261,7 @@ def iter_discovered_chunks(
                 yield from _flush()
             continue
 
-        for dirpath, filenames in _walk_within_depth(root, depth):
+        for dirpath, filenames in _walk_sorted(root):
             matched = [
                 os.path.join(dirpath, fn)
                 for fn in filenames
@@ -316,11 +295,10 @@ def _filter_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
     return df[df[INVALID_ASSET].isnull()].drop(columns=[INVALID_ASSET, TRACEBACK])
 
 
-def iter_built_catalogs(  # noqa: PLR0913
+def iter_built_catalogs(
     paths: list[str],
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
-    depth: int | None = 0,
     n_jobs: int = 1,
     chunk_size: int = 10_000,
 ) -> Iterator[pd.DataFrame]:
@@ -339,8 +317,6 @@ def iter_built_catalogs(  # noqa: PLR0913
         Must return a dict with an ``INVALID_ASSET`` key on failure.
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``).
-    depth
-        Maximum directory depth to search, or ``None`` to search the whole tree.
     n_jobs
         Number of parallel workers per chunk for parsing.
     chunk_size
@@ -354,7 +330,7 @@ def iter_built_catalogs(  # noqa: PLR0913
     """
     any_emitted = False
     for chunk_paths in iter_discovered_chunks(
-        paths, include_patterns=include_patterns, depth=depth, chunk_size=chunk_size
+        paths, include_patterns=include_patterns, chunk_size=chunk_size
     ):
         logger.info(f"Parsing chunk of {len(chunk_paths)} files")
         entries = parse_files(chunk_paths, parsing_func, n_jobs=n_jobs)

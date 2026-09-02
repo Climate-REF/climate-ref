@@ -280,8 +280,6 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             paths=[str(file_or_directory)],
             parsing_func=parsing_function,
             include_patterns=["*.nc"],
-            # Unbounded: how deep the DRS sits below the root given is not known ahead of time.
-            depth=None,
             n_jobs=self.n_jobs,
         )
 
@@ -318,8 +316,6 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             paths=[str(file_or_directory)],
             parsing_func=parsing_function,
             include_patterns=["*.nc"],
-            # Unbounded: how deep the DRS sits below the root given is not known ahead of time.
-            depth=None,
             n_jobs=self.n_jobs,
             chunk_size=chunk_size,
         ):

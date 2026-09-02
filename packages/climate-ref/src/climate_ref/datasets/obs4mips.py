@@ -201,7 +201,6 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             paths=[str(file_or_directory)],
             parsing_func=functools.partial(parse_obs4mips, accepted_activity_ids=self.accepted_activity_ids),
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=self.n_jobs,
         )
         if datasets.empty:

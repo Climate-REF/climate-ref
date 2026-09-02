@@ -25,7 +25,9 @@ TRACEBACK = "TRACEBACK"
 
 def _walk_within_depth(root: Path, depth: int | None) -> Iterator[tuple[str, list[str]]]:
     """
-    Walk ``root`` in sorted order, yielding ``(dirpath, filenames)`` for each directory visited.
+    Walk ``root``, descending into subdirectories in sorted order.
+
+    Yields ``(dirpath, filenames)`` for each directory visited.
 
     Files at the depth limit are still yielded, the walk just stops descending past it.
 

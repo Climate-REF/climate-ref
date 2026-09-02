@@ -276,10 +276,30 @@ class TestMisfiledObs4ref:
 
         assert len(findings) == 1
         assert findings[0].severity == Severity.WARNING
-        assert "1 obs4REF dataset ingested as obs4mips" in findings[0].summary
-        assert "obs4MIPs.obs4MIPs.X.gpp" in findings[0].detail
-        assert "ERA-5" not in findings[0].detail
+        assert findings[0].summary == "obs4MIPs.obs4MIPs.X.gpp is obs4REF data ingested as obs4mips"
         assert findings[0].command == "ref datasets ingest --source-type obs4ref <dir>"
+
+    def test_each_misfiled_dataset_gets_its_own_finding(self):
+        catalog = _catalog(
+            [
+                (
+                    "obs4MIPs.obs4MIPs.X.gpp",
+                    "X-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/d/obs4REF/X/gpp.nc",
+                ),
+                ("obs4MIPs.obs4MIPs.Y.ts", "Y-1-0", "ts", "2007-01-01", "2015-12-01", "/d/obs4REF/Y/ts.nc"),
+            ]
+        )
+        context = _context({SourceDatasetType.obs4MIPs: catalog})
+
+        findings = check_misfiled_obs4ref(context)
+
+        # One remedy shared across them, so the report groups them under it.
+        assert len(findings) == 2
+        assert len({f.remedy for f in findings}) == 1
 
     def test_registry_source_id_from_esgf_is_not_reported(self):
         # HadISST-1-1 sits in both collections, so an ESGF copy is legitimately ingested as obs4MIPs.

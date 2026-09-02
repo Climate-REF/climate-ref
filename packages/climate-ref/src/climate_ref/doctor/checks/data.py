@@ -277,7 +277,7 @@ def check_misfiled_obs4ref(context: DoctorContext) -> list[Finding]:
     Returns
     -------
     :
-        One finding when any such data is present.
+        One finding per misfiled dataset, all sharing the one remedy.
     """
     catalog = context.catalog(SourceDatasetType.obs4MIPs)
     if not len(catalog) or not {"instance_id", "path"}.issubset(catalog.columns):
@@ -287,18 +287,17 @@ def check_misfiled_obs4ref(context: DoctorContext) -> list[Finding]:
     if not misfiled.any():
         return []
 
-    instance_ids = sorted(catalog.loc[misfiled, "instance_id"].unique())
     return [
         Finding(
             severity=Severity.WARNING,
-            summary=f"{pluralise(len(instance_ids), 'obs4REF dataset')} ingested as obs4mips",
-            detail="Affected: " + ", ".join(instance_ids) + ".",
+            summary=f"{instance_id} is obs4REF data ingested as obs4mips",
             remedy=(
                 "Re-ingest the obs4REF collection under its own source type, "
                 "then retract each of the obs4mips rows above with `ref datasets retract <instance_id>`."
             ),
             command="ref datasets ingest --source-type obs4ref <dir>",
         )
+        for instance_id in sorted(catalog.loc[misfiled, "instance_id"].unique())
     ]
 
 

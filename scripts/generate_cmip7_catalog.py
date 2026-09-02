@@ -22,6 +22,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_to_cmip7_attrs,
     create_cmip7_filename,
     create_cmip7_path,
+    make_tracking_id,
 )
 
 # CMIP7 columns expected by the CMIP7DatasetAdapter
@@ -63,6 +64,7 @@ def _convert_row(row: pd.Series) -> dict | None:
     # Build instance_id in CMIP7 DRS format
     instance_parts = [*CMIP7DatasetAdapter.dataset_id_metadata, "version"]
     attrs["instance_id"] = "CMIP7." + ".".join(str(attrs[p]) for p in instance_parts)
+    attrs["tracking_id"] = make_tracking_id(f"{attrs['instance_id']}/{cmip7_filename}")
 
     return attrs
 

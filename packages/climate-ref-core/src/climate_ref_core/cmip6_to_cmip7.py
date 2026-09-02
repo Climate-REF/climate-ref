@@ -381,6 +381,26 @@ class CMIP7Metadata:
     license_id: str = "CC-BY-4.0"
 
 
+def make_tracking_id(file_id: str) -> str:
+    """
+    Return the CMIP7 handle for a file, derived from ``file_id`` rather than minted at random.
+
+    A file therefore keeps its handle when a catalog is regenerated,
+    so the regeneration diff shows what actually moved.
+
+    Parameters
+    ----------
+    file_id
+        Something that identifies the file, such as its ``instance_id`` and filename.
+
+    Returns
+    -------
+    str
+        The handle.
+    """
+    return f"hdl:21.14107/{uuid.uuid5(uuid.NAMESPACE_URL, f'hdl:21.14107/{file_id}')}"
+
+
 def convert_cmip6_to_cmip7_attrs(
     cmip6_attrs: dict[str, Any],
 ) -> dict[str, Any]:

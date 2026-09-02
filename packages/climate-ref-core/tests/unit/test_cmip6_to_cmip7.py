@@ -24,6 +24,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     get_dreq_entry,
     get_frequency_from_table,
     get_realm,
+    make_tracking_id,
     parse_variant_label,
     repeat_final_year_to,
     suppress_bounds_coordinates,
@@ -1244,3 +1245,22 @@ class TestConvertCmip6DatasetExtendHistorical:
         assert (last.year, last.month) == (2021, 12)
         # Only the tail is fabricated, so the real years keep their dates.
         assert (first.year, first.month) == (1850, 1)
+
+
+class TestMakeTrackingId:
+    """Test the handle that keeps a regenerated catalog diffable."""
+
+    def test_same_file_keeps_its_handle(self):
+        instance_id = "CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v1"
+
+        assert make_tracking_id(instance_id) == make_tracking_id(instance_id)
+
+    def test_different_files_get_different_handles(self):
+        base = "CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v1"
+
+        assert make_tracking_id(f"{base}/a_185001-190012.nc") != make_tracking_id(
+            f"{base}/a_190101-195012.nc"
+        )
+
+    def test_carries_the_cmip7_handle_prefix(self):
+        assert make_tracking_id("anything").startswith("hdl:21.14107/")

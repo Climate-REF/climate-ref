@@ -105,7 +105,7 @@ def _extract_facet_values(filters: tuple[FacetFilter, ...], facet_name: str) -> 
     return tuple(sorted(values))
 
 
-def _normalize_requirement_sets(
+def normalize_requirement_sets(
     data_requirements: Sequence[DataRequirement] | Sequence[Sequence[DataRequirement]],
 ) -> list[Sequence[DataRequirement]]:
     """
@@ -179,7 +179,7 @@ def summarize_diagnostic(diagnostic: Diagnostic) -> DiagnosticSummary:
     :
         A DiagnosticSummary with all requirement sets summarized.
     """
-    requirement_sets = _normalize_requirement_sets(diagnostic.data_requirements)
+    requirement_sets = normalize_requirement_sets(diagnostic.data_requirements)
 
     set_summaries = []
     for req_set in requirement_sets:

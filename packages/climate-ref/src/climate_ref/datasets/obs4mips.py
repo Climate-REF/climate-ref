@@ -234,6 +234,7 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         other = "obs4REF" if self.activity_id == "obs4MIPs" else "obs4MIPs"
         misfiled = in_collection_directory(datasets["path"], other)
         if other == "obs4REF":
+            # An obs4MIPs attribute on an obs4REF file is expected, the reverse is not.
             misfiled |= datasets["activity_id"] == other
         count = int(misfiled.sum())
         if count:

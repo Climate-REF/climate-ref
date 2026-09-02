@@ -248,6 +248,23 @@ def _process_group_constraints(
     return group
 
 
+def as_frame(catalog: pd.DataFrame | DataCatalog) -> pd.DataFrame:
+    """
+    Unwrap a catalog to the DataFrame behind it.
+
+    Parameters
+    ----------
+    catalog
+        Either a catalog wrapper or a plain frame.
+
+    Returns
+    -------
+    :
+        The catalog as a DataFrame.
+    """
+    return catalog.to_frame() if isinstance(catalog, DataCatalog) else catalog
+
+
 def with_obs4ref_fallback(
     obs4mips: pd.DataFrame | DataCatalog,
     obs4ref: pd.DataFrame | DataCatalog,
@@ -273,10 +290,10 @@ def with_obs4ref_fallback(
         The obs4MIPs catalog, extended with the obs4REF datasets it does not hold.
         The original catalog is returned untouched when there is nothing to add.
     """
-    obs4ref_df = obs4ref.to_frame() if isinstance(obs4ref, DataCatalog) else obs4ref
+    obs4ref_df = as_frame(obs4ref)
     if obs4ref_df.empty or "instance_id" not in obs4ref_df.columns:
         return obs4mips
-    obs4mips_df = obs4mips.to_frame() if isinstance(obs4mips, DataCatalog) else obs4mips
+    obs4mips_df = as_frame(obs4mips)
 
     held = set(obs_dataset_key(obs4mips_df["instance_id"])) if len(obs4mips_df) else set()
     extra = obs4ref_df[~obs_dataset_key(obs4ref_df["instance_id"]).isin(held)]

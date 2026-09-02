@@ -13,11 +13,20 @@ and diagnostics the ingested data cannot solve at all.
 from collections import defaultdict
 from collections.abc import Mapping
 
+import pandas as pd
+
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.datasets.obs4mips import in_collection_directory
 from climate_ref.doctor.context import DoctorContext
 from climate_ref.doctor.findings import Finding, Severity
 from climate_ref.doctor.registry import check
+from climate_ref.solver import (
+    apply_obs4ref_fallback,
+    as_frame,
+    extract_covered_datasets,
+    obs_dataset_key,
+    solve_executions,
+)
 from climate_ref.text import pluralise
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import InvalidDiagnosticException
@@ -28,7 +37,7 @@ from climate_ref_core.reference_data import (
     source_ids_by_registry,
 )
 from climate_ref_core.source_types import SourceDatasetType
-from climate_ref_core.summary import _normalize_requirement_sets, summarize_provider
+from climate_ref_core.summary import normalize_requirement_sets, summarize_provider
 
 
 @check(
@@ -312,8 +321,6 @@ def check_superseded_obs4ref(context: DoctorContext) -> list[Finding]:
     :
         One finding per superseded obs4REF dataset.
     """
-    from climate_ref.solver import obs_dataset_key  # noqa: PLC0415
-
     obs4mips = context.catalog(SourceDatasetType.obs4MIPs)
     obs4ref = context.catalog(SourceDatasetType.obs4REF)
     if not len(obs4mips) or not len(obs4ref) or "instance_id" not in obs4mips or "instance_id" not in obs4ref:
@@ -356,11 +363,11 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
     :
         One finding per diagnostic with no executions.
     """
-    from climate_ref.solver import solve_executions  # noqa: PLC0415
-
     catalogs: dict[SourceDatasetType, DataCatalog] = {
         source_type: context.data_catalog(source_type) for source_type in SourceDatasetType
     }
+
+    available = apply_obs4ref_fallback(catalogs)
 
     findings = []
     for provider in context.providers:
@@ -375,7 +382,7 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
                 Finding(
                     severity=Severity.WARNING,
                     summary=f"{provider.slug}/{diagnostic.slug} has no executions",
-                    detail=_why_unsolvable(diagnostic, catalogs),
+                    detail=_why_unsolvable(diagnostic, available),
                     remedy="Ingest the data the unmet requirement names, then run the solver again.",
                 )
             )
@@ -384,7 +391,7 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
 
 def _why_unsolvable(
     diagnostic: Diagnostic,
-    catalogs: Mapping[SourceDatasetType, DataCatalog],
+    available: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
 ) -> str:
     """
     Explain which requirement the ingested data fails to meet.
@@ -393,15 +400,11 @@ def _why_unsolvable(
     the data to fetch. When every requirement matches something, the failure lies in how
     they combine, which is reported as such.
     """
-    from climate_ref.solver import apply_obs4ref_fallback, extract_covered_datasets  # noqa: PLC0415
-
-    available = apply_obs4ref_fallback(catalogs)
-
     reasons = []
-    for requirements in _normalize_requirement_sets(diagnostic.data_requirements):
+    for requirements in normalize_requirement_sets(diagnostic.data_requirements):
         for requirement in requirements:
             catalog = available[requirement.source_type]
-            frame = catalog.to_frame() if isinstance(catalog, DataCatalog) else catalog
+            frame = as_frame(catalog)
             if not len(frame):
                 reasons.append(f"nothing is ingested as {requirement.source_type.value}")
                 break

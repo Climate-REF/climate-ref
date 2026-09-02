@@ -39,14 +39,14 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": "siconc",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "SImon",
                         },
                     ),
                     FacetFilter(
                         facets={
                             "variable_id": "tas",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
@@ -83,7 +83,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "siconc_tavg-u-hxy-u",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -91,7 +91,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "tas_tavg-h2m-hxy-u",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },

@@ -98,7 +98,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": "siconc",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "SImon",
                         },
                     ),
@@ -123,7 +123,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "siconc_tavg-u-hxy-u",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },

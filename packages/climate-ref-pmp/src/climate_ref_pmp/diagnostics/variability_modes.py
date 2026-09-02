@@ -71,7 +71,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                 FacetFilter(
                     facets={
                         "frequency": "mon",
-                        "experiment_id": ("historical", "hist-GHG", *extra_experiments),
+                        "experiment_id": ("historical", "esm-hist", "hist-GHG", *extra_experiments),
                         "variable_id": model_variable,
                     }
                 )
@@ -81,7 +81,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                 FacetFilter(
                     facets={
                         "branded_variable": (_BRANDED_VARIABLE_NAMES[model_variable],),
-                        "experiment_id": ("historical", "hist-GHG", *extra_experiments),
+                        "experiment_id": ("historical", "esm-hist", "hist-GHG", *extra_experiments),
                         "frequency": "mon",
                         "region": "glb",
                     }

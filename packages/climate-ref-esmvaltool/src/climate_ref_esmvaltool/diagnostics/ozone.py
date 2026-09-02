@@ -33,7 +33,7 @@ toz_data_requirement = (
                 FacetFilter(
                     facets={
                         "variable_id": "toz",
-                        "experiment_id": "historical",
+                        "experiment_id": ("historical", "esm-hist"),
                         "table_id": "AERmon",
                     },
                 ),
@@ -69,7 +69,7 @@ toz_data_requirement = (
                 FacetFilter(
                     facets={
                         "variable_id": "toz",
-                        "experiment_id": "historical",
+                        "experiment_id": ("historical", "esm-hist"),
                         "branded_variable": "toz_tavg-u-hxy-u",
                         "frequency": "mon",
                         "region": "glb",
@@ -307,7 +307,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                 FacetFilter(
                     facets={
                         "variable_id": "o3",
-                        "experiment_id": "historical",
+                        "experiment_id": ("historical", "esm-hist"),
                         "table_id": "Amon",
                     },
                 ),

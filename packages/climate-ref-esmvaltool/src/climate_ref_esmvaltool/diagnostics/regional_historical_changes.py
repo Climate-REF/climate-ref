@@ -130,7 +130,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
@@ -159,7 +159,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                                 "tas_tavg-h2m-hxy-u",
                                 "ua_tavg-p19-hxy-air",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                         },
                     ),
@@ -415,7 +415,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
@@ -444,7 +444,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                                 "tas_tavg-h2m-hxy-u",
                                 "ua_tavg-p19-hxy-air",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -671,7 +671,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
@@ -700,7 +700,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                                 "tas_tavg-h2m-hxy-u",
                                 "ua_tavg-p19-hxy-air",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                         },
                     ),

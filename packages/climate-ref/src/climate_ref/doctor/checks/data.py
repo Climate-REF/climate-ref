@@ -312,6 +312,10 @@ def check_superseded_obs4ref(context: DoctorContext) -> list[Finding]:
     The solver takes the obs4MIPs copy, so the obs4REF one is no longer used.
     This is the signal that a dataset can be dropped from the obs4REF registry.
 
+    A misfiled obs4REF row does not count as a publication.
+    Mid-upgrade the two sit side by side, and calling that superseded would tell the user
+    to retract the row `misfiled-obs4ref` is asking them to keep.
+
     Parameters
     ----------
     context
@@ -327,7 +331,13 @@ def check_superseded_obs4ref(context: DoctorContext) -> list[Finding]:
     if not len(obs4mips) or not len(obs4ref) or "instance_id" not in obs4mips or "instance_id" not in obs4ref:
         return []
 
-    published = set(obs_dataset_key(obs4mips["instance_id"]))
+    genuine = obs4mips
+    if "path" in obs4mips.columns:
+        genuine = obs4mips[~in_collection_directory(obs4mips["path"], "obs4REF")]
+    if not len(genuine):
+        return []
+
+    published = set(obs_dataset_key(genuine["instance_id"]))
     superseded = obs4ref[obs_dataset_key(obs4ref["instance_id"]).isin(published)]
     return [
         Finding(

@@ -201,22 +201,28 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                 dataset.pop("mip", None)
                 dataset["timerange"] = "1979/2014"
 
-        # The recipe carries its own model and observational datasets. Drop both, because the
-        # REF supplies the models from the solve and has no ESMValTool observations available.
-        for key in ("datasets", "model_defaults", "model_datasets", "obs_defaults"):
-            recipe.pop(key, None)
-        for key in ("tasa_obs", "arctic_siconc_obs", "antarctic_siconc_obs"):
+        # The REF supplies the models from the solve and has no ESMValTool observations available,
+        # so drop the datasets the recipe carries and the anchors holding them.
+        for key in (
+            "datasets",
+            "model_defaults",
+            "model_datasets",
+            "obs_defaults",
+            "tasa_obs",
+            "arctic_siconc_obs",
+            "antarctic_siconc_obs",
+        ):
             recipe.pop(key, None)
 
         for diagnostic in recipe["diagnostics"].values():
             variables = diagnostic["variables"]
             for name in list(variables):
-                if name.endswith("_obs"):
-                    del variables[name]
-                else:
+                if name in recipe_variables:
                     variables[name]["additional_datasets"] = copy.deepcopy(
                         recipe_variables[name]["additional_datasets"]
                     )
+                else:
+                    del variables[name]
 
     @staticmethod
     def format_result(
@@ -236,35 +242,29 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
             "region": {},
             "metric": {},
         }
+        dimensions = metric_args[MetricCV.DIMENSIONS.value]
         for region in "antarctic", "arctic":
             df = pd.read_csv(
                 result_dir / "work" / region / "sea_ice_sensitivity_script" / "data_values.csv",
                 header=[0, 1, 2],
                 index_col=0,
             )
-            # The label and type columns have no period, so pandas names their upper levels
-            # "Unnamed: <n>_level_<m>". Everything else is headed by a period.
-            periods = [
-                period
-                for period in df.columns.get_level_values(0).unique()
-                if not period.startswith("Unnamed:")
-            ]
-            type_column = next(column for column in df.columns if column[2] == "type")
-            df = df[df[type_column] == "model"]
+            is_type = df.columns.get_level_values("statistic") == "type"
+            is_model = df.loc[:, is_type].iloc[:, 0] == "model"
             # The REF solve covers a single period, so keep the last one if the script adds more.
-            values = df[periods[-1]]
+            period = str(df.columns.get_level_values("period")[-1])
+            values = df.loc[is_model, period]
 
-            metric_args[MetricCV.DIMENSIONS.value]["region"][region] = {}
+            dimensions["region"][region] = {}
             for regression, statistic in values.columns:
-                metric_args[MetricCV.DIMENSIONS.value]["metric"][f"{regression}_{statistic}"] = {}
+                dimensions["metric"][f"{regression}_{statistic}"] = {}
             for source_id, row in values.iterrows():
-                metric_args[MetricCV.DIMENSIONS.value]["source_id"][source_id] = {}
+                dimensions["source_id"][source_id] = {}
                 results = metric_args[MetricCV.RESULTS.value].setdefault(source_id, {}).setdefault(region, {})
                 for (regression, statistic), value in row.items():
                     results[f"{regression}_{statistic}"] = float(value)
 
-        # The provenance drops the .csv suffix, so the bundle would point at a file that
-        # does not exist. Restore it before the output files are collected.
+        # Restore the suffix so the bundle does not point at a file that does not exist.
         data = output_args[OutputCV.DATA.value]
         for key in [key for key in data if key.endswith("/data_values")]:
             entry = data.pop(key)

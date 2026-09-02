@@ -86,7 +86,6 @@ class TestDiscoverFiles:
         assert names_d2 == ["a.nc", "b.nc", "root.nc"]
 
     def test_unlimited_depth(self, tmp_path):
-        # A tree deeper than any previous fixed limit, matching the CMIP7 DRS nesting.
         leaf = tmp_path
         for level in range(14):
             leaf = leaf / f"level{level}"

@@ -23,6 +23,32 @@ INVALID_ASSET = "INVALID_ASSET"
 TRACEBACK = "TRACEBACK"
 
 
+def _walk_within_depth(root: Path, depth: int | None) -> Iterator[tuple[str, list[str]]]:
+    """
+    Walk ``root`` in sorted order, yielding ``(dirpath, filenames)`` for each directory visited.
+
+    Files at the depth limit are still yielded, the walk just stops descending past it.
+
+    Parameters
+    ----------
+    root
+        Directory to walk.
+    depth
+        Maximum directory depth below ``root``, or ``None`` to walk the whole tree.
+        ``0`` visits only ``root`` itself.
+
+    Yields
+    ------
+    :
+        The directory path and the names of the files directly inside it.
+    """
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames.sort()
+        if depth is not None and len(Path(dirpath).relative_to(root).parts) >= depth:
+            dirnames.clear()
+        yield dirpath, filenames
+
+
 def discover_files(
     paths: list[str],
     include_patterns: list[str] | None = None,
@@ -62,12 +88,7 @@ def discover_files(
                 assets.append(str(root))
             continue
 
-        for dirpath, dirnames, filenames in os.walk(root):
-            current_depth = len(Path(dirpath).relative_to(root).parts)
-            if depth is not None and current_depth >= depth:
-                # Still process files at this level, but don't descend further
-                dirnames.clear()
-
+        for dirpath, filenames in _walk_within_depth(root, depth):
             for filename in filenames:
                 if any(fnmatch.fnmatch(filename, pat) for pat in include_patterns):
                     assets.append(os.path.join(dirpath, filename))
@@ -259,12 +280,7 @@ def iter_discovered_chunks(
                 yield from _flush()
             continue
 
-        for dirpath, dirnames, filenames in os.walk(root):
-            dirnames.sort()
-            current_depth = len(Path(dirpath).relative_to(root).parts)
-            if depth is not None and current_depth >= depth:
-                dirnames.clear()
-
+        for dirpath, filenames in _walk_within_depth(root, depth):
             matched = [
                 os.path.join(dirpath, fn)
                 for fn in filenames
@@ -351,4 +367,4 @@ def iter_built_catalogs(  # noqa: PLR0913
         yield df
 
     if not any_emitted:
-        logger.info(f"No valid files found in {paths} matching {include_patterns}")
+        logger.warning(f"No valid files found in {paths} matching {include_patterns}")

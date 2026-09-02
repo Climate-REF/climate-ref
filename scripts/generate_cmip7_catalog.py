@@ -22,6 +22,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_to_cmip7_attrs,
     create_cmip7_filename,
     create_cmip7_path,
+    make_tracking_id,
 )
 
 # CMIP7 columns expected by the CMIP7DatasetAdapter
@@ -63,14 +64,13 @@ def _convert_row(row: pd.Series) -> dict | None:
     # Build instance_id in CMIP7 DRS format
     instance_parts = [*CMIP7DatasetAdapter.dataset_id_metadata, "version"]
     attrs["instance_id"] = "CMIP7." + ".".join(str(attrs[p]) for p in instance_parts)
+    attrs["tracking_id"] = make_tracking_id(f"{attrs['instance_id']}/{cmip7_filename}")
 
     return attrs
 
 
 # The canonical last monthly timestep of a full CMIP6/CMIP7 ``historical`` run.
-# Only rows that already reach this end are lifted, which is what keeps the
-# extension from perturbing any other diagnostic (see ``_extend_historical_end``).
-FULL_HISTORICAL_END = "2014-12-16 12:00:00"
+FULL_HISTORICAL_END = "2014-12-16"
 
 
 def _extend_historical_end(
@@ -81,19 +81,13 @@ def _extend_historical_end(
     """
     Relabel full-length CMIP7 ``historical`` runs so their coverage reaches ``end_time``.
 
-    Only rows whose ``end_time`` is *exactly* ``only_from`` (the canonical full
-    historical end, 2014-12) are lifted. This deliberately narrow rule is what keeps
-    the extension from perturbing other diagnostics: those rows already satisfy every
-    diagnostic that requires coverage up to 2014-12 or earlier, so pushing their end
-    further out never removes them and never newly-satisfies such a constraint. Only a
-    diagnostic that requires coverage *beyond* 2014-12 (the fire diagnostic's 2002-2021
-    window) sees any change.
+    This only adjusts the ``historical`` experiment.
+    There are other experiments that may have changed,
+    but our focus is the ``historical``.
 
-    Shorter historical runs (e.g. a 5-year GFDL slice ending 1854) are left alone so
-    they cannot suddenly satisfy another diagnostic's timerange. Fixed-frequency rows
-    (``fx``, e.g. ``sftlf``) carry a null ``end_time`` and are untouched. Only
-    ``end_time`` is changed -- ``start_time``, ``instance_id``, ``path`` and every other
-    column are preserved.
+    Fixed-frequency rows (``fx``, e.g. ``sftlf``) carry a null ``end_time`` and are untouched.
+    Only ``end_time`` is changed,
+    so ``start_time``, ``instance_id``, ``path`` and every other column are preserved.
 
     Parameters
     ----------
@@ -102,7 +96,7 @@ def _extend_historical_end(
     end_time
         Target ``end_time`` string (``YYYY-MM-DD HH:MM:SS``).
     only_from
-        Only rows whose ``end_time`` equals this value are extended.
+        Only rows whose ``end_time`` falls on this date (``YYYY-MM-DD``) are extended.
 
     Returns
     -------
@@ -110,7 +104,8 @@ def _extend_historical_end(
         Number of rows whose ``end_time`` was extended.
     """
     is_historical = cmip7_catalog["experiment_id"] == "historical"
-    is_full_run = cmip7_catalog["end_time"] == only_from
+    # Check date only to avoid calendar differences
+    is_full_run = cmip7_catalog["end_time"].str.startswith(only_from, na=False)
     mask = is_historical & is_full_run
 
     cmip7_catalog.loc[mask, "end_time"] = end_time

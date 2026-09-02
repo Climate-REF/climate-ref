@@ -281,14 +281,14 @@ class TestMisfiledObs4ref:
         assert "ERA-5" not in findings[0].detail
         assert findings[0].command == "ref datasets ingest --source-type obs4ref <dir>"
 
-    def test_registry_source_id_under_obs4mips_is_reported(self):
-        # WECANN-1-0 is carried by the obs4REF registry, whatever directory it was ingested from.
+    def test_registry_source_id_from_esgf_is_not_reported(self):
+        # HadISST-1-1 sits in both collections, so an ESGF copy is legitimately ingested as obs4MIPs.
         catalog = _catalog(
-            [("obs4MIPs.obs4MIPs.WECANN.gpp", "WECANN-1-0", "gpp", "2007-01-01", "2015-12-01", "/d/gpp.nc")]
+            [("obs4MIPs.obs4MIPs.HadISST.ts", "HadISST-1-1", "ts", "2000-01-01", "2000-12-01", "/d/ts.nc")]
         )
         context = _context({SourceDatasetType.obs4MIPs: catalog})
 
-        assert len(check_misfiled_obs4ref(context)) == 1
+        assert check_misfiled_obs4ref(context) == []
 
     def test_esgf_data_is_not_reported(self):
         catalog = _catalog([("obs4MIPs.ERA-5.ta", "ERA-5", "ta", "2000-01-01", "2000-12-01", "/d/ta.nc")])

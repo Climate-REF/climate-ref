@@ -112,7 +112,7 @@ The script also fetches `CERES-EBAF-4-2`, `GPCP-Monthly-3-2`, `HadISST-1-1` and 
 These are the ESGF-published copies of datasets that were curated for the REF before publication,
 so the obs4REF registry ships them as well.
 
-If you fetch these from ESGF as well as from the obs4REF registry, the ESGF copy is the one used.
+If you fetch the same dataset from ESGF as well as from the obs4REF registry, the ESGF copy is the one used.
 obs4MIPs is the official home of the reference data, and the registry only fills in what is not published yet.
 `ref doctor` lists the registry copies that have been superseded this way.
 ///

@@ -1975,12 +1975,22 @@ class TestObs4REFFallback:
         obs4mips = self._frame("obs4MIPs", ["A"])
         obs4ref = self._frame("obs4REF", ["A", "B"], start=10)
 
-        merged = with_obs4ref_fallback(obs4mips, obs4ref).to_frame()
+        merged = with_obs4ref_fallback(obs4mips, obs4ref)
 
         # A is taken from obs4MIPs only, B comes from obs4REF and keeps its dataset id.
         assert merged["source_id"].tolist() == ["A", "B"]
-        assert merged.index.tolist() == [0, 11]
+        assert merged.index.tolist() == [0, 1]
         assert merged["instance_id"].iloc[1].startswith("obs4REF.")
+
+    def test_the_merged_catalog_can_still_finalise(self):
+        adapter = CMIP6DatasetAdapter()
+        obs4mips = DataCatalog(database=None, adapter=adapter, df=self._frame("obs4MIPs", ["A"]))
+        obs4ref = DataCatalog.from_frame(self._frame("obs4REF", ["B"]))
+
+        merged = with_obs4ref_fallback(obs4mips, obs4ref)
+
+        assert isinstance(merged, DataCatalog)
+        assert merged.adapter is adapter
 
     def test_obs4mips_wins_whatever_the_versions(self):
         obs4mips = self._frame("obs4MIPs", ["A"], version="v1")

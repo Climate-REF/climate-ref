@@ -105,7 +105,7 @@ ref datasets fetch-data --registry quickstart --output-directory $REF_CONFIGURAT
 ## 4. Ingest (~20 s)
 
 Extract metadata from the downloaded files into the local catalog.
-The model data is CMIP6; the observation uses the `obs4mips` source type:
+The model data is CMIP6. The observation comes from the obs4REF registry, so it is ingested under the `obs4ref` source type.
 
 ```bash
 ref datasets ingest --source-type cmip6 $REF_CONFIGURATION/datasets/sample-data/CMIP6

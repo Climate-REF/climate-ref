@@ -45,8 +45,6 @@ from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionD
 from climate_ref_core.exceptions import InvalidDiagnosticException
 from climate_ref_core.providers import DiagnosticProvider
 
-_EMPTY_CATALOG = pd.DataFrame()
-
 
 @frozen
 class DiagnosticExecution:
@@ -286,7 +284,12 @@ def with_obs4ref_fallback(
         return obs4mips
     if obs4mips_df.empty:
         return obs4ref
-    return DataCatalog.from_frame(pd.concat([obs4mips_df, extra]))
+
+    merged = pd.concat([obs4mips_df, extra], ignore_index=True)
+    if isinstance(obs4mips, DataCatalog):
+        # Keep the obs4MIPs adapter and database so the merged catalog can still finalise.
+        return DataCatalog(database=obs4mips.database, adapter=obs4mips.adapter, df=merged)
+    return merged
 
 
 def obs_dataset_key(instance_id: pd.Series) -> pd.Series:
@@ -329,7 +332,7 @@ def apply_obs4ref_fallback(
     """
     if SourceDatasetType.obs4REF not in data_catalog:
         return data_catalog
-    obs4mips = data_catalog.get(SourceDatasetType.obs4MIPs, _EMPTY_CATALOG)
+    obs4mips = data_catalog.get(SourceDatasetType.obs4MIPs, pd.DataFrame())
     return {
         **data_catalog,
         SourceDatasetType.obs4MIPs: with_obs4ref_fallback(obs4mips, data_catalog[SourceDatasetType.obs4REF]),

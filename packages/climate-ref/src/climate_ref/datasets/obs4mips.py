@@ -20,6 +20,25 @@ from climate_ref.datasets.utils import build_instance_id, parse_cftime_dates
 from climate_ref.models.dataset import Dataset, Obs4MIPsDataset, Obs4REFDataset
 
 
+def in_collection_directory(paths: pd.Series, activity_id: str) -> pd.Series:
+    """
+    Whether each file sits under the named collection's directory.
+
+    Parameters
+    ----------
+    paths
+        File paths from a catalog.
+    activity_id
+        The collection to look for, ``obs4MIPs`` or ``obs4REF``.
+
+    Returns
+    -------
+    :
+        A boolean mask over ``paths``.
+    """
+    return paths.astype(str).str.contains(f"/{activity_id}/", regex=False)
+
+
 def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
     """
     Parser for obs4MIPs and obs4REF files
@@ -213,7 +232,7 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         or activity id is only a hint. The files are ingested either way.
         """
         other = "obs4REF" if self.activity_id == "obs4MIPs" else "obs4MIPs"
-        misfiled = datasets["path"].astype(str).str.contains(f"/{other}/", regex=False)
+        misfiled = in_collection_directory(datasets["path"], other)
         if other == "obs4REF":
             misfiled |= datasets["activity_id"] == other
         count = int(misfiled.sum())

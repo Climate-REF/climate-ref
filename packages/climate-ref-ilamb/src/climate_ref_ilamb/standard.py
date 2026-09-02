@@ -951,9 +951,7 @@ class ILAMBStandard(Diagnostic):
         # resolve to keys in one of its data registries. If instead we find a
         # dictionary, then assume that these keys are meant to be keywords in a
         # REF data requirement.
-        # obs_source names where the test data is fetched from:
-        # "obs4ref" for the obs4REF registry, "obs4mips" for ESGF.
-        # The requirement itself asks for obs4MIPs, and obs4REF fills in what ESGF lacks.
+        # obs_source names where the test data is fetched from, the registry or ESGF.
         filters: dict[str, tuple[str, ...]] = {}
         obs_source = None
         for _, source in sources.items():

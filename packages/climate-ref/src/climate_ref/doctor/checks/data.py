@@ -14,6 +14,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 
 from climate_ref.data_catalog import DataCatalog
+from climate_ref.datasets.obs4mips import in_collection_directory
 from climate_ref.doctor.context import DoctorContext
 from climate_ref.doctor.findings import Finding, Severity
 from climate_ref.doctor.registry import check
@@ -252,8 +253,10 @@ def check_misfiled_obs4ref(context: DoctorContext) -> list[Finding]:
     The cost is that the catalog no longer shows which datasets came from the registry
     and which from the archive, and a later obs4MIPs publication cannot take over from it.
 
-    A dataset counts as obs4REF when an obs4REF registry carries its ``source_id``
-    or its files sit under an ``obs4REF`` directory.
+    A dataset counts as obs4REF when its files sit under an ``obs4REF`` directory,
+    which is how the registry lays them out.
+    Carrying a ``source_id`` the registry also carries is not enough,
+    because the four datasets published to both archives are legitimately ingested as obs4MIPs.
 
     Parameters
     ----------
@@ -266,17 +269,10 @@ def check_misfiled_obs4ref(context: DoctorContext) -> list[Finding]:
         One finding when any such data is present.
     """
     catalog = context.catalog(SourceDatasetType.obs4MIPs)
-    if not len(catalog) or not {"instance_id", "source_id", "path"}.issubset(catalog.columns):
+    if not len(catalog) or not {"instance_id", "path"}.issubset(catalog.columns):
         return []
 
-    registry_ids = {
-        source_id
-        for (source_type, source_id) in source_ids_by_registry()
-        if source_type == SourceDatasetType.obs4REF.value
-    }
-    misfiled = catalog["source_id"].isin(registry_ids) | catalog["path"].astype(str).str.contains(
-        "/obs4REF/", regex=False
-    )
+    misfiled = in_collection_directory(catalog["path"], "obs4REF")
     if not misfiled.any():
         return []
 
@@ -363,7 +359,7 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
     from climate_ref.solver import solve_executions  # noqa: PLC0415
 
     catalogs: dict[SourceDatasetType, DataCatalog] = {
-        source_type: DataCatalog.from_frame(context.catalog(source_type)) for source_type in SourceDatasetType
+        source_type: context.data_catalog(source_type) for source_type in SourceDatasetType
     }
 
     findings = []
@@ -380,10 +376,7 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
                     severity=Severity.WARNING,
                     summary=f"{provider.slug}/{diagnostic.slug} has no executions",
                     detail=_why_unsolvable(diagnostic, catalogs),
-                    remedy=(
-                        "Ingest the data each diagnostic asks for. "
-                        "The findings above list the missing reference data."
-                    ),
+                    remedy="Ingest the data the unmet requirement names, then run the solver again.",
                 )
             )
     return findings

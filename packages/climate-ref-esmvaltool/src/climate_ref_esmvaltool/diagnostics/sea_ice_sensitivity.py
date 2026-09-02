@@ -264,7 +264,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                 for (regression, statistic), value in row.items():
                     results[f"{regression}_{statistic}"] = float(value)
 
-        # Restore the suffix so the bundle does not point at a file that does not exist.
+        # Restore the data_values suffix
         data = output_args[OutputCV.DATA.value]
         for key in [key for key in data if key.endswith("/data_values")]:
             entry = data.pop(key)

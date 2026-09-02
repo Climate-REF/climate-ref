@@ -149,7 +149,6 @@ toz_test_spec = TestDataSpecification(
                     },
                     remove_ensembles=True,
                     time_span=("1950", "2015"),
-                    # Fabricate the CMIP7 historical series to extend to 2021-12
                     extend_historical_to=(2021, 12),
                 ),
                 Obs4MIPsRequest(

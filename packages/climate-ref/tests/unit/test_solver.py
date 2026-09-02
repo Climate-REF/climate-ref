@@ -1995,6 +1995,16 @@ class TestObs4REFFallback:
         assert merged.adapter is None
         assert merged.to_frame()["source_id"].tolist() == ["A", "B"]
 
+    def test_added_rows_group_as_obs4mips(self):
+        # pmp/enso groups its reference data by activity_id, so a second value splits it in two.
+        obs4mips = self._frame("obs4MIPs", ["A"]).assign(activity_id="obs4MIPs")
+        obs4ref = self._frame("obs4REF", ["B"], start=10).assign(activity_id="obs4REF")
+
+        merged = with_obs4ref_fallback(obs4mips, obs4ref)
+
+        assert merged["activity_id"].tolist() == ["obs4MIPs", "obs4MIPs"]
+        assert merged["instance_id"].iloc[1].startswith("obs4REF.")
+
     def test_obs4mips_wins_whatever_the_versions(self):
         obs4mips = self._frame("obs4MIPs", ["A"], version="v1")
         obs4ref = self._frame("obs4REF", ["A"], version="v2", start=10)

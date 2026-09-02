@@ -231,12 +231,15 @@ def obs4ref_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFra
 
 @pytest.fixture(scope="session")
 def data_catalog(
-    cmip6_data_catalog: pd.DataFrame, obs4mips_data_catalog: pd.DataFrame
+    cmip6_data_catalog: pd.DataFrame,
+    obs4mips_data_catalog: pd.DataFrame,
+    obs4ref_data_catalog: pd.DataFrame,
 ) -> dict[SourceDatasetType, pd.DataFrame]:
-    """Provide combined data catalog with CMIP6 and obs4MIPs sources."""
+    """Provide combined data catalog with CMIP6, obs4MIPs and obs4REF sources."""
     return {
         SourceDatasetType.CMIP6: cmip6_data_catalog,
         SourceDatasetType.obs4MIPs: obs4mips_data_catalog,
+        SourceDatasetType.obs4REF: obs4ref_data_catalog,
     }
 
 

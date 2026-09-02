@@ -375,7 +375,8 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
         for diagnostic in provider.diagnostics():
             try:
                 solvable = any(True for _ in solve_executions(catalogs, diagnostic, provider))
-            except InvalidDiagnosticException:
+            except (InvalidDiagnosticException, ValueError):
+                # ValueError is a diagnostic declaring no data requirements at all.
                 solvable = False
             if solvable:
                 continue

@@ -23,10 +23,9 @@ from climate_ref_core.cmip6_to_cmip7 import (
     format_cmip7_time_range,
     get_dreq_entry,
     get_frequency_from_table,
-    month_index,
+    months_to_extend,
     repeat_final_year_to,
     suppress_bounds_coordinates,
-    target_month_index,
 )
 from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.esgf.cmip6 import CMIP6Request
@@ -365,20 +364,18 @@ class CMIP7Request:
             cmip7_row = self._convert_to_cmip7_metadata(row_dict)
 
             # Get file paths and convert them
-            files = row_dict.get("files", [])
+            paths = [Path(file_path) for file_path in row_dict.get("files", [])]
             latest = None
             if self.extend_historical_to is not None:
-                end_year, end_month = self.extend_historical_to
-                found = _latest_file([Path(f) for f in files if Path(f).exists()])
-                if found is not None and month_index(found.end) < target_month_index(end_year, end_month):
+                found = _latest_file([path for path in paths if path.exists()])
+                if found is not None and months_to_extend(found.end, *self.extend_historical_to) > 0:
                     latest = found.path
                     # Fabricated years must not be published under the version the real
                     # data carries, so bump it for every file in the dataset.
-                    cmip7_row["version"] = _bump_version(str(cmip7_row.get("version", "v0")))
+                    cmip7_row["version"] = _bump_version(str(cmip7_row.get("version", "")))
 
             converted_files = []
-            for file_path in files:
-                cmip6_path = Path(file_path)
+            for cmip6_path in paths:
                 if cmip6_path.exists():
                     try:
                         cmip7_path = _convert_file_to_cmip7(
@@ -391,7 +388,7 @@ class CMIP7Request:
                         logger.exception(f"Failed to convert {cmip6_path.name}: {e}")
                         continue
                 else:
-                    logger.warning(f"CMIP6 file not found: {file_path}")
+                    logger.warning(f"CMIP6 file not found: {cmip6_path}")
 
             if converted_files:
                 cmip7_row["files"] = converted_files

@@ -111,7 +111,7 @@ def _extend_historical_end(
         Number of rows whose ``end_time`` was extended.
     """
     is_historical = cmip7_catalog["experiment_id"] == "historical"
-    is_full_run = cmip7_catalog["end_time"].astype("string").str.startswith(only_from).fillna(False)
+    is_full_run = cmip7_catalog["end_time"].str.startswith(only_from, na=False)
     mask = is_historical & is_full_run
 
     cmip7_catalog.loc[mask, "end_time"] = end_time

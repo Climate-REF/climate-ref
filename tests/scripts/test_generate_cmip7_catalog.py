@@ -13,17 +13,13 @@ import pytest
 SCRIPT = Path(__file__).parents[2] / "scripts" / "generate_cmip7_catalog.py"
 
 
-def _load_script():
+@pytest.fixture(scope="module")
+def script():
     spec = importlib.util.spec_from_file_location("generate_cmip7_catalog", SCRIPT)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-@pytest.fixture(scope="module")
-def script():
-    return _load_script()
 
 
 def _catalog(rows):

@@ -795,13 +795,8 @@ class TestFetchDatasetsExtendHistorical:
         xr.Dataset({"toz": ("time", np.zeros(n))}, coords={"time": time}).to_netcdf(path)
         return path
 
-    @patch("climate_ref_core.esgf.cmip7.CMIP6Request")
-    @patch("climate_ref_core.esgf.cmip7._convert_file_to_cmip7")
-    def test_only_the_last_chunk_is_extended(self, mock_convert, mock_cmip6_request_class, tmp_path):
-        """The earlier chunks stay where they are, so the converted files do not overlap."""
-        early = self._write_monthly_file(tmp_path / "early.nc", 1850, 1949)
-        late = self._write_monthly_file(tmp_path / "late.nc", 1950, 2014)
-
+    def _stub_cmip6(self, mock_cmip6_request_class, files: list[Path], **extra: str) -> None:
+        """Stand in for the ESGF fetch with a single CMIP6 row covering ``files``."""
         mock_cmip6_instance = MagicMock()
         mock_cmip6_instance.fetch_datasets.return_value = pd.DataFrame(
             {
@@ -809,10 +804,20 @@ class TestFetchDatasetsExtendHistorical:
                 "member_id": ["r1i1p1f1"],
                 "variable_id": ["toz"],
                 "table_id": ["AERmon"],
-                "files": [[str(early), str(late)]],
+                "files": [[str(path) for path in files]],
+                **{key: [value] for key, value in extra.items()},
             }
         )
         mock_cmip6_request_class.return_value = mock_cmip6_instance
+
+    @patch("climate_ref_core.esgf.cmip7.CMIP6Request")
+    @patch("climate_ref_core.esgf.cmip7._convert_file_to_cmip7")
+    def test_only_the_last_chunk_is_extended(self, mock_convert, mock_cmip6_request_class, tmp_path):
+        """The earlier chunks stay where they are, so the converted files do not overlap."""
+        early = self._write_monthly_file(tmp_path / "early.nc", 1850, 1949)
+        late = self._write_monthly_file(tmp_path / "late.nc", 1950, 2014)
+
+        self._stub_cmip6(mock_cmip6_request_class, [early, late])
         mock_convert.side_effect = [tmp_path / "a.nc", tmp_path / "b.nc"]
 
         request = CMIP7Request(
@@ -835,17 +840,7 @@ class TestFetchDatasetsExtendHistorical:
         """Without the opt-in no file is extended, and the files are not opened to find out."""
         only = self._write_monthly_file(tmp_path / "only.nc", 1950, 2014)
 
-        mock_cmip6_instance = MagicMock()
-        mock_cmip6_instance.fetch_datasets.return_value = pd.DataFrame(
-            {
-                "source_id": ["GFDL-ESM4"],
-                "member_id": ["r1i1p1f1"],
-                "variable_id": ["toz"],
-                "table_id": ["AERmon"],
-                "files": [[str(only)]],
-            }
-        )
-        mock_cmip6_request_class.return_value = mock_cmip6_instance
+        self._stub_cmip6(mock_cmip6_request_class, [only])
         mock_convert.return_value = tmp_path / "a.nc"
 
         CMIP7Request(slug="test", facets={"source_id": "GFDL-ESM4"}).fetch_datasets()
@@ -860,18 +855,7 @@ class TestFetchDatasetsExtendHistorical:
         """A dataset already reaching the requested end is real data, so it keeps its version."""
         only = self._write_monthly_file(tmp_path / "only.nc", 1950, 2021)
 
-        mock_cmip6_instance = MagicMock()
-        mock_cmip6_instance.fetch_datasets.return_value = pd.DataFrame(
-            {
-                "source_id": ["GFDL-ESM4"],
-                "member_id": ["r1i1p1f1"],
-                "variable_id": ["toz"],
-                "table_id": ["AERmon"],
-                "version": ["20190429"],
-                "files": [[str(only)]],
-            }
-        )
-        mock_cmip6_request_class.return_value = mock_cmip6_instance
+        self._stub_cmip6(mock_cmip6_request_class, [only], version="20190429")
         mock_convert.return_value = tmp_path / "a.nc"
 
         CMIP7Request(

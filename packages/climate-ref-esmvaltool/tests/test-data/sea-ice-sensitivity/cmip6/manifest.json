@@ -1,55 +1,55 @@
 {
   "catalog_hash": "ed2db5a8a44c55840961c2a0a30fa1160cfa42ab",
   "committed": {
-    "diagnostic.json": "1e9c270e88ad1395978103851bdb068629fd90e265229baa7d76c0310853982b",
-    "output.json": "0addb1511d0f758554aa7caac92ee3c254d279e2cb7da71e326dcdc191169939",
+    "diagnostic.json": "8dffe46455b90b10d172ff2e9f85d0f959a1efc69277e068e0830c1b879d89ee",
+    "output.json": "f3b3b0f75f134bb26a730e5f51ce20acd253e373fd07e15b62939963652d4775",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 1,
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
-      "sha256": "a9fce0fa39fbba0cdd17aca8264f0d272f6e2b3efb0412cf851b958a4a6a08e2",
-      "size": 1198
+      "sha256": "2119b8fe5751c25caa4b82e3bc34f6ef42ea15a3cf1cda5b0730cf3d8542848d",
+      "size": 2317
     },
     "executions/recipe/index.html": {
-      "sha256": "93a956c8c0c2df28590a69ac37e2b78f67797097e8ae1167ecc21d2e06d76261",
-      "size": 15915
+      "sha256": "ce0b44849e6f67626d1d77bc4713bae8c62d7884eb32946b0bd38ee06f7d428b",
+      "size": 15971
     },
     "executions/recipe/plots/antarctic/sea_ice_sensitivity_script/png/Annual Antarctic sea ice sensitivity.png": {
-      "sha256": "4f06a0229cc45c5fa70b9ca1a8e058334c5e660cceecb9ab4ef80fc891c07412",
-      "size": 15933
+      "sha256": "c0c574544ccab6542148bfbcadd6be187f53e2db7816e00950fd1350e4ea3d59",
+      "size": 16406
     },
     "executions/recipe/plots/antarctic/sea_ice_sensitivity_script/png/Annual Antarctic sea ice trends.png": {
-      "sha256": "95f77ffa79d400184a0c188503026a754cad9a028ad6428e16f044c6ae11de2f",
-      "size": 37229
+      "sha256": "7278db8150586ae7080715a5ce9aa5985b18556a6a1cd779b9b9411fc84f4d2e",
+      "size": 39561
     },
     "executions/recipe/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice sensitivity.png": {
-      "sha256": "6b649635fc99c069f3fa4c5708eba7234f5013a5cc15d6e0d5b60949758d6f33",
-      "size": 21396
+      "sha256": "5693bee5d6810c0d8c58d7adf0c7ecc80adbc01c2d84c0b689134104b143133b",
+      "size": 20488
     },
     "executions/recipe/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice trends.png": {
-      "sha256": "8efdcc711f0b1f373d4069f7ff9486ba0f31a09e72c8d1cd310c5ac9cce9f652",
-      "size": 36062
+      "sha256": "c4a54dfc60fc88af4ff633d8067f76aa977d1b40a4083d331c653612f370eaa4",
+      "size": 39996
     },
     "executions/recipe/run/antarctic/sea_ice_sensitivity_script/diagnostic_provenance.yml": {
-      "sha256": "0e8c755c7b7939907fb2bb38e9a845de20f7d74c075967a335d21410de87f187",
-      "size": 1476
+      "sha256": "aa316a3d7211e624f50d97d1716570f850eb9e32a70341f8f3f2dfc7edb8fddc",
+      "size": 1469
     },
     "executions/recipe/run/arctic/sea_ice_sensitivity_script/diagnostic_provenance.yml": {
-      "sha256": "c12c3034076bf312f37bf26c2539ca7fe97fe1ed8793687eb08f4838f4b66de6",
-      "size": 1532
+      "sha256": "452842ae27218a853d5d551e516f8ab7bc6e94cc09fc25e950e90d72fafb64cd",
+      "size": 1560
     },
-    "executions/recipe/work/antarctic/sea_ice_sensitivity_script/plotted_values.csv": {
-      "sha256": "832fccab6e7efd626a2bc56c9ea7e025279186bbc16a02f2f6783ae16336e38b",
-      "size": 225
+    "executions/recipe/work/antarctic/sea_ice_sensitivity_script/data_values.csv": {
+      "sha256": "f717d22563f878c90c3c5afb203ce30930761db09f1ca046de74fb1314f28e65",
+      "size": 715
     },
-    "executions/recipe/work/arctic/sea_ice_sensitivity_script/plotted_values.csv": {
-      "sha256": "c0b13303ee5bfb24f343967d33f4954e47a10b8d10415b9d554135af9b0c96ca",
-      "size": 224
+    "executions/recipe/work/arctic/sea_ice_sensitivity_script/data_values.csv": {
+      "sha256": "2beee01f0310e8cfd93570e09e2fb36adafeb89456d4ac926c1fc2a448c83d28",
+      "size": 719
     },
     "output.json": {
-      "sha256": "2fc746e657b5cd596eafed2925eb8e6dc9dafe0c388a143640d33b6681122e1d",
-      "size": 2912
+      "sha256": "c6f41e586979162b667cb4b3bffa263652ac6bae0dc625fed9a4c35a9800c271",
+      "size": 2929
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -57,5 +57,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

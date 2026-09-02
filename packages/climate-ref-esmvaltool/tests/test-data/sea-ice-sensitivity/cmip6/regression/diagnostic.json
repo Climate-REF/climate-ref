@@ -10,11 +10,18 @@
       "metric"
     ],
     "metric": {
-      "annual_siconc_trend": {},
-      "annual_tas_trend": {},
-      "direct_p_val": {},
-      "direct_r_val": {},
-      "direct_sensitivity_(notz-style)": {}
+      "gmst_over_time_p_value": {},
+      "gmst_over_time_r_value": {},
+      "gmst_over_time_slope": {},
+      "gmst_over_time_std_err_slope": {},
+      "sia_over_gmst_p_value": {},
+      "sia_over_gmst_r_value": {},
+      "sia_over_gmst_slope": {},
+      "sia_over_gmst_std_err_slope": {},
+      "sia_over_time_p_value": {},
+      "sia_over_time_r_value": {},
+      "sia_over_time_slope": {},
+      "sia_over_time_std_err_slope": {}
     },
     "region": {
       "antarctic": {},
@@ -31,18 +38,32 @@
     "historical": {
       "CanESM5": {
         "antarctic": {
-          "annual_siconc_trend": -0.003315054,
-          "annual_tas_trend": 0.03272226,
-          "direct_p_val": 0.3522661,
-          "direct_r_val": -0.159671,
-          "direct_sensitivity_(notz-style)": -0.2176355
+          "gmst_over_time_p_value": 1.181736e-16,
+          "gmst_over_time_r_value": 0.9329817,
+          "gmst_over_time_slope": 0.03272226,
+          "gmst_over_time_std_err_slope": 0.002164918,
+          "sia_over_gmst_p_value": 0.3522657,
+          "sia_over_gmst_r_value": -0.159671,
+          "sia_over_gmst_slope": -0.2176355,
+          "sia_over_gmst_std_err_slope": 0.2307577,
+          "sia_over_time_p_value": 0.6877782,
+          "sia_over_time_r_value": -0.06934527,
+          "sia_over_time_slope": -0.003315054,
+          "sia_over_time_std_err_slope": 0.008178762
         },
         "arctic": {
-          "annual_siconc_trend": -0.07236914,
-          "annual_tas_trend": 0.03272226,
-          "direct_p_val": 3.949451e-12,
-          "direct_r_val": -0.872809,
-          "direct_sensitivity_(notz-style)": -2.066191
+          "gmst_over_time_p_value": 1.181736e-16,
+          "gmst_over_time_r_value": 0.9329817,
+          "gmst_over_time_slope": 0.03272226,
+          "gmst_over_time_std_err_slope": 0.002164918,
+          "sia_over_gmst_p_value": 3.949456e-12,
+          "sia_over_gmst_r_value": -0.872809,
+          "sia_over_gmst_slope": -2.066191,
+          "sia_over_gmst_std_err_slope": 0.1981467,
+          "sia_over_time_p_value": 4.576936e-12,
+          "sia_over_time_r_value": -0.8716297,
+          "sia_over_time_slope": -0.07236914,
+          "sia_over_time_std_err_slope": 0.006979499
         }
       }
     }

@@ -483,7 +483,7 @@ def convert_cmip6_to_cmip7_attrs(
     return attrs
 
 
-def _month_index(t: Any) -> int:
+def month_index(t: Any) -> int:
     """Return the absolute month index (``year * 12 + month - 1``) of a time value."""
     if isinstance(t, cftime.datetime):
         return t.year * 12 + t.month - 1
@@ -543,7 +543,7 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
         )
 
     target_index = end_year * _MONTHS_PER_YEAR + (end_month - 1)
-    months_to_add = target_index - _month_index(last)
+    months_to_add = target_index - month_index(last)
     if months_to_add <= 0:
         return ds
 

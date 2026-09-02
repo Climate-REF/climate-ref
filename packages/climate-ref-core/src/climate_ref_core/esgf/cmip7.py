@@ -7,6 +7,7 @@ a request class that fetches CMIP6 data and converts it to CMIP7 format.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any, ClassVar
 
@@ -21,6 +22,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     format_cmip7_time_range,
     get_dreq_entry,
     get_frequency_from_table,
+    month_index,
     repeat_final_year_to,
     suppress_bounds_coordinates,
 )
@@ -36,7 +38,7 @@ def _get_cmip7_cache_dir() -> Path:
     return cache_dir
 
 
-def _latest_file(files: list[Path]) -> Path | None:
+def _latest_file(files: list[Path]) -> tuple[Path, Any] | None:
     """
     Find the file holding a dataset's final timestep.
 
@@ -50,8 +52,8 @@ def _latest_file(files: list[Path]) -> Path | None:
 
     Returns
     -------
-    Path | None
-        The file ending last, or ``None`` when none of them carry a time axis.
+    tuple[Path, Any] | None
+        The file ending last and its final timestep, or ``None`` when none of them carry a time axis.
     """
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
 
@@ -64,7 +66,31 @@ def _latest_file(files: list[Path]) -> Path | None:
             end = ds["time"].values[-1]
             if latest_end is None or end > latest_end:
                 latest, latest_end = path, end
-    return latest
+    if latest is None:
+        return None
+    return latest, latest_end
+
+
+def _bump_version(version: str) -> str:
+    """
+    Bump a DRS version so fabricated data does not share an ``instance_id`` with the real thing.
+
+    A version that is not already ``v<digits>`` is read as ``v0``, which is what the ingest
+    falls back to when it cannot parse one out of the path.
+
+    Parameters
+    ----------
+    version
+        The version the dataset would otherwise be published under.
+
+    Returns
+    -------
+    str
+        The next version.
+    """
+    match = re.fullmatch(r"v(\d+)", version)
+    current = int(match.group(1)) if match else 0
+    return f"v{current + 1}"
 
 
 def _convert_file_to_cmip7(
@@ -336,7 +362,13 @@ class CMIP7Request:
             files = row_dict.get("files", [])
             latest = None
             if self.extend_historical_to is not None:
-                latest = _latest_file([Path(f) for f in files if Path(f).exists()])
+                end_year, end_month = self.extend_historical_to
+                found = _latest_file([Path(f) for f in files if Path(f).exists()])
+                if found is not None and month_index(found[1]) < end_year * 12 + (end_month - 1):
+                    latest = found[0]
+                    # Fabricated years must not be published under the version the real
+                    # data carries, so bump it for every file in the dataset.
+                    cmip7_row["version"] = _bump_version(str(cmip7_row.get("version", "v0")))
 
             converted_files = []
             for file_path in files:

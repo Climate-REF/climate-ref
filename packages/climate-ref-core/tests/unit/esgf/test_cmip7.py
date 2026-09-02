@@ -11,6 +11,7 @@ import xarray as xr
 
 from climate_ref_core.esgf import CMIP7Request
 from climate_ref_core.esgf.cmip7 import (
+    _bump_version,
     _convert_file_to_cmip7,
     _get_cmip7_cache_dir,
     _latest_file,
@@ -759,8 +760,15 @@ class TestLatestFile:
         early = self._write_monthly_file(tmp_path / "early.nc", 1850, 1949)
         late = self._write_monthly_file(tmp_path / "late.nc", 1950, 2014)
 
-        assert _latest_file([early, late]) == late
-        assert _latest_file([late, early]) == late
+        assert _latest_file([early, late])[0] == late
+        assert _latest_file([late, early])[0] == late
+
+    def test_returns_the_final_timestep(self, tmp_path):
+        """The end is needed to tell whether the dataset falls short of the requested end."""
+        late = self._write_monthly_file(tmp_path / "late.nc", 1950, 2014)
+
+        _, end = _latest_file([late])
+        assert (end.year, end.month) == (2014, 12)
 
     def test_skips_files_without_a_time_axis(self, tmp_path):
         """Fixed-frequency files carry no time axis, so they never win."""
@@ -768,7 +776,7 @@ class TestLatestFile:
         xr.Dataset({"areacella": ("lat", np.zeros(2))}, coords={"lat": [0.0, 1.0]}).to_netcdf(fixed)
         monthly = self._write_monthly_file(tmp_path / "a.nc", 1950, 2014)
 
-        assert _latest_file([fixed, monthly]) == monthly
+        assert _latest_file([fixed, monthly])[0] == monthly
 
     def test_no_time_axes_at_all(self, tmp_path):
         """A dataset with nothing to extend has no latest file."""
@@ -817,6 +825,10 @@ class TestFetchDatasetsExtendHistorical:
         extended = {call.args[0]: call.kwargs["extend_historical_to"] for call in mock_convert.call_args_list}
         assert extended == {early: None, late: (2021, 12)}
 
+        # Every file of the dataset moves to the bumped version, so the fabricated years
+        # do not share an instance_id with the real data.
+        assert {call.args[1]["version"] for call in mock_convert.call_args_list} == {"v1"}
+
     @patch("climate_ref_core.esgf.cmip7.CMIP6Request")
     @patch("climate_ref_core.esgf.cmip7._convert_file_to_cmip7")
     def test_no_extension_requested(self, mock_convert, mock_cmip6_request_class, tmp_path):
@@ -839,3 +851,52 @@ class TestFetchDatasetsExtendHistorical:
         CMIP7Request(slug="test", facets={"source_id": "GFDL-ESM4"}).fetch_datasets()
 
         assert mock_convert.call_args_list[0].kwargs["extend_historical_to"] is None
+
+    @patch("climate_ref_core.esgf.cmip7.CMIP6Request")
+    @patch("climate_ref_core.esgf.cmip7._convert_file_to_cmip7")
+    def test_version_untouched_when_nothing_is_fabricated(
+        self, mock_convert, mock_cmip6_request_class, tmp_path
+    ):
+        """A dataset already reaching the requested end is real data, so it keeps its version."""
+        only = self._write_monthly_file(tmp_path / "only.nc", 1950, 2021)
+
+        mock_cmip6_instance = MagicMock()
+        mock_cmip6_instance.fetch_datasets.return_value = pd.DataFrame(
+            {
+                "source_id": ["GFDL-ESM4"],
+                "member_id": ["r1i1p1f1"],
+                "variable_id": ["toz"],
+                "table_id": ["AERmon"],
+                "version": ["20190429"],
+                "files": [[str(only)]],
+            }
+        )
+        mock_cmip6_request_class.return_value = mock_cmip6_instance
+        mock_convert.return_value = tmp_path / "a.nc"
+
+        CMIP7Request(
+            slug="test",
+            facets={"source_id": "GFDL-ESM4"},
+            extend_historical_to=(2021, 12),
+        ).fetch_datasets()
+
+        assert mock_convert.call_args_list[0].kwargs["extend_historical_to"] is None
+        assert mock_convert.call_args_list[0].args[1]["version"] == "20190429"
+
+
+class TestBumpVersion:
+    """Test the version bump that keeps fabricated data out of the real instance_id."""
+
+    @pytest.mark.parametrize(
+        "version, expected",
+        [
+            ("v0", "v1"),
+            ("v1", "v2"),
+            ("v9", "v10"),
+            # The ingest cannot parse a version out of these, so it sees v0.
+            ("20190429", "v1"),
+            ("", "v1"),
+        ],
+    )
+    def test_bump(self, version, expected):
+        assert _bump_version(version) == expected

@@ -312,10 +312,6 @@ def check_superseded_obs4ref(context: DoctorContext) -> list[Finding]:
     The solver takes the obs4MIPs copy, so the obs4REF one is no longer used.
     This is the signal that a dataset can be dropped from the obs4REF registry.
 
-    A misfiled obs4REF row does not count as a publication.
-    Mid-upgrade the two sit side by side, and calling that superseded would tell the user
-    to retract the row `misfiled-obs4ref` is asking them to keep.
-
     Parameters
     ----------
     context
@@ -362,7 +358,10 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
 
     This runs the solver against the ingested catalogs, diagnostic by diagnostic,
     so it catches everything the narrower checks do not:
-    a filter no dataset matches, a constraint no group satisfies, a source type nothing was ingested under.
+
+    - a filter no dataset matches
+    - a constraint no group satisfies
+    - a source type nothing was ingested under
 
     Parameters
     ----------
@@ -408,9 +407,8 @@ def _why_unsolvable(
     """
     Explain which requirement the ingested data fails to meet.
 
-    Each requirement is checked on its own, so the first one with no matching group names
-    the data to fetch. When every requirement matches something, the failure lies in how
-    they combine, which is reported as such.
+    Each requirement is checked on its own, so the first one with no matching group names the data to fetch.
+    When every requirement matches something, the failure lies in howthey combine, which is reported as such.
     """
     reasons = []
     for requirements in normalize_requirement_sets(diagnostic.data_requirements):

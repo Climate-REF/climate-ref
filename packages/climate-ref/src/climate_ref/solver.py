@@ -288,8 +288,9 @@ def with_obs4ref_fallback(
     -------
     :
         The obs4MIPs catalog, extended with the obs4REF datasets it does not hold.
-        This includes the case of nothing being ingested as obs4MIPs at all, which is an ordinary
-        deployment that fetched only the registry.
+
+        This includes the case of nothing being ingested as obs4MIPs at all
+        which is an ordinary deployment that fetched only the registry.
         The original catalog is returned untouched when there is nothing to add.
         A merge of two catalogs carries no adapter, so it cannot reload itself and lose the added rows.
         The added rows carry ``activity_id`` of obs4MIPs, because that is the collection they stand in for.

@@ -12,6 +12,8 @@ Regenerate with:
 The variable_id and table_id attributes are used to map the CMIP6 variable to its CMIP7 equivalent,
 and to determine the appropriate branding suffix and realm for the CMIP7 format.
 Grid information is not converted so the grid_labels may not be valid for CMIP7.
+
+This is a temporary work around until we have better CMIP7 coverage.
 """
 
 from __future__ import annotations

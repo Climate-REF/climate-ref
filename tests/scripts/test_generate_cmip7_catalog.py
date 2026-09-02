@@ -1,7 +1,5 @@
 """
 Tests for the historical extension in `scripts/generate_cmip7_catalog.py`.
-
-The script is not an importable module, so it is loaded by path.
 """
 
 import importlib.util

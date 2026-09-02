@@ -266,6 +266,8 @@ def check_misfiled_obs4ref(context: DoctorContext) -> list[Finding]:
     which is how the registry lays them out.
     Carrying a ``source_id`` the registry also carries is not enough,
     because the four datasets published to both archives are legitimately ingested as obs4MIPs.
+    The file's own ``activity_id`` is stamped from the source type at ingest,
+    so only the ingest-time warning can use it.
 
     Parameters
     ----------

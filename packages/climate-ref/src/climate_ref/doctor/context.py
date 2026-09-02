@@ -3,19 +3,16 @@ The deployment a check runs against.
 """
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING
 
 import pandas as pd
 from attrs import define, field
 
 from climate_ref.config import Config
+from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.source_types import SourceDatasetType
-
-if TYPE_CHECKING:
-    from climate_ref.data_catalog import DataCatalog
 
 EMPTY_CATALOG = pd.DataFrame()
 """Stands in for a source type with nothing ingested."""
@@ -78,7 +75,7 @@ class DoctorContext:
             self._providers = list(registry.providers)
         return self._providers
 
-    def data_catalog(self, source_type: SourceDatasetType) -> "DataCatalog":
+    def data_catalog(self, source_type: SourceDatasetType) -> DataCatalog:
         """
         Load the ingested catalog as the solver sees it.
 
@@ -95,8 +92,6 @@ class DoctorContext:
         :
             A catalog the solver can be run against.
         """
-        from climate_ref.data_catalog import DataCatalog  # noqa: PLC0415
-
         frame = self.catalog(source_type)
         if self.database is None:
             return DataCatalog.from_frame(frame)

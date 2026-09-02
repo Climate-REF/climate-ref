@@ -1982,15 +1982,18 @@ class TestObs4REFFallback:
         assert merged.index.tolist() == [0, 1]
         assert merged["instance_id"].iloc[1].startswith("obs4REF.")
 
-    def test_the_merged_catalog_can_still_finalise(self):
-        adapter = CMIP6DatasetAdapter()
-        obs4mips = DataCatalog(database=None, adapter=adapter, df=self._frame("obs4MIPs", ["A"]))
+    def test_the_merged_catalog_cannot_reload_away_the_obs4ref_rows(self):
+        obs4mips = DataCatalog(
+            database=None, adapter=CMIP6DatasetAdapter(), df=self._frame("obs4MIPs", ["A"])
+        )
         obs4ref = DataCatalog.from_frame(self._frame("obs4REF", ["B"]))
 
         merged = with_obs4ref_fallback(obs4mips, obs4ref)
 
+        # A reload would go back to the obs4MIPs adapter alone and drop B.
         assert isinstance(merged, DataCatalog)
-        assert merged.adapter is adapter
+        assert merged.adapter is None
+        assert merged.to_frame()["source_id"].tolist() == ["A", "B"]
 
     def test_obs4mips_wins_whatever_the_versions(self):
         obs4mips = self._frame("obs4MIPs", ["A"], version="v1")

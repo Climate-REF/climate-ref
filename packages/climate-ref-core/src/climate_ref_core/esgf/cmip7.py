@@ -9,8 +9,9 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any, ClassVar, NamedTuple
 
+import cftime
 import pandas as pd
 import xarray as xr
 from loguru import logger
@@ -25,6 +26,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     month_index,
     repeat_final_year_to,
     suppress_bounds_coordinates,
+    target_month_index,
 )
 from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.esgf.cmip6 import CMIP6Request
@@ -38,7 +40,14 @@ def _get_cmip7_cache_dir() -> Path:
     return cache_dir
 
 
-def _latest_file(files: list[Path]) -> tuple[Path, Any] | None:
+class LatestFile(NamedTuple):
+    """The file holding a dataset's final timestep, and that timestep."""
+
+    path: Path
+    end: cftime.datetime
+
+
+def _latest_file(files: list[Path]) -> LatestFile | None:
     """
     Find the file holding a dataset's final timestep.
 
@@ -52,23 +61,20 @@ def _latest_file(files: list[Path]) -> tuple[Path, Any] | None:
 
     Returns
     -------
-    tuple[Path, Any] | None
+    LatestFile | None
         The file ending last and its final timestep, or ``None`` when none of them carry a time axis.
     """
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
 
-    latest: Path | None = None
-    latest_end = None
+    latest: LatestFile | None = None
     for path in files:
         with xr.open_dataset(path, decode_times=time_coder) as ds:
             if "time" not in ds.coords or len(ds["time"]) == 0:
                 continue
             end = ds["time"].values[-1]
-            if latest_end is None or end > latest_end:
-                latest, latest_end = path, end
-    if latest is None:
-        return None
-    return latest, latest_end
+            if latest is None or end > latest.end:
+                latest = LatestFile(path, end)
+    return latest
 
 
 def _bump_version(version: str) -> str:
@@ -122,7 +128,7 @@ def _convert_file_to_cmip7(
     # CMIP6 activity_id can contain multiple activities separated by spaces
     # (e.g. "C4MIP CDRMIP"). Use only the first activity for the DRS path.
     activity_id = str(cmip7_facets.get("activity_id", "CMIP")).split()[0]
-    version = str(cmip7_facets.get("version", "v1"))
+    version = str(cmip7_facets.get("version", "v0"))
 
     # Build CMIP7 DRS path using the standard MIP-DRS7 path builder.
     # Provide defaults for fields that may not be in facets.
@@ -364,8 +370,8 @@ class CMIP7Request:
             if self.extend_historical_to is not None:
                 end_year, end_month = self.extend_historical_to
                 found = _latest_file([Path(f) for f in files if Path(f).exists()])
-                if found is not None and month_index(found[1]) < end_year * 12 + (end_month - 1):
-                    latest = found[0]
+                if found is not None and month_index(found.end) < target_month_index(end_year, end_month):
+                    latest = found.path
                     # Fabricated years must not be published under the version the real
                     # data carries, so bump it for every file in the dataset.
                     cmip7_row["version"] = _bump_version(str(cmip7_row.get("version", "v0")))

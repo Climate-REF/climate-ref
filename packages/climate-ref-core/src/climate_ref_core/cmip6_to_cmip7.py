@@ -494,6 +494,11 @@ def month_index(t: Any) -> int:
 _MONTHS_PER_YEAR = 12
 
 
+def target_month_index(end_year: int, end_month: int) -> int:
+    """Return the absolute month index of the ``end_year``-``end_month`` timestep."""
+    return end_year * _MONTHS_PER_YEAR + (end_month - 1)
+
+
 def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> xr.Dataset:
     """
     Extend a monthly series to ``end_year``-``end_month`` by repeating its final year.
@@ -542,8 +547,7 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
             f"Got {type(last).__name__}. Decode with use_cftime=True."
         )
 
-    target_index = end_year * _MONTHS_PER_YEAR + (end_month - 1)
-    months_to_add = target_index - month_index(last)
+    months_to_add = target_month_index(end_year, end_month) - month_index(last)
     if months_to_add <= 0:
         return ds
 

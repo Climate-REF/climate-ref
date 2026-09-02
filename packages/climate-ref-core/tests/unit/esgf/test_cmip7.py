@@ -760,15 +760,15 @@ class TestLatestFile:
         early = self._write_monthly_file(tmp_path / "early.nc", 1850, 1949)
         late = self._write_monthly_file(tmp_path / "late.nc", 1950, 2014)
 
-        assert _latest_file([early, late])[0] == late
-        assert _latest_file([late, early])[0] == late
+        assert _latest_file([early, late]).path == late
+        assert _latest_file([late, early]).path == late
 
     def test_returns_the_final_timestep(self, tmp_path):
         """The end is needed to tell whether the dataset falls short of the requested end."""
         late = self._write_monthly_file(tmp_path / "late.nc", 1950, 2014)
 
-        _, end = _latest_file([late])
-        assert (end.year, end.month) == (2014, 12)
+        latest = _latest_file([late])
+        assert (latest.end.year, latest.end.month) == (2014, 12)
 
     def test_skips_files_without_a_time_axis(self, tmp_path):
         """Fixed-frequency files carry no time axis, so they never win."""
@@ -776,7 +776,7 @@ class TestLatestFile:
         xr.Dataset({"areacella": ("lat", np.zeros(2))}, coords={"lat": [0.0, 1.0]}).to_netcdf(fixed)
         monthly = self._write_monthly_file(tmp_path / "a.nc", 1950, 2014)
 
-        assert _latest_file([fixed, monthly])[0] == monthly
+        assert _latest_file([fixed, monthly]).path == monthly
 
     def test_no_time_axes_at_all(self, tmp_path):
         """A dataset with nothing to extend has no latest file."""

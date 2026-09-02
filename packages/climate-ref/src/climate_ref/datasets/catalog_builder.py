@@ -26,7 +26,7 @@ TRACEBACK = "TRACEBACK"
 def discover_files(
     paths: list[str],
     include_patterns: list[str] | None = None,
-    depth: int = 0,
+    depth: int | None = 0,
 ) -> list[str]:
     """
     Discover files matching the given glob patterns within the specified paths
@@ -41,6 +41,8 @@ def discover_files(
     depth
         Maximum directory depth below each root to search.
         ``0`` means only files directly inside the root directory.
+        ``None`` searches the whole tree, which is needed when the depth of the
+        files below the given root is not known ahead of time.
 
     Returns
     -------
@@ -62,7 +64,7 @@ def discover_files(
 
         for dirpath, dirnames, filenames in os.walk(root):
             current_depth = len(Path(dirpath).relative_to(root).parts)
-            if current_depth >= depth:
+            if depth is not None and current_depth >= depth:
                 # Still process files at this level, but don't descend further
                 dirnames.clear()
 
@@ -155,7 +157,7 @@ def build_catalog(
     paths: list[str],
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
-    depth: int = 0,
+    depth: int | None = 0,
     n_jobs: int = 1,
 ) -> pd.DataFrame:
     """
@@ -174,7 +176,7 @@ def build_catalog(
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``)
     depth
-        Maximum directory depth to search
+        Maximum directory depth to search, or ``None`` to search the whole tree
     n_jobs
         Number of parallel workers for parsing.
         ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many worker processes.
@@ -208,7 +210,7 @@ def build_catalog(
 def iter_discovered_chunks(
     paths: list[str],
     include_patterns: list[str] | None = None,
-    depth: int = 0,
+    depth: int | None = 0,
     chunk_size: int = 10_000,
 ) -> Iterator[list[str]]:
     """
@@ -226,7 +228,7 @@ def iter_discovered_chunks(
         Glob patterns to include (e.g. ``["*.nc"]``).
         Defaults to ``["*"]``.
     depth
-        Maximum directory depth below each root to search.
+        Maximum directory depth below each root to search, or ``None`` for the whole tree.
     chunk_size
         Soft target for the number of files per batch. A batch may exceed
         this if a single directory contains more matching files.
@@ -260,7 +262,7 @@ def iter_discovered_chunks(
         for dirpath, dirnames, filenames in os.walk(root):
             dirnames.sort()
             current_depth = len(Path(dirpath).relative_to(root).parts)
-            if current_depth >= depth:
+            if depth is not None and current_depth >= depth:
                 dirnames.clear()
 
             matched = [
@@ -300,7 +302,7 @@ def iter_built_catalogs(  # noqa: PLR0913
     paths: list[str],
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
-    depth: int = 0,
+    depth: int | None = 0,
     n_jobs: int = 1,
     chunk_size: int = 10_000,
 ) -> Iterator[pd.DataFrame]:
@@ -320,7 +322,7 @@ def iter_built_catalogs(  # noqa: PLR0913
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``).
     depth
-        Maximum directory depth to search.
+        Maximum directory depth to search, or ``None`` to search the whole tree.
     n_jobs
         Number of parallel workers per chunk for parsing.
     chunk_size

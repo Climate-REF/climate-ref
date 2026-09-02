@@ -85,6 +85,19 @@ class TestDiscoverFiles:
         names_d2 = sorted(Path(f).name for f in files_d2)
         assert names_d2 == ["a.nc", "b.nc", "root.nc"]
 
+    def test_unlimited_depth(self, tmp_path):
+        # A tree deeper than any previous fixed limit, matching the CMIP7 DRS nesting.
+        leaf = tmp_path
+        for level in range(14):
+            leaf = leaf / f"level{level}"
+        leaf.mkdir(parents=True)
+        (leaf / "deep.nc").touch()
+
+        assert discover_files([str(tmp_path)], include_patterns=["*.nc"], depth=10) == []
+
+        files = discover_files([str(tmp_path)], include_patterns=["*.nc"], depth=None)
+        assert files == [str(leaf / "deep.nc")]
+
     def test_nonexistent_path(self):
         files = discover_files(["/nonexistent/path"], include_patterns=["*.nc"], depth=5)
         assert files == []
@@ -330,6 +343,18 @@ class TestIterDiscoveredChunks:
 
         total = sum(len(c) for c in chunks)
         assert total == 20
+
+    def test_unlimited_depth(self, tmp_path):
+        leaf = tmp_path
+        for level in range(14):
+            leaf = leaf / f"level{level}"
+        leaf.mkdir(parents=True)
+        (leaf / "deep.nc").touch()
+
+        chunks = list(
+            iter_discovered_chunks([str(tmp_path)], include_patterns=["*.nc"], depth=None, chunk_size=10)
+        )
+        assert chunks == [[str(leaf / "deep.nc")]]
 
     def test_empty_root_yields_nothing(self, tmp_path):
         empty = tmp_path / "empty"

@@ -43,7 +43,7 @@ class ENSO(CommandLineDiagnostic):
 
     reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
-    version = 2
+    version = 3
 
     facets = (
         "kind",

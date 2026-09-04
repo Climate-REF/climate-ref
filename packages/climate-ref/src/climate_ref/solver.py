@@ -300,14 +300,19 @@ def union_with_fallbacks(
         stand in for.
         Their ``instance_id`` still names the collection they came from, so the provenance is not lost.
     """
+    usable = [
+        frame
+        for frame in (as_frame(fallback) for fallback in fallbacks)
+        if not frame.empty and "instance_id" in frame.columns
+    ]
+    if not usable:
+        return primary
+
     primary_df = as_frame(primary)
     held = set(obs_dataset_key(primary_df["instance_id"])) if len(primary_df) else set()
 
     additions = []
-    for fallback in fallbacks:
-        fallback_df = as_frame(fallback)
-        if fallback_df.empty or "instance_id" not in fallback_df.columns:
-            continue
+    for fallback_df in usable:
         extra = fallback_df[~obs_dataset_key(fallback_df["instance_id"]).isin(held)]
         if extra.empty:
             continue
@@ -468,12 +473,10 @@ def catalog_for_requirement(
         for source_type in requirement.fallback_source_types
         if source_type in data_catalog
     ]
-    if requirement.source_type not in data_catalog:
-        if not fallbacks:
-            return None
-        return union_with_fallbacks(pd.DataFrame(), fallbacks, requirement.source_type)
+    if requirement.source_type not in data_catalog and not fallbacks:
+        return None
 
-    primary = data_catalog[requirement.source_type]
+    primary = data_catalog.get(requirement.source_type, pd.DataFrame())
     if not fallbacks:
         return primary
     return union_with_fallbacks(primary, fallbacks, requirement.source_type)

@@ -178,6 +178,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={
@@ -464,6 +465,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={
@@ -719,6 +721,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={

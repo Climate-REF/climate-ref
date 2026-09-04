@@ -13,7 +13,7 @@ from collections import Counter
 from contextlib import ExitStack
 from itertools import islice
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import xarray as xr
@@ -49,9 +49,8 @@ MAX_DECODED_BYTES = 500_000_000
 # Unified-diff lines kept per file before the rest is elided.
 MAX_DIFF_LINES = 5000
 
-# A difference this small relative to the variable's own magnitude reads as numerical noise.
-# Double precision carries about 16 significant digits, so this leaves several digits of headroom
-# for a real change to sit above.
+# A difference this small relative to the base ref's magnitude reads as numerical noise.
+# Double precision carries about 16 significant digits, so a real change has room to sit above.
 NOISE_REL_TOLERANCE = 1e-9
 
 
@@ -101,11 +100,14 @@ class Pair[T]:
         Returns
         -------
         :
-            ``True`` when the value moved, which is what emphasises it in the table.
+            ``True`` when the value moved further than :attr:`tolerance`, which is what
+            emphasises it in the table.
         """
+        if self.old == self.new:
+            return False
         if isinstance(self.old, float) and isinstance(self.new, float):
-            return abs(self.new - self.old) > self.tolerance
-        return self.old != self.new
+            return not abs(self.new - self.old) <= self.tolerance
+        return True
 
 
 @frozen
@@ -140,10 +142,10 @@ class StatRow:
     """Cells that changed, counting NaN as equal to NaN."""
 
     moved: bool
-    """Whether anything about this variable changed, which is what shades its row."""
+    """Whether anything about this variable changed, however small the change."""
 
     @property
-    def severity(self) -> str:
+    def severity(self) -> Literal["same", "noise", "changed"]:
         """
         How much weight the row deserves.
 

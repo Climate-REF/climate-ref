@@ -60,6 +60,21 @@ def _clone_db(target_db_url: str, template_db_path: Path) -> None:
     shutil.copy(template_db_path, target_db_path)
 
 
+def _build_cached_file(cache_path: Path, builder: Callable[[Path], None]) -> None:
+    """Build and atomically publish a file once across xdist workers."""
+    with _exclusive_file_lock(cache_path.with_suffix(".lock")):
+        if cache_path.exists():
+            return
+
+        temporary_path = cache_path.with_name(f".{cache_path.stem}.{os.getpid()}{cache_path.suffix}")
+        temporary_path.unlink(missing_ok=True)
+        try:
+            builder(temporary_path)
+            os.replace(temporary_path, cache_path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+
+
 @pytest.fixture(scope="session")
 def migrated_db_template(shared_session_dir: Path) -> Path:
     """
@@ -68,20 +83,14 @@ def migrated_db_template(shared_session_dir: Path) -> Path:
     This schema is reused across parallel test runners.
     """
     template_db_path = shared_session_dir / "climate_ref_template.db"
-    with _exclusive_file_lock(shared_session_dir / "climate_ref_template.lock"):
-        if not template_db_path.exists():
-            temporary_path = shared_session_dir / f".climate_ref_template.{os.getpid()}.db"
-            temporary_path.unlink(missing_ok=True)
 
-            # dimensions_cv is left unset so the CV shipped in climate_ref_core is used.
-            template_config = Config()
-            template_config.db.database_url = f"sqlite:///{temporary_path}"
-            try:
-                database = Database.from_config(template_config, run_migrations=True, skip_backup=True)
-                database.close()
-                os.replace(temporary_path, template_db_path)
-            finally:
-                temporary_path.unlink(missing_ok=True)
+    def _build(temporary_path: Path) -> None:
+        # dimensions_cv is left unset so the CV shipped in climate_ref_core is used.
+        template_config = Config()
+        template_config.db.database_url = f"sqlite:///{temporary_path}"
+        Database.from_config(template_config, run_migrations=True, skip_backup=True).close()
+
+    _build_cached_file(template_db_path, _build)
 
     return template_db_path
 
@@ -143,39 +152,30 @@ def db_seeded_template(  # noqa: PLR0913
     prepare_db,
 ) -> Path:
     template_db_path = shared_session_dir / "climate_ref_template_seeded.db"
-    with _exclusive_file_lock(shared_session_dir / "climate_ref_template_seeded.lock"):
-        if not template_db_path.exists():
-            temporary_path = shared_session_dir / f".climate_ref_template_seeded.{os.getpid()}.db"
-            temporary_path.unlink(missing_ok=True)
-            shutil.copy(migrated_db_template, temporary_path)
 
-            database = Database(f"sqlite:///{temporary_path}")
-            try:
-                # ``register_dataset`` trusts callers to validate the catalog first.
-                adapter = CMIP6DatasetAdapter()
-                cmip6_validated = adapter.validate_data_catalog(cmip6_data_catalog)
+    def _build(temporary_path: Path) -> None:
+        shutil.copy(migrated_db_template, temporary_path)
+        with Database(f"sqlite:///{temporary_path}") as database:
+            # ``register_dataset`` trusts callers to validate the catalog first.
+            adapter = CMIP6DatasetAdapter()
+            cmip6_validated = adapter.validate_data_catalog(cmip6_data_catalog)
+            with database.session.begin():
+                for _, data_catalog_dataset in cmip6_validated.groupby(adapter.slug_column):
+                    adapter.register_dataset(database, data_catalog_dataset)
+
+            for adapter_obs, catalog in (
+                (Obs4MIPsDatasetAdapter(), obs4mips_data_catalog),
+                (Obs4REFDatasetAdapter(), obs4ref_data_catalog),
+            ):
+                validated = adapter_obs.validate_data_catalog(catalog)
                 with database.session.begin():
-                    for _, data_catalog_dataset in cmip6_validated.groupby(adapter.slug_column):
-                        adapter.register_dataset(database, data_catalog_dataset)
+                    for _, data_catalog_dataset in validated.groupby(adapter_obs.slug_column):
+                        adapter_obs.register_dataset(database, data_catalog_dataset)
 
-                for adapter_obs, catalog in (
-                    (Obs4MIPsDatasetAdapter(), obs4mips_data_catalog),
-                    (Obs4REFDatasetAdapter(), obs4ref_data_catalog),
-                ):
-                    validated = adapter_obs.validate_data_catalog(catalog)
-                    with database.session.begin():
-                        for _, data_catalog_dataset in validated.groupby(adapter_obs.slug_column):
-                            adapter_obs.register_dataset(database, data_catalog_dataset)
+            with database.session.begin():
+                _register_provider(database, example_provider)
 
-                with database.session.begin():
-                    _register_provider(database, example_provider)
-            finally:
-                database.close()
-
-            try:
-                os.replace(temporary_path, template_db_path)
-            finally:
-                temporary_path.unlink(missing_ok=True)
+    _build_cached_file(template_db_path, _build)
 
     return template_db_path
 

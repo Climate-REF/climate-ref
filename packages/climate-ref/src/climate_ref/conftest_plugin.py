@@ -30,7 +30,6 @@ import atexit
 import fcntl
 import os
 import re
-import tempfile
 from collections.abc import Callable, Generator, Iterator
 from contextlib import ExitStack, contextmanager
 from functools import lru_cache
@@ -112,13 +111,6 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 @pytest.fixture(scope="session")
-def tmp_path_session() -> Iterator[Path]:
-    """Session-scoped temporary directory."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        yield Path(tmpdir)
-
-
-@pytest.fixture(scope="session")
 def shared_session_dir(tmp_path_factory: pytest.TempPathFactory, request: pytest.FixtureRequest) -> Path:
     """Temporary directory shared by every xdist worker in this pytest run."""
     base_temp = tmp_path_factory.getbasetemp()
@@ -150,19 +142,22 @@ def _run_once(marker_path: Path, action: Callable[[], None]) -> None:
 
 def _load_or_create_dataframe(cache_path: Path, builder: Callable[[], pd.DataFrame]) -> pd.DataFrame:
     """Build and cache a DataFrame once across xdist workers."""
+    dataframe: pd.DataFrame | None = None
     with _exclusive_file_lock(cache_path.with_suffix(".lock")):
-        if cache_path.exists():
-            # This is a trusted, run-local cache created by the fixture below.
-            return cast(pd.DataFrame, pd.read_pickle(cache_path))  # noqa: S301
+        if not cache_path.exists():
+            dataframe = builder()
+            temporary_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
+            try:
+                dataframe.to_pickle(temporary_path)
+                os.replace(temporary_path, cache_path)
+            finally:
+                temporary_path.unlink(missing_ok=True)
 
-        dataframe = builder()
-        temporary_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
-        try:
-            dataframe.to_pickle(temporary_path)
-            os.replace(temporary_path, cache_path)
-        finally:
-            temporary_path.unlink(missing_ok=True)
+    if dataframe is not None:
         return dataframe
+
+    # This is a trusted, run-local cache created by the fixture above.
+    return cast(pd.DataFrame, pd.read_pickle(cache_path))  # noqa: S301
 
 
 @pytest.fixture
@@ -283,9 +278,7 @@ def obs4mips_data_catalog(sample_data: None, sample_data_dir: Path, shared_sessi
 
 
 @pytest.fixture(scope="session")
-def obs4ref_data_catalog(
-    sample_data: None, sample_data_dir: Path, shared_session_dir: Path
-) -> pd.DataFrame:
+def obs4ref_data_catalog(sample_data: None, sample_data_dir: Path, shared_session_dir: Path) -> pd.DataFrame:
     """obs4REF sample data catalog."""
     return _load_or_create_dataframe(
         shared_session_dir / "obs4ref-data-catalog.pkl",

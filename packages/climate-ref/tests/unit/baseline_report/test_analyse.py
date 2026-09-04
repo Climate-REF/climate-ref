@@ -295,13 +295,15 @@ def base_nc(tmp_path):
 
 
 class TestNetcdfDiff:
-    def test_identical_files_have_no_header_diff_and_no_moved_rows(self, tmp_path, base_nc):
+    def test_identical_files_show_the_whole_header_as_context(self, tmp_path, base_nc):
         new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0]])
 
         diff = netcdf_diff(base_nc, new)
 
         assert diff.note is None
-        assert diff.header == ()
+        assert diff.header_changed is False
+        assert {line.kind for line in diff.header} == {"context"}
+        assert len(diff.header) == len(diff.header_old) == len(diff.header_new)
         assert diff.rows[0].moved is False
         assert diff.rows[0].cells_differ == 0
         assert diff.rows[0].max_abs_diff == 0.0
@@ -313,6 +315,8 @@ class TestNetcdfDiff:
 
         assert sum(1 for line in diff.header if line.kind == "add") == 1
         assert sum(1 for line in diff.header if line.kind == "remove") == 1
+        assert diff.header_changed is True
+        assert any(line.kind == "context" for line in diff.header)  # the rest is still shown
         assert all(row.moved is False for row in diff.rows)
 
     def test_one_changed_value_is_counted_and_measured(self, tmp_path, base_nc):
@@ -358,7 +362,11 @@ class TestNetcdfDiff:
         assert row.moved is False
 
     def test_an_absent_old_side_leaves_every_old_statistic_unset(self, tmp_path, base_nc):
-        row = netcdf_diff(None, base_nc).rows[0]
+        diff = netcdf_diff(None, base_nc)
+        row = diff.rows[0]
+
+        assert diff.header_old == ()
+        assert diff.header_new
 
         assert (row.shape_old, row.min_old, row.max_old, row.mean_old, row.nan_old) == (
             None,
@@ -378,6 +386,7 @@ class TestNetcdfDiff:
 
         assert diff.note.startswith("could not open")
         assert diff.rows == ()
+        assert diff.header_old == ()
 
     def test_a_string_variable_gets_shapes_but_no_statistics(self, tmp_path):
         for path in (tmp_path / "old.nc", tmp_path / "new.nc"):

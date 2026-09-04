@@ -82,6 +82,21 @@ was {{ file.change.old.size | bytes -}}
 </tr>
 {% endmacro %}
 
+{% macro header_side(label, lines) %}
+<div class="side">
+<span class="side-label">{{ label }}</span>
+{% if lines %}
+<pre class="diff">
+{%- for line in lines %}
+<span class="context">{{ line }}</span>
+{%- endfor %}
+</pre>
+{% else %}
+<div class="absent">absent</div>
+{% endif %}
+</div>
+{% endmacro %}
+
 {% macro stat_pair(old, new) -%}
 {{ old | num }} -> {{ new | num }}
 {%- endmacro %}
@@ -98,12 +113,20 @@ was {{ file.change.old.size | bytes -}}
 <p class="note">{{ file.netcdf.note }}</p>
 {% else %}
 <details>
-<summary>Header</summary>
-{% if file.netcdf.header %}
+<summary>Header{% if not file.netcdf.header_changed %} <span class="note">(unchanged)</span>{% endif %}</summary>
+<div class="header" data-header>
+<div class="views">
+<button type="button" data-header-view="diff" aria-pressed="true">Diff</button>
+<button type="button" data-header-view="split" aria-pressed="false">Side by side</button>
+</div>
+<div data-view="diff">
 {{ diff_lines(file.netcdf.header) }}
-{% else %}
-<p class="note">The headers match.</p>
-{% endif %}
+</div>
+<div class="split" data-view="split" hidden>
+{{ header_side("old", file.netcdf.header_old) }}
+{{ header_side("new", file.netcdf.header_new) }}
+</div>
+</div>
 </details>
 {% if file.netcdf.rows %}
 <div class="scroll-x">

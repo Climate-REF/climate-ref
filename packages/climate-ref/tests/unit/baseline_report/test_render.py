@@ -338,6 +338,13 @@ def _stat_row(name, *, moved, **overrides):
     return StatRow(name=name, moved=moved, **fields)
 
 
+def _netcdf_diff(
+    rows, header=(), header_old=("xarray.Dataset {",), header_new=("xarray.Dataset {",), note=None
+):
+    """Build a NetCDF analysis with the header fields filled in."""
+    return NetcdfDiff(header=header, header_old=header_old, header_new=header_new, rows=rows, note=note)
+
+
 def _netcdf_case(tmp_path, diff, name="out.nc"):
     """A report whose single case has one changed NetCDF file carrying ``diff``."""
     return _analysed(
@@ -349,13 +356,12 @@ def _netcdf_case(tmp_path, diff, name="out.nc"):
 
 class TestNetcdfBlock:
     def test_only_the_moved_row_is_shaded(self, tmp_path):
-        diff = NetcdfDiff(
-            header=(DiffLine(kind="add", text="+title: b"),),
+        diff = _netcdf_diff(
+            header=(DiffLine(kind="add", text="+ title: b"),),
             rows=(
                 _stat_row("tas", moved=True, max_abs_diff=0.5, max_rel_diff=0.125, cells_differ=1),
                 _stat_row("pr", moved=False),
             ),
-            note=None,
         )
         report = _netcdf_case(tmp_path, diff)
 
@@ -367,7 +373,7 @@ class TestNetcdfBlock:
         assert "0.125" in html
 
     def test_a_note_replaces_the_table(self, tmp_path):
-        report = _netcdf_case(tmp_path, NetcdfDiff(header=(), rows=(), note="could not open: boom"))
+        report = _netcdf_case(tmp_path, _netcdf_diff(rows=(), note="could not open: boom"))
 
         html = render_case(report, report.cases[0])
 
@@ -375,8 +381,7 @@ class TestNetcdfBlock:
         assert "<table" not in html
 
     def test_an_absent_statistic_renders_as_an_ascii_hyphen(self, tmp_path):
-        diff = NetcdfDiff(
-            header=(),
+        diff = _netcdf_diff(
             rows=(
                 _stat_row(
                     "tas",
@@ -391,7 +396,6 @@ class TestNetcdfBlock:
                     cells_differ=None,
                 ),
             ),
-            note=None,
         )
         report = _netcdf_case(tmp_path, diff)
 
@@ -401,7 +405,7 @@ class TestNetcdfBlock:
         assert "<td>-</td>" in html
 
     def test_the_page_carries_no_dash_that_is_not_ascii(self, tmp_path):
-        diff = NetcdfDiff(header=(), rows=(_stat_row("tas", moved=False),), note=None)
+        diff = _netcdf_diff(rows=(_stat_row("tas", moved=False),))
         report = _netcdf_case(tmp_path, diff)
 
         html = render_case(report, report.cases[0])
@@ -410,7 +414,7 @@ class TestNetcdfBlock:
         assert "\u2014" not in html
 
     def test_a_wide_table_is_wrapped_so_it_can_scroll(self, tmp_path):
-        diff = NetcdfDiff(header=(), rows=(_stat_row("tas", moved=False),), note=None)
+        diff = _netcdf_diff(rows=(_stat_row("tas", moved=False),))
         report = _netcdf_case(tmp_path, diff, name="a" * 120 + ".nc")
 
         html = render_case(report, report.cases[0])
@@ -418,11 +422,43 @@ class TestNetcdfBlock:
         assert '<div class="scroll-x">' in html
         assert "a" * 120 in html
 
-    def test_matching_headers_say_so_rather_than_showing_an_empty_diff(self, tmp_path):
-        diff = NetcdfDiff(header=(), rows=(_stat_row("tas", moved=False),), note=None)
+    def test_matching_headers_are_marked_unchanged_but_still_shown(self, tmp_path):
+        diff = _netcdf_diff(
+            header=(DiffLine(kind="context", text="  xarray.Dataset {"),),
+            rows=(_stat_row("tas", moved=False),),
+        )
         report = _netcdf_case(tmp_path, diff)
 
         html = render_case(report, report.cases[0])
 
-        assert "The headers match." in html
-        assert '<pre class="diff">' not in html
+        assert "(unchanged)" in html
+        assert "xarray.Dataset {" in html
+
+    def test_both_headers_are_available_side_by_side(self, tmp_path):
+        diff = _netcdf_diff(
+            header=(DiffLine(kind="remove", text="-   lat = 90 ;"),),
+            header_old=("dimensions:", "    lat = 90 ;"),
+            header_new=("dimensions:", "    lat = 45 ;"),
+            rows=(_stat_row("tas", moved=True, cells_differ=1),),
+        )
+        report = _netcdf_case(tmp_path, diff)
+
+        html = render_case(report, report.cases[0])
+
+        assert 'data-header-view="split"' in html
+        assert "lat = 90 ;" in html
+        assert "lat = 45 ;" in html
+        assert html.count('data-view="diff"') == 1
+
+    def test_an_absent_side_says_so_in_the_split_view(self, tmp_path):
+        diff = _netcdf_diff(
+            header=(DiffLine(kind="add", text="+ dimensions:"),),
+            header_old=(),
+            header_new=("dimensions:",),
+            rows=(_stat_row("tas", moved=True, shape_old=None),),
+        )
+        report = _netcdf_case(tmp_path, diff)
+
+        html = render_case(report, report.cases[0])
+
+        assert '<div class="absent">absent</div>' in html

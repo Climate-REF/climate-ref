@@ -120,13 +120,36 @@ class NetcdfDiff:
     """What changed inside one NetCDF file, or the reason nothing could be read."""
 
     header: tuple[DiffLine, ...]
-    """Unified diff of the two ncdump-style headers, empty when they match."""
+    """
+    The two ncdump-style headers merged into one tagged listing.
+
+    Every line is kept rather than only the changed hunks, because the header is what tells a
+    reader what the file holds.
+    """
+
+    header_old: tuple[str, ...]
+    """The base ref's header, for reading one side on its own."""
+
+    header_new: tuple[str, ...]
+    """HEAD's header, for reading one side on its own."""
 
     rows: tuple[StatRow, ...]
     """One row per data variable, in name order."""
 
     note: str | None
     """Why the file could not be analysed, or ``None`` when it was."""
+
+    @property
+    def header_changed(self) -> bool:
+        """
+        Whether the headers differ.
+
+        Returns
+        -------
+        :
+            ``True`` when any header line was added or removed.
+        """
+        return any(line.kind != "context" for line in self.header)
 
 
 @frozen
@@ -376,6 +399,34 @@ def _header(dataset: xr.Dataset | None) -> list[str]:
     return buf.getvalue().splitlines()
 
 
+def _header_diff(old_lines: list[str], new_lines: list[str]) -> tuple[DiffLine, ...]:
+    """
+    Merge two headers into one listing, tagging each line.
+
+    Unlike a unified diff this keeps every line, so the listing doubles as the file's
+    description rather than only naming what moved.
+
+    Parameters
+    ----------
+    old_lines
+        The base side's header, empty when that side is absent.
+    new_lines
+        The head side's header, empty when that side is absent.
+
+    Returns
+    -------
+    :
+        Every line, in reading order, tagged ``context``, ``add`` or ``remove``. The two
+        character marker is kept on the text so the tags survive without colour.
+    """
+    kinds = {" ": "context", "-": "remove", "+": "add"}
+    return tuple(
+        DiffLine(kind=kinds[line[0]], text=line)
+        for line in difflib.Differ().compare(old_lines, new_lines)
+        if line[0] in kinds
+    )
+
+
 def _variable(dataset: xr.Dataset | None, name: str) -> xr.DataArray | None:
     """
     Look one data variable up on one side.
@@ -568,12 +619,9 @@ def netcdf_diff(old: Path | None, new: Path | None) -> NetcdfDiff:
                 if new is not None
                 else None
             )
-            header, _ = _diff_lines(
-                _header(old_ds),
-                _header(new_ds),
-                fromfile="old" if old_ds is not None else "(absent)",
-                tofile="new" if new_ds is not None else "(absent)",
-            )
+            header_old = _header(old_ds)
+            header_new = _header(new_ds)
+            header = _header_diff(header_old, header_new)
             names = sorted(
                 {
                     str(name)
@@ -584,8 +632,14 @@ def netcdf_diff(old: Path | None, new: Path | None) -> NetcdfDiff:
             )
             rows = tuple(_stat_row(old_ds, new_ds, name) for name in names)
     except (OSError, ValueError, KeyError) as exc:
-        return NetcdfDiff(header=(), rows=(), note=f"could not open: {exc}")
-    return NetcdfDiff(header=header, rows=rows, note=None)
+        return NetcdfDiff(header=(), header_old=(), header_new=(), rows=(), note=f"could not open: {exc}")
+    return NetcdfDiff(
+        header=header,
+        header_old=tuple(header_old),
+        header_new=tuple(header_new),
+        rows=rows,
+        note=None,
+    )
 
 
 def _fetch_side(
@@ -736,13 +790,13 @@ def _netcdf_for(
     if change.kind is not FileKind.NETCDF:
         return None
     if not fetch:
-        return NetcdfDiff(header=(), rows=(), note="fetching disabled")
+        return NetcdfDiff(header=(), header_old=(), header_new=(), rows=(), note="fetching disabled")
 
     old_path, new_path, note = _fetch_pair(
         change, store, workdir, limit=NETCDF_FETCH_BYTES, oversize="too large to analyse"
     )
     if note is not None:
-        return NetcdfDiff(header=(), rows=(), note=note)
+        return NetcdfDiff(header=(), header_old=(), header_new=(), rows=(), note=note)
     return netcdf_diff(old_path, new_path)
 
 

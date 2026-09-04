@@ -148,6 +148,11 @@ summary {
   white-space: pre-wrap;
 }
 
+/* A blank header line has nothing to give the block height, so keep the gap. */
+.diff span:empty::after {
+  content: "\00a0";
+}
+
 .diff .add { background: var(--add-bg); color: var(--add-fg); }
 .diff .remove { background: var(--remove-bg); color: var(--remove-fg); }
 .diff .hunk, .diff .header { color: var(--muted); }
@@ -185,4 +190,42 @@ tr.moved {
 
 .binaries td:first-child {
   max-width: 40rem;
+}
+
+.header .views {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.header .views button {
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 0.15rem 0.6rem;
+}
+
+.header .views button[aria-pressed="true"] {
+  background: var(--panel);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.header .split:not([hidden]) {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Each side scrolls on its own so a long line cannot widen the other column. */
+.header .split .diff {
+  max-height: 30rem;
+  overflow: auto;
+}
+
+.header .split .diff span {
+  white-space: pre;
 }

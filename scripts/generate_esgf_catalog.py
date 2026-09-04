@@ -36,6 +36,13 @@ def main() -> None:
         help="Directory containing obs4MIPs data (can be specified multiple times)",
     )
     parser.add_argument(
+        "--obs4ref-dir",
+        type=Path,
+        action="append",
+        default=[],
+        help="Directory containing obs4REF data (can be specified multiple times)",
+    )
+    parser.add_argument(
         "--pmp-climatology-dir",
         type=Path,
         action="append",
@@ -77,6 +84,13 @@ def main() -> None:
         print(f"Scanning obs4MIPs directories: {args.obs4mips_dir}")
         catalog = generate_catalog("obs4mips", args.obs4mips_dir, strip_path_prefix=args.strip_prefix)
         out_path = output_dir / "obs4mips_catalog.parquet"
+        write_catalog_parquet(catalog, out_path)
+        print(f"  Wrote {len(catalog)} rows to {out_path}")
+
+    if args.obs4ref_dir:
+        print(f"Scanning obs4REF directories: {args.obs4ref_dir}")
+        catalog = generate_catalog("obs4ref", args.obs4ref_dir, strip_path_prefix=args.strip_prefix)
+        out_path = output_dir / "obs4ref_catalog.parquet"
         write_catalog_parquet(catalog, out_path)
         print(f"  Wrote {len(catalog)} rows to {out_path}")
 

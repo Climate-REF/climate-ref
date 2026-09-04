@@ -284,9 +284,7 @@ class TestCMIP7IterLocalDatasets:
         config.cmip7_parser = "drs"
         adapter = CMIP7DatasetAdapter(config=config)
         _build_cmip7_archive(tmp_path / "archive", self.DATASETS)
-        # CMIP7DatasetAdapter walks with depth=10, so point it at the
-        # activity_id parent (MIP-DRS7/CMIP7) rather than the bare archive root.
-        root = tmp_path / "archive" / "MIP-DRS7" / "CMIP7" / "CMIP"
+        root = tmp_path / "archive"
 
         whole = adapter.find_local_datasets(root)
         streamed = pd.concat(list(adapter.iter_local_datasets(root, chunk_size=2)))
@@ -295,6 +293,18 @@ class TestCMIP7IterLocalDatasets:
             sort_data_catalog(whole.reset_index(drop=True)),
             sort_data_catalog(streamed.reset_index(drop=True)),
         )
+
+    def test_finds_datasets_from_the_archive_root(self, tmp_path, config):
+        """Both entry points must reach files nested a full DRS below the given root."""
+        config.cmip7_parser = "drs"
+        adapter = CMIP7DatasetAdapter(config=config)
+        _build_cmip7_archive(tmp_path / "archive", self.DATASETS)
+        root = tmp_path / "archive"
+
+        expected = sum(len(dataset["time_ranges"]) for dataset in self.DATASETS)
+
+        assert len(adapter.find_local_datasets(root)) == expected
+        assert sum(len(chunk) for chunk in adapter.iter_local_datasets(root)) == expected
 
     def test_streaming_yields_nonempty_chunks(self, tmp_path, config):
         config.cmip7_parser = "drs"

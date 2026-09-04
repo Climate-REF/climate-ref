@@ -42,6 +42,14 @@ class DataRequirementSummary:
     which is what :mod:`climate_ref_core.reference_data` uses to work out where that dataset comes from.
     """
 
+    fallback_source_types: tuple[str, ...] = ()
+    """
+    Values of the source types that may supply the requirement when ``source_type`` does not.
+
+    :mod:`climate_ref_core.reference_data` reads this to resolve which registry carries a dataset,
+    so an obs4MIPs requirement served from the obs4REF registry is not reported as unobtainable.
+    """
+
 
 @frozen
 class RequirementSetSummary:
@@ -105,7 +113,7 @@ def _extract_facet_values(filters: tuple[FacetFilter, ...], facet_name: str) -> 
     return tuple(sorted(values))
 
 
-def _normalize_requirement_sets(
+def normalize_requirement_sets(
     data_requirements: Sequence[DataRequirement] | Sequence[Sequence[DataRequirement]],
 ) -> list[Sequence[DataRequirement]]:
     """
@@ -162,6 +170,7 @@ def summarize_data_requirement(req: DataRequirement) -> DataRequirementSummary:
         frequencies=_extract_facet_values(req.filters, "frequency"),
         group_by=req.group_by,
         source_ids=_extract_facet_values(req.filters, "source_id"),
+        fallback_source_types=tuple(t.value for t in req.fallback_source_types),
     )
 
 
@@ -179,7 +188,7 @@ def summarize_diagnostic(diagnostic: Diagnostic) -> DiagnosticSummary:
     :
         A DiagnosticSummary with all requirement sets summarized.
     """
-    requirement_sets = _normalize_requirement_sets(diagnostic.data_requirements)
+    requirement_sets = normalize_requirement_sets(diagnostic.data_requirements)
 
     set_summaries = []
     for req_set in requirement_sets:

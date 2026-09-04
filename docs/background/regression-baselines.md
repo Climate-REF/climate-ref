@@ -250,7 +250,7 @@ the `--json` output drives CI's dispatch of the `replay` jobs.
 
 ## Continuous integration
 
-The lifecycle commands are wired into three GitHub Action workflows.
+The lifecycle commands are wired into four GitHub Action workflows.
 The minting process requires credentials to upload data.
 Since this is a public project we have to be careful about when this is run to not leak these credentials.
 
@@ -258,6 +258,7 @@ Since this is a public project we have to be careful about when this is run to n
 | --- | --- | --- | --- |
 | `regression-pr-gate.yaml` | every pull request | none | Runs the coupling gate, then `replay`s every case it routes to `replay`. |
 | `regression-mint.yaml` | manual dispatch | R2 write | `mint`s native baselines and commits the regenerated manifest back to the branch. |
+| `regression-diff-report.yaml` | called by the mint + manual | R2 write (reports bucket) | Builds the HTML diff of the changed baselines and links it from a sticky pull-request comment. |
 | `regression-drift.yaml` | nightly + manual | none | `replay`s every baseline to catch silent drift. |
 
 ### PR gate (`regression-pr-gate.yaml`)
@@ -301,6 +302,7 @@ Dispatch it on the feature branch that should receive the new baseline:
 the job runs `mint`, and commits the regenerated `manifest.json` (and committed bundle) back to that branch,
 so the change is reviewed through its pull request and no developer ever needs write credentials.
 A `dry_run` input previews without uploading or committing, and the job refuses to run on the default branch.
+Once the commit is pushed, the mint calls `regression-diff-report.yaml` to publish the diff of what it changed.
 
 !!! warning "The mint commit does not re-trigger the PR gate"
     The mint job pushes with the default `GITHUB_TOKEN`, and GitHub deliberately does not start new workflow runs for such pushes.
@@ -316,6 +318,47 @@ A `dry_run` input previews without uploading or committing, and the job refuses 
 
     The endpoint and bucket default to the production R2 account
     (`REF_NATIVE_STORE_S3_ENDPOINT_URL` / `REF_NATIVE_STORE_BUCKET` override them).
+
+### Diff report (`regression-diff-report.yaml`)
+
+Reviewing a minted baseline means looking at what actually moved, which a JSON manifest does not show.
+So this workflow builds an HTML report of every test case whose baseline changed against the base branch:
+
+- Images are shown two-up, the old beside the new.
+- Text outputs get a coloured line diff.
+- A changed NetCDF gets a header diff plus one row of statistics per variable, shaded only where the values moved.
+
+The report is uploaded to the public reports bucket and served at
+`https://reports.baselines.climate-ref.org/<pr>/<sha>/index.html`.
+The workflow then posts a short comment on the branch's open pull request linking to it.
+The comment carries a hidden marker, so a later run edits that same comment rather than stacking a new one.
+A run on a branch with no open pull request uploads under `branch/<name>/<sha>/` and writes the summary to the job log only.
+
+The mint workflow calls this automatically.
+After minting on a workstation and pushing the result by hand, dispatch it yourself:
+
+```bash
+gh workflow run regression-diff-report.yaml --ref <branch>
+```
+
+The same report can be built locally, without any credentials:
+
+```bash
+uv run ref test-cases diff --base origin/main --html-dir out/
+```
+
+!!! note "Required repository configuration"
+    Create a `baseline-reports` Environment (Settings -> Environments) with **no required reviewers**,
+    so a mint run does not stop for a second approval, and add two secrets to it
+    holding an R2 token scoped to the `ref-baselines-reports` bucket:
+
+    - `R2_REPORTS_ACCESS_KEY_ID` -> `REF_REPORT_STORE_ACCESS_KEY_ID`
+    - `R2_REPORTS_SECRET_ACCESS_KEY` -> `REF_REPORT_STORE_SECRET_ACCESS_KEY`
+
+    The reports live in their own bucket because an R2 token cannot be scoped write-only or to a prefix.
+    A token that could write reports into the baselines bucket could also overwrite a baseline.
+    The endpoint, bucket and public URL default to the production R2 account
+    (`REF_REPORT_STORE_S3_ENDPOINT_URL` / `REF_REPORT_STORE_BUCKET` / `REF_REPORT_STORE_URL` override them).
 
 ### Nightly drift (`regression-drift.yaml`)
 

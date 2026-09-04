@@ -2868,3 +2868,184 @@ class TestCIGateCommand:
         result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
         assert result.exit_code == 1
         assert "fail" in result.output
+
+
+class TestDiff:
+    """``ref test-cases diff`` writes a local HTML report."""
+
+    def test_no_changes_still_writes_an_index(self, invoke_cli, mocker, tmp_path):
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        out = tmp_path / "out"
+        invoke_cli(["test-cases", "diff", "--html-dir", str(out), "--no-fetch"])
+
+        assert (out / "index.html").exists()
+        assert "No baseline manifests changed" in (out / "index.html").read_text()
+
+    def test_outside_a_repository_exits_one(self, invoke_cli, mocker, tmp_path):
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=None)
+
+        invoke_cli(
+            ["test-cases", "diff", "--html-dir", str(tmp_path / "out"), "--no-fetch"],
+            expected_exit_code=1,
+        )
+
+    def test_a_changed_case_gets_a_page(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest, NativeEntry
+
+        rel_path = "packages/climate-ref-example/tests/test-data/diag/case/manifest.json"
+        manifest_path = tmp_path / rel_path
+        manifest_path.parent.mkdir(parents=True)
+        Manifest(
+            schema=SCHEMA_VERSION,
+            test_case_version=4,
+            diagnostic_version=1,
+            committed={},
+            native={"plot.png": NativeEntry(sha256="b" * 64, size=20)},
+        ).dump(manifest_path)
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = rel_path
+        repo.git.show.return_value = json.dumps(
+            {
+                "schema": SCHEMA_VERSION,
+                "test_case_version": 3,
+                "diagnostic_version": 1,
+                "committed": {},
+                "native": {"plot.png": {"sha256": "a" * 64, "size": 10}},
+            }
+        )
+        repo.head.commit.hexsha = "c" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        out = tmp_path / "out"
+        invoke_cli(["test-cases", "diff", "--html-dir", str(out), "--no-fetch"])
+
+        page = out / "example" / "diag" / "case" / "index.html"
+        assert page.exists()
+        assert page.read_text().count("<img") == 2
+        assert "example/diag/case/index.html" in (out / "index.html").read_text()
+
+    def test_upload_writes_the_report_and_the_comment(self, invoke_cli, mocker, tmp_path, monkeypatch):
+        reports = tmp_path / "reports"
+        monkeypatch.setenv("REF_REPORT_STORE_URL", str(reports))
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        comment = tmp_path / "comment.md"
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(tmp_path / "out"),
+                "--no-fetch",
+                "--upload",
+                "912/abc",
+                "--comment-output",
+                str(comment),
+            ]
+        )
+
+        assert (reports / "912" / "abc" / "index.html").exists()
+        assert comment.read_text().count("<!-- climate-ref-baseline-diff -->") == 1
+
+    def test_an_unsafe_upload_prefix_exits_one(self, invoke_cli, mocker, tmp_path, monkeypatch):
+        monkeypatch.setenv("REF_REPORT_STORE_URL", str(tmp_path / "reports"))
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(tmp_path / "out"),
+                "--no-fetch",
+                "--upload",
+                "../escape",
+            ],
+            expected_exit_code=1,
+        )
+
+    def test_an_unusable_report_store_exits_one(self, invoke_cli, mocker, tmp_path, monkeypatch):
+        blocker = tmp_path / "blocker"
+        blocker.write_text("not a directory")
+        monkeypatch.setenv("REF_REPORT_STORE_URL", str(blocker / "reports"))
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(tmp_path / "out"),
+                "--no-fetch",
+                "--upload",
+                "912/abc",
+            ],
+            expected_exit_code=1,
+        )
+
+    def test_the_comment_links_locally_without_upload(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest
+
+        rel_path = "packages/climate-ref-example/tests/test-data/diag/case/manifest.json"
+        manifest_path = tmp_path / rel_path
+        manifest_path.parent.mkdir(parents=True)
+        Manifest(
+            schema=SCHEMA_VERSION,
+            test_case_version=4,
+            diagnostic_version=1,
+            committed={},
+            native={},
+        ).dump(manifest_path)
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = rel_path
+        repo.git.show.return_value = json.dumps(
+            {
+                "schema": SCHEMA_VERSION,
+                "test_case_version": 3,
+                "diagnostic_version": 1,
+                "committed": {},
+                "native": {},
+            }
+        )
+        repo.head.commit.hexsha = "c" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        out = tmp_path / "out"
+        comment = tmp_path / "comment.md"
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(out),
+                "--no-fetch",
+                "--comment-output",
+                str(comment),
+            ]
+        )
+
+        assert f"{out.resolve().as_uri()}/index.html" in comment.read_text()

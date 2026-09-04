@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 import traceback
 from pathlib import Path
 from typing import Any
@@ -21,25 +20,36 @@ from climate_ref.datasets.utils import build_instance_id, parse_cftime_dates
 from climate_ref.models.dataset import Dataset, Obs4MIPsDataset, Obs4REFDataset
 
 
-def parse_obs4mips(
-    file: str, accepted_activity_ids: tuple[str, ...] = ("obs4MIPs", "obs4REF"), **kwargs: Any
-) -> dict[str, Any]:
+def in_collection_directory(paths: pd.Series, activity_id: str) -> pd.Series:
     """
-    Parser for obs4mips
+    Whether each file sits under the named collection's directory.
+
+    Parameters
+    ----------
+    paths
+        File paths from a catalog.
+    activity_id
+        The collection to look for, ``obs4MIPs`` or ``obs4REF``.
+
+    Returns
+    -------
+    :
+        A boolean mask over ``paths``.
+    """
+    return paths.astype(str).str.replace("\\", "/", regex=False).str.contains(f"/{activity_id}/", regex=False)
+
+
+def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
+    """
+    Parser for obs4MIPs and obs4REF files
+
+    obs4REF files follow the obs4MIPs metadata conventions, so the same parser reads both.
+    The adapter that called the parser decides which collection the file belongs to.
 
     Parameters
     ----------
     file
         File to parse
-    accepted_activity_ids
-        Activity ids that the calling adapter expects.
-
-        Any file whose ``activity_id`` is outside this set but is still a
-        known obs4MIPs/obs4REF activity id is ingested anyway with a warning
-        (a REF-curated obs4REF file parsed by the obs4MIPs adapter, or vice versa) --
-        the hard-reject cutover for this cross-contamination case is a tracked follow-up,
-        not this change. A file whose ``activity_id`` is neither ``obs4MIPs`` nor
-        ``obs4REF`` at all is never a valid asset for this parser and is always rejected.
     kwargs
         Additional keyword arguments (not used, but required for protocol compatibility)
     """
@@ -65,18 +75,10 @@ def parse_obs4mips(
 
     try:
         with netCDF4.Dataset(file, "r") as ds:
-            # obs4REF is the REF-specific observational product.
-            # it shares the obs4MIPs metadata conventions and is ingested through this adapter.
             activity_id = getattr(ds, "activity_id", "")
             if activity_id not in ("obs4MIPs", "obs4REF"):
                 traceback_message = f"{file} is not an obs4MIPs or obs4REF dataset"
                 raise TypeError(traceback_message)
-
-            if activity_id not in accepted_activity_ids:
-                logger.warning(
-                    f"{file} has activity_id={activity_id!r}, which is outside the expected "
-                    f"{accepted_activity_ids} for this adapter; ingesting anyway"
-                )
 
             global_attrs = read_global_attrs(ds, keys)
             missing_fields = [key for key in keys if global_attrs.get(key) is None]
@@ -130,16 +132,12 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
     dataset_cls: type[Dataset] = Obs4MIPsDataset
     slug_column = "instance_id"
 
-    instance_id_prefix = "obs4MIPs"
-    """Prefix used to build ``instance_id`` for datasets ingested through this adapter."""
-
-    accepted_activity_ids: tuple[str, ...] = ("obs4MIPs",)
+    activity_id = "obs4MIPs"
     """
-    Activity ids this adapter expects to ingest.
+    The collection this adapter ingests into, whatever the file itself claims.
 
-    A file whose ``activity_id`` is outside this set (but is still a recognised
-    obs4MIPs/obs4REF activity id) is ingested anyway with a warning -- see
-    :func:`parse_obs4mips`.
+    The obs4REF collection republishes obs4MIPs files unchanged,
+    so the file attribute cannot tell the two collections apart.
     """
 
     dataset_specific_metadata = (
@@ -199,13 +197,16 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         """
         datasets = build_catalog(
             paths=[str(file_or_directory)],
-            parsing_func=functools.partial(parse_obs4mips, accepted_activity_ids=self.accepted_activity_ids),
+            parsing_func=parse_obs4mips,
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
         )
         if datasets.empty:
             logger.error("No datasets found")
             raise ValueError("No obs4MIPs-compliant datasets found")
+
+        self._warn_if_misfiled(datasets)
+        datasets["activity_id"] = self.activity_id
 
         # Convert the start_time and end_time columns to cftime objects
         datasets["start_time"] = parse_cftime_dates(datasets["start_time"])
@@ -219,22 +220,38 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         def _transform(item: str, value: Any) -> str:
             return str(value).replace(" ", "") if item == "nominal_resolution" else str(value)
 
-        datasets = build_instance_id(
-            datasets, drs_items, prefix=self.instance_id_prefix, transform=_transform
-        )
+        datasets = build_instance_id(datasets, drs_items, prefix=self.activity_id, transform=_transform)
         datasets["finalised"] = True
         return datasets
+
+    def _warn_if_misfiled(self, datasets: pd.DataFrame) -> None:
+        """
+        Warn when the files look like they belong to the other collection.
+
+        The registry republishes obs4MIPs files unchanged, so an ``obs4REF`` directory
+        or activity id is only a hint. The files are ingested either way.
+        """
+        other = "obs4REF" if self.activity_id == "obs4MIPs" else "obs4MIPs"
+        misfiled = in_collection_directory(datasets["path"], other)
+        if other == "obs4REF":
+            # An obs4MIPs attribute on an obs4REF file is expected, the reverse is not.
+            misfiled |= datasets["activity_id"] == other
+        count = int(misfiled.sum())
+        if count:
+            logger.warning(
+                f"{count} of {len(datasets)} files look like {other} data but are being ingested as "
+                f"{self.activity_id}. Use `--source-type {other.lower()}` if that is not intended."
+            )
 
 
 class Obs4REFDatasetAdapter(Obs4MIPsDatasetAdapter):
     """
     Adapter for obs4REF datasets
 
-    obs4REF is REF-curated observational data that shares the obs4MIPs metadata
-    conventions and is parsed by the same :func:`parse_obs4mips` function, but is
-    ingested as a distinct dataset type so it is never mistaken for published obs4MIPs data.
+    obs4REF is the REF-curated collection of observational data.
+    It shares the obs4MIPs metadata conventions and parser,
+    but is ingested as its own dataset type so it is never mistaken for published obs4MIPs data.
     """
 
     dataset_cls: type[Dataset] = Obs4REFDataset
-    instance_id_prefix = "obs4REF"
-    accepted_activity_ids: tuple[str, ...] = ("obs4REF",)
+    activity_id = "obs4REF"

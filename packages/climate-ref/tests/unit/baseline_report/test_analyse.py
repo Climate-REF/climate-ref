@@ -384,6 +384,47 @@ class TestNetcdfDiff:
         assert row.shape.changed is True
         assert row.moved is True
 
+    def test_adjacent_integers_past_the_float_mantissa_still_compare(self, tmp_path):
+        # 2**53 and the next integer collide once cast to float64.
+        old_values = np.array([[9007199254740992, 1], [2, 3]], dtype=np.int64)
+        new_values = np.array([[9007199254740993, 1], [2, 3]], dtype=np.int64)
+        paths = []
+        for name, values in (("old.nc", old_values), ("new.nc", new_values)):
+            path = tmp_path / name
+            xr.Dataset({"count": (("lat", "lon"), values)}).to_netcdf(path)
+            paths.append(path)
+
+        row = netcdf_diff(*paths).rows[0]
+
+        assert row.cells_differ == 1
+        assert row.moved is True
+
+    @pytest.mark.parametrize(
+        ("old_cell", "new_cell"),
+        [(np.nan, 5.0), (5.0, np.nan)],
+        ids=["nan_to_number", "number_to_nan"],
+    )
+    def test_a_cell_moving_between_nan_and_a_number_has_no_measurable_difference(
+        self, tmp_path, old_cell, new_cell
+    ):
+        old = _write_nc(tmp_path / "old.nc", [[old_cell, 1.0], [2.0, 3.0]])
+        new = _write_nc(tmp_path / "new.nc", [[new_cell, 1.0], [2.0, 3.0]])
+
+        row = netcdf_diff(old, new).rows[0]
+
+        assert row.cells_differ == 1
+        assert row.max_abs_diff is None  # never 0.0, which would read as no change
+        assert row.max_rel_diff is None
+        assert row.moved is True
+
+    def test_a_file_that_decodes_to_too_much_is_not_reduced(self, tmp_path, base_nc, monkeypatch):
+        monkeypatch.setattr("climate_ref.baseline_report.analyse.MAX_DECODED_BYTES", 8)
+
+        diff = netcdf_diff(base_nc, base_nc)
+
+        assert diff.note.startswith("decodes to too much to analyse")
+        assert diff.rows == ()
+
     def test_a_file_that_is_not_netcdf_becomes_a_note(self, tmp_path, base_nc):
         broken = tmp_path / "broken.nc"
         broken.write_text("not a netcdf file at all")

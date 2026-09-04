@@ -35,6 +35,10 @@ SHORT_DIGEST = 12
 # A NetCDF blob larger than this is left unopened.
 NETCDF_FETCH_BYTES = 100_000_000
 
+# Compression means a blob under the fetch cap can still decode to far more, and each variable
+# is held on both sides plus a difference. This bounds what one side may expand to.
+MAX_DECODED_BYTES = 500_000_000
+
 # Unified-diff lines kept per file before the rest is elided.
 MAX_DIFF_LINES = 5000
 
@@ -479,11 +483,13 @@ def _values(variable: xr.DataArray | None) -> np.ndarray | None:
     Returns
     -------
     :
-        The values as float64, or ``None`` when the variable is absent or not numeric.
+        The values in their stored dtype, or ``None`` when the variable is absent or not
+        numeric. The dtype is kept because an ``int64`` past 2**53 does not survive a cast to
+        float, so two adjacent values would compare equal.
     """
     if variable is None or not np.issubdtype(variable.dtype, np.number):
         return None
-    return np.asarray(variable.values, dtype=float)
+    return np.asarray(variable.values)
 
 
 def _shape(variable: xr.DataArray | None) -> str | None:
@@ -526,7 +532,12 @@ def _summarise(values: np.ndarray | None) -> tuple[float | None, float | None, f
     nan_count = int(np.isnan(values).sum())
     if values.size in (0, nan_count):
         return None, None, None, nan_count
-    return float(np.nanmin(values)), float(np.nanmax(values)), float(np.nanmean(values)), nan_count
+    return (
+        float(np.nanmin(values)),
+        float(np.nanmax(values)),
+        float(np.nanmean(values, dtype=float)),
+        nan_count,
+    )
 
 
 def _compare(
@@ -550,13 +561,18 @@ def _compare(
     -------
     :
         The largest absolute difference, the same relative to ``scale``, and the number of
-        cells that differ. All ``None`` when the sides cannot be compared.
+        cells that differ. The two differences are ``None`` when a cell moved between NaN and
+        a number, because that gap has no magnitude and the finite maximum would read as zero.
+        All three are ``None`` when the sides cannot be compared.
     """
     if old is None or new is None or old.shape != new.shape:
         return None, None, None
-    same = (old == new) | (np.isnan(old) & np.isnan(new))
-    cells_differ = int(np.sum(~same))
-    diff = np.abs(new - old)
+    old_nan = np.isnan(old)
+    new_nan = np.isnan(new)
+    cells_differ = int(np.sum(~((old == new) | (old_nan & new_nan))))
+    if np.any(old_nan != new_nan):
+        return None, None, cells_differ
+    diff = np.abs(new.astype(float) - old.astype(float))
     max_abs = 0.0 if np.isnan(diff).all() else float(np.nanmax(diff))
     return max_abs, max_abs / max(scale, float(np.finfo(float).tiny)), cells_differ
 
@@ -634,6 +650,15 @@ def netcdf_diff(old: Path | None, new: Path | None) -> NetcdfDiff:
                 if new is not None
                 else None
             )
+            for dataset in (old_ds, new_ds):
+                if dataset is not None and dataset.nbytes > MAX_DECODED_BYTES:
+                    return NetcdfDiff(
+                        header=(),
+                        header_old=(),
+                        header_new=(),
+                        rows=(),
+                        note=f"decodes to too much to analyse ({dataset.nbytes:,} B)",
+                    )
             header_old = _header(old_ds)
             header_new = _header(new_ds)
             header = _header_diff(header_old, header_new)

@@ -193,7 +193,6 @@ tr.noise {
 }
 
 .pill.noise {
-  background: var(--noise-bg);
   color: var(--noise-fg);
 }
 
@@ -249,7 +248,7 @@ tr.noise {
   font-weight: 600;
 }
 
-/* Marks a file that lives in git, so a reviewer can find it in the pull request's own diff. */
+/* A small inline tag, used for a file that lives in git and for a noise row. */
 .pill {
   background: var(--panel);
   border: 1px solid var(--rule);

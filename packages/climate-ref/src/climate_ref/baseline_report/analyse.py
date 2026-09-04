@@ -141,6 +141,14 @@ class StatRow:
     cells_differ: int | None
     """Cells that changed, counting NaN as equal to NaN."""
 
+    tolerance: float
+    """
+    How far a value may move before it counts as changed.
+
+    :data:`NOISE_REL_TOLERANCE` scaled by the base ref's own magnitude, so one number governs
+    both the row's verdict and which of its statistics are emphasised.
+    """
+
     moved: bool
     """Whether anything about this variable changed, however small the change."""
 
@@ -155,12 +163,12 @@ class StatRow:
         Returns
         -------
         :
-            ``changed`` when the move is larger than :data:`NOISE_REL_TOLERANCE` or cannot be
-            measured, ``noise`` when it is smaller, and ``same`` when nothing moved.
+            ``changed`` when the move is larger than :attr:`tolerance` or cannot be measured,
+            ``noise`` when it is smaller, and ``same`` when nothing moved.
         """
         if not self.moved:
             return "same"
-        if self.max_rel_diff is None or self.max_rel_diff > NOISE_REL_TOLERANCE:
+        if self.max_abs_diff is None or self.max_abs_diff > self.tolerance:
             return "changed"
         return "noise"
 
@@ -769,6 +777,7 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
         max_abs_diff=max_abs_diff,
         max_rel_diff=max_rel_diff,
         cells_differ=cells_differ,
+        tolerance=tolerance,
         moved=(cells_differ or 0) > 0 or shape.changed,
     )
 

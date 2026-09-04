@@ -308,6 +308,7 @@ class TestNetcdfDiff:
         assert {line.kind for line in diff.header} == {"context"}
         assert len(diff.header) == len(diff.header_old) == len(diff.header_new)
         assert diff.rows[0].moved is False
+        assert diff.rows[0].severity == "same"
         assert diff.rows[0].cells_differ == 0
         assert diff.rows[0].max_abs_diff == 0.0
 
@@ -356,19 +357,6 @@ class TestNetcdfDiff:
         assert row.differs is True
         assert row.maximum.changed is True
 
-    def test_an_unmeasurable_move_is_never_called_noise(self, tmp_path, base_nc):
-        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-
-        row = netcdf_diff(base_nc, new).rows[0]
-
-        assert row.max_rel_diff is None
-        assert row.severity == "changed"
-
-    def test_an_unchanged_variable_has_no_severity(self, tmp_path, base_nc):
-        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0]])
-
-        assert netcdf_diff(base_nc, new).rows[0].severity == "same"
-
     def test_a_changed_shape_cannot_be_compared_cell_by_cell(self, tmp_path, base_nc):
         new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
 
@@ -380,6 +368,7 @@ class TestNetcdfDiff:
         assert row.shape.new == "2x3"
         assert row.shape.changed is True
         assert row.moved is True
+        assert row.severity == "changed"  # an unmeasurable move is never called noise
 
     def test_a_nan_in_the_same_cell_on_both_sides_is_not_a_change(self, tmp_path):
         old = _write_nc(tmp_path / "old.nc", [[1.0, np.nan], [3.0, 4.0]])

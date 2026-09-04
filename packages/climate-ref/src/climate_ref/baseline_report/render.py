@@ -140,7 +140,7 @@ def _build_env() -> Environment:
     env.filters["num"] = _format_num
     env.filters["dash"] = _format_dash
     env.filters["short"] = _format_short
-    env.globals["noise_tolerance"] = _format_num(NOISE_REL_TOLERANCE)
+    env.globals["noise_tolerance"] = NOISE_REL_TOLERANCE
     return env
 
 

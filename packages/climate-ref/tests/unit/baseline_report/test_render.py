@@ -496,8 +496,7 @@ MARKER = "<!-- climate-ref-baseline-diff -->"
 
 def _rows(markdown: str) -> list[str]:
     """Return the table's body rows."""
-    lines = [line for line in markdown.splitlines() if line.startswith("| `")]
-    return lines
+    return [line for line in markdown.splitlines() if line.startswith("| `")]
 
 
 class TestComment:
@@ -563,6 +562,20 @@ class TestComment:
         report = _analysed([_case_change([], base=base, head=head)], tmp_path)
 
         assert f"| {expected} |" in _rows(render_comment(report, BASE_URL))[0]
+
+    def test_the_header_carries_a_column_per_kind(self, changed_image_case):
+        markdown = render_comment(changed_image_case, BASE_URL)
+
+        header = next(line for line in markdown.splitlines() if line.startswith("| case |"))
+        assert header.count("|") == len(changed_image_case.kinds) + 4
+        for kind in changed_image_case.kinds:
+            assert f"| {kind} |" in header
+
+    def test_every_row_has_the_same_column_count_as_the_header(self, changed_image_case):
+        markdown = render_comment(changed_image_case, BASE_URL)
+
+        header = next(line for line in markdown.splitlines() if line.startswith("| case |"))
+        assert all(row.count("|") == header.count("|") for row in _rows(markdown))
 
     def test_zero_cases_renders_the_no_change_message(self, tmp_path):
         markdown = render_comment(_analysed([], tmp_path), BASE_URL)

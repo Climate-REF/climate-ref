@@ -3,10 +3,10 @@
 {% if cases %}
 {{ cases | length }} test case(s) changed against `{{ report.report.base_ref }}`. [Full report]({{ index_url }})
 
-| case | versions | images | text | netcdf | other | |
-| --- | --- | --- | --- | --- | --- | --- |
+| case | versions |{% for kind in report.kinds %} {{ kind }} |{% endfor %} |
+| --- | --- |{% for kind in report.kinds %} --- |{% endfor %} --- |
 {% for case in cases %}
-| `{{ case.label }}` | {{ case.versions }} | {{ case.images }} | {{ case.text }} | {{ case.netcdf }} | {{ case.other }} | [view]({{ case.url }}) |
+| `{{ case.label }}` | {{ case.versions }} |{% for count in case.counts %} {{ count }} |{% endfor %} [view]({{ case.url }}) |
 {% endfor %}
 {% else %}
 No baseline manifests changed against `{{ report.report.base_ref }}`.

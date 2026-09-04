@@ -286,6 +286,16 @@ def build_report_store(config: _ReportStoreConfigProtocol, *, writable: bool) ->
     if not writable or store.root is not None:
         # A local store is already writable, and a read-only store needs no credentials.
         return store
+    # Checked here rather than in S3WriteConfig, whose message names the native store's env vars.
+    if not config.s3_endpoint_url:
+        raise ValueError(
+            "Uploading a report needs an S3 endpoint URL. Set REF_REPORT_STORE_S3_ENDPOINT_URL "
+            "(e.g. https://<account>.r2.cloudflarestorage.com)."
+        )
+    if not config.bucket:
+        raise ValueError(
+            "Uploading a report needs a bucket name. Set REF_REPORT_STORE_BUCKET (e.g. ref-baseline-reports)."
+        )
     return ReportStore(
         url=config.url,
         write=S3WriteConfig(

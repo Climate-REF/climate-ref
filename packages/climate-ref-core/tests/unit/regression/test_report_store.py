@@ -173,6 +173,17 @@ class TestBuildReportStore:
 
         assert store.write is None
 
+    @pytest.mark.parametrize(
+        "kwargs, expected",
+        [
+            ({"s3_endpoint_url": ""}, "REF_REPORT_STORE_S3_ENDPOINT_URL"),
+            ({"bucket": ""}, "REF_REPORT_STORE_BUCKET"),
+        ],
+    )
+    def test_missing_routing_names_the_report_store_env_var(self, kwargs, expected: str) -> None:
+        with pytest.raises(ValueError, match=expected):
+            build_report_store(_StubConfig(REMOTE_URL, **kwargs), writable=True)
+
     def test_a_local_store_is_writable_without_credentials(self, tmp_path: Path) -> None:
         store = build_report_store(_StubConfig(str(tmp_path / "reports")), writable=True)
 

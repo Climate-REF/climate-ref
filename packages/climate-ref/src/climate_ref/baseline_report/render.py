@@ -117,9 +117,15 @@ def _format_short(digest: str | None) -> str:
     return digest[:SHORT_DIGEST]
 
 
-def _build_env() -> Environment:
+def _build_env(*, escape: bool) -> Environment:
     """
-    Build the Jinja environment the report is rendered with.
+    Build a Jinja environment for the templates in this package.
+
+    Parameters
+    ----------
+    escape
+        Whether to escape values. Off for the markdown comment, where an escaped case label
+        would render as HTML entities on GitHub.
 
     Returns
     -------
@@ -128,7 +134,7 @@ def _build_env() -> Environment:
     """
     env = Environment(
         loader=PackageLoader("climate_ref.baseline_report", "templates"),
-        autoescape=select_autoescape(["html", "j2"]),
+        autoescape=select_autoescape(["html", "j2"]) if escape else False,  # noqa: S701
         trim_blocks=True,
         lstrip_blocks=True,
     )
@@ -140,28 +146,8 @@ def _build_env() -> Environment:
     return env
 
 
-def _build_text_env() -> Environment:
-    """
-    Build the Jinja environment the markdown comment is rendered with.
-
-    Escaping is off, because the comment is markdown rather than HTML,
-    and a case label escaped as HTML entities would render literally on GitHub.
-
-    Returns
-    -------
-    :
-        The environment.
-    """
-    return Environment(
-        loader=PackageLoader("climate_ref.baseline_report", "templates"),
-        autoescape=False,  # noqa: S701 - markdown output, escaping would show as entities
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
-
-
-_env = _build_env()
-_text_env = _build_text_env()
+_env = _build_env(escape=True)
+_text_env = _build_env(escape=False)
 
 
 @frozen
@@ -185,17 +171,8 @@ class CommentRow:
     versions: str
     """``v3 -> v4``, or ``new`` / ``removed`` when the case only exists on one side."""
 
-    images: str
-    """The ``+a ~c -r`` shorthand for image changes, or ``none``."""
-
-    text: str
-    """The shorthand for text changes."""
-
-    netcdf: str
-    """The shorthand for NetCDF changes."""
-
-    other: str
-    """The shorthand for everything else."""
+    counts: tuple[str, ...]
+    """The ``+a ~c -r`` shorthand per file kind, in the report's column order."""
 
     url: str
     """Link to the case's page in the hosted report."""
@@ -263,14 +240,10 @@ def _comment_row(case: AnalysedCase, base_url: str) -> CommentRow:
     :
         The row.
     """
-    by_kind = {count.label: _shorthand(count) for count in case.counts}
     return CommentRow(
         label=case.change.label,
         versions=_versions(case),
-        images=by_kind["image"],
-        text=by_kind["text"],
-        netcdf=by_kind["netcdf"],
-        other=by_kind["other"],
+        counts=tuple(_shorthand(count) for count in case.counts),
         url=f"{base_url}/{case.change.label}/index.html",
     )
 

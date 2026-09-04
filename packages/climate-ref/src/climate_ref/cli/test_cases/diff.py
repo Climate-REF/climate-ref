@@ -87,7 +87,7 @@ def diff_baselines(  # noqa: PLR0913
         try:
             report_store = build_report_store(config.report_store, writable=True)
             report_store.preflight()
-            upload_site(html_dir, report_store, upload)
+            index_url = upload_site(html_dir, report_store, upload)
             base_url = report_store.url_for(upload)
         except (NotImplementedError, ValueError, ImportError, NativeStoreUnavailableError) as exc:
             logger.error(
@@ -96,7 +96,7 @@ def diff_baselines(  # noqa: PLR0913
                 "'climate-ref-core[aws]' extra."
             )
             raise typer.Exit(code=1) from exc
-        console.print(f"Uploaded the report to {base_url}/index.html")
+        console.print(f"Uploaded the report to {index_url}")
 
     if comment_output is not None:
         comment_output.parent.mkdir(parents=True, exist_ok=True)

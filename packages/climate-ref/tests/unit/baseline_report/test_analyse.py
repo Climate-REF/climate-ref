@@ -576,10 +576,11 @@ def _manifest(native, committed=None):
 class TestBaselineTree:
     def test_directories_are_emitted_once_before_their_files(self):
         entry = NativeEntry(sha256="1" * 64, size=10)
+        added = NativeEntry(sha256="2" * 64, size=10)
         case = _report(
-            [],
+            [_file_change("plots/b.png", None, added)],
             base=_manifest({"plots/a.png": entry}),
-            head=_manifest({"plots/a.png": entry, "plots/b.png": evolve(entry, sha256="2" * 64)}),
+            head=_manifest({"plots/a.png": entry, "plots/b.png": added}),
         ).cases[0]
 
         assert [(node.name, node.depth, node.is_dir, node.status) for node in baseline_tree(case)] == [
@@ -606,7 +607,11 @@ class TestBaselineTree:
 
     def test_a_removed_file_keeps_its_place_in_the_listing(self):
         entry = NativeEntry(sha256="1" * 64, size=10)
-        case = _report([], base=_manifest({"gone.png": entry}), head=_manifest({})).cases[0]
+        case = _report(
+            [_file_change("gone.png", entry, None)],
+            base=_manifest({"gone.png": entry}),
+            head=_manifest({}),
+        ).cases[0]
 
         assert [(node.name, node.status, node.size) for node in baseline_tree(case)] == [
             ("gone.png", "removed", 10)
@@ -619,6 +624,7 @@ class TestBaselineTree:
         entry = NativeEntry(sha256="1" * 64, size=10)
         case = _report(
             [],
+            committed=[_committed()],
             base=_manifest({"plot.png": entry}, {"series.json": "a" * 64}),
             head=_manifest({"plot.png": entry}, {"series.json": "b" * 64}),
         ).cases[0]

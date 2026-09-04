@@ -9,6 +9,7 @@ from __future__ import annotations
 import difflib
 import io
 import json
+import os.path
 from collections import Counter
 from contextlib import ExitStack
 from itertools import islice
@@ -25,8 +26,8 @@ from climate_ref.baseline_report.collect import (
     FileChange,
     FileKind,
     Report,
-    change_status,
 )
+from climate_ref_core.regression.manifest import COMMITTED_DIRNAME
 
 if TYPE_CHECKING:
     from climate_ref_core.regression.manifest import NativeEntry
@@ -333,6 +334,25 @@ def blob_url(store: NativeStore, digest: str) -> str:
     return f"{store.url.rstrip('/')}/{digest}"
 
 
+def _decode(path: Path | None) -> str | None:
+    """
+    Decode a fetched blob, replacing any byte that is not valid UTF-8.
+
+    Parameters
+    ----------
+    path
+        The blob, or ``None`` when the file is absent on that side.
+
+    Returns
+    -------
+    :
+        The blob's text, or ``None`` when there is no blob.
+    """
+    if path is None:
+        return None
+    return path.read_bytes().decode("utf-8", errors="replace")
+
+
 def _text_lines(text: str | None, name: str) -> list[str]:
     """
     Split text into diffable lines.
@@ -360,27 +380,6 @@ def _text_lines(text: str | None, name: str) -> list[str]:
         except json.JSONDecodeError:
             pass
     return text.splitlines()
-
-
-def _as_lines(path: Path | None, name: str) -> list[str]:
-    """
-    Decode a blob into diffable lines.
-
-    Parameters
-    ----------
-    path
-        The fetched blob, or ``None`` when the file is absent on that side.
-    name
-        The file's name, used to decide whether it is JSON.
-
-    Returns
-    -------
-    :
-        The lines to diff.
-    """
-    if path is None:
-        return []
-    return _text_lines(path.read_bytes().decode("utf-8", errors="replace"), name)
 
 
 def _classify_line(line: str) -> str:
@@ -515,8 +514,8 @@ def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
         The diff, or a note explaining why there is not one.
     """
     return _build_text_diff(
-        _as_lines(old, name),
-        _as_lines(new, name),
+        _text_lines(_decode(old), name),
+        _text_lines(_decode(new), name),
         has_old=old is not None,
         has_new=new is not None,
     )
@@ -1045,33 +1044,13 @@ def _counts(files: tuple[AnalysedFile, ...]) -> tuple[KindCounts, ...]:
     )
 
 
-def _file_status(old: NativeEntry | None, new: NativeEntry | None) -> str | None:
-    """
-    Describe how one native file moved between the two manifests.
-
-    Parameters
-    ----------
-    old
-        The entry on the base ref, or ``None``.
-    new
-        The entry on HEAD, or ``None``.
-
-    Returns
-    -------
-    :
-        ``added``, ``removed``, ``changed``, or ``None`` when the digest is the same.
-    """
-    if old is not None and new is not None and old.sha256 == new.sha256:
-        return None
-    return change_status(old, new)
-
-
 def _baseline_entries(case: CaseChange) -> dict[str, tuple[int | None, str | None]]:
     """
     Gather every file the baseline captures, keyed by its path within the test case.
 
-    The committed bundle sits under ``regression/``, which is where a run writes it, so the
+    The committed bundle sits under its own directory, which is where a run writes it, so the
     listing matches the layout on disk rather than splitting the capture by where it is stored.
+    Statuses come from the collected case, which is what decided that a file moved at all.
 
     Parameters
     ----------
@@ -1081,23 +1060,19 @@ def _baseline_entries(case: CaseChange) -> dict[str, tuple[int | None, str | Non
     Returns
     -------
     :
-        ``{path: (size, status)}``. The size is ``None`` for a committed artefact, whose
-        manifest entry carries only a digest.
+        ``{path: (size, status)}``, where the status is ``None`` for a file that did not move.
+        The size is ``None`` for a committed artefact, whose manifest entry carries only a digest.
     """
-    old_native = case.base.native if case.base else {}
-    new_native = case.head.native if case.head else {}
-    entries: dict[str, tuple[int | None, str | None]] = {}
-    for name in set(old_native) | set(new_native):
-        old, new = old_native.get(name), new_native.get(name)
-        entry = new or old
-        entries[name] = (entry.size if entry else None, _file_status(old, new))
+    moved = {file.name: file.status for file in case.files}
+    native = {**(case.base.native if case.base else {}), **(case.head.native if case.head else {})}
+    entries: dict[str, tuple[int | None, str | None]] = {
+        name: (entry.size, moved.get(name)) for name, entry in native.items()
+    }
 
-    old_committed = case.base.committed if case.base else {}
-    new_committed = case.head.committed if case.head else {}
-    for name in set(old_committed) | set(new_committed):
-        old_digest, new_digest = old_committed.get(name), new_committed.get(name)
-        status = None if old_digest == new_digest else change_status(old_digest, new_digest)
-        entries[f"regression/{name}"] = (None, status)
+    moved_committed = {artefact.name: artefact.status for artefact in case.committed}
+    committed = {**(case.base.committed if case.base else {}), **(case.head.committed if case.head else {})}
+    for name in committed:
+        entries[f"{COMMITTED_DIRNAME}/{name}"] = (None, moved_committed.get(name))
     return entries
 
 
@@ -1120,21 +1095,18 @@ def baseline_tree(case: CaseChange) -> tuple[TreeNode, ...]:
     """
     entries = _baseline_entries(case)
     rows: list[TreeNode] = []
-    open_dirs: list[str] = []
+    previous: tuple[str, ...] = ()
     for path in sorted(entries):
-        parts = PurePosixPath(path).parts
-        for depth, part in enumerate(parts[:-1]):
-            if depth < len(open_dirs) and open_dirs[depth] == part:
-                continue
-            del open_dirs[depth:]
-            open_dirs.append(part)
-            rows.append(TreeNode(name=part, depth=depth, is_dir=True, size=None, status=None))
-        del open_dirs[len(parts) - 1 :]
+        *directories, filename = PurePosixPath(path).parts
+        shared = len(os.path.commonprefix([previous, tuple(directories)]))
+        for depth in range(shared, len(directories)):
+            rows.append(TreeNode(name=directories[depth], depth=depth, is_dir=True, size=None, status=None))
+        previous = tuple(directories)
         size, status = entries[path]
         rows.append(
             TreeNode(
-                name=parts[-1],
-                depth=len(parts) - 1,
+                name=filename,
+                depth=len(directories),
                 is_dir=False,
                 size=size,
                 status=status,

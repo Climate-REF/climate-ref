@@ -1,7 +1,8 @@
 """
-Read the manifests either side of a base ref and pair up every native file that moved.
+Read the baselines either side of a base ref and pair up everything that moved.
 
-Collection performs no network access. Fetching blobs and building diffs is
+Collection reads only the repository, both the manifests and the committed bundle they track.
+Fetching native blobs from the store and building diffs is
 :mod:`~climate_ref.baseline_report.analyse`'s job.
 """
 
@@ -14,7 +15,7 @@ from typing import TYPE_CHECKING
 from attrs import frozen
 from loguru import logger
 
-from climate_ref_core.regression.manifest import Manifest, NativeEntry
+from climate_ref_core.regression.manifest import COMMITTED_DIRNAME, Manifest, NativeEntry
 
 if TYPE_CHECKING:
     from git import Repo
@@ -362,7 +363,7 @@ def _committed_path(manifest_rel_path: str, name: str) -> str:
     :
         The path as it appears in the pull request's file list.
     """
-    return (PurePosixPath(manifest_rel_path).parent / "regression" / name).as_posix()
+    return (PurePosixPath(manifest_rel_path).parent / COMMITTED_DIRNAME / name).as_posix()
 
 
 def _committed_changes(

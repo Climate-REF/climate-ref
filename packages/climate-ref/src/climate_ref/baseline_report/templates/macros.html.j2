@@ -50,6 +50,17 @@ was {{ file.change.old.size | bytes -}}
 </pre>
 {%- endmacro %}
 
+{% macro diff_body(text) %}
+{% if text.note %}
+<p class="note">{{ text.note }}</p>
+{% else %}
+{{ diff_lines(text.lines) }}
+{% if text.elided %}
+<p class="note">{{ text.elided }} further diff line(s) elided.</p>
+{% endif %}
+{% endif %}
+{% endmacro %}
+
 {% macro text_block(file) %}
 <section class="file">
 <h3>
@@ -62,14 +73,7 @@ was {{ file.change.old.size | bytes -}}
 </span>
 {{ blob_links(file) }}
 </h3>
-{% if file.text.note %}
-<p class="note">{{ file.text.note }}</p>
-{% else %}
-{{ diff_lines(file.text.lines) }}
-{% if file.text.elided %}
-<p class="note">{{ file.text.elided }} further diff line(s) elided.</p>
-{% endif %}
-{% endif %}
+{{ diff_body(file.text) }}
 </section>
 {% endmacro %}
 
@@ -177,14 +181,7 @@ was {{ file.change.old.size | bytes -}}
 </span>
 </h3>
 <p class="path"><code>{{ item.change.rel_path }}</code></p>
-{% if item.text.note %}
-<p class="note">{{ item.text.note }}</p>
-{% else %}
-{{ diff_lines(item.text.lines) }}
-{% if item.text.elided %}
-<p class="note">{{ item.text.elided }} further diff line(s) elided.</p>
-{% endif %}
-{% endif %}
+{{ diff_body(item.text) }}
 </section>
 {% endmacro %}
 

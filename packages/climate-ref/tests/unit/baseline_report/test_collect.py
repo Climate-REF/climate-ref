@@ -21,6 +21,15 @@ def _digest(char: str) -> str:
     return char * 64
 
 
+def _init_repo(repo_dir):
+    """Initialise a repository that can commit without the caller's git identity."""
+    repo = Repo.init(repo_dir)
+    with repo.config_writer() as writer:
+        writer.set_value("user", "name", "test")
+        writer.set_value("user", "email", "test@example.com")
+    return repo
+
+
 def _write_committed(repo_dir, rel_path, name, text):
     """Write a committed regression artefact alongside the manifest at ``rel_path``."""
     path = repo_dir / rel_path / "regression" / name
@@ -46,10 +55,7 @@ def _write_manifest(repo_dir, rel_path, *, version, native, committed=None, cata
 @pytest.fixture
 def repo(tmp_path):
     """A git repository with one manifest committed twice, the second time with changes."""
-    repo = Repo.init(tmp_path)
-    with repo.config_writer() as writer:
-        writer.set_value("user", "name", "test")
-        writer.set_value("user", "email", "test@example.com")
+    repo = _init_repo(tmp_path)
 
     _write_manifest(
         tmp_path,
@@ -142,10 +148,7 @@ class TestCollect:
         assert [(c.name, c.status) for c in case.committed] == [("series.json", "changed")]
 
     def test_new_case_has_no_base(self, tmp_path):
-        repo = Repo.init(tmp_path)
-        with repo.config_writer() as writer:
-            writer.set_value("user", "name", "test")
-            writer.set_value("user", "email", "test@example.com")
+        repo = _init_repo(tmp_path)
         (tmp_path / "README.md").write_text("seed")
         repo.git.add("-A")
         repo.index.commit("seed")
@@ -180,12 +183,9 @@ class TestCollect:
 
 class TestCommittedChanges:
     @pytest.fixture
-    def repo(self, tmp_path):
+    def committed_repo(self, tmp_path):
         """A repository whose committed ``series.json`` moved between the two commits."""
-        repo = Repo.init(tmp_path)
-        with repo.config_writer() as writer:
-            writer.set_value("user", "name", "test")
-            writer.set_value("user", "email", "test@example.com")
+        repo = _init_repo(tmp_path)
 
         case_dir = str(Path(MANIFEST_PATH).parent)
         _write_manifest(
@@ -214,8 +214,8 @@ class TestCommittedChanges:
         repo.index.commit("head")
         return repo
 
-    def test_both_sides_are_read_out_of_the_repository(self, repo):
-        case = collect(repo, "HEAD~1").cases[0]
+    def test_both_sides_are_read_out_of_the_repository(self, committed_repo):
+        case = collect(committed_repo, "HEAD~1").cases[0]
 
         assert [(c.name, c.status) for c in case.committed] == [
             ("diagnostic.json", "added"),
@@ -227,24 +227,24 @@ class TestCommittedChanges:
         assert changed.new_text == '{"value": 2}'
         assert changed.rel_path == f"{Path(MANIFEST_PATH).parent.as_posix()}/regression/series.json"
 
-    def test_an_added_artefact_has_no_base_side(self, repo):
-        added = collect(repo, "HEAD~1").cases[0].committed[0]
+    def test_an_added_artefact_has_no_base_side(self, committed_repo):
+        added = collect(committed_repo, "HEAD~1").cases[0].committed[0]
 
         assert added.old is None
         assert added.old_text is None
         assert added.new_text == '{"new": true}'
 
-    def test_a_removed_artefact_has_no_head_side(self, repo):
-        removed = collect(repo, "HEAD~1").cases[0].committed[1]
+    def test_a_removed_artefact_has_no_head_side(self, committed_repo):
+        removed = collect(committed_repo, "HEAD~1").cases[0].committed[1]
 
         assert removed.new is None
         assert removed.new_text is None
         assert removed.old_text == "{}"
 
-    def test_an_artefact_missing_from_the_working_tree_leaves_no_text(self, repo, tmp_path):
+    def test_an_artefact_missing_from_the_working_tree_leaves_no_text(self, committed_repo, tmp_path):
         (tmp_path / Path(MANIFEST_PATH).parent / "regression" / "series.json").unlink()
 
-        changed = collect(repo, "HEAD~1").cases[0].committed[-1]
+        changed = collect(committed_repo, "HEAD~1").cases[0].committed[-1]
 
         assert changed.new is not None
         assert changed.new_text is None

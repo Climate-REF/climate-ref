@@ -2,7 +2,13 @@ import builtins
 from pathlib import Path
 
 import pooch
-from climate_ref_pmp import PMPDiagnosticProvider, __version__, provider
+from climate_ref_pmp import (
+    _DEFAULT_THREAD_LIMIT,
+    _THREAD_LIMIT_VARS,
+    PMPDiagnosticProvider,
+    __version__,
+    provider,
+)
 
 from climate_ref_core.data import LayeredResource, PackagedResource
 
@@ -110,6 +116,26 @@ class TestPMPProviderHooks:
         )
         assert "FI_PROVIDER" in test_provider.env_overrides
         assert test_provider.env_overrides["FI_PROVIDER"] == "tcp"
+        for name in _THREAD_LIMIT_VARS:
+            assert test_provider.env_overrides[name] == _DEFAULT_THREAD_LIMIT
+
+    def test_configure_keeps_user_thread_limits(self, mocker, tmp_path, monkeypatch):
+        """A thread limit already in the environment is left alone."""
+        monkeypatch.setenv("OMP_NUM_THREADS", "4")
+        test_provider = PMPDiagnosticProvider("PMP-Test", "1.0")
+        mock_config = mocker.Mock()
+        mock_config.paths.software = tmp_path / "software"
+        mock_config.ignore_datasets_file = tmp_path / "ignore.yaml"
+        mock_config.ignore_datasets_file.touch()
+        mock_config.ignore_datasets_resource = LayeredResource(
+            packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
+            override=mock_config.ignore_datasets_file,
+        )
+
+        test_provider.configure(mock_config)
+
+        assert "OMP_NUM_THREADS" not in test_provider.env_overrides
+        assert test_provider.env_overrides["MKL_NUM_THREADS"] == _DEFAULT_THREAD_LIMIT
 
     def test_ingest_data_skips_when_climate_ref_not_installed(self, mocker, caplog):
         """Test ingest_data gracefully skips when climate-ref package is not installed."""

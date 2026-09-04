@@ -38,9 +38,8 @@ _THREAD_LIMIT_VARS = (
     "VECLIB_MAXIMUM_THREADS",
 )
 
-# Conservative default
+# Conservative default for ~10% improvement over a single thread
 # Without a default BLAS will take as many CPUs as available
-# ~10% improvement over a single thread
 _DEFAULT_THREAD_LIMIT = "2"
 
 
@@ -62,7 +61,7 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
             logger.debug("Setting env variable 'FI_PROVIDER=tcp'")
             self.env_overrides["FI_PROVIDER"] = "tcp"
 
-        # One of these being set means someone has chosen a thread budget, so leave all five alone.
+        # If any budgets are set, don't set default values
         if not any(name in os.environ for name in _THREAD_LIMIT_VARS):
             logger.debug(f"Limiting threads to {_DEFAULT_THREAD_LIMIT}")
             for name in _THREAD_LIMIT_VARS:

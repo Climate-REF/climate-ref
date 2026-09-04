@@ -21,7 +21,6 @@ from climate_ref.doctor.context import DoctorContext
 from climate_ref.doctor.findings import Finding, Severity
 from climate_ref.doctor.registry import check
 from climate_ref.solver import (
-    apply_obs4ref_fallback,
     as_frame,
     catalog_for_requirement,
     extract_covered_datasets,
@@ -171,8 +170,6 @@ def check_missing_reference_data(context: DoctorContext) -> list[Finding]:
         if len(catalog) and "source_id" in catalog:
             ingested[source_type.value].update(catalog["source_id"].unique())
 
-    # obs4REF fills in whatever obs4MIPs lacks, so either satisfies an obs4MIPs requirement.
-    ingested[SourceDatasetType.obs4MIPs.value] |= ingested[SourceDatasetType.obs4REF.value]
     for requested_type, fallbacks in _declared_fallbacks(context.providers).items():
         for fallback in fallbacks:
             ingested[requested_type] |= ingested[fallback]
@@ -227,9 +224,8 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
     """
     Find data ingested under a source type that no enabled diagnostic asks for.
 
-    The solver only matches a requirement against its own source type,
+    The solver only matches a requirement against its own source type and its declared fallbacks,
     so data ingested under a type nothing asks for is never selected.
-    The one exception is obs4REF data, which fills in for obs4MIPs requirements.
 
     Parameters
     ----------
@@ -248,8 +244,6 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
                 for requirement in requirement_set.requirements:
                     requested.add(requirement.source_type)
                     requested.update(requirement.fallback_source_types)
-    if SourceDatasetType.obs4MIPs.value in requested:
-        requested.add(SourceDatasetType.obs4REF.value)
 
     findings = []
     for source_type in SourceDatasetType:
@@ -267,8 +261,8 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
                     "that no enabled diagnostic requires"
                 ),
                 detail=(
-                    "The solver matches a data requirement against its own source type only, "
-                    "so nothing will select these datasets."
+                    "The solver matches a data requirement against its own source type and the "
+                    "fallbacks it declares, so nothing will select these datasets."
                 ),
                 remedy=(
                     "Re-ingest the data under the source type the diagnostics ask for, "
@@ -406,8 +400,6 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
         source_type: context.data_catalog(source_type) for source_type in SourceDatasetType
     }
 
-    available = apply_obs4ref_fallback(catalogs)
-
     findings = []
     for provider in context.providers:
         for diagnostic in provider.diagnostics():
@@ -422,7 +414,7 @@ def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
                 Finding(
                     severity=Severity.WARNING,
                     summary=f"{provider.slug}/{diagnostic.slug} has no executions",
-                    detail=_why_unsolvable(diagnostic, available),
+                    detail=_why_unsolvable(diagnostic, catalogs),
                     remedy="Ingest the data the unmet requirement names, then run the solver again.",
                 )
             )
@@ -480,16 +472,9 @@ def check_overlapping_registries(context: DoctorContext) -> list[Finding]:
         One finding per dataset carried by more than one registry.
     """
     findings = []
-    # obs4REF registries answer for two source types, so the same overlap is reported under both.
-    # Collapse to one finding per dataset and set of registries.
-    seen: set[tuple[str, tuple[str, ...]]] = set()
     for (_, source_id), registries in sorted(source_ids_by_registry().items()):
         if len(registries) < 2:  # noqa: PLR2004
             continue
-        key = (source_id, tuple(registries))
-        if key in seen:
-            continue
-        seen.add(key)
         findings.append(
             Finding(
                 severity=Severity.INFO,

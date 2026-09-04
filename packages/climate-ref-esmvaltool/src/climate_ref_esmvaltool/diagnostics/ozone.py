@@ -33,12 +33,12 @@ toz_data_requirement = (
                 FacetFilter(
                     facets={
                         "variable_id": "toz",
-                        "experiment_id": "historical",
+                        "experiment_id": ("historical", "esm-hist"),
                         "table_id": "AERmon",
                     },
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
+            group_by=("source_id", "experiment_id", "member_id", "grid_label"),
             constraints=(
                 RequireTimerange(
                     group_by=("instance_id",),
@@ -51,6 +51,7 @@ toz_data_requirement = (
         ),
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(ozone_obs_filter,),
             group_by=("source_id",),
             constraints=(
@@ -69,14 +70,14 @@ toz_data_requirement = (
                 FacetFilter(
                     facets={
                         "variable_id": "toz",
-                        "experiment_id": "historical",
+                        "experiment_id": ("historical", "esm-hist"),
                         "branded_variable": "toz_tavg-u-hxy-u",
                         "frequency": "mon",
                         "region": "glb",
                     },
                 ),
             ),
-            group_by=("source_id", "variant_label", "grid_label"),
+            group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
             constraints=(
                 RequireTimerange(
                     group_by=("instance_id",),
@@ -89,6 +90,7 @@ toz_data_requirement = (
         ),
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(ozone_obs_filter,),
             group_by=("source_id",),
             constraints=(
@@ -166,7 +168,7 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
     name = "Ozone Diagnostics"
     slug = "ozone-lat-time"
     base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 2
+    version = 3
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -202,7 +204,7 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
     name = "Ozone Diagnostics"
     slug = "ozone-sh-oct"
     base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 2
+    version = 3
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -248,7 +250,7 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
     name = "Ozone Diagnostics"
     slug = "ozone-nh-mar"
     base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 2
+    version = 3
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -298,7 +300,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
     name = "Ozone Diagnostics"
     slug = "ozone-zonal"
     base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 3
+    version = 4
 
     data_requirements = (
         DataRequirement(
@@ -307,12 +309,12 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                 FacetFilter(
                     facets={
                         "variable_id": "o3",
-                        "experiment_id": "historical",
+                        "experiment_id": ("historical", "esm-hist"),
                         "table_id": "Amon",
                     },
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
+            group_by=("source_id", "experiment_id", "member_id", "grid_label"),
             constraints=(
                 RequireTimerange(
                     group_by=("instance_id",),
@@ -397,7 +399,7 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
     name = "Ozone Diagnostics"
     slug = "ozone-annual-cycle"
     base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 2
+    version = 3
 
     data_requirements = toz_data_requirement
     facets = ()

@@ -9,7 +9,9 @@
   --add-fg: #14532d;
   --remove-bg: #fbe4e4;
   --remove-fg: #7f1d1d;
-  --moved-bg: #fdeeee;
+  --changed-bg: #fdeeee;
+  --noise-bg: #fdf4e3;
+  --noise-fg: #7a5200;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,7 +25,9 @@
     --add-fg: #86e29b;
     --remove-bg: #3a1c1c;
     --remove-fg: #f2a1a1;
-    --moved-bg: #2c1717;
+    --changed-bg: #2c1717;
+    --noise-bg: #2b2415;
+    --noise-fg: #e0bd72;
   }
 }
 
@@ -179,8 +183,17 @@ summary {
   font-size: 0.9em;
 }
 
-tr.moved {
-  background: var(--moved-bg);
+tr.changed {
+  background: var(--changed-bg);
+}
+
+/* Moved, but only within the noise tolerance, so it should not read as a real difference. */
+tr.noise {
+  background: var(--noise-bg);
+}
+
+.pill.noise {
+  color: var(--noise-fg);
 }
 
 /* A baseline file name can be long and has no spaces to break on. */
@@ -232,5 +245,38 @@ tr.moved {
 
 /* The moved half of a pair, so a column can be scanned for what actually shifted. */
 .stats strong {
+  font-weight: 600;
+}
+
+/* A small inline tag, used for a file that lives in git and for a noise row. */
+.pill {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.75em;
+  letter-spacing: 0.04em;
+  padding: 0.05rem 0.5rem;
+  text-transform: uppercase;
+  vertical-align: 0.1em;
+}
+
+.path {
+  color: var(--muted);
+  font-size: 0.85em;
+  margin: 0 0 0.5rem;
+}
+
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree li {
+  padding-left: calc(var(--depth) * 1.25rem);
+}
+
+.tree .dir {
   font-weight: 600;
 }

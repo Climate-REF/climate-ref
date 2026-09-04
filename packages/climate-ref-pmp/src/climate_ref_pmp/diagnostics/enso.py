@@ -56,7 +56,9 @@ class ENSO(CommandLineDiagnostic):
         "reference_source_id",
     )
 
-    def __init__(self, metrics_collection: str, experiments: Collection[str] = ("historical",)) -> None:
+    def __init__(
+        self, metrics_collection: str, experiments: Collection[str] = ("historical", "esm-hist")
+    ) -> None:
         self.name = metrics_collection
         self.slug = metrics_collection.lower()
         self.metrics_collection = metrics_collection
@@ -193,7 +195,7 @@ class ENSO(CommandLineDiagnostic):
 
     def _get_data_requirements(
         self,
-        experiments: Collection[str] = ("historical",),
+        experiments: Collection[str] = ("historical", "esm-hist"),
     ) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
         cmip6_filters = [
             FacetFilter(
@@ -218,6 +220,7 @@ class ENSO(CommandLineDiagnostic):
 
         obs_requirement = DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(
                 FacetFilter(facets={"source_id": self.obs_sources, "variable_id": self.model_variables}),
             ),

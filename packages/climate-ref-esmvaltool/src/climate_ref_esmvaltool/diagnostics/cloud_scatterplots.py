@@ -25,7 +25,7 @@ def get_cmip_data_requirements(
 ) -> tuple[tuple[DataRequirement, ...], ...]:
     """Create data requirements for CMIP6 and CMIP7 data."""
     cmip7_facets: dict[str, str | Collection[str]] = {
-        "experiment_id": "historical",
+        "experiment_id": ("historical", "esm-hist"),
         "frequency": "mon",
         "region": "glb",
     }
@@ -39,7 +39,7 @@ def get_cmip_data_requirements(
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
@@ -455,6 +455,7 @@ class CloudScatterplotsReference(ESMValToolDiagnostic):
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(
                 FacetFilter(
                     facets={

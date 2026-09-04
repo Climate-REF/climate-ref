@@ -10,6 +10,7 @@
       "values_name": "lwcre"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "CERES-EBAF-4-2-1",
@@ -395,6 +396,7 @@
       "values_name": "swcre"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "CERES-EBAF-4-2-1",
@@ -780,6 +782,7 @@
       "values_name": "lwcre"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -1163,6 +1166,7 @@
       "values_name": "swcre"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",

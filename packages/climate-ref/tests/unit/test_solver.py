@@ -22,7 +22,6 @@ from climate_ref.solver import (
     SolveFilterOptions,
     _solve_from_data_requirements,
     apply_dataset_filters,
-    apply_obs4ref_fallback,
     catalog_for_requirement,
     extract_covered_datasets,
     matches_filter,
@@ -1318,6 +1317,7 @@ def test_solve_with_new_areacella(obs4ref_data_catalog, mock_diagnostic, provide
     mock_diagnostic.data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(FacetFilter(facets={"variable_id": "ts", "source_id": "HadISST-1-1"}),),
             group_by=("variable_id", "source_id"),
         ),
@@ -2076,22 +2076,6 @@ class TestObs4REFFallback:
 
         assert merged["activity_id"].tolist() == ["obs4MIPs"]
         assert merged["instance_id"].tolist() == obs4ref["instance_id"].tolist()
-
-    def test_only_the_obs4mips_catalog_is_extended(self):
-        catalogs = {
-            SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", []),
-            SourceDatasetType.obs4REF: self._frame("obs4REF", ["A"]),
-        }
-
-        applied = apply_obs4ref_fallback(catalogs)
-
-        assert len(applied[SourceDatasetType.obs4MIPs]) == 1
-        assert applied[SourceDatasetType.obs4REF] is catalogs[SourceDatasetType.obs4REF]
-
-    def test_untouched_without_an_obs4ref_catalog(self):
-        catalogs = {SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"])}
-
-        assert apply_obs4ref_fallback(catalogs) is catalogs
 
 
 class TestDeclaredFallbacks:

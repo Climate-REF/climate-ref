@@ -1,5 +1,7 @@
 """Tests for collecting the manifest changes on a branch."""
 
+from pathlib import Path
+
 import pytest
 from git import Repo
 
@@ -17,6 +19,22 @@ MANIFEST_PATH = "packages/climate-ref-example/tests/test-data/global-mean-timese
 def _digest(char: str) -> str:
     """Build a valid sha256 digest from a single repeated hex character."""
     return char * 64
+
+
+def _init_repo(repo_dir):
+    """Initialise a repository that can commit without the caller's git identity."""
+    repo = Repo.init(repo_dir)
+    with repo.config_writer() as writer:
+        writer.set_value("user", "name", "test")
+        writer.set_value("user", "email", "test@example.com")
+    return repo
+
+
+def _write_committed(repo_dir, rel_path, name, text):
+    """Write a committed regression artefact alongside the manifest at ``rel_path``."""
+    path = repo_dir / rel_path / "regression" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
 
 
 def _write_manifest(repo_dir, rel_path, *, version, native, committed=None, catalog_hash=None):
@@ -37,10 +55,7 @@ def _write_manifest(repo_dir, rel_path, *, version, native, committed=None, cata
 @pytest.fixture
 def repo(tmp_path):
     """A git repository with one manifest committed twice, the second time with changes."""
-    repo = Repo.init(tmp_path)
-    with repo.config_writer() as writer:
-        writer.set_value("user", "name", "test")
-        writer.set_value("user", "email", "test@example.com")
+    repo = _init_repo(tmp_path)
 
     _write_manifest(
         tmp_path,
@@ -130,13 +145,10 @@ class TestCollect:
         case = collect(repo, "HEAD~1").cases[0]
 
         assert case.metadata == ("test_case_version: 3 -> 4",)
-        assert case.committed == ("series.json",)
+        assert [(c.name, c.status) for c in case.committed] == [("series.json", "changed")]
 
     def test_new_case_has_no_base(self, tmp_path):
-        repo = Repo.init(tmp_path)
-        with repo.config_writer() as writer:
-            writer.set_value("user", "name", "test")
-            writer.set_value("user", "email", "test@example.com")
+        repo = _init_repo(tmp_path)
         (tmp_path / "README.md").write_text("seed")
         repo.git.add("-A")
         repo.index.commit("seed")
@@ -167,3 +179,72 @@ class TestCollect:
         repo.index.commit("break the manifest")
 
         assert collect(repo, "HEAD~1").cases == ()
+
+
+class TestCommittedChanges:
+    @pytest.fixture
+    def committed_repo(self, tmp_path):
+        """A repository whose committed ``series.json`` moved between the two commits."""
+        repo = _init_repo(tmp_path)
+
+        case_dir = str(Path(MANIFEST_PATH).parent)
+        _write_manifest(
+            tmp_path,
+            MANIFEST_PATH,
+            version=3,
+            native={},
+            committed={"series.json": _digest("a"), "output.json": _digest("c")},
+        )
+        _write_committed(tmp_path, case_dir, "series.json", '{"value": 1}')
+        _write_committed(tmp_path, case_dir, "output.json", "{}")
+        repo.git.add("-A")
+        repo.index.commit("base")
+
+        _write_manifest(
+            tmp_path,
+            MANIFEST_PATH,
+            version=4,
+            native={},
+            committed={"series.json": _digest("b"), "diagnostic.json": _digest("d")},
+        )
+        _write_committed(tmp_path, case_dir, "series.json", '{"value": 2}')
+        _write_committed(tmp_path, case_dir, "diagnostic.json", '{"new": true}')
+        (tmp_path / case_dir / "regression" / "output.json").unlink()
+        repo.git.add("-A")
+        repo.index.commit("head")
+        return repo
+
+    def test_both_sides_are_read_out_of_the_repository(self, committed_repo):
+        case = collect(committed_repo, "HEAD~1").cases[0]
+
+        assert [(c.name, c.status) for c in case.committed] == [
+            ("diagnostic.json", "added"),
+            ("output.json", "removed"),
+            ("series.json", "changed"),
+        ]
+        changed = case.committed[-1]
+        assert changed.old_text == '{"value": 1}'
+        assert changed.new_text == '{"value": 2}'
+        assert changed.rel_path == f"{Path(MANIFEST_PATH).parent.as_posix()}/regression/series.json"
+
+    def test_an_added_artefact_has_no_base_side(self, committed_repo):
+        added = collect(committed_repo, "HEAD~1").cases[0].committed[0]
+
+        assert added.old is None
+        assert added.old_text is None
+        assert added.new_text == '{"new": true}'
+
+    def test_a_removed_artefact_has_no_head_side(self, committed_repo):
+        removed = collect(committed_repo, "HEAD~1").cases[0].committed[1]
+
+        assert removed.new is None
+        assert removed.new_text is None
+        assert removed.old_text == "{}"
+
+    def test_an_artefact_missing_from_the_working_tree_leaves_no_text(self, committed_repo, tmp_path):
+        (tmp_path / Path(MANIFEST_PATH).parent / "regression" / "series.json").unlink()
+
+        changed = collect(committed_repo, "HEAD~1").cases[0].committed[-1]
+
+        assert changed.new is not None
+        assert changed.new_text is None

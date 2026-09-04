@@ -39,12 +39,12 @@ esmvaltool/cloud-scatterplots-reference/obs4mips_obs4MIPs.obs4MIPs.ECMWF.ERA-5.m
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-esmvaltool/enso-basic-climatology/cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
+esmvaltool/enso-basic-climatology/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tauu.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.tos.gn.v20191115
-esmvaltool/enso-characteristics/cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
+esmvaltool/enso-characteristics/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.areacello.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.tos.gn.v20191115
@@ -106,30 +106,30 @@ esmvaltool/global-mean-timeseries/cmip6_ssp126_gn_r1i1p1f1_ACCESS-ESM1-5_Amon_ta
   SourceDatasetType.CMIP6:
   - CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.tas.gn.v20210318
   - CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.fx.areacella.gn.v20210318
-esmvaltool/ozone-annual-cycle/cmip6_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
+esmvaltool/ozone-annual-cycle/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
   SourceDatasetType.obs4MIPs:
   - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
-esmvaltool/ozone-lat-time/cmip6_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
+esmvaltool/ozone-lat-time/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
   SourceDatasetType.obs4MIPs:
   - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
-esmvaltool/ozone-nh-mar/cmip6_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
+esmvaltool/ozone-nh-mar/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
   SourceDatasetType.obs4MIPs:
   - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
-esmvaltool/ozone-sh-oct/cmip6_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
+esmvaltool/ozone-sh-oct/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
   SourceDatasetType.obs4MIPs:
   - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
-esmvaltool/ozone-zonal/cmip6_gr_r1i1p1f2_CNRM-ESM2-1:
+esmvaltool/ozone-zonal/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Amon.o3.gr.v20181206
-esmvaltool/regional-historical-annual-cycle/cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
+esmvaltool/regional-historical-annual-cycle/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
@@ -137,11 +137,11 @@ esmvaltool/regional-historical-annual-cycle/cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ua.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
-esmvaltool/regional-historical-annual-cycle/cmip6_gn_r1i1p1f1_CanESM5:
+esmvaltool/regional-historical-annual-cycle/cmip6_historical_gn_r1i1p1f1_CanESM5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
-esmvaltool/regional-historical-annual-cycle/cmip6_gn_r1i1p1f3_HadGEM3-GC31-LL:
+esmvaltool/regional-historical-annual-cycle/cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-LL:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.Amon.tas.gn.v20190624
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
@@ -217,7 +217,7 @@ esmvaltool/regional-historical-annual-cycle/obs4mips_ERA-5:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-esmvaltool/regional-historical-timeseries/cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
+esmvaltool/regional-historical-timeseries/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
@@ -225,11 +225,11 @@ esmvaltool/regional-historical-timeseries/cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ua.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
-esmvaltool/regional-historical-timeseries/cmip6_gn_r1i1p1f1_CanESM5:
+esmvaltool/regional-historical-timeseries/cmip6_historical_gn_r1i1p1f1_CanESM5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
-esmvaltool/regional-historical-timeseries/cmip6_gn_r1i1p1f3_HadGEM3-GC31-LL:
+esmvaltool/regional-historical-timeseries/cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-LL:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.Amon.tas.gn.v20190624
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
@@ -305,7 +305,7 @@ esmvaltool/regional-historical-timeseries/obs4mips_ERA-5:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-esmvaltool/regional-historical-trend/cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
+esmvaltool/regional-historical-trend/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
@@ -313,11 +313,11 @@ esmvaltool/regional-historical-trend/cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ua.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
-esmvaltool/regional-historical-trend/cmip6_gn_r1i1p1f1_CanESM5:
+esmvaltool/regional-historical-trend/cmip6_historical_gn_r1i1p1f1_CanESM5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
-esmvaltool/regional-historical-trend/cmip6_gn_r1i1p1f3_HadGEM3-GC31-LL:
+esmvaltool/regional-historical-trend/cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-LL:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.Amon.tas.gn.v20190624
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709

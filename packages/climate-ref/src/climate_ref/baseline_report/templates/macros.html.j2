@@ -50,6 +50,17 @@ was {{ file.change.old.size | bytes -}}
 </pre>
 {%- endmacro %}
 
+{% macro diff_body(text) %}
+{% if text.note %}
+<p class="note">{{ text.note }}</p>
+{% else %}
+{{ diff_lines(text.lines) }}
+{% if text.elided %}
+<p class="note">{{ text.elided }} further diff line(s) elided.</p>
+{% endif %}
+{% endif %}
+{% endmacro %}
+
 {% macro text_block(file) %}
 <section class="file">
 <h3>
@@ -62,14 +73,7 @@ was {{ file.change.old.size | bytes -}}
 </span>
 {{ blob_links(file) }}
 </h3>
-{% if file.text.note %}
-<p class="note">{{ file.text.note }}</p>
-{% else %}
-{{ diff_lines(file.text.lines) }}
-{% if file.text.elided %}
-<p class="note">{{ file.text.elided }} further diff line(s) elided.</p>
-{% endif %}
-{% endif %}
+{{ diff_body(file.text) }}
 </section>
 {% endmacro %}
 
@@ -143,8 +147,11 @@ was {{ file.change.old.size | bytes -}}
 </thead>
 <tbody>
 {% for row in file.netcdf.rows %}
-<tr{% if row.moved %} class="moved"{% endif %}>
-<td><code>{{ row.name }}</code></td>
+<tr{% if row.severity != "same" %} class="{{ row.severity }}"{% endif %}>
+<td><code>{{ row.name }}</code>
+{%- if row.severity == "noise" %} <span class="pill noise"
+title="Every difference is at most {{ noise_rtol | num }} times the base ref's own magnitude,
+so this reads as numerical noise">noise</span>{% endif %}</td>
 <td>{{ pair_cell(row.shape.old | dash, row.shape.new | dash, row.shape.changed) }}</td>
 <td>{{ pair_cell(row.minimum.old | num, row.minimum.new | num, row.minimum.changed) }}</td>
 <td>{{ pair_cell(row.maximum.old | num, row.maximum.new | num, row.maximum.changed) }}</td>
@@ -163,4 +170,36 @@ was {{ file.change.old.size | bytes -}}
 {% endif %}
 {% endif %}
 </section>
+{% endmacro %}
+
+{% macro committed_block(item) %}
+<section class="file">
+<h3>
+<code>{{ item.change.name }}</code>
+<span class="pill" title="Tracked in git, so this file is part of the pull request">in PR</span>
+<span class="status {{ item.change.status }}">{{ item.change.status }}</span>
+<span class="digests">
+{% if item.change.old %}{{ item.change.old | short }}{% endif %}
+{%- if item.change.new %} -> {{ item.change.new | short }}{% endif %}
+</span>
+</h3>
+<p class="path"><code>{{ item.change.rel_path }}</code></p>
+{{ diff_body(item.text) }}
+</section>
+{% endmacro %}
+
+{% macro tree_rows(nodes) %}
+<ul class="tree">
+{% for node in nodes %}
+<li style="--depth: {{ node.depth }}">
+{% if node.is_dir %}
+<code class="dir">{{ node.name }}/</code>
+{% else %}
+<code>{{ node.name }}</code>
+{% if node.size is not none %}<span class="size">{{ node.size | bytes }}</span>{% endif %}
+{% if node.status %}<span class="status {{ node.status }}">{{ node.status }}</span>{% endif %}
+{% endif %}
+</li>
+{% endfor %}
+</ul>
 {% endmacro %}

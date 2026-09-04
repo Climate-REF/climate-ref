@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 from attrs import frozen
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from climate_ref.baseline_report.analyse import SHORT_DIGEST
+from climate_ref.baseline_report.analyse import NOISE_RTOL, SHORT_DIGEST
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -140,6 +140,7 @@ def _build_env() -> Environment:
     env.filters["num"] = _format_num
     env.filters["dash"] = _format_dash
     env.filters["short"] = _format_short
+    env.globals["noise_rtol"] = NOISE_RTOL
     return env
 
 

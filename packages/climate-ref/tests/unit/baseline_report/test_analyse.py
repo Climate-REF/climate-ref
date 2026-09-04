@@ -12,18 +12,21 @@ from climate_ref.baseline_report.analyse import (
     MAX_FETCH_BYTES,
     NETCDF_FETCH_BYTES,
     analyse,
+    baseline_tree,
     blob_url,
+    committed_diff,
     netcdf_diff,
     text_diff,
 )
 from climate_ref.baseline_report.collect import (
     CaseChange,
+    CommittedChange,
     FileChange,
     FileKind,
     Report,
     classify,
 )
-from climate_ref_core.regression.manifest import NativeEntry
+from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest, NativeEntry
 from climate_ref_core.regression.store import NativeStore
 
 
@@ -37,15 +40,15 @@ def _file_change(name, old, new):
     return FileChange(name=name, old=old, new=new, kind=classify(name))
 
 
-def _report(files):
+def _report(files, committed=(), base=None, head=None):
     """Wrap file changes in a single-case report."""
     case = CaseChange(
         label="example/diag/case",
         rel_path="packages/climate-ref-example/tests/test-data/diag/case/manifest.json",
-        base=None,
-        head=None,
+        base=base,
+        head=head,
         files=tuple(files),
-        committed=(),
+        committed=tuple(committed),
         metadata=(),
     )
     return Report(base_ref="origin/main", head_sha="a" * 40, cases=(case,))
@@ -305,6 +308,7 @@ class TestNetcdfDiff:
         assert {line.kind for line in diff.header} == {"context"}
         assert len(diff.header) == len(diff.header_old) == len(diff.header_new)
         assert diff.rows[0].moved is False
+        assert diff.rows[0].severity == "same"
         assert diff.rows[0].cells_differ == 0
         assert diff.rows[0].max_abs_diff == 0.0
 
@@ -331,6 +335,27 @@ class TestNetcdfDiff:
         assert row.differs is True
         assert row.maximum.changed is True  # 4.0 -> 4.5
         assert row.minimum.changed is False
+        assert row.severity == "changed"
+
+    def test_a_last_bit_difference_reads_as_noise(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0 + 1e-14]])
+
+        row = netcdf_diff(base_nc, new).rows[0]
+
+        assert row.cells_differ == 1
+        assert row.moved is True
+        assert row.severity == "noise"
+        assert row.differs is False
+        assert row.maximum.changed is False  # the move is inside atol
+
+    def test_a_difference_just_above_atol_still_counts(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0 + 1e-7]])
+
+        row = netcdf_diff(base_nc, new).rows[0]
+
+        assert row.severity == "changed"
+        assert row.differs is True
+        assert row.maximum.changed is True
 
     def test_a_changed_shape_cannot_be_compared_cell_by_cell(self, tmp_path, base_nc):
         new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -343,6 +368,7 @@ class TestNetcdfDiff:
         assert row.shape.new == "2x3"
         assert row.shape.changed is True
         assert row.moved is True
+        assert row.severity == "changed"  # an unmeasurable move is never called noise
 
     def test_a_nan_in_the_same_cell_on_both_sides_is_not_a_change(self, tmp_path):
         old = _write_nc(tmp_path / "old.nc", [[1.0, np.nan], [3.0, 4.0]])
@@ -398,6 +424,35 @@ class TestNetcdfDiff:
 
         assert row.cells_differ == 1
         assert row.moved is True
+        assert row.max_abs_diff == 1.0
+        assert row.severity == "changed"
+        assert row.differs is True
+
+    def test_a_large_integer_moving_by_one_is_never_noise(self, tmp_path):
+        paths = []
+        for name, cell in (("old.nc", 1_000_000_000), ("new.nc", 1_000_000_001)):
+            path = tmp_path / name
+            values = np.array([[cell, 1], [2, 3]], dtype=np.int64)
+            xr.Dataset({"count": (("lat", "lon"), values)}).to_netcdf(path)
+            paths.append(path)
+
+        row = netcdf_diff(*paths).rows[0]
+
+        assert row.atol == 0.0
+        assert row.severity == "changed"
+
+    def test_an_infinite_base_value_does_not_swallow_a_real_change(self, tmp_path):
+        paths = []
+        for name, cell in (("old.nc", np.inf), ("new.nc", 5.0)):
+            path = tmp_path / name
+            values = np.array([[cell, 1.0], [2.0, 3.0]])
+            xr.Dataset({"tas": (("lat", "lon"), values)}).to_netcdf(path)
+            paths.append(path)
+
+        row = netcdf_diff(*paths).rows[0]
+
+        assert row.atol == pytest.approx(3.0 * 1e-9)  # the largest finite base magnitude
+        assert row.severity == "changed"
 
     @pytest.mark.parametrize(
         ("old_cell", "new_cell"),
@@ -506,3 +561,133 @@ class TestAnalyseNetcdf:
         file = analyse(report, store, fetch=False, workdir=tmp_path).cases[0].files[0]
 
         assert file.netcdf.note == "fetching disabled"
+
+
+def _committed(**kwargs):
+    """Build one committed artefact change, defaulting to a changed ``series.json``."""
+    fields = {
+        "name": "series.json",
+        "rel_path": "packages/climate-ref-example/tests/test-data/diag/case/regression/series.json",
+        "old": "a" * 64,
+        "new": "b" * 64,
+        "old_text": '{"value": 1}',
+        "new_text": '{"value": 2}',
+    }
+    fields.update(kwargs)
+    return CommittedChange(**fields)
+
+
+class TestCommittedDiff:
+    def test_json_is_pretty_printed_before_diffing(self):
+        diff = committed_diff(_committed())
+
+        assert diff.note is None
+        # A minified bundle would otherwise diff as one unreadable line.
+        assert '-  "value": 1' in [line.text for line in diff.lines]
+        assert '+  "value": 2' in [line.text for line in diff.lines]
+
+    def test_an_added_artefact_diffs_against_nothing(self):
+        diff = committed_diff(_committed(old=None, old_text=None))
+
+        assert diff.note is None
+        assert diff.lines[0].text == "--- (absent)"
+
+    def test_an_unreadable_base_side_leaves_a_note(self):
+        diff = committed_diff(_committed(old_text=None))
+
+        assert diff.note == "could not read the base version from git"
+
+    def test_an_unreadable_head_side_leaves_a_note(self):
+        diff = committed_diff(_committed(new_text=None))
+
+        assert diff.note == "could not read the working tree version"
+
+    def test_the_diff_reaches_the_analysed_case(self, tmp_path):
+        store = MagicMock(spec=NativeStore)
+        store.url = "https://store"
+        store.root = None
+        report = _report([], committed=[_committed()])
+
+        case = analyse(report, store, fetch=False, workdir=tmp_path).cases[0]
+
+        assert [item.change.name for item in case.committed] == ["series.json"]
+        assert case.committed[0].text.note is None
+
+
+def _manifest(native, committed=None):
+    """Build a manifest carrying only what a tree is built from."""
+    return Manifest(
+        schema=SCHEMA_VERSION,
+        test_case_version=1,
+        diagnostic_version=1,
+        committed=committed or {},
+        native=native,
+    )
+
+
+class TestBaselineTree:
+    def test_directories_are_emitted_once_before_their_files(self):
+        entry = NativeEntry(sha256="1" * 64, size=10)
+        added = NativeEntry(sha256="2" * 64, size=10)
+        case = _report(
+            [_file_change("plots/b.png", None, added)],
+            base=_manifest({"plots/a.png": entry}),
+            head=_manifest({"plots/a.png": entry, "plots/b.png": added}),
+        ).cases[0]
+
+        assert [(node.name, node.depth, node.is_dir, node.status) for node in baseline_tree(case)] == [
+            ("plots", 0, True, None),
+            ("a.png", 1, False, None),
+            ("b.png", 1, False, "added"),
+        ]
+
+    def test_a_nested_directory_is_only_reopened_when_it_changes(self):
+        entry = NativeEntry(sha256="1" * 64, size=10)
+        case = _report(
+            [],
+            head=_manifest({"a/b/one.nc": entry, "a/c/two.nc": entry, "top.png": entry}),
+        ).cases[0]
+
+        assert [(node.name, node.depth, node.is_dir) for node in baseline_tree(case)] == [
+            ("a", 0, True),
+            ("b", 1, True),
+            ("one.nc", 2, False),
+            ("c", 1, True),
+            ("two.nc", 2, False),
+            ("top.png", 0, False),
+        ]
+
+    def test_a_removed_file_keeps_its_place_in_the_listing(self):
+        entry = NativeEntry(sha256="1" * 64, size=10)
+        case = _report(
+            [_file_change("gone.png", entry, None)],
+            base=_manifest({"gone.png": entry}),
+            head=_manifest({}),
+        ).cases[0]
+
+        assert [(node.name, node.status, node.size) for node in baseline_tree(case)] == [
+            ("gone.png", "removed", 10)
+        ]
+
+    def test_a_case_with_no_manifests_has_no_tree(self):
+        assert baseline_tree(_report([]).cases[0]) == ()
+
+    def test_the_committed_bundle_is_listed_under_regression(self):
+        entry = NativeEntry(sha256="1" * 64, size=10)
+        case = _report(
+            [],
+            committed=[_committed()],
+            base=_manifest({"plot.png": entry}, {"series.json": "a" * 64}),
+            head=_manifest({"plot.png": entry}, {"series.json": "b" * 64}),
+        ).cases[0]
+
+        assert [(node.name, node.depth, node.is_dir, node.status) for node in baseline_tree(case)] == [
+            ("plot.png", 0, False, None),
+            ("regression", 0, True, None),
+            ("series.json", 1, False, "changed"),
+        ]
+
+    def test_a_committed_artefact_has_no_size(self):
+        case = _report([], head=_manifest({}, {"series.json": "a" * 64})).cases[0]
+
+        assert baseline_tree(case)[-1].size is None

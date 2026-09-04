@@ -24,7 +24,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
     name = "Climate drivers for fire"
     slug = "climate-drivers-for-fire"
     base_recipe = "ref/recipe_ref_fire.yml"
-    version = 2
+    version = 3
 
     data_requirements = (
         (
@@ -34,26 +34,26 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                     FacetFilter(
                         {
                             "variable_id": ("hurs", "pr", "tas", "tasmax"),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         }
                     ),
                     FacetFilter(
                         {
                             "variable_id": ("cVeg", "treeFrac"),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Lmon",
                         }
                     ),
                     FacetFilter(
                         {
                             "variable_id": "vegFrac",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Emon",
                         }
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -89,7 +89,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                                 "tas_tavg-h2m-hxy-u",
                                 "tas_tmaxavg-h2m-hxy-u",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         }
@@ -101,13 +101,13 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                                 "treeFrac_tavg-u-hxy-u",
                                 "vegFrac_tavg-u-hxy-u",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         }
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),

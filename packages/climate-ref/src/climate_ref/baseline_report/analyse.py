@@ -13,13 +13,20 @@ from collections import Counter
 from contextlib import ExitStack
 from itertools import islice
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import xarray as xr
 from attrs import frozen
 
-from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report
+from climate_ref.baseline_report.collect import (
+    CaseChange,
+    CommittedChange,
+    FileChange,
+    FileKind,
+    Report,
+)
+from climate_ref_core.regression.manifest import COMMITTED_DIRNAME
 
 if TYPE_CHECKING:
     from climate_ref_core.regression.manifest import NativeEntry
@@ -41,6 +48,10 @@ MAX_DECODED_BYTES = 500_000_000
 
 # Unified-diff lines kept per file before the rest is elided.
 MAX_DIFF_LINES = 5000
+
+# A difference this small relative to the base ref's magnitude reads as numerical noise.
+# Double precision carries about 16 significant digits, so a real change has room to sit above.
+NOISE_RTOL = 1e-9
 
 
 @frozen
@@ -78,17 +89,25 @@ class Pair[T]:
     new: T | None
     """The value on HEAD, or ``None`` when it could not be computed."""
 
+    atol: float = 0.0
+    """How far a numeric pair may move before it reads as changed. Zero compares exactly."""
+
     @property
     def changed(self) -> bool:
         """
-        Whether the two sides differ.
+        Whether the two sides differ by more than :attr:`atol`.
 
         Returns
         -------
         :
-            ``True`` when the value moved, which is what emphasises it in the table.
+            ``True`` when the value moved further than :attr:`atol`, which is what
+            emphasises it in the table.
         """
-        return self.old != self.new
+        if self.old == self.new:
+            return False
+        if isinstance(self.old, float) and isinstance(self.new, float):
+            return not abs(self.new - self.old) <= self.atol
+        return True
 
 
 @frozen
@@ -122,20 +141,49 @@ class StatRow:
     cells_differ: int | None
     """Cells that changed, counting NaN as equal to NaN."""
 
+    atol: float
+    """
+    How far a value may move before it counts as changed.
+
+    :data:`NOISE_RTOL` scaled by the base ref's own magnitude, so one number governs
+    both the row's verdict and which of its statistics are emphasised.
+    """
+
     moved: bool
-    """Whether anything about this variable changed, which is what shades its row."""
+    """Whether anything about this variable changed, however small the change."""
 
     @property
-    def differs(self) -> bool:
+    def severity(self) -> Literal["same", "noise", "changed"]:
         """
-        Whether the cell by cell comparison found a change.
+        How much weight the row deserves.
+
+        A run reproduced on different hardware moves the last bits of nearly every cell, so a
+        row that only moved that far is called out as noise rather than as a change.
 
         Returns
         -------
         :
-            ``True`` when at least one cell moved, which is what emphasises the diff columns.
+            ``changed`` when the move is larger than :attr:`atol` or cannot be measured,
+            ``noise`` when it is smaller, and ``same`` when nothing moved.
         """
-        return bool(self.cells_differ)
+        if not self.moved:
+            return "same"
+        if self.max_abs_diff is None or self.max_abs_diff > self.atol:
+            return "changed"
+        return "noise"
+
+    @property
+    def differs(self) -> bool:
+        """
+        Whether the cell by cell comparison found a change worth reading.
+
+        Returns
+        -------
+        :
+            ``True`` when at least one cell moved further than :attr:`atol`, which is
+            what emphasises the diff columns.
+        """
+        return bool(self.cells_differ) and self.severity == "changed"
 
 
 @frozen
@@ -217,6 +265,40 @@ class KindCounts:
 
 
 @frozen
+class AnalysedCommitted:
+    """One committed regression artefact, with its diff."""
+
+    change: CommittedChange
+    """The underlying change."""
+
+    text: TextDiff
+    """The diff between the two committed versions."""
+
+
+@frozen
+class TreeNode:
+    """One row of the captured baseline's folder listing."""
+
+    name: str
+    """The directory or file name at this level."""
+
+    depth: int
+    """How deep the entry sits, so a template can indent it."""
+
+    is_dir: bool
+    """Whether the row is a directory rather than a file."""
+
+    size: int | None
+    """The file's size on HEAD, or on the base ref when it was removed.
+
+    ``None`` for a directory and for a committed artefact, whose manifest entry has no size.
+    """
+
+    status: str | None
+    """``added``, ``changed`` or ``removed``, or ``None`` when the file did not move."""
+
+
+@frozen
 class AnalysedCase:
     """One test case, with its files analysed and tallied."""
 
@@ -240,6 +322,12 @@ class AnalysedCase:
 
     others: tuple[AnalysedFile, ...]
     """Every remaining file, which renders as a table row."""
+
+    committed: tuple[AnalysedCommitted, ...]
+    """The committed artefacts that moved, in name order."""
+
+    tree: tuple[TreeNode, ...]
+    """The captured baseline's native files, as a flattened folder listing."""
 
     back_link: str
     """Relative link from this case's page back to the index, one ``..`` per label segment."""
@@ -286,17 +374,36 @@ def blob_url(store: NativeStore, digest: str) -> str:
     return f"{store.url.rstrip('/')}/{digest}"
 
 
-def _as_lines(path: Path | None, name: str) -> list[str]:
+def _decode(path: Path | None) -> str | None:
     """
-    Decode a blob into diffable lines.
+    Decode a fetched blob, replacing any byte that is not valid UTF-8.
+
+    Parameters
+    ----------
+    path
+        The blob, or ``None`` when the file is absent on that side.
+
+    Returns
+    -------
+    :
+        The blob's text, or ``None`` when there is no blob.
+    """
+    if path is None:
+        return None
+    return path.read_bytes().decode("utf-8", errors="replace")
+
+
+def _text_lines(text: str | None, name: str) -> list[str]:
+    """
+    Split text into diffable lines.
 
     JSON is re-serialised with indentation first, because a minified bundle would otherwise
     diff as a single unreadable line.
 
     Parameters
     ----------
-    path
-        The fetched blob, or ``None`` when the file is absent on that side.
+    text
+        The content, or ``None`` when the file is absent on that side.
     name
         The file's name, used to decide whether it is JSON.
 
@@ -305,9 +412,8 @@ def _as_lines(path: Path | None, name: str) -> list[str]:
     :
         The lines to diff.
     """
-    if path is None:
+    if text is None:
         return []
-    text = path.read_bytes().decode("utf-8", errors="replace")
     if Path(name).suffix.lower() == ".json":
         try:
             text = json.dumps(json.loads(text), indent=2, sort_keys=True)
@@ -372,6 +478,63 @@ def _diff_lines(
     return tuple(DiffLine(kind=_classify_line(line), text=line) for line in kept), sum(1 for _ in raw)
 
 
+def _build_text_diff(old_lines: list[str], new_lines: list[str], *, has_old: bool, has_new: bool) -> TextDiff:
+    """
+    Build a :class:`TextDiff` from two already decoded sides.
+
+    Parameters
+    ----------
+    old_lines
+        The base side's lines, empty when it is absent.
+    new_lines
+        The head side's lines, empty when it is absent.
+    has_old
+        Whether the file exists on the base ref, which labels the diff header.
+    has_new
+        Whether the file exists on HEAD, which labels the diff header.
+
+    Returns
+    -------
+    :
+        The diff, or a note when the two sides decode identically.
+    """
+    lines, elided = _diff_lines(
+        old_lines,
+        new_lines,
+        fromfile="old" if has_old else "(absent)",
+        tofile="new" if has_new else "(absent)",
+    )
+    if not lines:
+        return TextDiff(lines=(), note="identical after decoding", elided=0)
+    return TextDiff(lines=lines, note=None, elided=elided)
+
+
+def committed_diff(change: CommittedChange) -> TextDiff:
+    """
+    Build the unified diff of one committed regression artefact.
+
+    Parameters
+    ----------
+    change
+        The artefact that moved, carrying both sides' content.
+
+    Returns
+    -------
+    :
+        The diff, or a note explaining why there is not one.
+    """
+    if change.old is not None and change.old_text is None:
+        return TextDiff(lines=(), note="could not read the base version from git", elided=0)
+    if change.new is not None and change.new_text is None:
+        return TextDiff(lines=(), note="could not read the working tree version", elided=0)
+    return _build_text_diff(
+        _text_lines(change.old_text, change.name),
+        _text_lines(change.new_text, change.name),
+        has_old=change.old is not None,
+        has_new=change.new is not None,
+    )
+
+
 def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
     """
     Build the unified diff between two fetched blobs.
@@ -390,15 +553,12 @@ def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
     :
         The diff, or a note explaining why there is not one.
     """
-    lines, elided = _diff_lines(
-        _as_lines(old, name),
-        _as_lines(new, name),
-        fromfile="old" if old is not None else "(absent)",
-        tofile="new" if new is not None else "(absent)",
+    return _build_text_diff(
+        _text_lines(_decode(old), name),
+        _text_lines(_decode(new), name),
+        has_old=old is not None,
+        has_new=new is not None,
     )
-    if not lines:
-        return TextDiff(lines=(), note="identical after decoding", elided=0)
-    return TextDiff(lines=lines, note=None, elided=elided)
 
 
 def _header(dataset: xr.Dataset | None) -> list[str]:
@@ -540,6 +700,27 @@ def _summarise(values: np.ndarray | None) -> tuple[float | None, float | None, f
     )
 
 
+def _scale(values: np.ndarray | None) -> float:
+    """
+    Measure the base side's magnitude, which the noise tolerance is taken as a fraction of.
+
+    Parameters
+    ----------
+    values
+        The base side, or ``None`` when the variable is absent or not numeric.
+
+    Returns
+    -------
+    :
+        The largest finite magnitude, or ``0.0`` when there is none.
+        An infinite value is skipped because scaling by it would tolerate every difference.
+    """
+    if values is None:
+        return 0.0
+    finite = np.abs(values[np.isfinite(values)])
+    return float(finite.max()) if finite.size else 0.0
+
+
 def _compare(
     old: np.ndarray | None, new: np.ndarray | None, scale: float
 ) -> tuple[float | None, float | None, int | None]:
@@ -555,14 +736,14 @@ def _compare(
     new
         The head side, or ``None`` when absent or not numeric.
     scale
-        The base side's largest magnitude, which the relative difference is measured against.
+        The base side's largest finite magnitude,
+        which the relative difference is measured against.
 
     Returns
     -------
     :
-        The largest absolute difference, the same relative to ``scale``, and the number of
-        cells that differ. The two differences are ``None`` when a cell moved between NaN and
-        a number, because that gap has no magnitude and the finite maximum would read as zero.
+        The largest absolute difference, the absolute relative difference to ``scale``,
+        and the number of cells that differ.
         All three are ``None`` when the sides cannot be compared.
     """
     if old is None or new is None or old.shape != new.shape:
@@ -572,8 +753,13 @@ def _compare(
     cells_differ = int(np.sum(~((old == new) | (old_nan & new_nan))))
     if np.any(old_nan != new_nan):
         return None, None, cells_differ
-    diff = np.abs(new.astype(float) - old.astype(float))
-    max_abs = 0.0 if np.isnan(diff).all() else float(np.nanmax(diff))
+    if np.issubdtype(old.dtype, np.integer) and np.issubdtype(new.dtype, np.integer):
+        # A float cast collides adjacent integers past 2**53, which would read as no change.
+        exact = np.abs(new.astype(object) - old.astype(object))
+        max_abs = float(exact.max()) if exact.size else 0.0
+    else:
+        diff = np.abs(new.astype(float) - old.astype(float))
+        max_abs = 0.0 if np.isnan(diff).all() else float(np.nanmax(diff))
     return max_abs, max_abs / max(scale, float(np.finfo(float).tiny)), cells_differ
 
 
@@ -603,19 +789,24 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
     new_values = _values(new_variable)
     min_old, max_old, mean_old, nan_old = _summarise(old_values)
     min_new, max_new, mean_new, nan_new = _summarise(new_values)
-    scale = max(abs(min_old), abs(max_old)) if min_old is not None and max_old is not None else 0.0
+    scale = _scale(old_values)
     max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
+
+    sides = [values for values in (old_values, new_values) if values is not None]
+    integral = bool(sides) and all(np.issubdtype(values.dtype, np.integer) for values in sides)
+    atol = 0.0 if integral else scale * NOISE_RTOL
     shape = Pair(old=shape_old, new=shape_new)
     return StatRow(
         name=name,
         shape=shape,
-        minimum=Pair(old=min_old, new=min_new),
-        maximum=Pair(old=max_old, new=max_new),
-        mean=Pair(old=mean_old, new=mean_new),
+        minimum=Pair(old=min_old, new=min_new, atol=atol),
+        maximum=Pair(old=max_old, new=max_new, atol=atol),
+        mean=Pair(old=mean_old, new=mean_new, atol=atol),
         nan=Pair(old=nan_old, new=nan_new),
         max_abs_diff=max_abs_diff,
         max_rel_diff=max_rel_diff,
         cells_differ=cells_differ,
+        atol=atol,
         moved=(cells_differ or 0) > 0 or shape.changed,
     )
 
@@ -924,6 +1115,79 @@ def _counts(files: tuple[AnalysedFile, ...]) -> tuple[KindCounts, ...]:
     )
 
 
+def _baseline_entries(case: CaseChange) -> dict[str, tuple[int | None, str | None]]:
+    """
+    Gather every file the baseline captures, keyed by its path within the test case.
+
+    The committed bundle sits under its own directory, which is where a run writes it, so the
+    listing matches the layout on disk rather than splitting the capture by where it is stored.
+    Statuses come from the collected case, which is what decided that a file moved at all.
+
+    Parameters
+    ----------
+    case
+        The collected case.
+
+    Returns
+    -------
+    :
+        ``{path: (size, status)}``, where the status is ``None`` for a file that did not move.
+        The size is ``None`` for a committed artefact, whose manifest entry carries only a digest.
+    """
+    moved = {file.name: file.status for file in case.files}
+    native = {**(case.base.native if case.base else {}), **(case.head.native if case.head else {})}
+    entries: dict[str, tuple[int | None, str | None]] = {
+        name: (entry.size, moved.get(name)) for name, entry in native.items()
+    }
+
+    moved_committed = {artefact.name: artefact.status for artefact in case.committed}
+    committed = {**(case.base.committed if case.base else {}), **(case.head.committed if case.head else {})}
+    for name in committed:
+        entries[f"{COMMITTED_DIRNAME}/{name}"] = (None, moved_committed.get(name))
+    return entries
+
+
+def baseline_tree(case: CaseChange) -> tuple[TreeNode, ...]:
+    """
+    Flatten the captured baseline's files into an indented folder listing.
+
+    Every captured file is listed, not only the ones that moved, because the listing is what
+    tells a reviewer what the baseline actually holds.
+
+    Parameters
+    ----------
+    case
+        The collected case.
+
+    Returns
+    -------
+    :
+        One row per directory and file, in path order.
+    """
+    entries = _baseline_entries(case)
+    rows: list[TreeNode] = []
+    previous: tuple[str, ...] = ()
+    for path in sorted(entries):
+        *directories, filename = PurePosixPath(path).parts
+        shared = 0
+        while shared < min(len(previous), len(directories)) and previous[shared] == directories[shared]:
+            shared += 1
+        for depth in range(shared, len(directories)):
+            rows.append(TreeNode(name=directories[depth], depth=depth, is_dir=True, size=None, status=None))
+        previous = tuple(directories)
+        size, status = entries[path]
+        rows.append(
+            TreeNode(
+                name=filename,
+                depth=len(directories),
+                is_dir=False,
+                size=size,
+                status=status,
+            )
+        )
+    return tuple(rows)
+
+
 def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -> AnalysedReport:
     """
     Build everything the templates need from a collected report.
@@ -962,6 +1226,10 @@ def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -
                 texts=_of_kind(files, FileKind.TEXT),
                 netcdfs=_of_kind(files, FileKind.NETCDF),
                 others=_of_kind(files, FileKind.OTHER),
+                committed=tuple(
+                    AnalysedCommitted(change=change, text=committed_diff(change)) for change in case.committed
+                ),
+                tree=baseline_tree(case),
                 back_link="/".join([*[".."] * depth, "index.html"]),
             )
         )

@@ -21,6 +21,85 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.18.0 (2026-09-04)
+
+### Features
+
+- Accepts esm-hist alongside historical in diagnostic data requirements. ([#893](https://github.com/Climate-REF/climate-ref/pull/893))
+- Ingests the obs4REF collection under its own `obs4ref` source type.
+  The `instance_id` for `obs4ref` datasets now starts with `obs4REF`.
+  The diagnostics keep asking for obs4MIPs data.
+  Where a dataset is ingested from both, the newest version is used, and the obs4MIPs copy wins a tie.
+  Publishing a dataset to obs4MIPs therefore takes over from the registry copy without any change to the REF.
+  A newer registry version is still preferred over a stale published one, so nothing reruns for no reason.
+
+  `ref doctor` gains three checks: `misfiled-obs4ref`, `superseded-obs4ref` and `unsolvable-diagnostics`.
+  Data ingested with `--source-type obs4mips` in earlier releases still solves,
+  but re-ingesting it with `--source-type obs4ref` is recommended.
+
+  A data requirement can now declare the collections that may supply it,
+  through the new `fallback_source_types` field on `DataRequirement`.
+  A dataset present under `source_type` still wins,
+  and the data is delivered under `source_type` whichever collection it came from.
+  The solver, `ref doctor` and the generated reference data documentation all read the declaration.
+  Every observational requirement declares `obs4ref` as a fallback. ([#898](https://github.com/Climate-REF/climate-ref/pull/898))
+- `ref test-cases diff` renders the regression baselines changed on a branch as a local HTML report.
+  Images appear old and new side by side, with a button that overlays them.
+  Text outputs get a coloured diff,
+  and NetCDF and other binaries are listed with a size delta and a link to each blob.
+  `--html-dir` chooses where the report is written,
+  and `--no-fetch` skips blob downloads and reports sizes only. ([#910](https://github.com/Climate-REF/climate-ref/pull/910))
+- `ref test-cases diff --upload <prefix>` publishes the report to a public object store,
+  and `--comment-output <path>` writes the pull request comment markdown that links into it.
+
+  Reports are stored in their own bucket, separate from the baselines. ([#912](https://github.com/Climate-REF/climate-ref/pull/912))
+- Summarise the changes to `.nc` files in the `ref test-cases diff` report.
+  Each file gets a collapsible listing of its ncdump-style header and a table with one row per
+  data variable carrying min, max, mean, NaN count, the largest absolute and relative difference,
+  and the number of cells that differ. ([#913](https://github.com/Climate-REF/climate-ref/pull/913))
+- Regression baseline diffs are now published as an HTML report linked from a short pull request comment, with images shown side by side and NetCDF outputs summarised per variable. ([#915](https://github.com/Climate-REF/climate-ref/pull/915))
+- Diff the committed regression artefacts in the `ref test-cases diff` report, alongside the native outputs.
+  Each one carries an "in PR" pill, because those bytes also appear in the pull request's own file list.
+  Every case page also lists the folder structure of its captured baseline, the committed bundle included,
+  showing the files that did not move as well as the ones that did. ([#919](https://github.com/Climate-REF/climate-ref/pull/919))
+
+### Improvements
+
+- The ESMValTool diagnostics that run on a single historical experiment now group by `experiment_id`,
+  so their metric values carry the experiment as a dimension.
+  Each affected diagnostic has its version bumped, so existing executions are recomputed on the next solve. ([#914](https://github.com/Climate-REF/climate-ref/pull/914))
+
+### Bug Fixes
+
+- Celery workers now reuse a single database connection for the lifetime of a worker process
+  instead of opening a new one for every result they handle.
+  An execution that is still in flight when `ref solve` fails is now recorded as failed-retryable. ([#879](https://github.com/Climate-REF/climate-ref/pull/879))
+- Fabricated CMIP7 test data now reaches years without real CMIP6 source data by repeating the final year,
+  rather than relabelling the whole series onto the requested end date. ([#887](https://github.com/Climate-REF/climate-ref/pull/887))
+- - Fabricated CMIP7 test data now bumps its dataset version,
+    so a series padded with repeated years no longer shares an `instance_id` with the real data.
+  - The synthetic CMIP7 catalog generator now extends full-length historical runs on every calendar.
+
+  ([#895](https://github.com/Climate-REF/climate-ref/pull/895))
+- - The synthetic CMIP7 catalog now covers the five models using a 360_day calendar,
+    which previously ended in 2014 and were dropped by any diagnostic needing coverage past that year.
+  - CMIP7 tracking ids are now derived from the dataset instance id,
+    so regenerating the catalog leaves unchanged rows alone.
+
+  ([#896](https://github.com/Climate-REF/climate-ref/pull/896))
+- Dataset discovery now walks the whole directory tree instead of stopping 10 directories below the root.
+  The CMIP7 DRS nests files deeper than that, so ingesting a `MIP-DRS7` root found no files at all. ([#897](https://github.com/Climate-REF/climate-ref/pull/897))
+- Removed the `immutable` flag from read-only SQLite connections.
+  The flag told SQLite to skip locking, which did not hold when a background run was writing
+  to the same database. The connection is still opened read-only. ([#908](https://github.com/Climate-REF/climate-ref/pull/908))
+- PMP executions are now capped at two threads each.
+  Without a limit the scientific stack sized its thread pools from the machine's core count. ([#911](https://github.com/Climate-REF/climate-ref/pull/911))
+
+### Trivial/Internal Changes
+
+- [#877](https://github.com/Climate-REF/climate-ref/pull/877), [#888](https://github.com/Climate-REF/climate-ref/pull/888), [#916](https://github.com/Climate-REF/climate-ref/pull/916), [#917](https://github.com/Climate-REF/climate-ref/pull/917), [#918](https://github.com/Climate-REF/climate-ref/pull/918), [#920](https://github.com/Climate-REF/climate-ref/pull/920)
+
+
 ## climate-ref 0.17.2 (2026-08-14)
 
 ### Features

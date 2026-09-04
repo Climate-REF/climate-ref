@@ -30,6 +30,7 @@ from climate_ref_core.diagnostics import ExecutionDefinition
 from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.regression import (
     COMMITTED_BUNDLE_FILES,
+    COMMITTED_DIRNAME,
     Tolerance,
     assert_bundle_regression,
     materialise_native,
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
     from climate_ref_core.regression.store import NativeStore
     from climate_ref_core.testing import TestCase, TestCasePaths
 
-SLOT_REGRESSION_DIRNAME = "regression"
+SLOT_REGRESSION_DIRNAME = COMMITTED_DIRNAME
 
 
 class StageError(Exception):

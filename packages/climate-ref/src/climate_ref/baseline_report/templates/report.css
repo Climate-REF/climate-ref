@@ -1,0 +1,156 @@
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1b1b1b;
+  --muted: #666666;
+  --rule: #d8d8d8;
+  --panel: #f6f6f6;
+  --add-bg: #e2f5e6;
+  --add-fg: #14532d;
+  --remove-bg: #fbe4e4;
+  --remove-fg: #7f1d1d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181c;
+    --fg: #e6e6e6;
+    --muted: #9aa0a6;
+    --rule: #33363c;
+    --panel: #1e2126;
+    --add-bg: #16321f;
+    --add-fg: #86e29b;
+    --remove-bg: #3a1c1c;
+    --remove-fg: #f2a1a1;
+  }
+}
+
+body {
+  margin: 0 auto;
+  padding: 1.5rem;
+  max-width: 72rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.45;
+}
+
+code, pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.report-header {
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 1.5rem;
+}
+
+.meta {
+  color: var(--muted);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border-bottom: 1px solid var(--rule);
+  padding: 0.35rem 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.counts .added, .status.added { color: var(--add-fg); }
+.counts .removed, .status.removed { color: var(--remove-fg); }
+.counts .changed, .status.changed { color: var(--muted); }
+
+.status {
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.size {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+
+details {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.file {
+  border-top: 1px solid var(--rule);
+  margin: 1rem 0 0;
+  padding-top: 1rem;
+}
+
+.pair {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+}
+
+.pair .side-label {
+  color: var(--muted);
+  display: block;
+  font-size: 0.85em;
+}
+
+.pair img {
+  background: var(--panel);
+  display: block;
+  max-width: 100%;
+}
+
+.pair.flipped {
+  grid-template-columns: 1fr;
+}
+
+.pair.flipped .side {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.pair.flipped .side:last-child img {
+  opacity: 0.5;
+}
+
+.absent {
+  border: 1px dashed var(--rule);
+  color: var(--muted);
+  padding: 2rem;
+  text-align: center;
+}
+
+.diff {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  max-height: 40rem;
+  overflow: auto;
+  padding: 0.5rem;
+}
+
+.diff span {
+  display: block;
+  white-space: pre-wrap;
+}
+
+.diff .add { background: var(--add-bg); color: var(--add-fg); }
+.diff .remove { background: var(--remove-bg); color: var(--remove-fg); }
+.diff .hunk, .diff .header { color: var(--muted); }
+
+.note {
+  color: var(--muted);
+  font-style: italic;
+}

@@ -1,0 +1,42 @@
+{% extends "base.html.j2" %}
+{% block content %}
+{% if report.cases %}
+<table class="cases">
+<thead>
+<tr>
+<th>case</th>
+<th>versions</th>
+<th>images</th>
+<th>text</th>
+<th>netcdf</th>
+<th>other</th>
+</tr>
+</thead>
+<tbody>
+{% for case in report.cases %}
+<tr>
+<td><a href="{{ case.change.slug }}/index.html"><code>{{ case.change.label }}</code></a></td>
+<td>
+{% if case.change.is_removed %}
+removed
+{% elif case.change.is_new %}
+new
+{% else %}
+v{{ case.change.base.test_case_version }} -&gt; v{{ case.change.head.test_case_version }}
+{% endif %}
+</td>
+{% for kind in ("image", "text", "netcdf", "other") %}
+<td class="counts">
+{% if case.counts[kind].added %}<span class="added">+{{ case.counts[kind].added }}</span>{% endif %}
+{% if case.counts[kind].changed %}<span class="changed">~{{ case.counts[kind].changed }}</span>{% endif %}
+{% if case.counts[kind].removed %}<span class="removed">-{{ case.counts[kind].removed }}</span>{% endif %}
+</td>
+{% endfor %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% else %}
+<p class="note">No baseline manifests changed against <code>{{ report.report.base_ref }}</code>.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html.j2" %}
+{% import "macros.html.j2" as m %}
+{% block title %}{{ case.change.label }}{% endblock %}
+{% block content %}
+<p><a href="../../../index.html">Back to all cases</a></p>
+<h2><code>{{ case.change.label }}</code></h2>
+{% if case.change.metadata %}
+<ul class="metadata">
+{% for line in case.change.metadata %}
+<li>{{ line }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if case.change.committed %}
+<h3>Committed artefacts changed</h3>
+<ul class="committed">
+{% for name in case.change.committed %}
+<li><code>{{ name }}</code></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% set images = case.files | selectattr("change.kind.value", "equalto", "image") | list %}
+{% set texts = case.files | selectattr("change.kind.value", "equalto", "text") | list %}
+{% set binaries = case.files | rejectattr("change.kind.value", "in", ["image", "text"]) | list %}
+
+{% if images %}
+<details open>
+<summary>Images ({{ images | length }})</summary>
+{% for file in images %}
+{{ m.image_pair(file) }}
+{% endfor %}
+</details>
+{% endif %}
+
+{% if texts %}
+<details open>
+<summary>Text ({{ texts | length }})</summary>
+{% for file in texts %}
+{{ m.text_block(file) }}
+{% endfor %}
+</details>
+{% endif %}
+
+{% if binaries %}
+<details open>
+<summary>NetCDF and other ({{ binaries | length }})</summary>
+<table class="binaries">
+<thead>
+<tr><th>file</th><th>status</th><th>size</th><th>blobs</th></tr>
+</thead>
+<tbody>
+{% for file in binaries %}
+{{ m.binary_row(file) }}
+{% endfor %}
+</tbody>
+</table>
+</details>
+{% endif %}
+{% endblock %}

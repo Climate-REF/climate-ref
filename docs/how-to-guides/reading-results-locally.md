@@ -38,7 +38,7 @@ with Database.from_config(config, read_only=True) as db:
 # `df` is a plain DataFrame and remains valid out here, after the session has closed.
 ```
 
-`read_only=True` opens SQLite in immutable read-only mode and skips migrations,
+`read_only=True` opens SQLite in read-only mode and skips migrations,
 so the read layer never mutates the database you point it at.
 
 `Reader` is a thin entry point.

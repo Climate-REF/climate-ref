@@ -99,10 +99,10 @@ def _make_readonly_sqlite_url(database_url: str) -> tuple[str, dict[str, Any]]:
         return database_url, {}
 
     if encoded_path.startswith("file:"):
-        # Already URI form — caller is responsible for any ro/immutable flags.
+        # Already URI form — caller is responsible for any read-only flags.
         return database_url, {"uri": True}
 
-    return f"sqlite:///file:{encoded_path}?mode=ro&immutable=1&uri=true", {"uri": True}
+    return f"sqlite:///file:{encoded_path}?mode=ro&uri=true", {"uri": True}
 
 
 def _get_database_revision(connection: sqlalchemy.engine.Connection) -> str | None:
@@ -469,7 +469,7 @@ class Database:
         read_only
             If True, open the database in read-only mode and skip migrations.
 
-            SQLite URLs are rewritten to URI form with ``mode=ro&immutable=1``.
+            SQLite URLs are rewritten to URI form with ``mode=ro``.
             For other backends, callers must configure the connecting role as
             read-only themselves.
 

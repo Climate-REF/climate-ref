@@ -82,7 +82,7 @@ def _build_env() -> Environment:
     Returns
     -------
     :
-        The environment, with the three permitted filters registered.
+        The environment, with the formatting filters the templates use.
     """
     env = Environment(
         loader=PackageLoader("climate_ref.baseline_report", "templates"),

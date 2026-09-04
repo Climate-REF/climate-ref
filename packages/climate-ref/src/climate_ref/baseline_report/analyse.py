@@ -117,7 +117,7 @@ class AnalysedCase:
     """The NetCDF and other files, which render as a table row."""
 
     back_link: str
-    """Relative link from this case's page back to the index, one ``..`` per slug segment."""
+    """Relative link from this case's page back to the index, one ``..`` per label segment."""
 
 
 @frozen
@@ -128,7 +128,7 @@ class AnalysedReport:
     """The underlying report."""
 
     store_url: str
-    """Base URL of the native store, without a trailing slash."""
+    """Base location blobs are served from, matching what :func:`blob_url` builds."""
 
     cases: tuple[AnalysedCase, ...]
     """The analysed cases, in the order collection produced them."""
@@ -434,7 +434,7 @@ def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -
     :
         The analysed report.
     """
-    store_url = store.url.rstrip("/")
+    store_url = store.root.absolute().as_uri() if store.root is not None else store.url.rstrip("/")
     cases = []
     for case in report.cases:
         files = tuple(_analyse_file(change, store, fetch=fetch, workdir=workdir) for change in case.files)

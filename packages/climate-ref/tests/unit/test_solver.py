@@ -1985,7 +1985,7 @@ def test_drs_and_complete_parsers_produce_same_executions(config, sample_data_di
 
 
 class TestObs4REFFallback:
-    """obs4MIPs requirements are filled from obs4REF, and the obs4MIPs copy wins."""
+    """obs4MIPs requirements are filled from obs4REF, taking the newest version of each dataset."""
 
     @staticmethod
     def _frame(prefix, source_ids, version="v1", start=0):
@@ -2032,9 +2032,34 @@ class TestObs4REFFallback:
         assert merged["activity_id"].tolist() == ["obs4MIPs", "obs4MIPs"]
         assert merged["instance_id"].iloc[1].startswith("obs4REF.")
 
-    def test_obs4mips_wins_whatever_the_versions(self):
+    def test_obs4mips_wins_a_version_tie(self):
         obs4mips = self._frame("obs4MIPs", ["A"], version="v1")
-        obs4ref = self._frame("obs4REF", ["A"], version="v2", start=10)
+        obs4ref = self._frame("obs4REF", ["A"], version="v1", start=10)
+
+        assert union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs) is obs4mips
+
+    def test_a_newer_obs4ref_version_replaces_the_obs4mips_copy(self):
+        # A stale published copy must not force every diagnostic to rerun on the wrong data.
+        obs4mips = self._frame("obs4MIPs", ["A", "B"], version="v20240101")
+        obs4ref = self._frame("obs4REF", ["A"], version="v20250101", start=10)
+
+        merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
+
+        assert merged["source_id"].tolist() == ["B", "A"]
+        assert merged["instance_id"].tolist() == [
+            "obs4MIPs.obs4MIPs.INST.B.mon.ts.gn.v20240101",
+            "obs4REF.obs4REF.INST.A.mon.ts.gn.v20250101",
+        ]
+
+    def test_an_older_obs4ref_version_is_ignored(self):
+        obs4mips = self._frame("obs4MIPs", ["A"], version="v10")
+        obs4ref = self._frame("obs4REF", ["A"], version="v9", start=10)
+
+        assert union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs) is obs4mips
+
+    def test_a_primary_without_instance_id_is_left_alone(self):
+        obs4mips = pd.DataFrame({"source_id": ["A"], "variable_id": "ts"})
+        obs4ref = self._frame("obs4REF", ["B"])
 
         assert union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs) is obs4mips
 

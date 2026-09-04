@@ -163,6 +163,22 @@ class TestCollectRequiredReferenceData:
 
         assert collect_required_reference_data([provider], _FakeManager({})) == []
 
+    def test_declared_fallback_locates_the_registry(self):
+        manager = _FakeManager(
+            {"obs4ref": _FakeEntry([_obs4ref_key("WECANN-1-0", "gpp")], SourceDatasetType.obs4REF)}
+        )
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.PMPClimatology,
+            filters=(FacetFilter(facets={"source_id": "WECANN-1-0", "variable_id": "gpp"}),),
+            group_by=None,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
+        )
+
+        (dataset,) = collect_required_reference_data([_provider([requirement])], manager)
+
+        assert dataset.source_type == SourceDatasetType.PMPClimatology.value
+        assert dataset.registry_name == "obs4ref"
+
     def test_variables_are_unioned_across_diagnostics(self):
         manager = _FakeManager({})
         one = _provider([_requirement(SourceDatasetType.obs4MIPs, "ERA-5", "ta")], slug="one")

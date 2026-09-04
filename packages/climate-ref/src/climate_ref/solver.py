@@ -40,6 +40,7 @@ from climate_ref_core.datasets import (
     ExecutionDatasetCollection,
     Selector,
     SourceDatasetType,
+    version_sort_key,
 )
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition
 from climate_ref_core.exceptions import InvalidDiagnosticException
@@ -271,16 +272,17 @@ def union_with_fallbacks(
     primary_type: SourceDatasetType,
 ) -> pd.DataFrame | DataCatalog:
     """
-    Fill a reference catalog with the datasets its fallback collections hold and it lacks.
+    Fill a reference catalog from its fallback collections.
 
-    A dataset the primary holds is taken from the primary, whichever version each collection holds.
-    So for obs4MIPs standing in front of obs4REF, publishing a dataset to the archive
-    takes over from the registry copy without any re-ingest.
+    A dataset held by more than one collection is taken at its newest version,
+    and from the primary when the versions tie.
+    So publishing a dataset to obs4MIPs takes over from the obs4REF copy without any re-ingest,
+    but a newer registry version is not lost to a stale published one.
 
     Parameters
     ----------
     primary
-        The catalog the requirement asks for, which wins on duplicates.
+        The catalog the requirement asks for, which wins a version tie.
     fallbacks
         Catalogs that may stand in for it, tried in order.
     primary_type
@@ -289,14 +291,9 @@ def union_with_fallbacks(
     Returns
     -------
     :
-        The primary catalog, extended with the fallback datasets it does not hold.
-
-        This includes the case of nothing being ingested as the primary type at all
-        which is an ordinary deployment that fetched only the registry.
-        The original catalog is returned untouched when there is nothing to add.
-        A merge of two catalogs carries no adapter, so it cannot reload itself and lose the added rows.
-        The added rows carry ``activity_id`` of the primary, because that is the collection they
-        stand in for.
+        The primary catalog, extended with the fallback rows that win.
+        The original catalog is returned untouched when nothing is added.
+        The added rows carry ``activity_id`` of the primary, because that is the collection they stand in for.
         Their ``instance_id`` still names the collection they came from, so the provenance is not lost.
     """
     usable = [
@@ -307,32 +304,76 @@ def union_with_fallbacks(
     if not usable:
         return primary
 
-    primary_df = as_frame(primary)
-    held = set(obs_dataset_key(primary_df["instance_id"])) if len(primary_df) else set()
-
-    additions = []
+    merged = as_frame(primary)
+    if len(merged) and "instance_id" not in merged.columns:
+        return primary
+    changed = False
     for fallback_df in usable:
-        extra = fallback_df[~obs_dataset_key(fallback_df["instance_id"]).isin(held)]
-        if extra.empty:
+        taken = newer_rows(fallback_df, merged)
+        if taken.empty:
             continue
-        held |= set(obs_dataset_key(extra["instance_id"]))
         # The rows are served as the primary's data, so they must group as the primary's data too.
         # A requirement grouping by activity_id would otherwise split its reference data in two.
-        if "activity_id" in extra.columns:
-            extra = extra.assign(activity_id=primary_type.name)
-        additions.append(extra)
+        if "activity_id" in taken.columns:
+            taken = taken.assign(activity_id=primary_type.name)
+        if len(merged):
+            beaten = obs_dataset_key(merged["instance_id"]).isin(obs_dataset_key(taken["instance_id"]))
+            merged = pd.concat([merged[~beaten], taken], ignore_index=True)
+        else:
+            merged = taken.reset_index(drop=True)
+        changed = True
 
-    if not additions:
+    if not changed:
         return primary
-
-    merged = pd.concat(
-        [primary_df, *additions] if len(primary_df) else additions,
-        ignore_index=True,
-    )
     if isinstance(primary, DataCatalog) or any(isinstance(f, DataCatalog) for f in fallbacks):
         # No adapter can reload the merge, so the result carries none and never reloads.
         return DataCatalog.from_frame(merged)
     return merged
+
+
+def newer_rows(candidate: pd.DataFrame, held: pd.DataFrame) -> pd.DataFrame:
+    """
+    Select the rows of ``candidate`` that ``held`` lacks, or holds at an older version.
+
+    Parameters
+    ----------
+    candidate
+        Rows offered by a fallback collection.
+    held
+        Rows already taken, which win a version tie.
+
+    Returns
+    -------
+    :
+        The subset of ``candidate`` that should replace or extend ``held``.
+    """
+    if not len(held):
+        return candidate
+    held_version = pd.Series(
+        obs_dataset_version(held["instance_id"]).to_numpy(),
+        index=obs_dataset_key(held["instance_id"]).to_numpy(),
+    )
+    held_version = held_version.groupby(level=0).max()
+    current = obs_dataset_key(candidate["instance_id"]).map(held_version)
+    wins = current.isna() | (obs_dataset_version(candidate["instance_id"]) > current)
+    return candidate[wins]
+
+
+def obs_dataset_version(instance_id: pd.Series) -> pd.Series:
+    """
+    Read the numeric version key off the end of an obs4MIPs or obs4REF ``instance_id``.
+
+    Parameters
+    ----------
+    instance_id
+        Instance ids from either collection.
+
+    Returns
+    -------
+    :
+        The version compared as :func:`version_sort_key` does.
+    """
+    return instance_id.astype(str).str.rsplit(".", n=1).str[1].map(version_sort_key)
 
 
 def obs_dataset_key(instance_id: pd.Series) -> pd.Series:

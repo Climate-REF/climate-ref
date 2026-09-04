@@ -7,7 +7,8 @@
 - obs4REF data is ingested as `obs4mips`, so the catalog cannot say where it came from.
 - An obs4REF dataset has since been published to obs4MIPs, so the registry copy is no longer used.
 - A dataset's files cover the same period twice, so a diagnostic reads that period more than once.
-- A diagnostic cannot be solved at all by the ingested data, and the finding names the requirement that goes unmet.
+- A diagnostic cannot be solved at all by the ingested data.
+  The finding names the requirement that goes unmet.
 
 ```bash
 ref doctor

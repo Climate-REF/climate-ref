@@ -248,6 +248,35 @@ class TestSupersededObs4ref:
         assert findings[0].severity == Severity.INFO
         assert findings[0].summary.startswith("obs4REF.obs4REF.C.WECANN-1-0.mon.gpp.gn.v1")
 
+    def test_a_newer_obs4ref_version_is_not_superseded(self):
+        obs4mips = _catalog(
+            [
+                (
+                    "obs4MIPs.obs4MIPs.C.WECANN-1-0.mon.gpp.gn.v1",
+                    "WECANN-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/a",
+                )
+            ]
+        )
+        obs4ref = _catalog(
+            [
+                (
+                    "obs4REF.obs4REF.C.WECANN-1-0.mon.gpp.gn.v2",
+                    "WECANN-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/b",
+                )
+            ]
+        )
+        context = _context({SourceDatasetType.obs4MIPs: obs4mips, SourceDatasetType.obs4REF: obs4ref})
+
+        assert check_superseded_obs4ref(context) == []
+
     def test_a_misfiled_row_does_not_supersede(self):
         # Mid-upgrade both rows exist. Calling this superseded contradicts misfiled-obs4ref.
         obs4mips = _catalog(

@@ -104,7 +104,7 @@ so only use it if you are **not** using that registry — see the warning below.
 Files land in the [intake-esgf `local_cache`](https://intake-esgf.readthedocs.io/en/latest/configure.html),
 and are ingested with the `obs4mips` source type.
 
-The obs4REF collection is ingested with the `obs4ref` source type instead
+The obs4REF collection is ingested with the `obs4ref` source type instead.
 
 /// admonition | Fetching these twice
     type: note
@@ -113,8 +113,11 @@ The script also fetches `CERES-EBAF-4-2`, `GPCP-Monthly-3-2`, `HadISST-1-1` and 
 These are the ESGF-published copies of datasets that were curated for the REF before publication,
 so the obs4REF registry ships them as well.
 
-If you fetch the same dataset from ESGF/obs4MIPs as well as from the obs4REF registry, the ESGF copy is the one used.
-obs4MIPs is the preferred home of the reference data, and the registry only fills in what is not published yet.
+If you fetch the same dataset from ESGF/obs4MIPs as well as from the obs4REF registry,
+the newest version is used.
+The ESGF copy wins when the versions are the same.
+obs4MIPs is the preferred home of the reference data.
+The registry only fills in what is not published yet.
 ///
 
 ### Future work

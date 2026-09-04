@@ -25,8 +25,8 @@ from climate_ref.solver import (
     as_frame,
     catalog_for_requirement,
     extract_covered_datasets,
-    obs_dataset_key,
     solve_executions,
+    union_with_fallbacks,
 )
 from climate_ref.text import pluralise
 from climate_ref_core.diagnostics import Diagnostic
@@ -336,9 +336,9 @@ def check_misfiled_obs4ref(context: DoctorContext) -> list[Finding]:
 )
 def check_superseded_obs4ref(context: DoctorContext) -> list[Finding]:
     """
-    Find obs4REF datasets for which an obs4MIPs copy is also ingested.
+    Find obs4REF datasets that lose to an ingested obs4MIPs copy.
 
-    The solver takes the obs4MIPs copy, so the obs4REF one is no longer used.
+    The solver takes the newest version, and the obs4MIPs copy on a tie, so these rows are never used.
     This is the signal that a dataset can be dropped from the obs4REF registry.
 
     Parameters
@@ -362,14 +362,14 @@ def check_superseded_obs4ref(context: DoctorContext) -> list[Finding]:
     if not len(genuine):
         return []
 
-    published = set(obs_dataset_key(genuine["instance_id"]))
-    superseded = obs4ref[obs_dataset_key(obs4ref["instance_id"]).isin(published)]
+    used = set(as_frame(union_with_fallbacks(genuine, [obs4ref], SourceDatasetType.obs4MIPs))["instance_id"])
+    superseded = obs4ref[~obs4ref["instance_id"].isin(used)]
     return [
         Finding(
             severity=Severity.INFO,
             summary=f"{instance_id} is superseded by the obs4MIPs copy",
             remedy=(
-                "The obs4MIPs copy is used instead. "
+                "The obs4MIPs copy is the same or a newer version, so it is used instead. "
                 "These can be retracted, and dropped from the obs4REF registry."
             ),
         )
@@ -437,7 +437,7 @@ def _why_unsolvable(
     Explain which requirement the ingested data fails to meet.
 
     Each requirement is checked on its own, so the first one with no matching group names the data to fetch.
-    When every requirement matches something, the failure lies in howthey combine, which is reported as such.
+    When every requirement matches something, the failure lies in how they combine, which is reported as such.
     """
     reasons = []
     for requirements in normalize_requirement_sets(diagnostic.data_requirements):
@@ -447,7 +447,7 @@ def _why_unsolvable(
                 reasons.append(f"nothing is ingested as {requirement.source_type.value}")
                 break
             if not extract_covered_datasets(catalog, requirement):
-                facets = "; ".join(
+                facets = " and ".join(
                     ", ".join(f"{k}={'|'.join(v)}" for k, v in sorted(f.facets.items()))
                     for f in requirement.filters
                 )

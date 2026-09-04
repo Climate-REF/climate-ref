@@ -13,8 +13,10 @@ Before you begin, ensure you have:
 The `obs4REF` collection we downloaded in the previous step is ingested under the `obs4ref` source type.
 The files follow the obs4MIPs conventions, but are not yet published on ESGF.
 
-Where a dataset is ingested from both, the obs4MIPs copy is used, and then it falls back to obs4REF.
-This command will extract metadata from the files and store it in the Climate-REF catalog, and print a summary of the ingested datasets.
+Where a dataset is ingested from both, the newest version is used.
+The obs4MIPs copy wins when the versions are the same.
+This command extracts metadata from the files and stores it in the Climate-REF catalog.
+It then prints a summary of the ingested datasets.
 
 ```bash
 ref datasets ingest --source-type obs4ref $REF_CONFIGURATION/datasets/obs4ref

@@ -763,8 +763,6 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                # `micromamba run` only registers a pid under a single shared cache directory,
-                # so its lock serialises every worker on the host for no benefit.
                 env=self._launch_env(use_lockfiles=False),
             )
             logger.info("Command output: \n" + res.stdout)

@@ -276,7 +276,8 @@ class TestCondaDiagnosticProvider:
         # HOME is defaulted at launch so micromamba has a writable directory
         assert "HOME" in provider._launch_env()
 
-    def test_launch_env_disables_lockfiles_on_request(self, config) -> None:
+    def test_launch_env_disables_lockfiles_on_request(self, config, mocker: pytest_mock.MockFixture) -> None:
+        mocker.patch.object(climate_ref_core.providers.os, "environ", {})
         provider = CondaDiagnosticProvider("provider_name", "v0.23")
         provider.configure(config)
 

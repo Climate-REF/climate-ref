@@ -21,6 +21,23 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.18.1 (2026-09-04)
+
+### Improvements
+
+- Disabled micromamba's file locking for commands run inside a provider environment causing performance issues on NFS filesystems.
+  Environment creation still takes the lock. ([#922](https://github.com/Climate-REF/climate-ref/pull/922))
+- Baseline diff reports now shade a NetCDF variable amber and tag it `noise`
+  when every difference is at most `1e-9` times the base ref's own magnitude,
+  instead of shading it as a real change.
+  This keeps the last-bit wobble of a run reproduced on different hardware
+  from burying the rows that actually moved. ([#923](https://github.com/Climate-REF/climate-ref/pull/923))
+
+### Bug Fixes
+
+- Fixed the noise determination for integers or an infinite value. ([#924](https://github.com/Climate-REF/climate-ref/pull/924))
+
+
 ## climate-ref 0.18.0 (2026-09-04)
 
 ### Features

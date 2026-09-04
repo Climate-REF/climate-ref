@@ -1,11 +1,11 @@
 {
   "catalog_hash": "5c385e1d58b72eca3d1def8eae70ad8142593c54",
   "committed": {
-    "diagnostic.json": "5d6c7d12c0e59892d5c472c2c6c49b8ad485624eef9231a2f0eefab39ec41cde",
-    "output.json": "d185c5a92362b4d068a6397a96650eb945ef0ebd6a607bafebede6a745cc2cf6",
+    "diagnostic.json": "001be24474ad0e3e2b56492733265aed25ee92679733493e5e42b4f8ad9c3da5",
+    "output.json": "4ccf43f9ffadc5f4203842c31610a7938fe6ff5a9bb6c1b19ca697a644c3d4bb",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse.nc": {
       "sha256": "9af94d6d15996e558e57986efa127381f413354b832c694236fb74f18fad77cb",
@@ -20,8 +20,8 @@
       "size": 44673
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse.nc": {
-      "sha256": "74b13f2fd4578b52fa63e98c04de2f9b6301051c323f0c23a629b696d405b65e",
-      "size": 78275
+      "sha256": "1d7bcb457a991aff668881864f338c15cd383048c92aa1a8e28c337aa3b76e51",
+      "size": 78276
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown01.png": {
       "sha256": "9c1dbb727a575b11b9fd8c8f3d10fe6800f5a4f65e433afad334f6fc5a5a36a4",
@@ -68,7 +68,7 @@
       "size": 78514
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality.nc": {
-      "sha256": "3b818b05dd93feb6600b7adfafa5c257d086db4e218120640f1a203bd4083ec4",
+      "sha256": "7681422ee76525a8c566c619167a90fef6ae7166c890b1f55a10d704fcf907f6",
       "size": 221713
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown01.png": {
@@ -128,16 +128,16 @@
       "size": 55375
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json": {
-      "sha256": "8d2132f24c3e80380d80326a0ab4954f54483fd9f349e84b967c74f8a9a21bc8",
-      "size": 8486
+      "sha256": "c64c6ee196508b5280554ed89674206ca1a9c3e889e180431682f3106e30f543",
+      "size": 8490
     },
     "diagnostic.json": {
-      "sha256": "63a9e3135bb43c8df776c982a609779cf8bebbc392067d4c81a0f3dfbb6e1783",
-      "size": 3169
+      "sha256": "58e24e59312737b44173d37f47aa0858119a5a28c42558c54cd096851b8191a9",
+      "size": 3173
     },
     "output.json": {
-      "sha256": "b507e927a98a899747bbf61c67fe5a58a4277ddf07a339188fe38e81c8319021",
-      "size": 10371
+      "sha256": "81e647c990dc323da51421ad181b90425c965cb922dd1cc32670973a89ae7bf1",
+      "size": 10375
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -145,5 +145,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

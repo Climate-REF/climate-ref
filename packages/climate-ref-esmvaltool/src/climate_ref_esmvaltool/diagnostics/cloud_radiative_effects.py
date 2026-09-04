@@ -62,7 +62,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     name = "Climatologies and zonal mean profiles of cloud radiative effects"
     slug = "cloud-radiative-effects"
     base_recipe = "ref/recipe_ref_cre_cmip7.yml"
-    version = 2
+    version = 3
 
     variables = (
         "rlut",
@@ -83,7 +83,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                         }
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -115,7 +115,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                         }
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),

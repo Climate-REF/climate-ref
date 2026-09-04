@@ -88,7 +88,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     name = "Sea ice area basic"
     slug = "sea-ice-area-basic"
     base_recipe = "ref/recipe_ref_sea_ice_area_basic.yml"
-    version = 2
+    version = 3
 
     data_requirements = (
         (
@@ -103,7 +103,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -129,7 +129,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),

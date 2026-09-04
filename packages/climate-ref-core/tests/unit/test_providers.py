@@ -276,6 +276,26 @@ class TestCondaDiagnosticProvider:
         # HOME is defaulted at launch so micromamba has a writable directory
         assert "HOME" in provider._launch_env()
 
+    def test_launch_env_disables_lockfiles_on_request(self, config) -> None:
+        provider = CondaDiagnosticProvider("provider_name", "v0.23")
+        provider.configure(config)
+
+        assert "MAMBA_USE_LOCKFILES" not in provider._launch_env()
+        assert provider._launch_env(use_lockfiles=False)["MAMBA_USE_LOCKFILES"] == "false"
+
+    def test_launch_env_keeps_an_explicit_lockfile_setting(
+        self, config, mocker: pytest_mock.MockFixture
+    ) -> None:
+        mocker.patch.object(
+            climate_ref_core.providers.os,
+            "environ",
+            {"MAMBA_USE_LOCKFILES": "true"},
+        )
+        provider = CondaDiagnosticProvider("provider_name", "v0.23")
+        provider.configure(config)
+
+        assert provider._launch_env(use_lockfiles=False)["MAMBA_USE_LOCKFILES"] == "true"
+
     def test_launch_env_merges_the_live_environment(self, config, mocker: pytest_mock.MockFixture) -> None:
         mocker.patch.object(
             climate_ref_core.providers.os,
@@ -560,6 +580,7 @@ class TestCondaDiagnosticProvider:
             assert env["existing_var"] == "existing_value"
             assert env["test_var"] == "test_value"
             assert env["HOME"] == str(provider.prefix)
+            assert env["MAMBA_USE_LOCKFILES"] == "false"
 
     def test_run_command_fails(self, mocker: pytest_mock.MockerFixture, tmp_path, provider):
         """Test that run() re-raises CalledProcessError when command fails."""

@@ -567,7 +567,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
-    def _launch_env(self) -> dict[str, str]:
+    def _launch_env(self, *, use_lockfiles: bool = True) -> dict[str, str]:
         """
         Environment for a command launched in the conda environment.
 
@@ -575,10 +575,20 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         so settings applied to a worker reach every command it launches,
         with the provider's overrides on top.
         HOME falls back to the conda prefix so micromamba has a writable directory.
+
+        Parameters
+        ----------
+        use_lockfiles
+            Whether micromamba should take its file locks.
+            Disable this for commands that only read the environment.
+            An explicit ``MAMBA_USE_LOCKFILES`` in the process environment
+            or in `env_overrides` always wins.
         """
         env = {**os.environ, **self.env_overrides}
         if "HOME" not in env:
             env["HOME"] = str(self.prefix)
+        if not use_lockfiles:
+            env.setdefault("MAMBA_USE_LOCKFILES", "false")
         return env
 
     @property
@@ -753,7 +763,9 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=self._launch_env(),
+                # `micromamba run` only registers a pid under a single shared cache directory,
+                # so its lock serialises every worker on the host for no benefit.
+                env=self._launch_env(use_lockfiles=False),
             )
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")

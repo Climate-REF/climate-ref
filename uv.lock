@@ -729,6 +729,7 @@ dependencies = [
     { name = "tomlkit" },
     { name = "tqdm" },
     { name = "typer" },
+    { name = "xarray" },
 ]
 
 [package.optional-dependencies]
@@ -783,6 +784,7 @@ requires-dist = [
     { name = "tomlkit", specifier = ">=0.13.2" },
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "typer", specifier = ">=0.12.5" },
+    { name = "xarray", specifier = ">=2025.1" },
 ]
 provides-extras = ["postgres", "celery", "aft-providers", "providers", "test"]
 

@@ -9,6 +9,7 @@
   --add-fg: #14532d;
   --remove-bg: #fbe4e4;
   --remove-fg: #7f1d1d;
+  --moved-bg: #fdeeee;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +23,7 @@
     --add-fg: #86e29b;
     --remove-bg: #3a1c1c;
     --remove-fg: #f2a1a1;
+    --moved-bg: #2c1717;
   }
 }
 
@@ -146,6 +148,11 @@ summary {
   white-space: pre-wrap;
 }
 
+/* A blank header line has nothing to give the block height, so keep the gap. */
+.diff span:empty::after {
+  content: "\00a0";
+}
+
 .diff .add { background: var(--add-bg); color: var(--add-fg); }
 .diff .remove { background: var(--remove-bg); color: var(--remove-fg); }
 .diff .hunk, .diff .header { color: var(--muted); }
@@ -153,4 +160,77 @@ summary {
 .note {
   color: var(--muted);
   font-style: italic;
+}
+
+/* Table wrapper. A wide stats table scrolls inside its card rather than pushing the card wider. */
+.scroll-x {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.stats {
+  font-variant-numeric: tabular-nums;
+  min-width: 100%;
+  white-space: nowrap;
+  width: auto;
+}
+
+.stats th, .stats td {
+  font-size: 0.9em;
+}
+
+tr.moved {
+  background: var(--moved-bg);
+}
+
+/* A baseline file name can be long and has no spaces to break on. */
+.file h3 code, .binaries code {
+  overflow-wrap: anywhere;
+}
+
+.binaries td:first-child {
+  max-width: 40rem;
+}
+
+.header .views {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.header .views button {
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.85em;
+  padding: 0.15rem 0.6rem;
+}
+
+.header .views button[aria-pressed="true"] {
+  background: var(--panel);
+  color: var(--fg);
+  font-weight: 600;
+}
+
+.header .split:not([hidden]) {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Each side scrolls on its own so a long line cannot widen the other column. */
+.header .split .diff {
+  max-height: 30rem;
+  overflow: auto;
+}
+
+.header .split .diff span {
+  white-space: pre;
+}
+
+/* The moved half of a pair, so a column can be scanned for what actually shifted. */
+.stats strong {
+  font-weight: 600;
 }

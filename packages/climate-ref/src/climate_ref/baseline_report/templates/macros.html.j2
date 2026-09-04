@@ -42,6 +42,14 @@ was {{ file.change.old.size | bytes -}}
 </figure>
 {% endmacro %}
 
+{% macro diff_lines(lines) -%}
+<pre class="diff">
+{%- for line in lines %}
+<span class="{{ line.kind }}">{{ line.text }}</span>
+{%- endfor %}
+</pre>
+{%- endmacro %}
+
 {% macro text_block(file) %}
 <section class="file">
 <h3>
@@ -57,11 +65,7 @@ was {{ file.change.old.size | bytes -}}
 {% if file.text.note %}
 <p class="note">{{ file.text.note }}</p>
 {% else %}
-<pre class="diff">
-{%- for line in file.text.lines %}
-<span class="{{ line.kind }}">{{ line.text }}</span>
-{%- endfor %}
-</pre>
+{{ diff_lines(file.text.lines) }}
 {% if file.text.elided %}
 <p class="note">{{ file.text.elided }} further diff line(s) elided.</p>
 {% endif %}
@@ -76,4 +80,87 @@ was {{ file.change.old.size | bytes -}}
 <td>{{ size_delta(file) }}</td>
 <td>{{ blob_links(file) }}</td>
 </tr>
+{% endmacro %}
+
+{% macro header_side(label, lines) %}
+<div class="side">
+<span class="side-label">{{ label }}</span>
+{% if lines %}
+<pre class="diff">
+{%- for line in lines %}
+<span class="context">{{ line }}</span>
+{%- endfor %}
+</pre>
+{% else %}
+<div class="absent">absent</div>
+{% endif %}
+</div>
+{% endmacro %}
+
+{% macro emphasise(value, changed) -%}
+{% if changed %}<strong>{{ value }}</strong>{% else %}{{ value }}{% endif %}
+{%- endmacro %}
+
+{% macro pair_cell(old, new, changed) -%}
+{{ old }} -> {{ emphasise(new, changed) }}
+{%- endmacro %}
+
+{% macro netcdf_block(file) %}
+<section class="file">
+<h3>
+<code>{{ file.change.name }}</code>
+<span class="status {{ file.change.status }}">{{ file.change.status }}</span>
+<span class="size">{{ size_delta(file) }}</span>
+{{ blob_links(file) }}
+</h3>
+{% if file.netcdf.note %}
+<p class="note">{{ file.netcdf.note }}</p>
+{% else %}
+<details>
+<summary>Header{% if not file.netcdf.header_changed %} <span class="note">(unchanged)</span>{% endif %}</summary>
+<div class="header" data-header>
+<div class="views">
+<button type="button" data-header-view="diff" aria-pressed="true">Diff</button>
+<button type="button" data-header-view="split" aria-pressed="false">Side by side</button>
+</div>
+<div data-view="diff">
+{{ diff_lines(file.netcdf.header) }}
+</div>
+<div class="split" data-view="split" hidden>
+{{ header_side("old", file.netcdf.header_old) }}
+{{ header_side("new", file.netcdf.header_new) }}
+</div>
+</div>
+</details>
+{% if file.netcdf.rows %}
+<div class="scroll-x">
+<table class="stats">
+<thead>
+<tr>
+<th>variable</th><th>shape</th><th>min</th><th>max</th><th>mean</th>
+<th>nan</th><th>max abs diff</th><th>max rel diff</th><th>cells differ</th>
+</tr>
+</thead>
+<tbody>
+{% for row in file.netcdf.rows %}
+<tr{% if row.moved %} class="moved"{% endif %}>
+<td><code>{{ row.name }}</code></td>
+<td>{{ pair_cell(row.shape.old | dash, row.shape.new | dash, row.shape.changed) }}</td>
+<td>{{ pair_cell(row.minimum.old | num, row.minimum.new | num, row.minimum.changed) }}</td>
+<td>{{ pair_cell(row.maximum.old | num, row.maximum.new | num, row.maximum.changed) }}</td>
+<td>{{ pair_cell(row.mean.old | num, row.mean.new | num, row.mean.changed) }}</td>
+<td>{{ pair_cell(row.nan.old | num, row.nan.new | num, row.nan.changed) }}</td>
+<td>{{ emphasise(row.max_abs_diff | num, row.differs) }}</td>
+<td>{{ emphasise(row.max_rel_diff | num, row.differs) }}</td>
+<td>{{ emphasise(row.cells_differ | num, row.differs) }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<p class="note">No data variables.</p>
+{% endif %}
+{% endif %}
+</section>
 {% endmacro %}

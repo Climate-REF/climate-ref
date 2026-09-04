@@ -7,12 +7,16 @@ Text blobs are fetched from the native store and diffed here.
 from __future__ import annotations
 
 import difflib
+import io
 import json
 from collections import Counter
+from contextlib import ExitStack
 from itertools import islice
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
+import numpy as np
+import xarray as xr
 from attrs import frozen
 
 from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report
@@ -27,6 +31,13 @@ MAX_FETCH_BYTES = 2_000_000
 
 # Digest prefix shown wherever a blob is named. Long enough to identify it, short enough to read.
 SHORT_DIGEST = 12
+
+# A NetCDF blob larger than this is left unopened.
+NETCDF_FETCH_BYTES = 100_000_000
+
+# Compression means a blob under the fetch cap can still decode to far more, and each variable
+# is held on both sides plus a difference. This bounds what one side may expand to.
+MAX_DECODED_BYTES = 500_000_000
 
 # Unified-diff lines kept per file before the rest is elided.
 MAX_DIFF_LINES = 5000
@@ -58,8 +69,115 @@ class TextDiff:
 
 
 @frozen
+class Pair[T]:
+    """One statistic on each side of the change."""
+
+    old: T | None
+    """The value on the base ref, or ``None`` when it could not be computed."""
+
+    new: T | None
+    """The value on HEAD, or ``None`` when it could not be computed."""
+
+    @property
+    def changed(self) -> bool:
+        """
+        Whether the two sides differ.
+
+        Returns
+        -------
+        :
+            ``True`` when the value moved, which is what emphasises it in the table.
+        """
+        return self.old != self.new
+
+
+@frozen
+class StatRow:
+    """Whole-array statistics for one data variable, on each side of the change."""
+
+    name: str
+    """The variable's name."""
+
+    shape: Pair[str]
+    """Dimensions on each side, as ``180x360``, or ``scalar``."""
+
+    minimum: Pair[float]
+    """Minimum on each side, ignoring NaN."""
+
+    maximum: Pair[float]
+    """Maximum on each side, ignoring NaN."""
+
+    mean: Pair[float]
+    """Mean on each side, ignoring NaN."""
+
+    nan: Pair[int]
+    """NaN cells on each side, ``None`` when the variable is absent or not numeric."""
+
+    max_abs_diff: float | None
+    """Largest absolute change, or ``None`` when the shapes differ or a side is absent."""
+
+    max_rel_diff: float | None
+    """:attr:`max_abs_diff` over the largest magnitude on the base ref."""
+
+    cells_differ: int | None
+    """Cells that changed, counting NaN as equal to NaN."""
+
+    moved: bool
+    """Whether anything about this variable changed, which is what shades its row."""
+
+    @property
+    def differs(self) -> bool:
+        """
+        Whether the cell by cell comparison found a change.
+
+        Returns
+        -------
+        :
+            ``True`` when at least one cell moved, which is what emphasises the diff columns.
+        """
+        return bool(self.cells_differ)
+
+
+@frozen
+class NetcdfDiff:
+    """What changed inside one NetCDF file, or the reason nothing could be read."""
+
+    header: tuple[DiffLine, ...]
+    """
+    The two ncdump-style headers merged into one tagged listing.
+
+    Every line is kept rather than only the changed hunks, because the header is what tells a
+    reader what the file holds.
+    """
+
+    header_old: tuple[str, ...]
+    """The base ref's header, for reading one side on its own."""
+
+    header_new: tuple[str, ...]
+    """HEAD's header, for reading one side on its own."""
+
+    rows: tuple[StatRow, ...]
+    """One row per data variable, in name order."""
+
+    note: str | None
+    """Why the file could not be analysed, or ``None`` when it was."""
+
+    @property
+    def header_changed(self) -> bool:
+        """
+        Whether the headers differ.
+
+        Returns
+        -------
+        :
+            ``True`` when any header line was added or removed.
+        """
+        return any(line.kind != "context" for line in self.header)
+
+
+@frozen
 class AnalysedFile:
-    """One native file, with its blob URLs and its diff where it has one."""
+    """One native file, with its blob URLs and whatever its kind is analysed into."""
 
     change: FileChange
     """The underlying change."""
@@ -72,6 +190,10 @@ class AnalysedFile:
 
     text: TextDiff | None
     """The diff, set only for :attr:`~climate_ref.baseline_report.collect.FileKind.TEXT` files."""
+
+    netcdf: NetcdfDiff | None
+    """The header and stats diff, set only for
+    :attr:`~climate_ref.baseline_report.collect.FileKind.NETCDF` files."""
 
     size_delta: int | None
     """Signed byte change, or ``None`` when the file exists on only one side."""
@@ -113,8 +235,11 @@ class AnalysedCase:
     texts: tuple[AnalysedFile, ...]
     """The text files, which render as a diff."""
 
-    binaries: tuple[AnalysedFile, ...]
-    """The NetCDF and other files, which render as a table row."""
+    netcdfs: tuple[AnalysedFile, ...]
+    """The NetCDF files, which render as a header diff and a table of variable statistics."""
+
+    others: tuple[AnalysedFile, ...]
+    """Every remaining file, which renders as a table row."""
 
     back_link: str
     """Relative link from this case's page back to the index, one ``..`` per label segment."""
@@ -216,6 +341,37 @@ def _classify_line(line: str) -> str:
     return "context"
 
 
+def _diff_lines(
+    old_lines: list[str],
+    new_lines: list[str],
+    *,
+    fromfile: str,
+    tofile: str,
+) -> tuple[tuple[DiffLine, ...], int]:
+    """
+    Build the tagged unified diff of two line lists.
+
+    Parameters
+    ----------
+    old_lines
+        The base side, empty when it is absent.
+    new_lines
+        The head side, empty when it is absent.
+    fromfile
+        Label for the base side in the diff header.
+    tofile
+        Label for the head side in the diff header.
+
+    Returns
+    -------
+    :
+        The kept lines and the number dropped past :data:`MAX_DIFF_LINES`.
+    """
+    raw = difflib.unified_diff(old_lines, new_lines, fromfile=fromfile, tofile=tofile, lineterm="", n=3)
+    kept = list(islice(raw, MAX_DIFF_LINES))
+    return tuple(DiffLine(kind=_classify_line(line), text=line) for line in kept), sum(1 for _ in raw)
+
+
 def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
     """
     Build the unified diff between two fetched blobs.
@@ -234,29 +390,308 @@ def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
     :
         The diff, or a note explaining why there is not one.
     """
-    raw = difflib.unified_diff(
+    lines, elided = _diff_lines(
         _as_lines(old, name),
         _as_lines(new, name),
         fromfile="old" if old is not None else "(absent)",
         tofile="new" if new is not None else "(absent)",
-        lineterm="",
-        n=3,
     )
-    kept = list(islice(raw, MAX_DIFF_LINES))
-    if not kept:
+    if not lines:
         return TextDiff(lines=(), note="identical after decoding", elided=0)
-    return TextDiff(
-        lines=tuple(DiffLine(kind=_classify_line(line), text=line) for line in kept),
+    return TextDiff(lines=lines, note=None, elided=elided)
+
+
+def _header(dataset: xr.Dataset | None) -> list[str]:
+    """
+    Render a dataset's ncdump-style header as lines.
+
+    Parameters
+    ----------
+    dataset
+        The open dataset, or ``None`` when the file is absent on that side.
+
+    Returns
+    -------
+    :
+        The header lines, empty when there is no dataset.
+    """
+    if dataset is None:
+        return []
+    buf = io.StringIO()
+    dataset.info(buf)
+    return buf.getvalue().splitlines()
+
+
+def _header_diff(old_lines: list[str], new_lines: list[str]) -> tuple[DiffLine, ...]:
+    """
+    Merge two headers into one listing, tagging each line.
+
+    Unlike a unified diff this keeps every line, so the listing doubles as the file's
+    description rather than only naming what moved.
+
+    Parameters
+    ----------
+    old_lines
+        The base side's header, empty when that side is absent.
+    new_lines
+        The head side's header, empty when that side is absent.
+
+    Returns
+    -------
+    :
+        Every line, in reading order, tagged ``context``, ``add`` or ``remove``. The two
+        character marker is kept on the text so the tags survive without colour.
+    """
+    kinds = {" ": "context", "-": "remove", "+": "add"}
+    return tuple(
+        DiffLine(kind=kinds[line[0]], text=line)
+        for line in difflib.Differ().compare(old_lines, new_lines)
+        if line[0] in kinds
+    )
+
+
+def _variable(dataset: xr.Dataset | None, name: str) -> xr.DataArray | None:
+    """
+    Look one data variable up on one side.
+
+    Parameters
+    ----------
+    dataset
+        The open dataset, or ``None`` when the file is absent on that side.
+    name
+        The variable's name.
+
+    Returns
+    -------
+    :
+        The variable, or ``None`` when this side does not carry it.
+    """
+    if dataset is None or name not in dataset.data_vars:
+        return None
+    return dataset[name]
+
+
+def _values(variable: xr.DataArray | None) -> np.ndarray | None:
+    """
+    Read one variable as a float array.
+
+    Parameters
+    ----------
+    variable
+        The variable, or ``None`` when it is absent on that side.
+
+    Returns
+    -------
+    :
+        The values in their stored dtype, or ``None`` when the variable is absent or not
+        numeric. The dtype is kept because an ``int64`` past 2**53 does not survive a cast to
+        float, so two adjacent values would compare equal.
+    """
+    if variable is None or not np.issubdtype(variable.dtype, np.number):
+        return None
+    return np.asarray(variable.values)
+
+
+def _shape(variable: xr.DataArray | None) -> str | None:
+    """
+    Render one variable's shape.
+
+    Parameters
+    ----------
+    variable
+        The variable, or ``None`` when it is absent on that side.
+
+    Returns
+    -------
+    :
+        For example ``180x360``, ``scalar`` for a zero-dimensional variable, or ``None``
+        when the variable is absent.
+    """
+    if variable is None:
+        return None
+    return "x".join(str(size) for size in variable.shape) if variable.shape else "scalar"
+
+
+def _summarise(values: np.ndarray | None) -> tuple[float | None, float | None, float | None, int | None]:
+    """
+    Reduce one side's values to min, max, mean and NaN count.
+
+    Parameters
+    ----------
+    values
+        The float array, or ``None`` when the variable is absent or not numeric.
+
+    Returns
+    -------
+    :
+        The four statistics. The first three are ``None`` for an empty or all-NaN array,
+        which is what numpy would otherwise report as NaN with a warning.
+    """
+    if values is None:
+        return None, None, None, None
+    nan_count = int(np.isnan(values).sum())
+    if values.size in (0, nan_count):
+        return None, None, None, nan_count
+    return (
+        float(np.nanmin(values)),
+        float(np.nanmax(values)),
+        float(np.nanmean(values, dtype=float)),
+        nan_count,
+    )
+
+
+def _compare(
+    old: np.ndarray | None, new: np.ndarray | None, scale: float
+) -> tuple[float | None, float | None, int | None]:
+    """
+    Compare two sides of the same variable cell by cell.
+
+    NaN counts as equal to NaN, because a masked cell staying masked is not a change.
+
+    Parameters
+    ----------
+    old
+        The base side, or ``None`` when absent or not numeric.
+    new
+        The head side, or ``None`` when absent or not numeric.
+    scale
+        The base side's largest magnitude, which the relative difference is measured against.
+
+    Returns
+    -------
+    :
+        The largest absolute difference, the same relative to ``scale``, and the number of
+        cells that differ. The two differences are ``None`` when a cell moved between NaN and
+        a number, because that gap has no magnitude and the finite maximum would read as zero.
+        All three are ``None`` when the sides cannot be compared.
+    """
+    if old is None or new is None or old.shape != new.shape:
+        return None, None, None
+    old_nan = np.isnan(old)
+    new_nan = np.isnan(new)
+    cells_differ = int(np.sum(~((old == new) | (old_nan & new_nan))))
+    if np.any(old_nan != new_nan):
+        return None, None, cells_differ
+    diff = np.abs(new.astype(float) - old.astype(float))
+    max_abs = 0.0 if np.isnan(diff).all() else float(np.nanmax(diff))
+    return max_abs, max_abs / max(scale, float(np.finfo(float).tiny)), cells_differ
+
+
+def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> StatRow:
+    """
+    Build one variable's row.
+
+    Parameters
+    ----------
+    old
+        The base dataset, or ``None`` when the file is absent on that side.
+    new
+        The head dataset, or ``None`` when the file is absent on that side.
+    name
+        The variable's name.
+
+    Returns
+    -------
+    :
+        The row, with ``moved`` set when the shape or any cell changed.
+    """
+    old_variable = _variable(old, name)
+    new_variable = _variable(new, name)
+    shape_old = _shape(old_variable)
+    shape_new = _shape(new_variable)
+    old_values = _values(old_variable)
+    new_values = _values(new_variable)
+    min_old, max_old, mean_old, nan_old = _summarise(old_values)
+    min_new, max_new, mean_new, nan_new = _summarise(new_values)
+    scale = max(abs(min_old), abs(max_old)) if min_old is not None and max_old is not None else 0.0
+    max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
+    shape = Pair(old=shape_old, new=shape_new)
+    return StatRow(
+        name=name,
+        shape=shape,
+        minimum=Pair(old=min_old, new=min_new),
+        maximum=Pair(old=max_old, new=max_new),
+        mean=Pair(old=mean_old, new=mean_new),
+        nan=Pair(old=nan_old, new=nan_new),
+        max_abs_diff=max_abs_diff,
+        max_rel_diff=max_rel_diff,
+        cells_differ=cells_differ,
+        moved=(cells_differ or 0) > 0 or shape.changed,
+    )
+
+
+def netcdf_diff(old: Path | None, new: Path | None) -> NetcdfDiff:
+    """
+    Diff the headers and whole-array statistics of two NetCDF blobs.
+
+    Decoding is turned off so a non-standard calendar or unit cannot fail the report.
+
+    Parameters
+    ----------
+    old
+        The base blob, or ``None`` when the file is new.
+    new
+        The head blob, or ``None`` when the file was removed.
+
+    Returns
+    -------
+    :
+        The header diff and one row per data variable, or a note when a file could not be opened.
+    """
+    try:
+        with ExitStack() as stack:
+            old_ds = (
+                stack.enter_context(xr.open_dataset(old, decode_times=False, decode_cf=False))
+                if old is not None
+                else None
+            )
+            new_ds = (
+                stack.enter_context(xr.open_dataset(new, decode_times=False, decode_cf=False))
+                if new is not None
+                else None
+            )
+            for dataset in (old_ds, new_ds):
+                if dataset is not None and dataset.nbytes > MAX_DECODED_BYTES:
+                    return NetcdfDiff(
+                        header=(),
+                        header_old=(),
+                        header_new=(),
+                        rows=(),
+                        note=f"decodes to too much to analyse ({dataset.nbytes:,} B)",
+                    )
+            header_old = _header(old_ds)
+            header_new = _header(new_ds)
+            header = _header_diff(header_old, header_new)
+            names = sorted(
+                {
+                    str(name)
+                    for dataset in (old_ds, new_ds)
+                    if dataset is not None
+                    for name in dataset.data_vars
+                }
+            )
+            rows = tuple(_stat_row(old_ds, new_ds, name) for name in names)
+    except (OSError, ValueError, KeyError) as exc:
+        return NetcdfDiff(header=(), header_old=(), header_new=(), rows=(), note=f"could not open: {exc}")
+    return NetcdfDiff(
+        header=header,
+        header_old=tuple(header_old),
+        header_new=tuple(header_new),
+        rows=rows,
         note=None,
-        elided=sum(1 for _ in raw),
     )
 
 
 def _fetch_side(
-    store: NativeStore, entry: NativeEntry | None, workdir: Path
+    store: NativeStore,
+    entry: NativeEntry | None,
+    workdir: Path,
+    *,
+    limit: int,
+    oversize: str,
 ) -> tuple[Path | None, str | None]:
     """
-    Fetch one side of a text file.
+    Fetch one side of a file.
 
     Parameters
     ----------
@@ -266,6 +701,10 @@ def _fetch_side(
         The manifest entry, or ``None`` when the file is absent on that side.
     workdir
         Directory the blob is written into.
+    limit
+        Largest blob worth downloading.
+    oversize
+        Note to return when the blob is past ``limit``.
 
     Returns
     -------
@@ -275,8 +714,8 @@ def _fetch_side(
     """
     if entry is None:
         return None, None
-    if entry.size > MAX_FETCH_BYTES:
-        return None, f"too large to diff ({entry.size:,} B)"
+    if entry.size > limit:
+        return None, f"{oversize} ({entry.size:,} B)"
     digest = entry.sha256
     dest = workdir / digest
     if dest.exists():
@@ -286,6 +725,41 @@ def _fetch_side(
     except (OSError, ValueError) as exc:
         return None, f"could not fetch {digest[:SHORT_DIGEST]} ({exc})"
     return dest, None
+
+
+def _fetch_pair(
+    change: FileChange,
+    store: NativeStore,
+    workdir: Path,
+    *,
+    limit: int,
+    oversize: str,
+) -> tuple[Path | None, Path | None, str | None]:
+    """
+    Fetch both sides of a file.
+
+    Parameters
+    ----------
+    change
+        The file that moved.
+    store
+        The store to read blobs from.
+    workdir
+        Directory fetched blobs are written into.
+    limit
+        Largest blob worth downloading.
+    oversize
+        Note to return when a blob is past ``limit``.
+
+    Returns
+    -------
+    :
+        An ``(old, new, note)`` triple. ``note`` is the first failure of the two sides, and
+        the paths should be ignored once it is set.
+    """
+    old_path, old_note = _fetch_side(store, change.old, workdir, limit=limit, oversize=oversize)
+    new_path, new_note = _fetch_side(store, change.new, workdir, limit=limit, oversize=oversize)
+    return old_path, new_path, old_note or new_note
 
 
 def _diff_for(
@@ -319,12 +793,51 @@ def _diff_for(
     if not fetch:
         return TextDiff(lines=(), note="fetching disabled", elided=0)
 
-    old_path, old_note = _fetch_side(store, change.old, workdir)
-    new_path, new_note = _fetch_side(store, change.new, workdir)
-    note = old_note or new_note
+    old_path, new_path, note = _fetch_pair(
+        change, store, workdir, limit=MAX_FETCH_BYTES, oversize="too large to diff"
+    )
     if note is not None:
         return TextDiff(lines=(), note=note, elided=0)
     return text_diff(old_path, new_path, change.name)
+
+
+def _netcdf_for(
+    change: FileChange,
+    store: NativeStore,
+    *,
+    fetch: bool,
+    workdir: Path,
+) -> NetcdfDiff | None:
+    """
+    Build the NetCDF analysis for one file, or ``None`` when its kind is not NetCDF.
+
+    Parameters
+    ----------
+    change
+        The file that moved.
+    store
+        The store to read blobs from.
+    fetch
+        Whether blobs may be downloaded.
+    workdir
+        Directory fetched blobs are written into.
+
+    Returns
+    -------
+    :
+        The analysis, a note explaining why there is not one, or ``None`` for another kind.
+    """
+    if change.kind is not FileKind.NETCDF:
+        return None
+    if not fetch:
+        return NetcdfDiff(header=(), header_old=(), header_new=(), rows=(), note="fetching disabled")
+
+    old_path, new_path, note = _fetch_pair(
+        change, store, workdir, limit=NETCDF_FETCH_BYTES, oversize="too large to analyse"
+    )
+    if note is not None:
+        return NetcdfDiff(header=(), header_old=(), header_new=(), rows=(), note=note)
+    return netcdf_diff(old_path, new_path)
 
 
 def _analyse_file(
@@ -335,7 +848,7 @@ def _analyse_file(
     workdir: Path,
 ) -> AnalysedFile:
     """
-    Build the URLs and, for text, the diff of one native file.
+    Build the URLs and, for text and NetCDF, the analysis of one native file.
 
     Parameters
     ----------
@@ -358,27 +871,28 @@ def _analyse_file(
         old_url=blob_url(store, change.old.sha256) if change.old else None,
         new_url=blob_url(store, change.new.sha256) if change.new else None,
         text=_diff_for(change, store, fetch=fetch, workdir=workdir),
+        netcdf=_netcdf_for(change, store, fetch=fetch, workdir=workdir),
         size_delta=change.new.size - change.old.size if change.old and change.new else None,
     )
 
 
-def _of_kind(files: tuple[AnalysedFile, ...], *kinds: FileKind) -> tuple[AnalysedFile, ...]:
+def _of_kind(files: tuple[AnalysedFile, ...], kind: FileKind) -> tuple[AnalysedFile, ...]:
     """
-    Select the files of the given kinds, keeping their order.
+    Select the files of one kind, keeping their order.
 
     Parameters
     ----------
     files
         The analysed files.
-    kinds
-        The kinds to keep.
+    kind
+        The kind to keep.
 
     Returns
     -------
     :
         The matching files.
     """
-    return tuple(file for file in files if file.change.kind in kinds)
+    return tuple(file for file in files if file.change.kind is kind)
 
 
 def _counts(files: tuple[AnalysedFile, ...]) -> tuple[KindCounts, ...]:
@@ -446,7 +960,8 @@ def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -
                 counts=_counts(files),
                 images=_of_kind(files, FileKind.IMAGE),
                 texts=_of_kind(files, FileKind.TEXT),
-                binaries=_of_kind(files, FileKind.NETCDF, FileKind.OTHER),
+                netcdfs=_of_kind(files, FileKind.NETCDF),
+                others=_of_kind(files, FileKind.OTHER),
                 back_link="/".join([*[".."] * depth, "index.html"]),
             )
         )

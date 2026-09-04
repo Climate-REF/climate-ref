@@ -1,11 +1,11 @@
 {
   "catalog_hash": "711cd5b3388d0f1f1754eeb749df36d9bc705800",
   "committed": {
-    "diagnostic.json": "2cdcebd9f62a8d3475a3449587dc12c14c9b157796f32bf2e228ca5fd3b5da36",
+    "diagnostic.json": "b10b2c7e9eb8cdfb851be9586de32f9f9b51bae3dbfe5c5db820e404c7527cd9",
     "output.json": "554c24fc561dd41fefed3b1e2e0aafbbf70e9d8862f896deb1c19d3ddfac45df",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 3,
+  "diagnostic_version": 4,
   "native": {
     "EG_Spec_North_test_NPO_DJF_20CR-V2_1900-2005.png": {
       "sha256": "e1c1ce2915621ff07e8d00b7c7d2fe74bd85b8d3e2e2493e051f672c2d5c17c5",
@@ -24,7 +24,7 @@
       "size": 31465
     },
     "NPO_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "9703576c51b25af7a94f8fb457a65e07b5d0d6663bb02882bf194afa05ea1c60",
+      "sha256": "0a543dd150c0239478b72cab364fa4b2187a505241c9bda16dd25969e99e0bef",
       "size": 690880
     },
     "NPO_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -36,7 +36,7 @@
       "size": 117916
     },
     "NPO_psl_EOF1_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "58886a54c06e8d8db99b2cd14146ddc3f4adeb02e1f7fad65f266f0deff44280",
+      "sha256": "516e2dba40409ec9e133dafd7b4ec10f2299a2502ca99b1d5ca9818495335366",
       "size": 690880
     },
     "NPO_psl_EOF1_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -48,7 +48,7 @@
       "size": 118888
     },
     "NPO_psl_EOF1_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "1f62a40caddc54e90c18e9071f04f99185c0dafabb9faca10d72d524d747c0fa",
+      "sha256": "b7f3f39821f237c39e1d58f64e97dfdc216fbb73b617a19dbc77194534e33ec0",
       "size": 690880
     },
     "NPO_psl_EOF1_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -60,7 +60,7 @@
       "size": 119737
     },
     "NPO_psl_EOF1_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "62476f00128c9506476575dfca90b1ea60d423d94fac79e80e54283aa1093ff9",
+      "sha256": "e9196868bbc7743c9a65c70aa9c33afbeb26a2a2f28e45ca62819edb97a039bb",
       "size": 690880
     },
     "NPO_psl_EOF1_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -72,7 +72,7 @@
       "size": 118393
     },
     "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "e47af0bf431ba5a178c77305afce1b0757c953e7d74a9ce9d1f28a21cd5d899e",
+      "sha256": "eebcfc0f25989acfae3a88a28468cf10d20407c6d3e9c1af99a5bf7fd4d30ee0",
       "size": 690880
     },
     "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -80,7 +80,7 @@
       "size": 91565
     },
     "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "12fdbdd4a15c877d7ebffffff468e8973cce6e3cf4444e65b5d29a487371607e",
+      "sha256": "5597630a74f32fe548d85dc4147f501e8305d2944d7f29fbc5f95072db8fb354",
       "size": 690631
     },
     "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
@@ -104,7 +104,7 @@
       "size": 121585
     },
     "NPO_psl_EOF2_DJF_obs_1900-2005.nc": {
-      "sha256": "3440da379923c39fbea812496d404d97ae76d2ca1c5178ba3a8f8bd4f4dfee96",
+      "sha256": "12ba997909e1489858ecb9c97394872ef5330c94c688f12bea08bd0eb2a7cd07",
       "size": 415707
     },
     "NPO_psl_EOF2_DJF_obs_1900-2005.png": {
@@ -116,7 +116,7 @@
       "size": 112927
     },
     "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "90057d2172b3c1bbd408e41a057651f569643388f5e721a817e720bf73af523e",
+      "sha256": "a31dfe299a9be2d86e8e6b8cd57f5ba53b20674978b89b9f4c4ae157da435c92",
       "size": 690880
     },
     "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -124,8 +124,8 @@
       "size": 89413
     },
     "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "6c7dc5ed9cc893e029403ed46b0a5abcefcb7a2a9ced268a114a3f83fecdfa18",
-      "size": 690631
+      "sha256": "dd88c986f81485ad95d605afe549a726377073b00c0f52c3ad5cd75baf8e084d",
+      "size": 690468
     },
     "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
       "sha256": "516860854bda9b7665e3e7ea41fc09d31087c8a1e9ff0fe304d90e7873fb7545",
@@ -148,7 +148,7 @@
       "size": 119811
     },
     "NPO_psl_EOF2_JJA_obs_1900-2005.nc": {
-      "sha256": "1d043f0912a7b00b67f1d231a8f3d4d908609f12f527b10a3c62eb95118cc3c0",
+      "sha256": "a1040d1b7261340c6a5630aa1afd2095a660a29ea24a6513f1de05df1d7fd84c",
       "size": 415707
     },
     "NPO_psl_EOF2_JJA_obs_1900-2005.png": {
@@ -160,7 +160,7 @@
       "size": 113483
     },
     "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "f7f1c5f9238e66b2ff7a0e10a1718421b2e0434def194c6d782d4c19087aa5d7",
+      "sha256": "fbe06f442b964f77718fecc1319f5b92486f72efb714475091f53b7acf137ca4",
       "size": 690880
     },
     "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -168,8 +168,8 @@
       "size": 90858
     },
     "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "00e83749f2331a68dc31ed52f9627711e2e1eb4f8d230585ae25d1e5be58fc29",
-      "size": 690631
+      "sha256": "4c34f9bd932ac5f74e109aabf991c9cb9601077d0be90c57485df956552dd4ce",
+      "size": 690468
     },
     "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
       "sha256": "599ef76e284ca5ee36483f03c2aa23545456fb9f32565590813da27e2496f1e2",
@@ -192,7 +192,7 @@
       "size": 119322
     },
     "NPO_psl_EOF2_MAM_obs_1900-2005.nc": {
-      "sha256": "5e5407dd1950f81055828e19fefd523fc17ae7f345dd6568a0e9debd1bcf819b",
+      "sha256": "fbbcef342150d60c295990624389eb5f0a1bb000413cb84e82e47d7b318361e5",
       "size": 415707
     },
     "NPO_psl_EOF2_MAM_obs_1900-2005.png": {
@@ -204,7 +204,7 @@
       "size": 116843
     },
     "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "e4701f73f500d9c3d59954bbeb9c60d67592efd65b282567c5600451b5b98be2",
+      "sha256": "231d04d797485a51f1d871a9580efc9b54e5b485e4b7032cf6b74dc7307b2047",
       "size": 690880
     },
     "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -212,7 +212,7 @@
       "size": 90838
     },
     "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "5d2f993a0f4db82c9f6edb5f879cb8fdfbfc2b77ca08c6326096eaa770b0dfd1",
+      "sha256": "9f398c4de2609f0c4e4003caeb784dfdef8b52b9e451ba328891d4d960c9a3f4",
       "size": 690631
     },
     "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
@@ -236,7 +236,7 @@
       "size": 118666
     },
     "NPO_psl_EOF2_SON_obs_1900-2005.nc": {
-      "sha256": "221abc8c5e7f359f8178f00a6dac2ea4215887da9f5de22eee48f0e652ba3617",
+      "sha256": "d1c29765cf06ce5cafbd2e1c04b964299622a0f5be8b46121c11c8f46949cb99",
       "size": 415707
     },
     "NPO_psl_EOF2_SON_obs_1900-2005.png": {
@@ -248,8 +248,8 @@
       "size": 114077
     },
     "diagnostic.json": {
-      "sha256": "2d924ff64c4b587ed18600ce19ca3375ec7324d94edd072c7b663091a2db0114",
-      "size": 12048
+      "sha256": "03a71295c27f7c75a5bd0c39c1ad6e4dd3d24c85981c53566d0b59b5f9207c83",
+      "size": 12051
     },
     "output.json": {
       "sha256": "900dd46c5922b8a88b9f893cdfddef955f8e34c00e19854518668db02ae1fc97",
@@ -260,10 +260,10 @@
       "size": 2
     },
     "var_mode_NPO_EOF2_stat_cmip7_historical_mo_atm_ACCESS-ESM1-5_r1i1p1f1_1900-2005_cmec.json": {
-      "sha256": "23f5c882af201fc8557bb4fca460718e3c0a19ec559e7db9a80fea8620bd6b21",
-      "size": 16238
+      "sha256": "a7470fadb85dfe375ea5b8616d0eeead2fa220285ca008aa04e88aea176d1432",
+      "size": 16244
     }
   },
   "schema": 2,
-  "test_case_version": 4
+  "test_case_version": 5
 }

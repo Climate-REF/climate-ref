@@ -12,6 +12,7 @@ from climate_ref_core.diagnostics import (
     ExecutionResult,
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.metric_values import SeriesMetricValue
 from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
@@ -116,7 +117,56 @@ def make_data_requirement(
     )
 
 
-def _transform_results(data: dict[str, Any]) -> dict[str, Any]:
+# PMP reports the annual cycle as 12 values ordered January to December.
+_MONTH_INDEX: tuple[int, ...] = tuple(range(1, 13))
+
+
+def _extract_monthly_series(results: dict[str, Any], level: str | None) -> list[SeriesMetricValue]:
+    """
+    Build a monthly series for every region and statistic that carries ``CalendarMonths``.
+
+    Parameters
+    ----------
+    results : dict
+        The ``RESULTS`` block, keyed by region then statistic.
+    level : str or None
+        The pressure level of the results, for 3D variables.
+
+    Returns
+    -------
+    list
+        One series per region and statistic pair.
+    """
+    series = []
+
+    for region, region_values in results.items():
+        if not isinstance(region_values, dict):
+            continue
+        for statistic, statistic_values in region_values.items():
+            # The region level also holds an ``attributes`` block whose leaves are strings.
+            if not isinstance(statistic_values, dict):
+                continue
+            months = statistic_values.get("CalendarMonths")
+            if months is None:
+                continue
+
+            dimensions = {"region": region, "statistic": statistic}
+            if level is not None:
+                dimensions["level"] = level
+
+            series.append(
+                SeriesMetricValue(
+                    dimensions=dimensions,
+                    values=[float(value) for value in months],
+                    index=list(_MONTH_INDEX),
+                    index_name="month_number",
+                )
+            )
+
+    return series
+
+
+def _transform_results(data: dict[str, Any]) -> tuple[dict[str, Any], list[SeriesMetricValue]]:
     """
     Transform the executions dictionary to match the expected structure.
 
@@ -127,27 +177,30 @@ def _transform_results(data: dict[str, Any]) -> dict[str, Any]:
 
     Returns
     -------
-    dict
-        The transformed executions dictionary.
+    tuple
+        The transformed executions dictionary and the monthly series extracted from it.
     """
     # Remove the model, reference, rip dimensions
     # These are later replaced with a REF-specific naming convention
     data = remove_dimensions(data, ["model", "reference", "rip"])
 
-    # TODO: replace this with the ability to capture series
-    # Remove the "CalendarMonths" key from the nested structure
-    for region, region_values in data["RESULTS"].items():
-        for stat, stat_values in region_values.items():
-            if "CalendarMonths" in stat_values:
-                stat_values.pop("CalendarMonths")
+    raw_level = data.get("Variable", {}).get("level")
+    level = None if raw_level is None else str(int(raw_level))
+    series = _extract_monthly_series(data["RESULTS"], level)
+
+    # The monthly values are captured as series, so drop them from the scalar bundle
+    for region_values in data["RESULTS"].values():
+        for statistic_values in region_values.values():
+            if "CalendarMonths" in statistic_values:
+                statistic_values.pop("CalendarMonths")
 
     # Remove the "CalendarMonths" key from the nested structure in "DIMENSIONS"
     data["DIMENSIONS"]["season"].pop("CalendarMonths")
 
-    return data
+    return data, series
 
 
-def transform_results_files(results_files: list[Any]) -> list[Any]:
+def transform_results_files(results_files: list[Any]) -> tuple[list[Any], list[SeriesMetricValue]]:
     """
     Transform the results files to match the expected structure.
 
@@ -158,21 +211,23 @@ def transform_results_files(results_files: list[Any]) -> list[Any]:
 
     Returns
     -------
-    list
-        List of transformed result files.
+    tuple
+        List of transformed result files and the monthly series extracted from them.
 
     """
     if len(results_files) == 0:
         logger.warning("No results files provided for transformation.")
-        return []
+        return [], []
 
     transformed_results_files = []
+    series: list[SeriesMetricValue] = []
 
     for results_file in results_files:
         # Rewrite the CMEC JSON file for compatibility
         with open(results_file) as f:
             results = json.load(f)
-            results_transformed = _transform_results(results)
+            results_transformed, file_series = _transform_results(results)
+            series.extend(file_series)
 
         # Get the stem (filename without extension)
         stem = results_file.stem
@@ -187,7 +242,7 @@ def transform_results_files(results_files: list[Any]) -> list[Any]:
 
         transformed_results_files.append(results_file_transformed)
 
-    return transformed_results_files
+    return transformed_results_files, series
 
 
 def _update_top_level_keys(combined_results: dict[str, Any], data: dict[str, Any], levels: list[str]) -> None:
@@ -291,7 +346,7 @@ class AnnualCycle(CommandLineDiagnostic):
         "statistic",
         "season",
     )
-    version = 5
+    version = 6
 
     _variable_obs_pairs = (
         # ERA-5 as reference dataset, spatial 2-D variables
@@ -584,7 +639,7 @@ class AnnualCycle(CommandLineDiagnostic):
         logger.debug(f"variable_dir_pattern: {variable_dir_pattern}")
 
         # Find the CMEC JSON file(s)
-        results_files = transform_results_files(list(results_directory.glob("*_cmec.json")))
+        results_files, series = transform_results_files(list(results_directory.glob("*_cmec.json")))
 
         if len(results_files) == 1:
             # If only one file, use it directly
@@ -616,23 +671,34 @@ class AnnualCycle(CommandLineDiagnostic):
         # Add missing dimensions to the output
         member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
         reference_collection = definition.datasets[SourceDatasetType.PMPClimatology]
+        common_dimensions = {
+            "source_id": input_datasets["source_id"].unique()[0],
+            "member_id": input_datasets[member_id_col].unique()[0],
+            "experiment_id": input_datasets["experiment_id"].unique()[0],
+            "variable_id": input_datasets["variable_id"].unique()[0],
+            "reference_source_id": reference_collection["source_id"].unique()[0],
+        }
         cmec_metric_bundle = cmec_metric_bundle.prepend_dimensions(
             {
                 # PMP scalars are model-performance scores against a reference, not reference
                 # (observation) values, so every value's role is ``model``.
                 "kind": "model",
-                "source_id": input_datasets["source_id"].unique()[0],
-                "member_id": input_datasets[member_id_col].unique()[0],
-                "experiment_id": input_datasets["experiment_id"].unique()[0],
-                "variable_id": input_datasets["variable_id"].unique()[0],
-                "reference_source_id": reference_collection["source_id"].unique()[0],
+                **common_dimensions,
             }
         )
+
+        # The series carry only the dimensions PMP varies within a file, so give them the
+        # same identifying dimensions the scalar bundle gets.
+        series = [
+            value.model_copy(update={"dimensions": {**common_dimensions, **value.dimensions}})
+            for value in series
+        ]
 
         return ExecutionResult.build_from_output_bundle(
             definition,
             cmec_output_bundle=cmec_output_bundle,
             cmec_metric_bundle=cmec_metric_bundle,
+            series=series,
         )
 
     def execute(self, definition: ExecutionDefinition) -> None:

@@ -205,7 +205,7 @@
     },
     "osAccess": false,
     "packages": {
-      "PMP": "3.9.2",
+      "PMP": "4.2.0",
       "PMPObs": "See 'References' key below, for detailed obs provenance information.",
       "cdat_info": "8.2.1",
       "cdp": "1.7.0",

@@ -313,8 +313,15 @@ def test_transform_results_removes_expected_keys():
         },
         "json_version": 3.0,
     }
-    transformed_data = _transform_results(input_data)
+    transformed_data, series = _transform_results(input_data)
     assert transformed_data == expected_output
+
+    assert len(series) == 1
+    assert series[0].dimensions == {"region": "global", "statistic": "bias_xy"}
+    assert series[0].index_name == "month_number"
+    assert series[0].index == list(range(1, 13))
+    assert series[0].values[0] == pytest.approx(1.66806)
+    assert series[0].values[-1] == pytest.approx(1.71510)
 
 
 def test_transform_results_empty_results_and_dimensions():

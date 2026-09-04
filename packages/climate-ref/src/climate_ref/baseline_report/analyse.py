@@ -49,6 +49,11 @@ MAX_DECODED_BYTES = 500_000_000
 # Unified-diff lines kept per file before the rest is elided.
 MAX_DIFF_LINES = 5000
 
+# A difference this small relative to the variable's own magnitude reads as numerical noise.
+# Double precision carries about 16 significant digits, so this leaves several digits of headroom
+# for a real change to sit above.
+NOISE_REL_TOLERANCE = 1e-9
+
 
 @frozen
 class DiffLine:
@@ -85,16 +90,21 @@ class Pair[T]:
     new: T | None
     """The value on HEAD, or ``None`` when it could not be computed."""
 
+    tolerance: float = 0.0
+    """How far a numeric pair may move before it reads as changed. Zero compares exactly."""
+
     @property
     def changed(self) -> bool:
         """
-        Whether the two sides differ.
+        Whether the two sides differ by more than :attr:`tolerance`.
 
         Returns
         -------
         :
             ``True`` when the value moved, which is what emphasises it in the table.
         """
+        if isinstance(self.old, float) and isinstance(self.new, float):
+            return abs(self.new - self.old) > self.tolerance
         return self.old != self.new
 
 
@@ -133,16 +143,37 @@ class StatRow:
     """Whether anything about this variable changed, which is what shades its row."""
 
     @property
-    def differs(self) -> bool:
+    def severity(self) -> str:
         """
-        Whether the cell by cell comparison found a change.
+        How much weight the row deserves.
+
+        A run reproduced on different hardware moves the last bits of nearly every cell, so a
+        row that only moved that far is called out as noise rather than as a change.
 
         Returns
         -------
         :
-            ``True`` when at least one cell moved, which is what emphasises the diff columns.
+            ``changed`` when the move is larger than :data:`NOISE_REL_TOLERANCE` or cannot be
+            measured, ``noise`` when it is smaller, and ``same`` when nothing moved.
         """
-        return bool(self.cells_differ)
+        if not self.moved:
+            return "same"
+        if self.max_rel_diff is None or self.max_rel_diff > NOISE_REL_TOLERANCE:
+            return "changed"
+        return "noise"
+
+    @property
+    def differs(self) -> bool:
+        """
+        Whether the cell by cell comparison found a change worth reading.
+
+        Returns
+        -------
+        :
+            ``True`` when at least one cell moved further than the noise tolerance, which is
+            what emphasises the diff columns.
+        """
+        return bool(self.cells_differ) and self.severity == "changed"
 
 
 @frozen
@@ -724,13 +755,14 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
     min_new, max_new, mean_new, nan_new = _summarise(new_values)
     scale = max(abs(min_old), abs(max_old)) if min_old is not None and max_old is not None else 0.0
     max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
+    tolerance = scale * NOISE_REL_TOLERANCE
     shape = Pair(old=shape_old, new=shape_new)
     return StatRow(
         name=name,
         shape=shape,
-        minimum=Pair(old=min_old, new=min_new),
-        maximum=Pair(old=max_old, new=max_new),
-        mean=Pair(old=mean_old, new=mean_new),
+        minimum=Pair(old=min_old, new=min_new, tolerance=tolerance),
+        maximum=Pair(old=max_old, new=max_new, tolerance=tolerance),
+        mean=Pair(old=mean_old, new=mean_new, tolerance=tolerance),
         nan=Pair(old=nan_old, new=nan_new),
         max_abs_diff=max_abs_diff,
         max_rel_diff=max_rel_diff,

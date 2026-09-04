@@ -9,7 +9,9 @@
   --add-fg: #14532d;
   --remove-bg: #fbe4e4;
   --remove-fg: #7f1d1d;
-  --moved-bg: #fdeeee;
+  --changed-bg: #fdeeee;
+  --noise-bg: #fdf4e3;
+  --noise-fg: #7a5200;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,7 +25,9 @@
     --add-fg: #86e29b;
     --remove-bg: #3a1c1c;
     --remove-fg: #f2a1a1;
-    --moved-bg: #2c1717;
+    --changed-bg: #2c1717;
+    --noise-bg: #2b2415;
+    --noise-fg: #e0bd72;
   }
 }
 
@@ -179,8 +183,18 @@ summary {
   font-size: 0.9em;
 }
 
-tr.moved {
-  background: var(--moved-bg);
+tr.changed {
+  background: var(--changed-bg);
+}
+
+/* Moved, but only within the noise tolerance, so it should not read as a real difference. */
+tr.noise {
+  background: var(--noise-bg);
+}
+
+.pill.noise {
+  background: var(--noise-bg);
+  color: var(--noise-fg);
 }
 
 /* A baseline file name can be long and has no spaces to break on. */

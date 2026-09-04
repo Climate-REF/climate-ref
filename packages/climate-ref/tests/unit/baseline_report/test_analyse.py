@@ -334,6 +334,40 @@ class TestNetcdfDiff:
         assert row.differs is True
         assert row.maximum.changed is True  # 4.0 -> 4.5
         assert row.minimum.changed is False
+        assert row.severity == "changed"
+
+    def test_a_last_bit_difference_reads_as_noise(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0 + 1e-14]])
+
+        row = netcdf_diff(base_nc, new).rows[0]
+
+        assert row.cells_differ == 1
+        assert row.moved is True
+        assert row.severity == "noise"
+        assert row.differs is False
+        assert row.maximum.changed is False  # the move is inside the tolerance
+
+    def test_a_difference_just_above_the_tolerance_still_counts(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0 + 1e-7]])
+
+        row = netcdf_diff(base_nc, new).rows[0]
+
+        assert row.severity == "changed"
+        assert row.differs is True
+        assert row.maximum.changed is True
+
+    def test_an_unmeasurable_move_is_never_called_noise(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+
+        row = netcdf_diff(base_nc, new).rows[0]
+
+        assert row.max_rel_diff is None
+        assert row.severity == "changed"
+
+    def test_an_unchanged_variable_has_no_severity(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0]])
+
+        assert netcdf_diff(base_nc, new).rows[0].severity == "same"
 
     def test_a_changed_shape_cannot_be_compared_cell_by_cell(self, tmp_path, base_nc):
         new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])

@@ -398,7 +398,7 @@ def _netcdf_case(tmp_path, diff, name="out.nc"):
 
 
 class TestNetcdfBlock:
-    def test_only_the_moved_row_is_shaded(self, tmp_path):
+    def test_only_the_changed_row_is_shaded(self, tmp_path):
         diff = _netcdf_diff(
             header=(DiffLine(kind="add", text="+ title: b"),),
             rows=(
@@ -410,7 +410,7 @@ class TestNetcdfBlock:
 
         html = render_case(report, report.cases[0])
 
-        assert html.count('<tr class="moved">') == 1
+        assert html.count('<tr class="changed">') == 1
         assert [attrs.get("class") for attrs in _tags(html, "table")] == ["stats"]
         assert "0.5" in html
         assert "0.125" in html
@@ -436,6 +436,27 @@ class TestNetcdfBlock:
         assert "1 -> 1" in html  # the min did not, so it stays plain
         assert "<strong>0.5</strong>" in html  # and so do the three diff columns
         assert html.count("<strong>") == 4
+
+    def test_a_noise_row_is_shaded_apart_and_emphasises_nothing(self, tmp_path):
+        diff = _netcdf_diff(
+            rows=(
+                _stat_row(
+                    "tas",
+                    moved=True,
+                    maximum=Pair(4.0, 4.0 + 1e-13, tolerance=4e-9),
+                    max_abs_diff=1e-13,
+                    max_rel_diff=2.5e-14,
+                    cells_differ=1,
+                ),
+            ),
+        )
+        report = _netcdf_case(tmp_path, diff)
+
+        html = render_case(report, report.cases[0])
+
+        assert '<tr class="noise">' in html
+        assert '<span class="pill noise"' in html
+        assert "<strong>" not in html
 
     def test_an_unchanged_row_emphasises_nothing(self, tmp_path):
         report = _netcdf_case(tmp_path, _netcdf_diff(rows=(_stat_row("tas", moved=False),)))

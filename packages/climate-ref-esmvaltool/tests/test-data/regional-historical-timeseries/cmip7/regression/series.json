@@ -11,6 +11,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Arctic-Ocean",
       "source_id": "CanESM5",
@@ -876,6 +877,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Arctic-Ocean",
       "source_id": "CanESM5",
@@ -1741,6 +1743,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Arctic-Ocean",
       "source_id": "CanESM5",
@@ -2606,6 +2609,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Arctic-Ocean",
       "source_id": "CanESM5",
@@ -3471,6 +3475,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "C.North-America",
       "source_id": "CanESM5",
@@ -4336,6 +4341,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "C.North-America",
       "source_id": "CanESM5",
@@ -5201,6 +5207,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "C.North-America",
       "source_id": "CanESM5",
@@ -6066,6 +6073,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "C.North-America",
       "source_id": "CanESM5",
@@ -6931,6 +6939,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Mediterranean",
       "source_id": "CanESM5",
@@ -7796,6 +7805,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Mediterranean",
       "source_id": "CanESM5",
@@ -8661,6 +8671,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Mediterranean",
       "source_id": "CanESM5",
@@ -9526,6 +9537,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Mediterranean",
       "source_id": "CanESM5",

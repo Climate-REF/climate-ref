@@ -51,7 +51,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("experiment_id",),  # this does nothing, but group_by cannot be empty
+                group_by=("experiment_id",),  # one execution per experiment, spanning every model
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -97,7 +97,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("experiment_id",),  # this does nothing, but group_by cannot be empty
+                group_by=("experiment_id",),  # one execution per experiment, spanning every model
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),

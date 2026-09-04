@@ -38,7 +38,7 @@ toz_data_requirement = (
                     },
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
+            group_by=("source_id", "experiment_id", "member_id", "grid_label"),
             constraints=(
                 RequireTimerange(
                     group_by=("instance_id",),
@@ -76,7 +76,7 @@ toz_data_requirement = (
                     },
                 ),
             ),
-            group_by=("source_id", "variant_label", "grid_label"),
+            group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
             constraints=(
                 RequireTimerange(
                     group_by=("instance_id",),
@@ -312,7 +312,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                     },
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
+            group_by=("source_id", "experiment_id", "member_id", "grid_label"),
             constraints=(
                 RequireTimerange(
                     group_by=("instance_id",),

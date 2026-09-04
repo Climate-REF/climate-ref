@@ -1,7 +1,7 @@
 {
   "catalog_hash": "fd3b4919d9d19410d908da71d1aaf7093932e7b1",
   "committed": {
-    "diagnostic.json": "b19d57084928c4530ed1fe8c49756f16fdb09b478329a940a42fa3d52a1246ce",
+    "diagnostic.json": "cb37b068f9091511576d75c83e086dedf71a41409a2b6633cebc595dc8bbbdc7",
     "output.json": "334cac04275b2581ab1129356f1242164d3bb5eaade4fc3de27fb9b89772f1a5",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
@@ -61,5 +61,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

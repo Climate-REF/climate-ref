@@ -135,7 +135,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -164,7 +164,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -420,7 +420,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -450,7 +450,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -676,7 +676,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -705,7 +705,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -821,7 +821,16 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         ),
     )
 
-    facets = ("grid_label", "member_id", "variant_label", "source_id", "variable_id", "region", "metric")
+    facets = (
+        "experiment_id",
+        "grid_label",
+        "member_id",
+        "variant_label",
+        "source_id",
+        "variable_id",
+        "region",
+        "metric",
+    )
     files = tuple(
         FileDefinition(
             file_pattern=f"plots/{var_name}_trends/plot/seaborn_barplot.png",

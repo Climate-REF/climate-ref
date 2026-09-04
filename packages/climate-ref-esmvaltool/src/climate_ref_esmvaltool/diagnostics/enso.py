@@ -50,7 +50,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -89,7 +89,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -315,7 +315,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -337,7 +337,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -347,7 +347,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("experiment_id", "grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     # ENSO pattern and lifecycle are series, but the ESMValTool diagnostic
     # script does not save the values used in the figure.
     series = tuple()

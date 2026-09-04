@@ -38,19 +38,30 @@
 </details>
 {% endif %}
 
-{% if case.binaries %}
+{% if case.netcdfs %}
 <details open>
-<summary>NetCDF and other</summary>
+<summary>NetCDF</summary>
+{% for file in case.netcdfs %}
+{{ m.netcdf_block(file) }}
+{% endfor %}
+</details>
+{% endif %}
+
+{% if case.others %}
+<details open>
+<summary>Other files</summary>
+<div class="scroll-x">
 <table class="binaries">
 <thead>
 <tr><th>file</th><th>status</th><th>size</th><th>blobs</th></tr>
 </thead>
 <tbody>
-{% for file in case.binaries %}
+{% for file in case.others %}
 {{ m.binary_row(file) }}
 {% endfor %}
 </tbody>
 </table>
+</div>
 </details>
 {% endif %}
 {% endblock %}

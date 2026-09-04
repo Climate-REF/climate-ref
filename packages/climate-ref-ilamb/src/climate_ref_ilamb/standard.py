@@ -952,6 +952,7 @@ class ILAMBStandard(Diagnostic):
         # dictionary, then assume that these keys are meant to be keywords in a
         # REF data requirement.
         # obs_source names where the test data is fetched from, the registry or ESGF.
+        # It does not affect the requirement below.
         filters: dict[str, tuple[str, ...]] = {}
         obs_source = None
         for _, source in sources.items():
@@ -966,6 +967,7 @@ class ILAMBStandard(Diagnostic):
                 source_type=SourceDatasetType.obs4MIPs,
                 filters=(FacetFilter(facets=filters),),
                 group_by=tuple(filters.keys()),
+                fallback_source_types=(SourceDatasetType.obs4REF,),
             )
             if filters
             else None

@@ -455,6 +455,7 @@ class CloudScatterplotsReference(ESMValToolDiagnostic):
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(
                 FacetFilter(
                     facets={

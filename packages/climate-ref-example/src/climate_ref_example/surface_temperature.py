@@ -324,6 +324,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
     # data is available alongside the reference dataset.
     _reference_requirement = DataRequirement(
         source_type=SourceDatasetType.obs4MIPs,
+        fallback_source_types=(SourceDatasetType.obs4REF,),
         filters=(
             FacetFilter(facets={"source_id": (_REFERENCE_SOURCE_ID,), "variable_id": (_REFERENCE_VARIABLE,)}),
         ),

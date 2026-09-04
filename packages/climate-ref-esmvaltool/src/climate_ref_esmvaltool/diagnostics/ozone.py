@@ -51,6 +51,7 @@ toz_data_requirement = (
         ),
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(ozone_obs_filter,),
             group_by=("source_id",),
             constraints=(
@@ -89,6 +90,7 @@ toz_data_requirement = (
         ),
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(ozone_obs_filter,),
             group_by=("source_id",),
             constraints=(

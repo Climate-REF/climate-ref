@@ -700,6 +700,27 @@ def _summarise(values: np.ndarray | None) -> tuple[float | None, float | None, f
     )
 
 
+def _scale(values: np.ndarray | None) -> float:
+    """
+    Measure the base side's magnitude, which the noise tolerance is taken as a fraction of.
+
+    Parameters
+    ----------
+    values
+        The base side, or ``None`` when the variable is absent or not numeric.
+
+    Returns
+    -------
+    :
+        The largest finite magnitude, or ``0.0`` when there is none. An infinite value is
+        skipped because scaling by it would tolerate every difference.
+    """
+    if values is None:
+        return 0.0
+    finite = np.abs(values[np.isfinite(values)])
+    return float(finite.max()) if finite.size else 0.0
+
+
 def _compare(
     old: np.ndarray | None, new: np.ndarray | None, scale: float
 ) -> tuple[float | None, float | None, int | None]:
@@ -715,7 +736,8 @@ def _compare(
     new
         The head side, or ``None`` when absent or not numeric.
     scale
-        The base side's largest magnitude, which the relative difference is measured against.
+        The base side's largest finite magnitude, which the relative difference is measured
+        against.
 
     Returns
     -------
@@ -732,8 +754,13 @@ def _compare(
     cells_differ = int(np.sum(~((old == new) | (old_nan & new_nan))))
     if np.any(old_nan != new_nan):
         return None, None, cells_differ
-    diff = np.abs(new.astype(float) - old.astype(float))
-    max_abs = 0.0 if np.isnan(diff).all() else float(np.nanmax(diff))
+    if np.issubdtype(old.dtype, np.integer) and np.issubdtype(new.dtype, np.integer):
+        # A float cast collides adjacent integers past 2**53, which would read as no change.
+        exact = np.abs(new.astype(object) - old.astype(object))
+        max_abs = float(exact.max()) if exact.size else 0.0
+    else:
+        diff = np.abs(new.astype(float) - old.astype(float))
+        max_abs = 0.0 if np.isnan(diff).all() else float(np.nanmax(diff))
     return max_abs, max_abs / max(scale, float(np.finfo(float).tiny)), cells_differ
 
 
@@ -763,9 +790,12 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
     new_values = _values(new_variable)
     min_old, max_old, mean_old, nan_old = _summarise(old_values)
     min_new, max_new, mean_new, nan_new = _summarise(new_values)
-    scale = max(abs(min_old), abs(max_old)) if min_old is not None and max_old is not None else 0.0
+    scale = _scale(old_values)
     max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
-    atol = scale * NOISE_RTOL
+    sides = [values for values in (old_values, new_values) if values is not None]
+    # An integer carries no rounding wobble, so any difference in one is real.
+    integral = bool(sides) and all(np.issubdtype(values.dtype, np.integer) for values in sides)
+    atol = 0.0 if integral else scale * NOISE_RTOL
     shape = Pair(old=shape_old, new=shape_new)
     return StatRow(
         name=name,

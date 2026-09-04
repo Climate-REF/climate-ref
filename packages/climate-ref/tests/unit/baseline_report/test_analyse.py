@@ -424,6 +424,35 @@ class TestNetcdfDiff:
 
         assert row.cells_differ == 1
         assert row.moved is True
+        assert row.max_abs_diff == 1.0
+        assert row.severity == "changed"
+        assert row.differs is True
+
+    def test_a_large_integer_moving_by_one_is_never_noise(self, tmp_path):
+        paths = []
+        for name, cell in (("old.nc", 1_000_000_000), ("new.nc", 1_000_000_001)):
+            path = tmp_path / name
+            values = np.array([[cell, 1], [2, 3]], dtype=np.int64)
+            xr.Dataset({"count": (("lat", "lon"), values)}).to_netcdf(path)
+            paths.append(path)
+
+        row = netcdf_diff(*paths).rows[0]
+
+        assert row.atol == 0.0
+        assert row.severity == "changed"
+
+    def test_an_infinite_base_value_does_not_swallow_a_real_change(self, tmp_path):
+        paths = []
+        for name, cell in (("old.nc", np.inf), ("new.nc", 5.0)):
+            path = tmp_path / name
+            values = np.array([[cell, 1.0], [2.0, 3.0]])
+            xr.Dataset({"tas": (("lat", "lon"), values)}).to_netcdf(path)
+            paths.append(path)
+
+        row = netcdf_diff(*paths).rows[0]
+
+        assert row.atol == pytest.approx(3.0 * 1e-9)  # the largest finite base magnitude
+        assert row.severity == "changed"
 
     @pytest.mark.parametrize(
         ("old_cell", "new_cell"),

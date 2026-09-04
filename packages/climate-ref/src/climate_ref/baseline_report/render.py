@@ -1,8 +1,8 @@
 """
 Write the static HTML report.
 
-Python decides and templates place, so this module builds no HTML. It hands frozen objects to
-Jinja, registers the three formatting filters the templates are allowed, and writes the pages out.
+Hands frozen objects to Jinja, registers the formatting filters the templates are allowed,
+and writes the pages out.
 """
 
 from __future__ import annotations
@@ -38,26 +38,23 @@ def _format_bytes(size: object) -> str:
     return f"{size:,} B"
 
 
-def _format_num(value: object) -> str:
+def _format_signed(delta: object) -> str:
     """
-    Render a number to four significant figures.
-
-    ``g`` switches to scientific notation past 1e4 on its own, which is where a plain decimal
-    stops being readable.
+    Render a signed byte change.
 
     Parameters
     ----------
-    value
-        The number, or anything else, which is passed through as text.
+    delta
+        The change, or ``None`` when the file exists on only one side.
 
     Returns
     -------
     :
-        The formatted number.
+        For example ``+1,024``, or ``-`` when there is no change to show.
     """
-    if isinstance(value, bool) or not isinstance(value, int | float):
-        return str(value)
-    return f"{value:.4g}"
+    if not isinstance(delta, int) or isinstance(delta, bool):
+        return "-"
+    return f"{delta:+,}"
 
 
 def _format_short(digest: object) -> str:
@@ -95,7 +92,7 @@ def _build_env() -> Environment:
         lstrip_blocks=True,
     )
     env.filters["bytes"] = _format_bytes
-    env.filters["num"] = _format_num
+    env.filters["signed"] = _format_signed
     env.filters["short"] = _format_short
     return env
 

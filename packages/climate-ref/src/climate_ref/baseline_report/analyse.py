@@ -1,15 +1,14 @@
 """
 Turn a collected report into everything the templates need.
 
-Text blobs are fetched from the native store and diffed here. Every URL, count and diff line
-is computed in this module, so the templates only loop and place.
+Text blobs are fetched from the native store and diffed here.
 """
 
 from __future__ import annotations
 
 import difflib
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
 from attrs import frozen
@@ -69,6 +68,9 @@ class AnalysedFile:
     text: TextDiff | None
     """The diff, set only for :attr:`~climate_ref.baseline_report.collect.FileKind.TEXT` files."""
 
+    size_delta: int | None
+    """Signed byte change, or ``None`` when the file exists on only one side."""
+
 
 @frozen
 class AnalysedCase:
@@ -82,6 +84,18 @@ class AnalysedCase:
 
     counts: dict[str, dict[str, int]]
     """``kind -> {added, changed, removed}``, with every kind present."""
+
+    images: tuple[AnalysedFile, ...]
+    """The image files, which render as a two-up comparison."""
+
+    texts: tuple[AnalysedFile, ...]
+    """The text files, which render as a diff."""
+
+    binaries: tuple[AnalysedFile, ...]
+    """The NetCDF and other files, which render as a table row."""
+
+    back_link: str
+    """Relative link from this case's page back to the index, one ``..`` per slug segment."""
 
 
 @frozen
@@ -276,34 +290,47 @@ def _analyse_file(
     :
         The analysed file.
     """
-    old_url = blob_url(store_url, change.old.sha256) if change.old else None
-    new_url = blob_url(store_url, change.new.sha256) if change.new else None
-    if change.kind is not FileKind.TEXT:
-        return AnalysedFile(change=change, old_url=old_url, new_url=new_url, text=None)
-    if not fetch:
+
+    def build(text: TextDiff | None) -> AnalysedFile:
+        """Build the file with the URLs and delta that do not depend on the diff."""
         return AnalysedFile(
             change=change,
-            old_url=old_url,
-            new_url=new_url,
-            text=TextDiff(lines=(), note="fetching disabled", elided=0),
+            old_url=blob_url(store_url, change.old.sha256) if change.old else None,
+            new_url=blob_url(store_url, change.new.sha256) if change.new else None,
+            text=text,
+            size_delta=change.new.size - change.old.size if change.old and change.new else None,
         )
+
+    if change.kind is not FileKind.TEXT:
+        return build(None)
+    if not fetch:
+        return build(TextDiff(lines=(), note="fetching disabled", elided=0))
 
     old_path, old_note = _fetch_side(store, change.old, workdir)
     new_path, new_note = _fetch_side(store, change.new, workdir)
     note = old_note or new_note
     if note is not None:
-        return AnalysedFile(
-            change=change,
-            old_url=old_url,
-            new_url=new_url,
-            text=TextDiff(lines=(), note=note, elided=0),
-        )
-    return AnalysedFile(
-        change=change,
-        old_url=old_url,
-        new_url=new_url,
-        text=text_diff(old_path, new_path, change.name),
-    )
+        return build(TextDiff(lines=(), note=note, elided=0))
+    return build(text_diff(old_path, new_path, change.name))
+
+
+def _of_kind(files: tuple[AnalysedFile, ...], *kinds: FileKind) -> tuple[AnalysedFile, ...]:
+    """
+    Select the files of the given kinds, keeping their order.
+
+    Parameters
+    ----------
+    files
+        The analysed files.
+    kinds
+        The kinds to keep.
+
+    Returns
+    -------
+    :
+        The matching files.
+    """
+    return tuple(file for file in files if file.change.kind in kinds)
 
 
 def _counts(files: tuple[AnalysedFile, ...]) -> dict[str, dict[str, int]]:
@@ -357,5 +384,16 @@ def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -
         files = tuple(
             _analyse_file(change, store, store_url, fetch=fetch, workdir=workdir) for change in case.files
         )
-        cases.append(AnalysedCase(change=case, files=files, counts=_counts(files)))
+        depth = len(PurePosixPath(case.slug).parts)
+        cases.append(
+            AnalysedCase(
+                change=case,
+                files=files,
+                counts=_counts(files),
+                images=_of_kind(files, FileKind.IMAGE),
+                texts=_of_kind(files, FileKind.TEXT),
+                binaries=_of_kind(files, FileKind.NETCDF, FileKind.OTHER),
+                back_link="/".join([*[".."] * depth, "index.html"]),
+            )
+        )
     return AnalysedReport(report=report, store_url=store_url, cases=tuple(cases))

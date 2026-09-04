@@ -29,7 +29,7 @@ TEXT_SUFFIXES = frozenset({".json", ".csv", ".yml", ".yaml", ".html", ".txt", ".
 """Extensions whose blobs are worth fetching and diffing line by line."""
 
 NETCDF_SUFFIXES = frozenset({".nc"})
-"""Extensions reported as a size delta until the NetCDF analysis slice lands."""
+"""Extensions reported as a size delta and a link rather than a content diff."""
 
 
 class FileKind(enum.Enum):
@@ -163,7 +163,7 @@ def changed_manifests(repo: Repo, base: str) -> list[str]:
     :
         The manifest paths, sorted.
     """
-    from git import GitCommandError  # noqa: PLC0415 - keeps the import cost off the CLI startup path
+    from git import GitCommandError  # noqa: PLC0415
 
     pathspec = ":(glob)packages/**/test-data/**/manifest.json"
     try:
@@ -193,7 +193,7 @@ def load_at_ref(repo: Repo, ref: str, rel_path: str) -> Manifest | None:
     :
         The parsed manifest, or ``None`` when the path does not exist at ``ref``.
     """
-    from git import GitCommandError  # noqa: PLC0415 - keeps the import cost off the CLI startup path
+    from git import GitCommandError  # noqa: PLC0415
 
     try:
         text = repo.git.show(f"{ref}:{rel_path}")
@@ -307,7 +307,6 @@ def build_case_change(repo: Repo, base: str, rel_path: str) -> CaseChange | None
         or cannot be parsed, both of which leave nothing to say.
     """
     head_path = Path(repo.working_tree_dir or ".") / rel_path
-    # One unreadable manifest should cost its own case, not the whole report.
     try:
         head = Manifest.load(head_path) if head_path.exists() else None
         base_manifest = load_at_ref(repo, base, rel_path)

@@ -64,6 +64,7 @@ def _analysed_file(name, kind, old, new, text=None) -> AnalysedFile:
         old_url=f"{STORE_URL}/{old.sha256}" if old else None,
         new_url=f"{STORE_URL}/{new.sha256}" if new else None,
         text=text,
+        size_delta=new.size - old.size if old and new else None,
     )
 
 
@@ -82,7 +83,15 @@ def _case(files, *, label="example/diag/case", base=None, head=None) -> Analysed
         committed=("series.json",),
         metadata=("test_case_version: 3 -> 4",),
     )
-    return AnalysedCase(change=change, files=tuple(files), counts=counts)
+    return AnalysedCase(
+        change=change,
+        files=tuple(files),
+        counts=counts,
+        images=tuple(f for f in files if f.change.kind is FileKind.IMAGE),
+        texts=tuple(f for f in files if f.change.kind is FileKind.TEXT),
+        binaries=tuple(f for f in files if f.change.kind in (FileKind.NETCDF, FileKind.OTHER)),
+        back_link="/".join([*[".."] * len(label.split("/")), "index.html"]),
+    )
 
 
 def _report(cases) -> AnalysedReport:
@@ -203,6 +212,30 @@ class TestCasePage:
         assert "out.nc" in html
         assert "was 10 B" in html
         assert not _tags(html, "img")
+
+    def test_the_back_link_matches_the_slug_depth(self):
+        case = _case([], label="pmp/diag/one")
+        report = _report([case])
+
+        assert "../../../index.html" in _hrefs(render_case(report, case))
+
+    def test_a_shallow_slug_gets_a_shallow_back_link(self):
+        case = _case([], label="pmp")
+        report = _report([case])
+
+        assert "../index.html" in _hrefs(render_case(report, case))
+
+    def test_a_changed_file_shows_its_signed_size_delta(self, changed_image_case):
+        assert "(+10)" in render_case(_report([changed_image_case]), changed_image_case)
+
+    def test_a_text_diff_names_both_digests(self):
+        diff = TextDiff(lines=(DiffLine(kind="add", text="+a"),), note=None, elided=0)
+        case = _case([_analysed_file("series.csv", FileKind.TEXT, _entry("1"), _entry("2"), text=diff)])
+
+        html = render_case(_report([case]), case)
+
+        assert "1" * 12 in html
+        assert "2" * 12 in html
 
     def test_links_are_internal_index_pages_or_store_blobs(self, changed_image_case):
         report = _report([changed_image_case])

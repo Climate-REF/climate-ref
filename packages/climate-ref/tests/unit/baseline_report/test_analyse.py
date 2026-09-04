@@ -4,6 +4,7 @@ import json
 from unittest.mock import MagicMock
 
 import pytest
+from attrs import evolve
 
 from climate_ref.baseline_report.analyse import MAX_FETCH_BYTES, analyse, blob_url, text_diff
 from climate_ref.baseline_report.collect import (
@@ -87,7 +88,7 @@ class TestTextDiff:
 
 
 class TestAnalyse:
-    def test_no_fetch_notes_every_text_file(self):
+    def test_no_fetch_notes_every_text_file(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
         report = _report(
@@ -97,14 +98,14 @@ class TestAnalyse:
             ]
         )
 
-        analysed = analyse(report, store, fetch=False, workdir=None)
+        analysed = analyse(report, store, fetch=False, workdir=tmp_path)
 
         files = {f.change.name: f for f in analysed.cases[0].files}
         assert files["series.json"].text.note == "fetching disabled"
         assert files["plot.png"].text is None
         store.fetch.assert_not_called()
 
-    def test_counts_are_tallied_per_kind(self):
+    def test_counts_are_tallied_per_kind(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
         entry = NativeEntry(sha256="1" * 64, size=10)
@@ -117,11 +118,62 @@ class TestAnalyse:
             ]
         )
 
-        counts = analyse(report, store, fetch=False, workdir=None).cases[0].counts
+        counts = analyse(report, store, fetch=False, workdir=tmp_path).cases[0].counts
 
         assert counts[FileKind.IMAGE.value] == {"added": 1, "changed": 1, "removed": 0}
         assert counts[FileKind.NETCDF.value] == {"added": 0, "changed": 0, "removed": 1}
         assert counts[FileKind.TEXT.value] == {"added": 0, "changed": 0, "removed": 0}
+
+    def test_partitions_and_back_link(self, tmp_path):
+        store = MagicMock(spec=NativeStore)
+        store.url = "https://store"
+        entry = NativeEntry(sha256="1" * 64, size=10)
+        report = _report(
+            [
+                _file_change("a.png", None, entry),
+                _file_change("b.json", None, entry),
+                _file_change("c.nc", None, entry),
+                _file_change("d.bin", None, entry),
+            ]
+        )
+
+        case = analyse(report, store, fetch=False, workdir=tmp_path).cases[0]
+
+        assert [f.change.name for f in case.images] == ["a.png"]
+        assert [f.change.name for f in case.texts] == ["b.json"]
+        assert [f.change.name for f in case.binaries] == ["c.nc", "d.bin"]
+        # The slug has three segments, so the index sits three levels up.
+        assert case.back_link == "../../../index.html"
+
+    def test_the_back_link_follows_the_slug_depth(self, tmp_path):
+        store = MagicMock(spec=NativeStore)
+        store.url = "https://store"
+        report = _report([])
+        shallow = evolve(report.cases[0], label="pmp", slug="pmp")
+        report = evolve(report, cases=(shallow,))
+
+        case = analyse(report, store, fetch=False, workdir=tmp_path).cases[0]
+
+        assert case.back_link == "../index.html"
+
+    def test_size_delta_is_signed_and_absent_on_one_sided_files(self, tmp_path):
+        store = MagicMock(spec=NativeStore)
+        store.url = "https://store"
+        report = _report(
+            [
+                _file_change(
+                    "grew.png", NativeEntry(sha256="1" * 64, size=10), NativeEntry(sha256="2" * 64, size=25)
+                ),
+                _file_change("added.png", None, NativeEntry(sha256="3" * 64, size=25)),
+            ]
+        )
+
+        files = {
+            f.change.name: f for f in analyse(report, store, fetch=False, workdir=tmp_path).cases[0].files
+        }
+
+        assert files["grew.png"].size_delta == 15
+        assert files["added.png"].size_delta is None
 
     def test_local_store_produces_a_real_diff(self, tmp_path):
         store = NativeStore(url=str(tmp_path / "store"))

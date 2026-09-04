@@ -97,7 +97,7 @@ class TestLocalStore:
     def test_preflight_reports_an_unwritable_root(
         self, local_store: ReportStore, mocker: MockerFixture
     ) -> None:
-        mocker.patch("climate_ref_core.regression.report_store.os.access", return_value=False)
+        mocker.patch("climate_ref_core.regression.store.os.access", return_value=False)
 
         with pytest.raises(NativeStoreUnavailableError, match="not writable"):
             local_store.preflight()

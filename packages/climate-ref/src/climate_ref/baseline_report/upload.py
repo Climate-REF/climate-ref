@@ -1,7 +1,6 @@
 """
 Push a rendered report into the report store.
 
-The files are uploaded to
 The store is a plain object store with no directory semantics,
 so every file is uploaded under an explicit key.
 The content type has to be set per object, or a browser will download the page instead of rendering it.

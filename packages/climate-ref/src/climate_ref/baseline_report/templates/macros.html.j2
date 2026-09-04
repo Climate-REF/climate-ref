@@ -150,7 +150,7 @@ was {{ file.change.old.size | bytes -}}
 <tr{% if row.severity != "same" %} class="{{ row.severity }}"{% endif %}>
 <td><code>{{ row.name }}</code>
 {%- if row.severity == "noise" %} <span class="pill noise"
-title="Every difference is at most {{ noise_tolerance | num }} times the base ref's own magnitude,
+title="Every difference is at most {{ noise_rtol | num }} times the base ref's own magnitude,
 so this reads as numerical noise">noise</span>{% endif %}</td>
 <td>{{ pair_cell(row.shape.old | dash, row.shape.new | dash, row.shape.changed) }}</td>
 <td>{{ pair_cell(row.minimum.old | num, row.minimum.new | num, row.minimum.changed) }}</td>

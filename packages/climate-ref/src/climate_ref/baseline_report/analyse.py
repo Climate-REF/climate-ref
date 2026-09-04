@@ -51,7 +51,7 @@ MAX_DIFF_LINES = 5000
 
 # A difference this small relative to the base ref's magnitude reads as numerical noise.
 # Double precision carries about 16 significant digits, so a real change has room to sit above.
-NOISE_REL_TOLERANCE = 1e-9
+NOISE_RTOL = 1e-9
 
 
 @frozen
@@ -89,24 +89,24 @@ class Pair[T]:
     new: T | None
     """The value on HEAD, or ``None`` when it could not be computed."""
 
-    tolerance: float = 0.0
+    atol: float = 0.0
     """How far a numeric pair may move before it reads as changed. Zero compares exactly."""
 
     @property
     def changed(self) -> bool:
         """
-        Whether the two sides differ by more than :attr:`tolerance`.
+        Whether the two sides differ by more than :attr:`atol`.
 
         Returns
         -------
         :
-            ``True`` when the value moved further than :attr:`tolerance`, which is what
+            ``True`` when the value moved further than :attr:`atol`, which is what
             emphasises it in the table.
         """
         if self.old == self.new:
             return False
         if isinstance(self.old, float) and isinstance(self.new, float):
-            return not abs(self.new - self.old) <= self.tolerance
+            return not abs(self.new - self.old) <= self.atol
         return True
 
 
@@ -141,11 +141,11 @@ class StatRow:
     cells_differ: int | None
     """Cells that changed, counting NaN as equal to NaN."""
 
-    tolerance: float
+    atol: float
     """
     How far a value may move before it counts as changed.
 
-    :data:`NOISE_REL_TOLERANCE` scaled by the base ref's own magnitude, so one number governs
+    :data:`NOISE_RTOL` scaled by the base ref's own magnitude, so one number governs
     both the row's verdict and which of its statistics are emphasised.
     """
 
@@ -163,12 +163,12 @@ class StatRow:
         Returns
         -------
         :
-            ``changed`` when the move is larger than :attr:`tolerance` or cannot be measured,
+            ``changed`` when the move is larger than :attr:`atol` or cannot be measured,
             ``noise`` when it is smaller, and ``same`` when nothing moved.
         """
         if not self.moved:
             return "same"
-        if self.max_abs_diff is None or self.max_abs_diff > self.tolerance:
+        if self.max_abs_diff is None or self.max_abs_diff > self.atol:
             return "changed"
         return "noise"
 
@@ -180,7 +180,7 @@ class StatRow:
         Returns
         -------
         :
-            ``True`` when at least one cell moved further than the noise tolerance, which is
+            ``True`` when at least one cell moved further than :attr:`atol`, which is
             what emphasises the diff columns.
         """
         return bool(self.cells_differ) and self.severity == "changed"
@@ -765,19 +765,19 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
     min_new, max_new, mean_new, nan_new = _summarise(new_values)
     scale = max(abs(min_old), abs(max_old)) if min_old is not None and max_old is not None else 0.0
     max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
-    tolerance = scale * NOISE_REL_TOLERANCE
+    atol = scale * NOISE_RTOL
     shape = Pair(old=shape_old, new=shape_new)
     return StatRow(
         name=name,
         shape=shape,
-        minimum=Pair(old=min_old, new=min_new, tolerance=tolerance),
-        maximum=Pair(old=max_old, new=max_new, tolerance=tolerance),
-        mean=Pair(old=mean_old, new=mean_new, tolerance=tolerance),
+        minimum=Pair(old=min_old, new=min_new, atol=atol),
+        maximum=Pair(old=max_old, new=max_new, atol=atol),
+        mean=Pair(old=mean_old, new=mean_new, atol=atol),
         nan=Pair(old=nan_old, new=nan_new),
         max_abs_diff=max_abs_diff,
         max_rel_diff=max_rel_diff,
         cells_differ=cells_differ,
-        tolerance=tolerance,
+        atol=atol,
         moved=(cells_differ or 0) > 0 or shape.changed,
     )
 

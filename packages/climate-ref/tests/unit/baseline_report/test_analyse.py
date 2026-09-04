@@ -346,9 +346,9 @@ class TestNetcdfDiff:
         assert row.moved is True
         assert row.severity == "noise"
         assert row.differs is False
-        assert row.maximum.changed is False  # the move is inside the tolerance
+        assert row.maximum.changed is False  # the move is inside atol
 
-    def test_a_difference_just_above_the_tolerance_still_counts(self, tmp_path, base_nc):
+    def test_a_difference_just_above_atol_still_counts(self, tmp_path, base_nc):
         new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0 + 1e-7]])
 
         row = netcdf_diff(base_nc, new).rows[0]

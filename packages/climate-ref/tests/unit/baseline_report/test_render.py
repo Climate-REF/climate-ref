@@ -376,7 +376,7 @@ def _stat_row(name, *, moved, **overrides):
         max_abs_diff=0.0,
         max_rel_diff=0.0,
         cells_differ=0,
-        tolerance=0.0,
+        atol=0.0,
     )
     fields.update(overrides)
     return StatRow(name=name, moved=moved, **fields)
@@ -444,11 +444,11 @@ class TestNetcdfBlock:
                 _stat_row(
                     "tas",
                     moved=True,
-                    maximum=Pair(4.0, 4.0 + 1e-13, tolerance=4e-9),
+                    maximum=Pair(4.0, 4.0 + 1e-13, atol=4e-9),
                     max_abs_diff=1e-13,
                     max_rel_diff=2.5e-14,
                     cells_differ=1,
-                    tolerance=4e-9,
+                    atol=4e-9,
                 ),
             ),
         )

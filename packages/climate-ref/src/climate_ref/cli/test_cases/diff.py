@@ -82,23 +82,29 @@ def diff_baselines(  # noqa: PLR0913
 
     console.print(f"Wrote {len(analysed.cases)} case page(s) to {index}")
 
-    base_url = index.parent.resolve().as_uri()
+    base_url = None
     if upload is not None:
         try:
             report_store = build_report_store(config.report_store, writable=True)
-            report_store.preflight()
-            index_url = upload_site(html_dir, report_store, upload)
             base_url = report_store.url_for(upload)
-        except (NotImplementedError, ValueError, ImportError, NativeStoreUnavailableError) as exc:
+        except ValueError as exc:
             logger.error(
-                f"Could not upload the report: {exc} Check REF_REPORT_STORE_URL, and for a remote "
-                "store REF_REPORT_STORE_ACCESS_KEY_ID / REF_REPORT_STORE_SECRET_ACCESS_KEY plus the "
-                "'climate-ref-core[aws]' extra."
+                f"{exc} Set --upload to a relative key prefix such as 912/0c7e1d4abc12, and check "
+                "REF_REPORT_STORE_URL, REF_REPORT_STORE_S3_ENDPOINT_URL and REF_REPORT_STORE_BUCKET."
             )
             raise typer.Exit(code=1) from exc
-        console.print(f"Uploaded the report to {index_url}")
+        try:
+            report_store.preflight()
+            console.print(f"Uploaded the report to {upload_site(html_dir, report_store, upload)}")
+        except (ImportError, NativeStoreUnavailableError) as exc:
+            logger.error(
+                f"Could not upload the report: {exc} Check REF_REPORT_STORE_ACCESS_KEY_ID / "
+                "REF_REPORT_STORE_SECRET_ACCESS_KEY and the 'climate-ref-core[aws]' extra."
+            )
+            raise typer.Exit(code=1) from exc
 
     if comment_output is not None:
         comment_output.parent.mkdir(parents=True, exist_ok=True)
-        comment_output.write_text(render_comment(analysed, base_url), encoding="utf-8")
+        markdown = render_comment(analysed, base_url or index.parent.resolve().as_uri())
+        comment_output.write_text(markdown, encoding="utf-8")
         console.print(f"Wrote the pull request comment to {comment_output}")

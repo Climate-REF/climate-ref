@@ -17,11 +17,13 @@ chain. They are never read from the persisted config.
 import os
 import re
 import shutil
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Protocol
 
 from attrs import field, frozen
 from loguru import logger
+
+from climate_ref_core.paths import safe_path
 
 from .store import (
     _AUTH_REJECTED_STATUSES,
@@ -37,39 +39,39 @@ from .store import (
 _KEY_PATTERN = re.compile(r"[A-Za-z0-9._/-]+")
 
 
-def _validate_key(key: str) -> str:
+def _validate_key(key: str, base: Path | None = None) -> Path:
     """
-    Check a report key is a safe relative path and return it.
+    Check a report key is a safe relative path and return the path it names.
 
-    A key becomes a path under the local root, so a key that escapes the root or carries
-    shell-hostile characters is rejected before it is ever joined.
+    The character class is the object-key rule, narrower than a filesystem path because the key
+    also has to survive a URL. Containment is left to :func:`safe_path`, which is what the rest
+    of the regression package validates paths with.
 
     Parameters
     ----------
     key
         The key to check, for example ``912/0c7e1d4abc12/index.html``.
+    base
+        The local store root the key is joined onto, or ``None`` for a remote store,
+        where there is no directory to escape.
 
     Returns
     -------
     :
-        The key, unchanged.
+        ``base / key`` when a base is given, otherwise the key as a relative path.
 
     Raises
     ------
     ValueError
-        If the key is empty, absolute, contains a ``..`` segment, or uses characters
-        outside ``[A-Za-z0-9._/-]``.
+        If the key uses characters outside ``[A-Za-z0-9._/-]``, is empty, absolute, or
+        contains a ``..`` segment, or if it escapes ``base``.
     """
-    if not key or not _KEY_PATTERN.fullmatch(key):
+    if not _KEY_PATTERN.fullmatch(key):
         raise ValueError(
-            f"Invalid report store key {key!r}: keys must be non-empty and may only contain "
-            "letters, digits, dot, underscore, hyphen and forward slash."
+            f"Unsafe report store key {key!r}: may only contain letters, digits, dot, "
+            "underscore, hyphen and forward slash."
         )
-    if key.startswith("/"):
-        raise ValueError(f"Invalid report store key {key!r}: keys must be relative, not absolute.")
-    if ".." in PurePosixPath(key).parts:
-        raise ValueError(f"Invalid report store key {key!r}: keys must not contain a '..' segment.")
-    return key
+    return safe_path(key, base, label="report store key")
 
 
 @frozen
@@ -120,10 +122,10 @@ class ReportStore:
         ValueError
             If the key is not a safe relative path.
         """
-        _validate_key(key)
         root = self.root
         if root is not None:
-            return (root / key).absolute().as_uri()
+            return _validate_key(key, root).absolute().as_uri()
+        _validate_key(key)
         return f"{self.url.rstrip('/')}/{key}"
 
     def put(self, key: str, path: Path, content_type: str) -> str:
@@ -154,13 +156,13 @@ class ReportStore:
         NotImplementedError
             If this is an anonymous remote store, which cannot write.
         """
-        _validate_key(key)
         root = self.root
         if root is not None:
-            dest = root / key
+            dest = _validate_key(key, root)
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(str(path), str(dest))
         else:
+            _validate_key(key)
             write = self.write
             if write is None:
                 raise NotImplementedError(

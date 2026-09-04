@@ -117,15 +117,12 @@ def _format_short(digest: str | None) -> str:
     return digest[:SHORT_DIGEST]
 
 
-def _build_env(*, escape: bool) -> Environment:
+def _build_env() -> Environment:
     """
-    Build a Jinja environment for the templates in this package.
+    Build the Jinja environment the templates in this package are rendered with.
 
-    Parameters
-    ----------
-    escape
-        Whether to escape values. Off for the markdown comment, where an escaped case label
-        would render as HTML entities on GitHub.
+    Escaping keys off the template name, so ``comment.md.j2`` renders unescaped.
+    It is markdown, where an escaped case label would show as HTML entities on GitHub.
 
     Returns
     -------
@@ -134,7 +131,7 @@ def _build_env(*, escape: bool) -> Environment:
     """
     env = Environment(
         loader=PackageLoader("climate_ref.baseline_report", "templates"),
-        autoescape=select_autoescape(["html", "j2"]) if escape else False,  # noqa: S701
+        autoescape=select_autoescape(enabled_extensions=("html.j2", "html")),
         trim_blocks=True,
         lstrip_blocks=True,
     )
@@ -146,8 +143,7 @@ def _build_env(*, escape: bool) -> Environment:
     return env
 
 
-_env = _build_env(escape=True)
-_text_env = _build_env(escape=False)
+_env = _build_env()
 
 
 @frozen
@@ -219,8 +215,7 @@ def _versions(case: AnalysedCase) -> str:
     if case.change.is_new:
         return "new"
     base, head = case.change.base, case.change.head
-    if base is None or head is None:  # pragma: no cover - is_new / is_removed already cover this
-        return "changed"
+    assert base is not None and head is not None
     return f"v{base.test_case_version} -> v{head.test_case_version}"
 
 
@@ -275,7 +270,7 @@ def render_comment(
         The comment's markdown, ending in the marker the CI job finds it by.
     """
     root = base_url.rstrip("/")
-    return _text_env.get_template("comment.md.j2").render(
+    return _env.get_template("comment.md.j2").render(
         report=report,
         cases=[_comment_row(case, root) for case in report.cases],
         index_url=f"{root}/index.html",

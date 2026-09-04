@@ -23,7 +23,12 @@ CONTENT_TYPES = {
     ".png": "image/png",
     ".svg": "image/svg+xml",
 }
-"""Content types for the file kinds a report is made of."""
+"""
+Content types for the file kinds a report is made of.
+
+A deliberate allowlist rather than :mod:`mimetypes`, whose answers vary with the host's
+registry, and which would not add the charset a browser needs on the text types.
+"""
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 """Served for anything else, which a browser will offer as a download."""

@@ -273,10 +273,9 @@ def union_with_fallbacks(
     """
     Fill a reference catalog with the datasets its fallback collections hold and it lacks.
 
-    The obs4MIPs archive on ESGF is the official home of the reference data,
-    and the obs4REF registry carries the datasets that are not published there yet.
-    A dataset present in both is taken from the primary, whichever version each holds,
-    so publishing a dataset takes over from the registry copy without any re-ingest.
+    A dataset the primary holds is taken from the primary, whichever version each collection holds.
+    So for obs4MIPs standing in front of obs4REF, publishing a dataset to the archive
+    takes over from the registry copy without any re-ingest.
 
     Parameters
     ----------

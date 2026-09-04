@@ -96,7 +96,7 @@ def diff_baselines(  # noqa: PLR0913
         try:
             report_store.preflight()
             console.print(f"Uploaded the report to {upload_site(html_dir, report_store, upload)}")
-        except (ImportError, NativeStoreUnavailableError) as exc:
+        except (ImportError, ValueError, NativeStoreUnavailableError) as exc:
             logger.error(
                 f"Could not upload the report: {exc} Check REF_REPORT_STORE_ACCESS_KEY_ID / "
                 "REF_REPORT_STORE_SECRET_ACCESS_KEY and the 'climate-ref-core[aws]' extra."

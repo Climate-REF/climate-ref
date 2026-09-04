@@ -78,7 +78,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         }
                     ),
@@ -109,7 +109,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                                 "rsut_tavg-u-hxy-u",
                                 "rsutcs_tavg-u-hxy-u",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         }

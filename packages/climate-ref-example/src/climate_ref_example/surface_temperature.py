@@ -339,7 +339,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": (_MODEL_VARIABLE,),
-                            "experiment_id": ("historical",),
+                            "experiment_id": ("historical", "esm-hist"),
                         }
                     ),
                 ),
@@ -359,7 +359,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": (_MODEL_VARIABLE,),
-                            "experiment_id": ("historical",),
+                            "experiment_id": ("historical", "esm-hist"),
                         }
                     ),
                 ),

@@ -82,7 +82,7 @@ def make_data_requirement(
         FacetFilter(
             facets={
                 "frequency": "mon",
-                "experiment_id": ("amip", "historical", "hist-GHG"),
+                "experiment_id": ("amip", "historical", "esm-hist", "hist-GHG"),
                 "variable_id": (variable_id,),
             }
         ),
@@ -92,7 +92,7 @@ def make_data_requirement(
         FacetFilter(
             facets={
                 "branded_variable": (_BRANDED_VARIABLE_NAMES[variable_id],),
-                "experiment_id": ("amip", "historical", "hist-GHG"),
+                "experiment_id": ("amip", "historical", "esm-hist", "hist-GHG"),
                 "frequency": "mon",
                 "region": "glb",
             }

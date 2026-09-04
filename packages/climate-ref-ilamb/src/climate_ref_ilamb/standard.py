@@ -914,7 +914,7 @@ class ILAMBStandard(Diagnostic):
             filters={
                 "variable_id": all_variable_ids,
                 "frequency": "mon",
-                "experiment_id": ("historical", "land-hist"),
+                "experiment_id": ("historical", "esm-hist", "land-hist"),
                 "table_id": (
                     "AERmonZ",
                     "Amon",
@@ -938,7 +938,7 @@ class ILAMBStandard(Diagnostic):
             filters={
                 "branded_variable": branded_variables,
                 "frequency": "mon",
-                "experiment_id": ("historical", "land-hist"),
+                "experiment_id": ("historical", "esm-hist", "land-hist"),
                 "region": "glb",
             },
             group_by=("experiment_id", "source_id", "variant_label", "grid_label"),

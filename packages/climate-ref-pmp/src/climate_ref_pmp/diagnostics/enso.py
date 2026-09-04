@@ -56,7 +56,9 @@ class ENSO(CommandLineDiagnostic):
         "reference_source_id",
     )
 
-    def __init__(self, metrics_collection: str, experiments: Collection[str] = ("historical",)) -> None:
+    def __init__(
+        self, metrics_collection: str, experiments: Collection[str] = ("historical", "esm-hist")
+    ) -> None:
         self.name = metrics_collection
         self.slug = metrics_collection.lower()
         self.metrics_collection = metrics_collection
@@ -193,7 +195,7 @@ class ENSO(CommandLineDiagnostic):
 
     def _get_data_requirements(
         self,
-        experiments: Collection[str] = ("historical",),
+        experiments: Collection[str] = ("historical", "esm-hist"),
     ) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
         cmip6_filters = [
             FacetFilter(

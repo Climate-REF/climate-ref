@@ -34,21 +34,21 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                     FacetFilter(
                         {
                             "variable_id": ("hurs", "pr", "tas", "tasmax"),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         }
                     ),
                     FacetFilter(
                         {
                             "variable_id": ("cVeg", "treeFrac"),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Lmon",
                         }
                     ),
                     FacetFilter(
                         {
                             "variable_id": "vegFrac",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Emon",
                         }
                     ),
@@ -89,7 +89,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                                 "tas_tavg-h2m-hxy-u",
                                 "tas_tmaxavg-h2m-hxy-u",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         }
@@ -101,7 +101,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                                 "treeFrac_tavg-u-hxy-u",
                                 "vegFrac_tavg-u-hxy-u",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         }

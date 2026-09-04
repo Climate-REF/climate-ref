@@ -39,14 +39,14 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": ("pr", "tauu"),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
                     FacetFilter(
                         facets={
                             "variable_id": "tos",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Omon",
                         },
                     ),
@@ -76,7 +76,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                                 "pr_tavg-u-hxy-u",
                                 "tauu_tavg-u-hxy-u",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -84,7 +84,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "tos_tavg-u-hxy-sea",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -312,7 +312,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": "tos",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Omon",
                         },
                     ),
@@ -333,7 +333,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "tos_tavg-u-hxy-sea",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },

@@ -16,7 +16,7 @@ from climate_ref.baseline_report.analyse import (
     analyse,
 )
 from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report, classify
-from climate_ref.baseline_report.render import render_case, render_index, write_site
+from climate_ref.baseline_report.render import render_case, render_comment, render_index, write_site
 from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest, NativeEntry
 from climate_ref_core.regression.store import NativeStore
 
@@ -487,3 +487,106 @@ class TestNetcdfBlock:
         html = render_case(report, report.cases[0])
 
         assert '<div class="absent">absent</div>' in html
+
+
+BASE_URL = "https://reports.example/912/0c7e1d4abc12"
+
+MARKER = "<!-- climate-ref-baseline-diff -->"
+
+
+def _rows(markdown: str) -> list[str]:
+    """Return the table's body rows."""
+    lines = [line for line in markdown.splitlines() if line.startswith("| `")]
+    return lines
+
+
+class TestComment:
+    def test_one_row_per_case(self, tmp_path):
+        report = _analysed(
+            [
+                _case_change([], label="example/diag/a", base=_manifest(1), head=_manifest(2)),
+                _case_change([], label="pmp/diag/b", base=_manifest(1), head=_manifest(2)),
+            ],
+            tmp_path,
+        )
+
+        markdown = render_comment(report, BASE_URL)
+
+        assert len(_rows(markdown)) == 2
+        assert "`example/diag/a`" in markdown
+        assert "`pmp/diag/b`" in markdown
+
+    def test_every_row_links_into_the_hosted_report(self, changed_image_case):
+        markdown = render_comment(changed_image_case, BASE_URL)
+
+        assert f"[view]({BASE_URL}/example/diag/case/index.html)" in markdown
+        assert f"[Full report]({BASE_URL}/index.html)" in markdown
+
+    def test_a_trailing_slash_on_the_base_url_is_ignored(self, changed_image_case):
+        markdown = render_comment(changed_image_case, BASE_URL + "/")
+
+        assert "//index.html" not in markdown
+
+    def test_rows_stay_small(self, changed_image_case):
+        markdown = render_comment(changed_image_case, BASE_URL)
+
+        assert all(len(row.encode("utf-8")) <= 300 for row in _rows(markdown))
+
+    def test_counts_use_the_short_form(self, tmp_path):
+        report = _analysed(
+            [
+                _case_change(
+                    [
+                        _change("added.png", None, _entry("1")),
+                        _change("moved.png", _entry("2"), _entry("3")),
+                        _change("gone.txt", _entry("4"), None),
+                    ],
+                    base=_manifest(3),
+                    head=_manifest(4),
+                )
+            ],
+            tmp_path,
+        )
+
+        row = _rows(render_comment(report, BASE_URL))[0]
+
+        assert "| v3 -> v4 |" in row
+        assert "| +1 ~1 |" in row
+        assert "| -1 |" in row
+        assert "| none |" in row
+
+    @pytest.mark.parametrize(
+        "base, head, expected",
+        [(_manifest(3), None, "removed"), (None, _manifest(4), "new")],
+    )
+    def test_a_one_sided_case_says_so(self, tmp_path, base, head, expected):
+        report = _analysed([_case_change([], base=base, head=head)], tmp_path)
+
+        assert f"| {expected} |" in _rows(render_comment(report, BASE_URL))[0]
+
+    def test_zero_cases_renders_the_no_change_message(self, tmp_path):
+        markdown = render_comment(_analysed([], tmp_path), BASE_URL)
+
+        assert "No baseline manifests changed against `origin/main`." in markdown
+        assert "| case |" not in markdown
+        assert MARKER in markdown
+
+    def test_the_marker_appears_once(self, changed_image_case):
+        assert render_comment(changed_image_case, BASE_URL).count(MARKER) == 1
+
+    def test_previous_reports_are_listed(self, changed_image_case):
+        markdown = render_comment(
+            changed_image_case,
+            BASE_URL,
+            previous=[("abc1234", "https://reports.example/912/abc1234/index.html")],
+        )
+
+        assert "[abc1234](https://reports.example/912/abc1234/index.html)" in markdown
+
+    def test_no_previous_reports_leaves_the_line_out(self, changed_image_case):
+        assert "Previous reports" not in render_comment(changed_image_case, BASE_URL)
+
+    def test_labels_are_not_html_escaped(self, tmp_path):
+        report = _analysed([_case_change([], base=_manifest(3), head=_manifest(4))], tmp_path)
+
+        assert "-&gt;" not in render_comment(report, BASE_URL)

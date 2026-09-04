@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 
 @app.command(name="diff")
-def diff_baselines(
+def diff_baselines(  # noqa: PLR0913
     ctx: typer.Context,
     html_dir: Annotated[Path, typer.Option(help="Directory to write the HTML report into")],
     base: Annotated[
@@ -35,6 +35,14 @@ def diff_baselines(
         bool,
         typer.Option("--no-fetch", help="Skip blob downloads and report sizes only"),
     ] = False,
+    upload: Annotated[
+        str | None,
+        typer.Option(help="Upload the report under this key prefix, e.g. 912/0c7e1d4abc12"),
+    ] = None,
+    comment_output: Annotated[
+        Path | None,
+        typer.Option(help="Write the pull request comment markdown here"),
+    ] = None,
 ) -> None:
     """
     Render an HTML report of the regression baselines changed on this branch.
@@ -49,11 +57,14 @@ def diff_baselines(
         ref test-cases diff --html-dir build/baseline-diff
         ref test-cases diff --base origin/develop --html-dir build/baseline-diff
         ref test-cases diff --html-dir build/baseline-diff --no-fetch
+        ref test-cases diff --html-dir build/baseline-diff --upload 912/0c7e1d4abc12
     """
     from climate_ref.baseline_report.analyse import analyse
     from climate_ref.baseline_report.collect import collect
-    from climate_ref.baseline_report.render import write_site
-    from climate_ref_core.regression.store import build_native_store
+    from climate_ref.baseline_report.render import render_comment, write_site
+    from climate_ref.baseline_report.upload import upload_site
+    from climate_ref_core.regression.report_store import build_report_store
+    from climate_ref_core.regression.store import NativeStoreUnavailableError, build_native_store
 
     config: Config = ctx.obj.config
     console: Console = ctx.obj.console
@@ -70,3 +81,24 @@ def diff_baselines(
         index = write_site(analysed, html_dir)
 
     console.print(f"Wrote {len(analysed.cases)} case page(s) to {index}")
+
+    base_url = index.parent.resolve().as_uri()
+    if upload is not None:
+        try:
+            report_store = build_report_store(config.report_store, writable=True)
+            report_store.preflight()
+            upload_site(html_dir, report_store, upload)
+            base_url = report_store.url_for(upload)
+        except (NotImplementedError, ValueError, ImportError, NativeStoreUnavailableError) as exc:
+            logger.error(
+                f"Could not upload the report: {exc} Check REF_REPORT_STORE_URL, and for a remote "
+                "store REF_REPORT_STORE_ACCESS_KEY_ID / REF_REPORT_STORE_SECRET_ACCESS_KEY plus the "
+                "'climate-ref-core[aws]' extra."
+            )
+            raise typer.Exit(code=1) from exc
+        console.print(f"Uploaded the report to {base_url}/index.html")
+
+    if comment_output is not None:
+        comment_output.parent.mkdir(parents=True, exist_ok=True)
+        comment_output.write_text(render_comment(analysed, base_url), encoding="utf-8")
+        console.print(f"Wrote the pull request comment to {comment_output}")

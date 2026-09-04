@@ -164,3 +164,42 @@ was {{ file.change.old.size | bytes -}}
 {% endif %}
 </section>
 {% endmacro %}
+
+{% macro committed_block(item) %}
+<section class="file">
+<h3>
+<code>{{ item.change.name }}</code>
+<span class="pill" title="Tracked in git, so this file is part of the pull request">in PR</span>
+<span class="status {{ item.change.status }}">{{ item.change.status }}</span>
+<span class="digests">
+{% if item.change.old %}{{ item.change.old | short }}{% endif %}
+{%- if item.change.new %} -> {{ item.change.new | short }}{% endif %}
+</span>
+</h3>
+<p class="path"><code>{{ item.change.rel_path }}</code></p>
+{% if item.text.note %}
+<p class="note">{{ item.text.note }}</p>
+{% else %}
+{{ diff_lines(item.text.lines) }}
+{% if item.text.elided %}
+<p class="note">{{ item.text.elided }} further diff line(s) elided.</p>
+{% endif %}
+{% endif %}
+</section>
+{% endmacro %}
+
+{% macro tree_rows(nodes) %}
+<ul class="tree">
+{% for node in nodes %}
+<li style="--depth: {{ node.depth }}">
+{% if node.is_dir %}
+<code class="dir">{{ node.name }}/</code>
+{% else %}
+<code>{{ node.name }}</code>
+<span class="size">{{ node.size | bytes }}</span>
+{% if node.status %}<span class="status {{ node.status }}">{{ node.status }}</span>{% endif %}
+{% endif %}
+</li>
+{% endfor %}
+</ul>
+{% endmacro %}

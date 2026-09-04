@@ -19,7 +19,13 @@ import numpy as np
 import xarray as xr
 from attrs import frozen
 
-from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report
+from climate_ref.baseline_report.collect import (
+    CaseChange,
+    CommittedChange,
+    FileChange,
+    FileKind,
+    Report,
+)
 
 if TYPE_CHECKING:
     from climate_ref_core.regression.manifest import NativeEntry
@@ -217,6 +223,37 @@ class KindCounts:
 
 
 @frozen
+class AnalysedCommitted:
+    """One committed regression artefact, with its diff."""
+
+    change: CommittedChange
+    """The underlying change."""
+
+    text: TextDiff
+    """The diff between the two committed versions."""
+
+
+@frozen
+class TreeNode:
+    """One row of the captured baseline's folder listing."""
+
+    name: str
+    """The directory or file name at this level."""
+
+    depth: int
+    """How deep the entry sits, so a template can indent it."""
+
+    is_dir: bool
+    """Whether the row is a directory rather than a file."""
+
+    size: int | None
+    """The file's size on HEAD, or on the base ref when it was removed."""
+
+    status: str | None
+    """``added``, ``changed`` or ``removed``, or ``None`` when the file did not move."""
+
+
+@frozen
 class AnalysedCase:
     """One test case, with its files analysed and tallied."""
 
@@ -240,6 +277,12 @@ class AnalysedCase:
 
     others: tuple[AnalysedFile, ...]
     """Every remaining file, which renders as a table row."""
+
+    committed: tuple[AnalysedCommitted, ...]
+    """The committed artefacts that moved, in name order."""
+
+    tree: tuple[TreeNode, ...]
+    """The captured baseline's native files, as a flattened folder listing."""
 
     back_link: str
     """Relative link from this case's page back to the index, one ``..`` per label segment."""
@@ -286,12 +329,38 @@ def blob_url(store: NativeStore, digest: str) -> str:
     return f"{store.url.rstrip('/')}/{digest}"
 
 
-def _as_lines(path: Path | None, name: str) -> list[str]:
+def _text_lines(text: str | None, name: str) -> list[str]:
     """
-    Decode a blob into diffable lines.
+    Split text into diffable lines.
 
     JSON is re-serialised with indentation first, because a minified bundle would otherwise
     diff as a single unreadable line.
+
+    Parameters
+    ----------
+    text
+        The content, or ``None`` when the file is absent on that side.
+    name
+        The file's name, used to decide whether it is JSON.
+
+    Returns
+    -------
+    :
+        The lines to diff.
+    """
+    if text is None:
+        return []
+    if Path(name).suffix.lower() == ".json":
+        try:
+            text = json.dumps(json.loads(text), indent=2, sort_keys=True)
+        except json.JSONDecodeError:
+            pass
+    return text.splitlines()
+
+
+def _as_lines(path: Path | None, name: str) -> list[str]:
+    """
+    Decode a blob into diffable lines.
 
     Parameters
     ----------
@@ -307,13 +376,7 @@ def _as_lines(path: Path | None, name: str) -> list[str]:
     """
     if path is None:
         return []
-    text = path.read_bytes().decode("utf-8", errors="replace")
-    if Path(name).suffix.lower() == ".json":
-        try:
-            text = json.dumps(json.loads(text), indent=2, sort_keys=True)
-        except json.JSONDecodeError:
-            pass
-    return text.splitlines()
+    return _text_lines(path.read_bytes().decode("utf-8", errors="replace"), name)
 
 
 def _classify_line(line: str) -> str:
@@ -372,6 +435,63 @@ def _diff_lines(
     return tuple(DiffLine(kind=_classify_line(line), text=line) for line in kept), sum(1 for _ in raw)
 
 
+def _build_text_diff(old_lines: list[str], new_lines: list[str], *, has_old: bool, has_new: bool) -> TextDiff:
+    """
+    Build a :class:`TextDiff` from two already decoded sides.
+
+    Parameters
+    ----------
+    old_lines
+        The base side's lines, empty when it is absent.
+    new_lines
+        The head side's lines, empty when it is absent.
+    has_old
+        Whether the file exists on the base ref, which labels the diff header.
+    has_new
+        Whether the file exists on HEAD, which labels the diff header.
+
+    Returns
+    -------
+    :
+        The diff, or a note when the two sides decode identically.
+    """
+    lines, elided = _diff_lines(
+        old_lines,
+        new_lines,
+        fromfile="old" if has_old else "(absent)",
+        tofile="new" if has_new else "(absent)",
+    )
+    if not lines:
+        return TextDiff(lines=(), note="identical after decoding", elided=0)
+    return TextDiff(lines=lines, note=None, elided=elided)
+
+
+def committed_diff(change: CommittedChange) -> TextDiff:
+    """
+    Build the unified diff of one committed regression artefact.
+
+    Parameters
+    ----------
+    change
+        The artefact that moved, carrying both sides' content.
+
+    Returns
+    -------
+    :
+        The diff, or a note explaining why there is not one.
+    """
+    if change.old is not None and change.old_text is None:
+        return TextDiff(lines=(), note="could not read the base version from git", elided=0)
+    if change.new is not None and change.new_text is None:
+        return TextDiff(lines=(), note="could not read the working tree version", elided=0)
+    return _build_text_diff(
+        _text_lines(change.old_text, change.name),
+        _text_lines(change.new_text, change.name),
+        has_old=change.old is not None,
+        has_new=change.new is not None,
+    )
+
+
 def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
     """
     Build the unified diff between two fetched blobs.
@@ -390,15 +510,12 @@ def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
     :
         The diff, or a note explaining why there is not one.
     """
-    lines, elided = _diff_lines(
+    return _build_text_diff(
         _as_lines(old, name),
         _as_lines(new, name),
-        fromfile="old" if old is not None else "(absent)",
-        tofile="new" if new is not None else "(absent)",
+        has_old=old is not None,
+        has_new=new is not None,
     )
-    if not lines:
-        return TextDiff(lines=(), note="identical after decoding", elided=0)
-    return TextDiff(lines=lines, note=None, elided=elided)
 
 
 def _header(dataset: xr.Dataset | None) -> list[str]:
@@ -924,6 +1041,74 @@ def _counts(files: tuple[AnalysedFile, ...]) -> tuple[KindCounts, ...]:
     )
 
 
+def _file_status(old: NativeEntry | None, new: NativeEntry | None) -> str | None:
+    """
+    Describe how one native file moved between the two manifests.
+
+    Parameters
+    ----------
+    old
+        The entry on the base ref, or ``None``.
+    new
+        The entry on HEAD, or ``None``.
+
+    Returns
+    -------
+    :
+        ``added``, ``removed``, ``changed``, or ``None`` when the digest is the same.
+    """
+    if old is None:
+        return "added"
+    if new is None:
+        return "removed"
+    return "changed" if old.sha256 != new.sha256 else None
+
+
+def baseline_tree(case: CaseChange) -> tuple[TreeNode, ...]:
+    """
+    Flatten the captured baseline's native files into an indented folder listing.
+
+    Every curated file is listed, not only the ones that moved, because the listing is what
+    tells a reviewer what the baseline actually holds. A file dropped by the mint is kept in
+    the listing so its absence is visible rather than silent.
+
+    Parameters
+    ----------
+    case
+        The collected case.
+
+    Returns
+    -------
+    :
+        One row per directory and file, in path order.
+    """
+    old_native = case.base.native if case.base else {}
+    new_native = case.head.native if case.head else {}
+    rows: list[TreeNode] = []
+    seen: list[str] = []
+    for name in sorted(set(old_native) | set(new_native)):
+        parts = PurePosixPath(name).parts
+        for depth, part in enumerate(parts[:-1]):
+            if depth < len(seen) and seen[depth] == part:
+                continue
+            del seen[depth:]
+            seen.append(part)
+            rows.append(TreeNode(name=part, depth=depth, is_dir=True, size=None, status=None))
+        del seen[len(parts) - 1 :]
+        old, new = old_native.get(name), new_native.get(name)
+        entry = new or old
+        rows.append(
+            TreeNode(
+                name=parts[-1],
+                depth=len(parts) - 1,
+                is_dir=False,
+                size=entry.size if entry else None,
+                status=_file_status(old, new),
+            )
+        )
+    return tuple(rows)
+
+
 def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -> AnalysedReport:
     """
     Build everything the templates need from a collected report.
@@ -962,6 +1147,10 @@ def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -
                 texts=_of_kind(files, FileKind.TEXT),
                 netcdfs=_of_kind(files, FileKind.NETCDF),
                 others=_of_kind(files, FileKind.OTHER),
+                committed=tuple(
+                    AnalysedCommitted(change=change, text=committed_diff(change)) for change in case.committed
+                ),
+                tree=baseline_tree(case),
                 back_link="/".join([*[".."] * depth, "index.html"]),
             )
         )

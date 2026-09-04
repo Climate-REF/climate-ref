@@ -8,7 +8,7 @@ Collection performs no network access. Fetching blobs and building diffs is
 from __future__ import annotations
 
 import enum
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
 from attrs import frozen
@@ -92,6 +92,42 @@ class FileChange:
 
 
 @frozen
+class CommittedChange:
+    """One committed regression artefact whose digest moved.
+
+    Unlike a native output these bytes are tracked in git, so both sides are read from the
+    repository rather than fetched from the store.
+    """
+
+    name: str
+    """Path of the artefact relative to the test case's ``regression/`` directory."""
+
+    rel_path: str
+    """Repo-relative path of the artefact, which is where it appears in the pull request."""
+
+    old: str | None
+    """The digest on the base ref, or ``None`` when the artefact is new."""
+
+    new: str | None
+    """The digest on HEAD, or ``None`` when the artefact was removed."""
+
+    old_text: str | None
+    """The artefact's content on the base ref, or ``None`` when it could not be read."""
+
+    new_text: str | None
+    """The artefact's content on HEAD, or ``None`` when it could not be read."""
+
+    @property
+    def status(self) -> str:
+        """``added``, ``removed`` or ``changed``."""
+        if self.old is None:
+            return "added"
+        if self.new is None:
+            return "removed"
+        return "changed"
+
+
+@frozen
 class CaseChange:
     """Everything that changed for a single test case."""
 
@@ -110,8 +146,8 @@ class CaseChange:
     files: tuple[FileChange, ...]
     """Every native file that moved, in name order."""
 
-    committed: tuple[str, ...]
-    """Committed artefacts whose digest moved, described one per entry."""
+    committed: tuple[CommittedChange, ...]
+    """Committed artefacts whose digest moved, in name order."""
 
     metadata: tuple[str, ...]
     """Scalar manifest fields that moved, described one per entry."""
@@ -172,6 +208,32 @@ def changed_manifests(repo: Repo, base: str) -> list[str]:
     return sorted(line for line in out.splitlines() if line.strip())
 
 
+def show_at_ref(repo: Repo, ref: str, rel_path: str) -> str | None:
+    """
+    Read a file's content as it exists at ``ref``, or ``None`` when absent there.
+
+    Parameters
+    ----------
+    repo
+        The repository to read from.
+    ref
+        The git ref to read the file at.
+    rel_path
+        Repo-relative path of the file.
+
+    Returns
+    -------
+    :
+        The file's text, or ``None`` when the path does not exist at ``ref``.
+    """
+    from git import GitCommandError  # noqa: PLC0415
+
+    try:
+        return str(repo.git.show(f"{ref}:{rel_path}"))
+    except GitCommandError:
+        return None
+
+
 def load_at_ref(repo: Repo, ref: str, rel_path: str) -> Manifest | None:
     """
     Load a manifest as it exists at ``ref``, or ``None`` when absent there.
@@ -190,11 +252,8 @@ def load_at_ref(repo: Repo, ref: str, rel_path: str) -> Manifest | None:
     :
         The parsed manifest, or ``None`` when the path does not exist at ``ref``.
     """
-    from git import GitCommandError  # noqa: PLC0415
-
-    try:
-        text = repo.git.show(f"{ref}:{rel_path}")
-    except GitCommandError:
+    text = show_at_ref(repo, ref, rel_path)
+    if text is None:
         return None
     return Manifest.loads(text, source=f"{ref}:{rel_path}")
 
@@ -250,13 +309,47 @@ def _metadata_changes(base: Manifest | None, head: Manifest | None) -> tuple[str
     return tuple(changes)
 
 
-def _committed_changes(base: Manifest | None, head: Manifest | None) -> tuple[str, ...]:
+def _committed_path(manifest_rel_path: str, name: str) -> str:
     """
-    Name the committed regression artefacts whose digest moved.
+    Build the repo-relative path of a committed artefact.
 
     Parameters
     ----------
+    manifest_rel_path
+        Repo-relative path of the case's ``manifest.json``.
+    name
+        The artefact's path relative to the case's ``regression/`` directory.
+
+    Returns
+    -------
+    :
+        The path as it appears in the pull request's file list.
+    """
+    return (PurePosixPath(manifest_rel_path).parent / "regression" / name).as_posix()
+
+
+def _committed_changes(
+    repo: Repo,
+    base: str,
+    rel_path: str,
+    base_manifest: Manifest | None,
+    head: Manifest | None,
+) -> tuple[CommittedChange, ...]:
+    """
+    Pair up the committed regression artefacts whose digest moved.
+
+    Both sides are read out of the repository, the base one at ``base`` and the head one from
+    the working tree, so a committed artefact needs no store access to diff.
+
+    Parameters
+    ----------
+    repo
+        The repository to read from.
     base
+        The git ref to compare against.
+    rel_path
+        Repo-relative path of the case's ``manifest.json``.
+    base_manifest
         The manifest on the base ref, or ``None``.
     head
         The manifest on HEAD, or ``None``.
@@ -264,20 +357,29 @@ def _committed_changes(base: Manifest | None, head: Manifest | None) -> tuple[st
     Returns
     -------
     :
-        One description per changed artefact, in name order.
+        One entry per changed artefact, in name order.
     """
-    old = base.committed if base else {}
+    old = base_manifest.committed if base_manifest else {}
     new = head.committed if head else {}
+    root = Path(repo.working_tree_dir or ".")
     out = []
     for name in sorted(set(old) | set(new)):
         if old.get(name) == new.get(name):
             continue
-        if name not in old:
-            out.append(f"{name} (added)")
-        elif name not in new:
-            out.append(f"{name} (removed)")
-        else:
-            out.append(name)
+        artefact_path = _committed_path(rel_path, name)
+        head_path = root / artefact_path
+        out.append(
+            CommittedChange(
+                name=name,
+                rel_path=artefact_path,
+                old=old.get(name),
+                new=new.get(name),
+                old_text=show_at_ref(repo, base, artefact_path) if name in old else None,
+                new_text=head_path.read_text(encoding="utf-8", errors="replace")
+                if name in new and head_path.exists()
+                else None,
+            )
+        )
     return tuple(out)
 
 
@@ -328,7 +430,7 @@ def build_case_change(repo: Repo, base: str, rel_path: str) -> CaseChange | None
         base=base_manifest,
         head=head,
         files=tuple(files),
-        committed=_committed_changes(base_manifest, head),
+        committed=_committed_changes(repo, base, rel_path, base_manifest, head),
         metadata=_metadata_changes(base_manifest, head),
     )
 

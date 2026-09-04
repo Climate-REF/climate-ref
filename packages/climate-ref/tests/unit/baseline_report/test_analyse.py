@@ -562,13 +562,13 @@ class TestCommittedDiff:
         assert case.committed[0].text.note is None
 
 
-def _manifest(native):
-    """Build a manifest carrying only the native entries a tree is built from."""
+def _manifest(native, committed=None):
+    """Build a manifest carrying only what a tree is built from."""
     return Manifest(
         schema=SCHEMA_VERSION,
         test_case_version=1,
         diagnostic_version=1,
-        committed={},
+        committed=committed or {},
         native=native,
     )
 
@@ -614,3 +614,22 @@ class TestBaselineTree:
 
     def test_a_case_with_no_manifests_has_no_tree(self):
         assert baseline_tree(_report([]).cases[0]) == ()
+
+    def test_the_committed_bundle_is_listed_under_regression(self):
+        entry = NativeEntry(sha256="1" * 64, size=10)
+        case = _report(
+            [],
+            base=_manifest({"plot.png": entry}, {"series.json": "a" * 64}),
+            head=_manifest({"plot.png": entry}, {"series.json": "b" * 64}),
+        ).cases[0]
+
+        assert [(node.name, node.depth, node.is_dir, node.status) for node in baseline_tree(case)] == [
+            ("plot.png", 0, False, None),
+            ("regression", 0, True, None),
+            ("series.json", 1, False, "changed"),
+        ]
+
+    def test_a_committed_artefact_has_no_size(self):
+        case = _report([], head=_manifest({}, {"series.json": "a" * 64})).cases[0]
+
+        assert baseline_tree(case)[-1].size is None

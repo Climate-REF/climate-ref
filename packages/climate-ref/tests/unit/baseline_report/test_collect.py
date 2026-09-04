@@ -240,3 +240,11 @@ class TestCommittedChanges:
         assert removed.new is None
         assert removed.new_text is None
         assert removed.old_text == "{}"
+
+    def test_an_artefact_missing_from_the_working_tree_leaves_no_text(self, repo, tmp_path):
+        (tmp_path / Path(MANIFEST_PATH).parent / "regression" / "series.json").unlink()
+
+        changed = collect(repo, "HEAD~1").cases[0].committed[-1]
+
+        assert changed.new is not None
+        assert changed.new_text is None

@@ -65,6 +65,29 @@ def classify(name: str) -> FileKind:
     return FileKind.OTHER
 
 
+def change_status(old: object | None, new: object | None) -> str:
+    """
+    Describe which sides of the change an entry is present on.
+
+    Parameters
+    ----------
+    old
+        The entry on the base ref, or ``None`` when it is absent there.
+    new
+        The entry on HEAD, or ``None`` when it is absent there.
+
+    Returns
+    -------
+    :
+        ``added``, ``removed`` or ``changed``.
+    """
+    if old is None:
+        return "added"
+    if new is None:
+        return "removed"
+    return "changed"
+
+
 @frozen
 class FileChange:
     """One native output file that was added, removed, or changed by the mint."""
@@ -84,11 +107,7 @@ class FileChange:
     @property
     def status(self) -> str:
         """``added``, ``removed`` or ``changed``."""
-        if self.old is None:
-            return "added"
-        if self.new is None:
-            return "removed"
-        return "changed"
+        return change_status(self.old, self.new)
 
 
 @frozen
@@ -120,11 +139,7 @@ class CommittedChange:
     @property
     def status(self) -> str:
         """``added``, ``removed`` or ``changed``."""
-        if self.old is None:
-            return "added"
-        if self.new is None:
-            return "removed"
-        return "changed"
+        return change_status(self.old, self.new)
 
 
 @frozen
@@ -208,9 +223,30 @@ def changed_manifests(repo: Repo, base: str) -> list[str]:
     return sorted(line for line in out.splitlines() if line.strip())
 
 
+def _read_text(path: Path) -> str | None:
+    """
+    Read a file from the working tree, or ``None`` when it cannot be read.
+
+    Parameters
+    ----------
+    path
+        The file to read.
+
+    Returns
+    -------
+    :
+        The file's text, decoded with replacement so odd bytes cost a character rather
+        than the report, or ``None`` when the file is missing or unreadable.
+    """
+    try:
+        return path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+
 def show_at_ref(repo: Repo, ref: str, rel_path: str) -> str | None:
     """
-    Read a file's content as it exists at ``ref``, or ``None`` when absent there.
+    Read a file's content as it exists at ``ref``, or ``None`` when it cannot be read there.
 
     Parameters
     ----------
@@ -224,13 +260,14 @@ def show_at_ref(repo: Repo, ref: str, rel_path: str) -> str | None:
     Returns
     -------
     :
-        The file's text, or ``None`` when the path does not exist at ``ref``.
+        The file's text, or ``None`` when the path does not exist at ``ref`` or does not
+        decode as UTF-8.
     """
     from git import GitCommandError  # noqa: PLC0415
 
     try:
         return str(repo.git.show(f"{ref}:{rel_path}"))
-    except GitCommandError:
+    except (GitCommandError, UnicodeDecodeError):
         return None
 
 
@@ -333,7 +370,7 @@ def _committed_changes(
     base: str,
     rel_path: str,
     base_manifest: Manifest | None,
-    head: Manifest | None,
+    head_manifest: Manifest | None,
 ) -> tuple[CommittedChange, ...]:
     """
     Pair up the committed regression artefacts whose digest moved.
@@ -351,7 +388,7 @@ def _committed_changes(
         Repo-relative path of the case's ``manifest.json``.
     base_manifest
         The manifest on the base ref, or ``None``.
-    head
+    head_manifest
         The manifest on HEAD, or ``None``.
 
     Returns
@@ -360,14 +397,13 @@ def _committed_changes(
         One entry per changed artefact, in name order.
     """
     old = base_manifest.committed if base_manifest else {}
-    new = head.committed if head else {}
+    new = head_manifest.committed if head_manifest else {}
     root = Path(repo.working_tree_dir or ".")
     out = []
     for name in sorted(set(old) | set(new)):
         if old.get(name) == new.get(name):
             continue
         artefact_path = _committed_path(rel_path, name)
-        head_path = root / artefact_path
         out.append(
             CommittedChange(
                 name=name,
@@ -375,9 +411,7 @@ def _committed_changes(
                 old=old.get(name),
                 new=new.get(name),
                 old_text=show_at_ref(repo, base, artefact_path) if name in old else None,
-                new_text=head_path.read_text(encoding="utf-8", errors="replace")
-                if name in new and head_path.exists()
-                else None,
+                new_text=_read_text(root / artefact_path) if name in new else None,
             )
         )
     return tuple(out)

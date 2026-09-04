@@ -25,6 +25,7 @@ from climate_ref.baseline_report.collect import (
     FileChange,
     FileKind,
     Report,
+    change_status,
 )
 
 if TYPE_CHECKING:
@@ -247,7 +248,10 @@ class TreeNode:
     """Whether the row is a directory rather than a file."""
 
     size: int | None
-    """The file's size on HEAD, or on the base ref when it was removed."""
+    """The file's size on HEAD, or on the base ref when it was removed.
+
+    ``None`` for a directory and for a committed artefact, whose manifest entry has no size.
+    """
 
     status: str | None
     """``added``, ``changed`` or ``removed``, or ``None`` when the file did not move."""
@@ -1057,20 +1061,52 @@ def _file_status(old: NativeEntry | None, new: NativeEntry | None) -> str | None
     :
         ``added``, ``removed``, ``changed``, or ``None`` when the digest is the same.
     """
-    if old is None:
-        return "added"
-    if new is None:
-        return "removed"
-    return "changed" if old.sha256 != new.sha256 else None
+    if old is not None and new is not None and old.sha256 == new.sha256:
+        return None
+    return change_status(old, new)
+
+
+def _baseline_entries(case: CaseChange) -> dict[str, tuple[int | None, str | None]]:
+    """
+    Gather every file the baseline captures, keyed by its path within the test case.
+
+    The committed bundle sits under ``regression/``, which is where a run writes it, so the
+    listing matches the layout on disk rather than splitting the capture by where it is stored.
+
+    Parameters
+    ----------
+    case
+        The collected case.
+
+    Returns
+    -------
+    :
+        ``{path: (size, status)}``. The size is ``None`` for a committed artefact, whose
+        manifest entry carries only a digest.
+    """
+    old_native = case.base.native if case.base else {}
+    new_native = case.head.native if case.head else {}
+    entries: dict[str, tuple[int | None, str | None]] = {}
+    for name in set(old_native) | set(new_native):
+        old, new = old_native.get(name), new_native.get(name)
+        entry = new or old
+        entries[name] = (entry.size if entry else None, _file_status(old, new))
+
+    old_committed = case.base.committed if case.base else {}
+    new_committed = case.head.committed if case.head else {}
+    for name in set(old_committed) | set(new_committed):
+        old_digest, new_digest = old_committed.get(name), new_committed.get(name)
+        status = None if old_digest == new_digest else change_status(old_digest, new_digest)
+        entries[f"regression/{name}"] = (None, status)
+    return entries
 
 
 def baseline_tree(case: CaseChange) -> tuple[TreeNode, ...]:
     """
-    Flatten the captured baseline's native files into an indented folder listing.
+    Flatten the captured baseline's files into an indented folder listing.
 
-    Every curated file is listed, not only the ones that moved, because the listing is what
-    tells a reviewer what the baseline actually holds. A file dropped by the mint is kept in
-    the listing so its absence is visible rather than silent.
+    Every captured file is listed, not only the ones that moved, because the listing is what
+    tells a reviewer what the baseline actually holds.
 
     Parameters
     ----------
@@ -1082,28 +1118,26 @@ def baseline_tree(case: CaseChange) -> tuple[TreeNode, ...]:
     :
         One row per directory and file, in path order.
     """
-    old_native = case.base.native if case.base else {}
-    new_native = case.head.native if case.head else {}
+    entries = _baseline_entries(case)
     rows: list[TreeNode] = []
-    seen: list[str] = []
-    for name in sorted(set(old_native) | set(new_native)):
-        parts = PurePosixPath(name).parts
+    open_dirs: list[str] = []
+    for path in sorted(entries):
+        parts = PurePosixPath(path).parts
         for depth, part in enumerate(parts[:-1]):
-            if depth < len(seen) and seen[depth] == part:
+            if depth < len(open_dirs) and open_dirs[depth] == part:
                 continue
-            del seen[depth:]
-            seen.append(part)
+            del open_dirs[depth:]
+            open_dirs.append(part)
             rows.append(TreeNode(name=part, depth=depth, is_dir=True, size=None, status=None))
-        del seen[len(parts) - 1 :]
-        old, new = old_native.get(name), new_native.get(name)
-        entry = new or old
+        del open_dirs[len(parts) - 1 :]
+        size, status = entries[path]
         rows.append(
             TreeNode(
                 name=parts[-1],
                 depth=len(parts) - 1,
                 is_dir=False,
-                size=entry.size if entry else None,
-                status=_file_status(old, new),
+                size=size,
+                status=status,
             )
         )
     return tuple(rows)

@@ -196,7 +196,7 @@ was {{ file.change.old.size | bytes -}}
 <code class="dir">{{ node.name }}/</code>
 {% else %}
 <code>{{ node.name }}</code>
-<span class="size">{{ node.size | bytes }}</span>
+{% if node.size is not none %}<span class="size">{{ node.size | bytes }}</span>{% endif %}
 {% if node.status %}<span class="status {{ node.status }}">{{ node.status }}</span>{% endif %}
 {% endif %}
 </li>

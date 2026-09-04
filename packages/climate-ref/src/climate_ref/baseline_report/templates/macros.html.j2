@@ -1,0 +1,79 @@
+{% macro size_delta(file) -%}
+{% if file.change.old is none %}
+{{- file.change.new.size | bytes -}}
+{% elif file.change.new is none %}
+was {{ file.change.old.size | bytes -}}
+{% else %}
+{{- file.change.old.size | bytes }} -> {{ file.change.new.size | bytes }} ({{ file.size_delta | signed }})
+{% endif %}
+{%- endmacro %}
+
+{% macro blob_links(file) -%}
+{% if file.old_url %}<a href="{{ file.old_url }}">old</a> {% endif %}
+{%- if file.new_url %}<a href="{{ file.new_url }}">new</a>{% endif %}
+{%- endmacro %}
+
+{% macro image_pair(file) %}
+<figure class="file">
+<figcaption>
+<code>{{ file.change.name }}</code>
+<span class="status {{ file.change.status }}">{{ file.change.status }}</span>
+<span class="size">{{ size_delta(file) }}</span>
+</figcaption>
+<div class="pair">
+<div class="side">
+<span class="side-label">old</span>
+{% if file.old_url %}
+<img loading="lazy" src="{{ file.old_url }}" alt="old {{ file.change.name }}">
+{% else %}
+<div class="absent">absent</div>
+{% endif %}
+</div>
+<div class="side">
+<span class="side-label">new</span>
+{% if file.new_url %}
+<img loading="lazy" src="{{ file.new_url }}" alt="new {{ file.change.name }}">
+{% else %}
+<div class="absent">absent</div>
+{% endif %}
+</div>
+</div>
+<button type="button" data-flip>Overlay</button>
+</figure>
+{% endmacro %}
+
+{% macro text_block(file) %}
+<section class="file">
+<h3>
+<code>{{ file.change.name }}</code>
+<span class="status {{ file.change.status }}">{{ file.change.status }}</span>
+<span class="size">{{ size_delta(file) }}</span>
+<span class="digests">
+{% if file.change.old %}{{ file.change.old.sha256 | short }}{% endif %}
+{%- if file.change.new %} -> {{ file.change.new.sha256 | short }}{% endif %}
+</span>
+{{ blob_links(file) }}
+</h3>
+{% if file.text.note %}
+<p class="note">{{ file.text.note }}</p>
+{% else %}
+<pre class="diff">
+{%- for line in file.text.lines %}
+<span class="{{ line.kind }}">{{ line.text }}</span>
+{%- endfor %}
+</pre>
+{% if file.text.elided %}
+<p class="note">{{ file.text.elided }} further diff line(s) elided.</p>
+{% endif %}
+{% endif %}
+</section>
+{% endmacro %}
+
+{% macro binary_row(file) %}
+<tr>
+<td><code>{{ file.change.name }}</code></td>
+<td><span class="status {{ file.change.status }}">{{ file.change.status }}</span></td>
+<td>{{ size_delta(file) }}</td>
+<td>{{ blob_links(file) }}</td>
+</tr>
+{% endmacro %}

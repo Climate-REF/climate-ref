@@ -1,0 +1,458 @@
+"""
+Turn a collected report into everything the templates need.
+
+Text blobs are fetched from the native store and diffed here.
+"""
+
+from __future__ import annotations
+
+import difflib
+import json
+from collections import Counter
+from itertools import islice
+from pathlib import Path, PurePosixPath
+from typing import TYPE_CHECKING
+
+from attrs import frozen
+
+from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report
+
+if TYPE_CHECKING:
+    from climate_ref_core.regression.manifest import NativeEntry
+    from climate_ref_core.regression.store import NativeStore
+
+# A blob larger than this is summarised rather than diffed. Keeps a runaway report
+# from stalling the job on the download alone.
+MAX_FETCH_BYTES = 2_000_000
+
+# Digest prefix shown wherever a blob is named. Long enough to identify it, short enough to read.
+SHORT_DIGEST = 12
+
+# Unified-diff lines kept per file before the rest is elided.
+MAX_DIFF_LINES = 5000
+
+
+@frozen
+class DiffLine:
+    """One line of a unified diff, tagged so a template can style it."""
+
+    kind: str
+    """One of ``add``, ``remove``, ``context``, ``hunk`` or ``header``."""
+
+    text: str
+    """The line itself, without a trailing newline."""
+
+
+@frozen
+class TextDiff:
+    """The unified diff of one text output, or the reason there is not one."""
+
+    lines: tuple[DiffLine, ...]
+    """The diff lines, empty when :attr:`note` is set."""
+
+    note: str | None
+    """Why no diff could be produced, or ``None`` when :attr:`lines` carries one."""
+
+    elided: int
+    """Lines dropped past :data:`MAX_DIFF_LINES`."""
+
+
+@frozen
+class AnalysedFile:
+    """One native file, with its blob URLs and its diff where it has one."""
+
+    change: FileChange
+    """The underlying change."""
+
+    old_url: str | None
+    """Store URL of the base blob, or ``None`` when the file is new."""
+
+    new_url: str | None
+    """Store URL of the head blob, or ``None`` when the file was removed."""
+
+    text: TextDiff | None
+    """The diff, set only for :attr:`~climate_ref.baseline_report.collect.FileKind.TEXT` files."""
+
+    size_delta: int | None
+    """Signed byte change, or ``None`` when the file exists on only one side."""
+
+
+@frozen
+class KindCounts:
+    """How many files of one kind were added, changed and removed."""
+
+    label: str
+    """The kind's name, as the report column header."""
+
+    added: int
+    """Files present only on HEAD."""
+
+    changed: int
+    """Files present on both sides with a different digest."""
+
+    removed: int
+    """Files present only on the base ref."""
+
+
+@frozen
+class AnalysedCase:
+    """One test case, with its files analysed and tallied."""
+
+    change: CaseChange
+    """The underlying change."""
+
+    files: tuple[AnalysedFile, ...]
+    """Every analysed file, in the order collection produced them."""
+
+    counts: tuple[KindCounts, ...]
+    """One entry per kind, in report column order."""
+
+    images: tuple[AnalysedFile, ...]
+    """The image files, which render as a two-up comparison."""
+
+    texts: tuple[AnalysedFile, ...]
+    """The text files, which render as a diff."""
+
+    binaries: tuple[AnalysedFile, ...]
+    """The NetCDF and other files, which render as a table row."""
+
+    back_link: str
+    """Relative link from this case's page back to the index, one ``..`` per label segment."""
+
+
+@frozen
+class AnalysedReport:
+    """A whole report, ready to render."""
+
+    report: Report
+    """The underlying report."""
+
+    store_url: str
+    """Base location blobs are served from, matching what :func:`blob_url` builds."""
+
+    cases: tuple[AnalysedCase, ...]
+    """The analysed cases, in the order collection produced them."""
+
+    kinds: tuple[str, ...]
+    """The count column headers, matching the order of every case's ``counts``."""
+
+
+def blob_url(store: NativeStore, digest: str) -> str:
+    """
+    Build the URL a blob is served from.
+
+    A local store fans its blobs out by the first two digest characters, so a flat URL under
+    its root would point at nothing.
+
+    Parameters
+    ----------
+    store
+        The store the blob lives in.
+    digest
+        The blob's sha256 hex digest.
+
+    Returns
+    -------
+    :
+        An absolute URL a browser can open.
+    """
+    if store.root is not None:
+        return (store.root / digest[:2] / digest).absolute().as_uri()
+    return f"{store.url.rstrip('/')}/{digest}"
+
+
+def _as_lines(path: Path | None, name: str) -> list[str]:
+    """
+    Decode a blob into diffable lines.
+
+    JSON is re-serialised with indentation first, because a minified bundle would otherwise
+    diff as a single unreadable line.
+
+    Parameters
+    ----------
+    path
+        The fetched blob, or ``None`` when the file is absent on that side.
+    name
+        The file's name, used to decide whether it is JSON.
+
+    Returns
+    -------
+    :
+        The lines to diff.
+    """
+    if path is None:
+        return []
+    text = path.read_bytes().decode("utf-8", errors="replace")
+    if Path(name).suffix.lower() == ".json":
+        try:
+            text = json.dumps(json.loads(text), indent=2, sort_keys=True)
+        except json.JSONDecodeError:
+            pass
+    return text.splitlines()
+
+
+def _classify_line(line: str) -> str:
+    """
+    Tag one unified-diff line with the CSS class a template should use.
+
+    Parameters
+    ----------
+    line
+        The raw diff line.
+
+    Returns
+    -------
+    :
+        One of ``header``, ``hunk``, ``add``, ``remove`` or ``context``.
+    """
+    if line.startswith(("---", "+++")):
+        return "header"
+    if line.startswith("@@"):
+        return "hunk"
+    if line.startswith("+"):
+        return "add"
+    if line.startswith("-"):
+        return "remove"
+    return "context"
+
+
+def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
+    """
+    Build the unified diff between two fetched blobs.
+
+    Parameters
+    ----------
+    old
+        The base blob, or ``None`` when the file is new.
+    new
+        The head blob, or ``None`` when the file was removed.
+    name
+        The file's name, used in the diff header and to detect JSON.
+
+    Returns
+    -------
+    :
+        The diff, or a note explaining why there is not one.
+    """
+    raw = difflib.unified_diff(
+        _as_lines(old, name),
+        _as_lines(new, name),
+        fromfile="old" if old is not None else "(absent)",
+        tofile="new" if new is not None else "(absent)",
+        lineterm="",
+        n=3,
+    )
+    kept = list(islice(raw, MAX_DIFF_LINES))
+    if not kept:
+        return TextDiff(lines=(), note="identical after decoding", elided=0)
+    return TextDiff(
+        lines=tuple(DiffLine(kind=_classify_line(line), text=line) for line in kept),
+        note=None,
+        elided=sum(1 for _ in raw),
+    )
+
+
+def _fetch_side(
+    store: NativeStore, entry: NativeEntry | None, workdir: Path
+) -> tuple[Path | None, str | None]:
+    """
+    Fetch one side of a text file.
+
+    Parameters
+    ----------
+    store
+        The store to read from.
+    entry
+        The manifest entry, or ``None`` when the file is absent on that side.
+    workdir
+        Directory the blob is written into.
+
+    Returns
+    -------
+    :
+        A ``(path, note)`` pair. ``path`` is ``None`` when the blob is absent or unfetchable,
+        and ``note`` describes a failure.
+    """
+    if entry is None:
+        return None, None
+    if entry.size > MAX_FETCH_BYTES:
+        return None, f"too large to diff ({entry.size:,} B)"
+    digest = entry.sha256
+    dest = workdir / digest
+    if dest.exists():
+        return dest, None
+    try:
+        store.fetch(digest, dest)
+    except (OSError, ValueError) as exc:
+        return None, f"could not fetch {digest[:SHORT_DIGEST]} ({exc})"
+    return dest, None
+
+
+def _diff_for(
+    change: FileChange,
+    store: NativeStore,
+    *,
+    fetch: bool,
+    workdir: Path,
+) -> TextDiff | None:
+    """
+    Build the diff for one file, or ``None`` when its kind is not diffed.
+
+    Parameters
+    ----------
+    change
+        The file that moved.
+    store
+        The store to read blobs from.
+    fetch
+        Whether blobs may be downloaded.
+    workdir
+        Directory fetched blobs are written into.
+
+    Returns
+    -------
+    :
+        The diff, a note explaining why there is not one, or ``None`` for a non-text file.
+    """
+    if change.kind is not FileKind.TEXT:
+        return None
+    if not fetch:
+        return TextDiff(lines=(), note="fetching disabled", elided=0)
+
+    old_path, old_note = _fetch_side(store, change.old, workdir)
+    new_path, new_note = _fetch_side(store, change.new, workdir)
+    note = old_note or new_note
+    if note is not None:
+        return TextDiff(lines=(), note=note, elided=0)
+    return text_diff(old_path, new_path, change.name)
+
+
+def _analyse_file(
+    change: FileChange,
+    store: NativeStore,
+    *,
+    fetch: bool,
+    workdir: Path,
+) -> AnalysedFile:
+    """
+    Build the URLs and, for text, the diff of one native file.
+
+    Parameters
+    ----------
+    change
+        The file that moved.
+    store
+        The store to read blobs from.
+    fetch
+        Whether blobs may be downloaded.
+    workdir
+        Directory fetched blobs are written into.
+
+    Returns
+    -------
+    :
+        The analysed file.
+    """
+    return AnalysedFile(
+        change=change,
+        old_url=blob_url(store, change.old.sha256) if change.old else None,
+        new_url=blob_url(store, change.new.sha256) if change.new else None,
+        text=_diff_for(change, store, fetch=fetch, workdir=workdir),
+        size_delta=change.new.size - change.old.size if change.old and change.new else None,
+    )
+
+
+def _of_kind(files: tuple[AnalysedFile, ...], *kinds: FileKind) -> tuple[AnalysedFile, ...]:
+    """
+    Select the files of the given kinds, keeping their order.
+
+    Parameters
+    ----------
+    files
+        The analysed files.
+    kinds
+        The kinds to keep.
+
+    Returns
+    -------
+    :
+        The matching files.
+    """
+    return tuple(file for file in files if file.change.kind in kinds)
+
+
+def _counts(files: tuple[AnalysedFile, ...]) -> tuple[KindCounts, ...]:
+    """
+    Tally each file kind's added, changed and removed counts.
+
+    Parameters
+    ----------
+    files
+        The analysed files.
+
+    Returns
+    -------
+    :
+        One entry per kind, in report column order, so a template never has to test
+        for a missing kind or decide the column order itself.
+    """
+    tally: dict[FileKind, Counter[str]] = {kind: Counter() for kind in FileKind}
+    for analysed in files:
+        tally[analysed.change.kind][analysed.change.status] += 1
+    return tuple(
+        KindCounts(
+            label=kind.value,
+            added=tally[kind]["added"],
+            changed=tally[kind]["changed"],
+            removed=tally[kind]["removed"],
+        )
+        for kind in FileKind
+    )
+
+
+def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -> AnalysedReport:
+    """
+    Build everything the templates need from a collected report.
+
+    A blob that cannot be fetched becomes a note on its file rather than an exception, because
+    one unreachable object should not cost the whole report.
+
+    Parameters
+    ----------
+    report
+        The collected report.
+    store
+        The store to read blobs from.
+    fetch
+        Whether blobs may be downloaded. With ``False`` every text file carries a note instead
+        of a diff and the store is never called.
+    workdir
+        Directory fetched blobs are written into.
+
+    Returns
+    -------
+    :
+        The analysed report.
+    """
+    store_url = store.root.absolute().as_uri() if store.root is not None else store.url.rstrip("/")
+    cases = []
+    for case in report.cases:
+        files = tuple(_analyse_file(change, store, fetch=fetch, workdir=workdir) for change in case.files)
+        depth = len(PurePosixPath(case.label).parts)
+        cases.append(
+            AnalysedCase(
+                change=case,
+                files=files,
+                counts=_counts(files),
+                images=_of_kind(files, FileKind.IMAGE),
+                texts=_of_kind(files, FileKind.TEXT),
+                binaries=_of_kind(files, FileKind.NETCDF, FileKind.OTHER),
+                back_link="/".join([*[".."] * depth, "index.html"]),
+            )
+        )
+    return AnalysedReport(
+        report=report,
+        store_url=store_url,
+        cases=tuple(cases),
+        kinds=tuple(kind.value for kind in FileKind),
+    )

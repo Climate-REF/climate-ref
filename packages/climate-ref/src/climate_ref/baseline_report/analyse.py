@@ -13,7 +13,7 @@ from collections import Counter
 from contextlib import ExitStack
 from itertools import islice
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import xarray as xr
@@ -48,6 +48,10 @@ MAX_DECODED_BYTES = 500_000_000
 
 # Unified-diff lines kept per file before the rest is elided.
 MAX_DIFF_LINES = 5000
+
+# A difference this small relative to the base ref's magnitude reads as numerical noise.
+# Double precision carries about 16 significant digits, so a real change has room to sit above.
+NOISE_RTOL = 1e-9
 
 
 @frozen
@@ -85,17 +89,25 @@ class Pair[T]:
     new: T | None
     """The value on HEAD, or ``None`` when it could not be computed."""
 
+    atol: float = 0.0
+    """How far a numeric pair may move before it reads as changed. Zero compares exactly."""
+
     @property
     def changed(self) -> bool:
         """
-        Whether the two sides differ.
+        Whether the two sides differ by more than :attr:`atol`.
 
         Returns
         -------
         :
-            ``True`` when the value moved, which is what emphasises it in the table.
+            ``True`` when the value moved further than :attr:`atol`, which is what
+            emphasises it in the table.
         """
-        return self.old != self.new
+        if self.old == self.new:
+            return False
+        if isinstance(self.old, float) and isinstance(self.new, float):
+            return not abs(self.new - self.old) <= self.atol
+        return True
 
 
 @frozen
@@ -129,20 +141,49 @@ class StatRow:
     cells_differ: int | None
     """Cells that changed, counting NaN as equal to NaN."""
 
+    atol: float
+    """
+    How far a value may move before it counts as changed.
+
+    :data:`NOISE_RTOL` scaled by the base ref's own magnitude, so one number governs
+    both the row's verdict and which of its statistics are emphasised.
+    """
+
     moved: bool
-    """Whether anything about this variable changed, which is what shades its row."""
+    """Whether anything about this variable changed, however small the change."""
 
     @property
-    def differs(self) -> bool:
+    def severity(self) -> Literal["same", "noise", "changed"]:
         """
-        Whether the cell by cell comparison found a change.
+        How much weight the row deserves.
+
+        A run reproduced on different hardware moves the last bits of nearly every cell, so a
+        row that only moved that far is called out as noise rather than as a change.
 
         Returns
         -------
         :
-            ``True`` when at least one cell moved, which is what emphasises the diff columns.
+            ``changed`` when the move is larger than :attr:`atol` or cannot be measured,
+            ``noise`` when it is smaller, and ``same`` when nothing moved.
         """
-        return bool(self.cells_differ)
+        if not self.moved:
+            return "same"
+        if self.max_abs_diff is None or self.max_abs_diff > self.atol:
+            return "changed"
+        return "noise"
+
+    @property
+    def differs(self) -> bool:
+        """
+        Whether the cell by cell comparison found a change worth reading.
+
+        Returns
+        -------
+        :
+            ``True`` when at least one cell moved further than :attr:`atol`, which is
+            what emphasises the diff columns.
+        """
+        return bool(self.cells_differ) and self.severity == "changed"
 
 
 @frozen
@@ -724,17 +765,19 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
     min_new, max_new, mean_new, nan_new = _summarise(new_values)
     scale = max(abs(min_old), abs(max_old)) if min_old is not None and max_old is not None else 0.0
     max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
+    atol = scale * NOISE_RTOL
     shape = Pair(old=shape_old, new=shape_new)
     return StatRow(
         name=name,
         shape=shape,
-        minimum=Pair(old=min_old, new=min_new),
-        maximum=Pair(old=max_old, new=max_new),
-        mean=Pair(old=mean_old, new=mean_new),
+        minimum=Pair(old=min_old, new=min_new, atol=atol),
+        maximum=Pair(old=max_old, new=max_new, atol=atol),
+        mean=Pair(old=mean_old, new=mean_new, atol=atol),
         nan=Pair(old=nan_old, new=nan_new),
         max_abs_diff=max_abs_diff,
         max_rel_diff=max_rel_diff,
         cells_differ=cells_differ,
+        atol=atol,
         moved=(cells_differ or 0) > 0 or shape.changed,
     )
 

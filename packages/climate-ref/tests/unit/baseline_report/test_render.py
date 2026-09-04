@@ -87,6 +87,7 @@ def _analysed(cases, tmp_path, diffs=None) -> AnalysedReport:
     """
     store = MagicMock(spec=NativeStore)
     store.url = STORE_URL
+    store.root = None
     report = analyse(
         Report(base_ref="origin/main", head_sha="a" * 40, cases=tuple(cases)),
         store,

@@ -43,8 +43,19 @@ def _report(files):
 
 
 class TestBlobUrl:
-    def test_joins_the_digest_onto_the_store(self):
-        assert blob_url("https://store/", "a" * 64) == f"https://store/{'a' * 64}"
+    def test_a_remote_store_serves_blobs_flat(self):
+        store = NativeStore(url="https://store/")
+
+        assert blob_url(store, "a" * 64) == f"https://store/{'a' * 64}"
+
+    def test_a_local_store_keeps_its_two_level_fan_out(self, tmp_path):
+        store = NativeStore(url=str(tmp_path / "store"))
+        digest = "a" * 64
+
+        url = blob_url(store, digest)
+
+        assert url.startswith("file://")
+        assert url.endswith(f"/aa/{digest}")
 
 
 class TestTextDiff:
@@ -90,6 +101,7 @@ class TestAnalyse:
     def test_no_fetch_notes_every_text_file(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
+        store.root = None
         report = _report(
             [
                 _file_change("plot.png", None, NativeEntry(sha256="1" * 64, size=10)),
@@ -107,6 +119,7 @@ class TestAnalyse:
     def test_counts_are_tallied_per_kind(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
+        store.root = None
         entry = NativeEntry(sha256="1" * 64, size=10)
         other = NativeEntry(sha256="2" * 64, size=10)
         report = _report(
@@ -131,6 +144,7 @@ class TestAnalyse:
     def test_partitions_and_back_link(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
+        store.root = None
         entry = NativeEntry(sha256="1" * 64, size=10)
         report = _report(
             [
@@ -152,6 +166,7 @@ class TestAnalyse:
     def test_the_back_link_follows_the_label_depth(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
+        store.root = None
         report = _report([])
         shallow = evolve(report.cases[0], label="pmp")
         report = evolve(report, cases=(shallow,))
@@ -163,6 +178,7 @@ class TestAnalyse:
     def test_size_delta_is_signed_and_absent_on_one_sided_files(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
+        store.root = None
         report = _report(
             [
                 _file_change(
@@ -208,6 +224,7 @@ class TestAnalyse:
     def test_oversized_blob_is_noted_not_fetched(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
+        store.root = None
         report = _report(
             [
                 _file_change(
@@ -226,6 +243,7 @@ class TestAnalyse:
     def test_a_failed_fetch_becomes_a_note(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
+        store.root = None
         store.fetch.side_effect = FileNotFoundError("gone")
         report = _report([_file_change("series.json", None, NativeEntry(sha256="1" * 64, size=10))])
 
@@ -237,6 +255,7 @@ class TestAnalyse:
     def test_urls_follow_the_entries_that_exist(self, tmp_path, fetch):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store/"
+        store.root = None
         report = _report([_file_change("plot.png", NativeEntry(sha256="1" * 64, size=10), None)])
 
         analysed = analyse(report, store, fetch=fetch, workdir=tmp_path)

@@ -137,23 +137,28 @@ class AnalysedReport:
     """The count column headers, matching the order of every case's ``counts``."""
 
 
-def blob_url(store_url: str, digest: str) -> str:
+def blob_url(store: NativeStore, digest: str) -> str:
     """
     Build the URL a blob is served from.
 
+    A local store fans its blobs out by the first two digest characters, so a flat URL under
+    its root would point at nothing.
+
     Parameters
     ----------
-    store_url
-        Base URL of the native store.
+    store
+        The store the blob lives in.
     digest
         The blob's sha256 hex digest.
 
     Returns
     -------
     :
-        The URL.
+        An absolute URL a browser can open.
     """
-    return f"{store_url.rstrip('/')}/{digest}"
+    if store.root is not None:
+        return (store.root / digest[:2] / digest).absolute().as_uri()
+    return f"{store.url.rstrip('/')}/{digest}"
 
 
 def _as_lines(path: Path | None, name: str) -> list[str]:
@@ -325,7 +330,6 @@ def _diff_for(
 def _analyse_file(
     change: FileChange,
     store: NativeStore,
-    store_url: str,
     *,
     fetch: bool,
     workdir: Path,
@@ -339,8 +343,6 @@ def _analyse_file(
         The file that moved.
     store
         The store to read blobs from.
-    store_url
-        Base URL of the store, used to build links.
     fetch
         Whether blobs may be downloaded.
     workdir
@@ -353,8 +355,8 @@ def _analyse_file(
     """
     return AnalysedFile(
         change=change,
-        old_url=blob_url(store_url, change.old.sha256) if change.old else None,
-        new_url=blob_url(store_url, change.new.sha256) if change.new else None,
+        old_url=blob_url(store, change.old.sha256) if change.old else None,
+        new_url=blob_url(store, change.new.sha256) if change.new else None,
         text=_diff_for(change, store, fetch=fetch, workdir=workdir),
         size_delta=change.new.size - change.old.size if change.old and change.new else None,
     )
@@ -435,9 +437,7 @@ def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -
     store_url = store.url.rstrip("/")
     cases = []
     for case in report.cases:
-        files = tuple(
-            _analyse_file(change, store, store_url, fetch=fetch, workdir=workdir) for change in case.files
-        )
+        files = tuple(_analyse_file(change, store, fetch=fetch, workdir=workdir) for change in case.files)
         depth = len(PurePosixPath(case.label).parts)
         cases.append(
             AnalysedCase(

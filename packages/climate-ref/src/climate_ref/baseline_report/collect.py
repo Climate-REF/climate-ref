@@ -66,7 +66,7 @@ def classify(name: str) -> FileKind:
     return FileKind.OTHER
 
 
-def change_status(old: object | None, new: object | None) -> str:
+def change_status(old: str | NativeEntry | None, new: str | NativeEntry | None) -> str:
     """
     Describe which sides of the change an entry is present on.
 

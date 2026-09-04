@@ -9,7 +9,6 @@ from __future__ import annotations
 import difflib
 import io
 import json
-import os.path
 from collections import Counter
 from contextlib import ExitStack
 from itertools import islice
@@ -1098,7 +1097,9 @@ def baseline_tree(case: CaseChange) -> tuple[TreeNode, ...]:
     previous: tuple[str, ...] = ()
     for path in sorted(entries):
         *directories, filename = PurePosixPath(path).parts
-        shared = len(os.path.commonprefix([previous, tuple(directories)]))
+        shared = 0
+        while shared < min(len(previous), len(directories)) and previous[shared] == directories[shared]:
+            shared += 1
         for depth in range(shared, len(directories)):
             rows.append(TreeNode(name=directories[depth], depth=depth, is_dir=True, size=None, status=None))
         previous = tuple(directories)

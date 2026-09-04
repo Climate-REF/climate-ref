@@ -326,7 +326,8 @@ To aid in the review process, we generate an HTML report of every test case whos
 - Images are shown two-up, the old beside the new.
 - Text outputs get a coloured line diff.
 - A changed NetCDF gets a header diff plus one row of statistics per variable, shaded only where the values moved.
-- Committed bundle artefacts get the same line diff, marked with an "in PR" pill because those bytes are also in the pull request's own file list.
+- Committed bundle artefacts get the same line diff,
+  marked with an "in PR" pill because those bytes are also in the pull request's own file list.
 - Each case page lists the folder structure of its captured baseline, including the files that did not move.
 
 The report is uploaded to the public reports bucket and served at

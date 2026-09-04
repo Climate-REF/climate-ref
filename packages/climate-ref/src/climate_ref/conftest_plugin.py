@@ -131,6 +131,22 @@ def _exclusive_file_lock(path: Path) -> Generator[None]:
             fcntl.flock(lock_file, fcntl.LOCK_UN)
 
 
+def _build_cached_file[T](cache_path: Path, builder: Callable[[Path], T]) -> T | None:
+    """Build and atomically publish a file once across xdist workers."""
+    with _exclusive_file_lock(cache_path.with_suffix(".lock")):
+        if cache_path.exists():
+            return None
+
+        temporary_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
+        temporary_path.unlink(missing_ok=True)
+        try:
+            result = builder(temporary_path)
+            os.replace(temporary_path, cache_path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+        return result
+
+
 def _run_once(marker_path: Path, action: Callable[[], None]) -> None:
     """Run an action once across xdist workers in the current pytest run."""
     with _exclusive_file_lock(marker_path.with_suffix(".lock")):
@@ -142,17 +158,13 @@ def _run_once(marker_path: Path, action: Callable[[], None]) -> None:
 
 def _load_or_create_dataframe(cache_path: Path, builder: Callable[[], pd.DataFrame]) -> pd.DataFrame:
     """Build and cache a DataFrame once across xdist workers."""
-    dataframe: pd.DataFrame | None = None
-    with _exclusive_file_lock(cache_path.with_suffix(".lock")):
-        if not cache_path.exists():
-            dataframe = builder()
-            temporary_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
-            try:
-                dataframe.to_pickle(temporary_path)
-                os.replace(temporary_path, cache_path)
-            finally:
-                temporary_path.unlink(missing_ok=True)
 
+    def _build(temporary_path: Path) -> pd.DataFrame:
+        dataframe = builder()
+        dataframe.to_pickle(temporary_path)
+        return dataframe
+
+    dataframe = _build_cached_file(cache_path, _build)
     if dataframe is not None:
         return dataframe
 

@@ -1,5 +1,4 @@
 import dataclasses
-import os
 import shutil
 from collections.abc import Callable, Generator
 from pathlib import Path
@@ -14,7 +13,7 @@ from pytest_regressions.data_regression import RegressionYamlDumper
 from yaml.representer import SafeRepresenter
 
 from climate_ref.config import Config
-from climate_ref.conftest_plugin import _exclusive_file_lock
+from climate_ref.conftest_plugin import _build_cached_file
 from climate_ref.database import Database, _get_sqlite_path
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
@@ -58,21 +57,6 @@ def _clone_db(target_db_url: str, template_db_path: Path) -> None:
 
     target_db_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(template_db_path, target_db_path)
-
-
-def _build_cached_file(cache_path: Path, builder: Callable[[Path], None]) -> None:
-    """Build and atomically publish a file once across xdist workers."""
-    with _exclusive_file_lock(cache_path.with_suffix(".lock")):
-        if cache_path.exists():
-            return
-
-        temporary_path = cache_path.with_name(f".{cache_path.stem}.{os.getpid()}{cache_path.suffix}")
-        temporary_path.unlink(missing_ok=True)
-        try:
-            builder(temporary_path)
-            os.replace(temporary_path, cache_path)
-        finally:
-            temporary_path.unlink(missing_ok=True)
 
 
 @pytest.fixture(scope="session")

@@ -20,13 +20,15 @@ from climate_ref.solver import (
     DiagnosticExecution,
     ExecutionSolver,
     SolveFilterOptions,
+    _solve_from_data_requirements,
     apply_dataset_filters,
     apply_obs4ref_fallback,
+    catalog_for_requirement,
     extract_covered_datasets,
     matches_filter,
     solve_executions,
     solve_required_executions,
-    with_obs4ref_fallback,
+    union_with_fallbacks,
 )
 from climate_ref_core.constraints import AddParentDataset, AddSupplementaryDataset, RequireFacets
 from climate_ref_core.datasets import SourceDatasetType
@@ -787,6 +789,31 @@ def test_two_executions_same_group_distinct_output_fragments(
     # The trailing segment is the new ``Execution.id``.
     assert fragment_a.split("/")[-1] == str(executions[0].id)
     assert fragment_b.split("/")[-1] == str(executions[1].id)
+
+
+def test_solve_snapshot_all_providers(db_seeded, config, data_regression):
+    """
+    Pin the solved output across every in-repo provider.
+
+    This is the oracle for the obs4REF fallback work. It must not move when the implicit
+    fold is replaced by declared fallbacks, so do not regenerate it with ``--force-regen``.
+
+    Rows are sorted because a seeded solve does not fix their order between runs.
+    `TestObs4REFFallback` pins the order the fallback itself produces.
+    """
+    solver = ExecutionSolver.build_from_db(config, db_seeded)
+    solver.provider_registry = ProviderRegistry(
+        providers=[example_provider, pmp_provider, esmvaltool_provider, ilamb_provider]
+    )
+
+    output = {}
+    for execution in solver.solve():
+        output[execution.execution_slug()] = {
+            str(source_type): sorted(collection.datasets[collection.slug_column])
+            for source_type, collection in execution.datasets.items()
+        }
+
+    data_regression.check(output)
 
 
 def test_solve_metrics(mocker, db_seeded, solver, data_regression, mock_executor):
@@ -1975,7 +2002,7 @@ class TestObs4REFFallback:
         obs4mips = self._frame("obs4MIPs", ["A"])
         obs4ref = self._frame("obs4REF", ["A", "B"], start=10)
 
-        merged = with_obs4ref_fallback(obs4mips, obs4ref)
+        merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
 
         # A is taken from obs4MIPs only, B comes from obs4REF and keeps its dataset id.
         assert merged["source_id"].tolist() == ["A", "B"]
@@ -1988,7 +2015,7 @@ class TestObs4REFFallback:
         )
         obs4ref = DataCatalog.from_frame(self._frame("obs4REF", ["B"]))
 
-        merged = with_obs4ref_fallback(obs4mips, obs4ref)
+        merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
 
         # A reload would go back to the obs4MIPs adapter alone and drop B.
         assert isinstance(merged, DataCatalog)
@@ -2000,7 +2027,7 @@ class TestObs4REFFallback:
         obs4mips = self._frame("obs4MIPs", ["A"]).assign(activity_id="obs4MIPs")
         obs4ref = self._frame("obs4REF", ["B"], start=10).assign(activity_id="obs4REF")
 
-        merged = with_obs4ref_fallback(obs4mips, obs4ref)
+        merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
 
         assert merged["activity_id"].tolist() == ["obs4MIPs", "obs4MIPs"]
         assert merged["instance_id"].iloc[1].startswith("obs4REF.")
@@ -2009,18 +2036,18 @@ class TestObs4REFFallback:
         obs4mips = self._frame("obs4MIPs", ["A"], version="v1")
         obs4ref = self._frame("obs4REF", ["A"], version="v2", start=10)
 
-        assert with_obs4ref_fallback(obs4mips, obs4ref) is obs4mips
+        assert union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs) is obs4mips
 
     def test_untouched_when_nothing_to_add(self):
         obs4mips = self._frame("obs4MIPs", ["A"])
 
-        assert with_obs4ref_fallback(obs4mips, pd.DataFrame()) is obs4mips
+        assert union_with_fallbacks(obs4mips, [pd.DataFrame()], SourceDatasetType.obs4MIPs) is obs4mips
 
     def test_obs4ref_alone_still_groups_as_obs4mips(self):
         # A deployment that fetched only the registry is the ordinary case, not an edge case.
         obs4ref = self._frame("obs4REF", ["A"]).assign(activity_id="obs4REF")
 
-        merged = with_obs4ref_fallback(pd.DataFrame(), obs4ref)
+        merged = union_with_fallbacks(pd.DataFrame(), [obs4ref], SourceDatasetType.obs4MIPs)
 
         assert merged["activity_id"].tolist() == ["obs4MIPs"]
         assert merged["instance_id"].tolist() == obs4ref["instance_id"].tolist()
@@ -2040,3 +2067,92 @@ class TestObs4REFFallback:
         catalogs = {SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"])}
 
         assert apply_obs4ref_fallback(catalogs) is catalogs
+
+
+class TestDeclaredFallbacks:
+    """A requirement names the collections that may stand in for its source type."""
+
+    # PMPClimatology is never folded globally, so a union of it can only come from the requirement.
+    FALLBACK = SourceDatasetType.PMPClimatology
+
+    @staticmethod
+    def _frame(prefix, source_ids, version="v1", start=0):
+        return pd.DataFrame(
+            {
+                "instance_id": [f"{prefix}.{prefix}.INST.{s}.mon.ts.gn.{version}" for s in source_ids],
+                "source_id": list(source_ids),
+                "variable_id": "ts",
+                "activity_id": prefix,
+                "path": [f"/data/{prefix}/{s}.nc" for s in source_ids],
+            },
+            index=range(start, start + len(source_ids)),
+        )
+
+    def _requirement(self, fallbacks):
+        return DataRequirement(
+            source_type=SourceDatasetType.obs4MIPs,
+            filters=(),
+            group_by=("activity_id",),
+            fallback_source_types=fallbacks,
+        )
+
+    def test_a_declared_fallback_is_unioned_into_the_requirement(self):
+        catalogs = {
+            SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"]),
+            self.FALLBACK: self._frame("pmp-climatology", ["B"], start=10),
+        }
+
+        catalog = catalog_for_requirement(catalogs, self._requirement((self.FALLBACK,)))
+
+        assert catalog["source_id"].tolist() == ["A", "B"]
+        assert catalog["activity_id"].tolist() == ["obs4MIPs", "obs4MIPs"]
+        assert catalog.index.tolist() == [0, 1]
+
+    def test_an_undeclared_collection_is_left_out(self):
+        catalogs = {
+            SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"]),
+            self.FALLBACK: self._frame("pmp-climatology", ["B"], start=10),
+        }
+
+        catalog = catalog_for_requirement(catalogs, self._requirement(()))
+
+        assert catalog["source_id"].tolist() == ["A"]
+
+    def test_a_requirement_solves_from_its_fallback_alone(self, provider, mock_diagnostic):
+        # An ordinary registry-only deployment ingests nothing under the primary type.
+        catalogs = {self.FALLBACK: self._frame("pmp-climatology", ["A", "B"])}
+
+        executions = list(
+            _solve_from_data_requirements(
+                catalogs, mock_diagnostic, [self._requirement((self.FALLBACK,))], provider
+            )
+        )
+
+        # The data is delivered under the primary type whichever collection supplied it.
+        assert len(executions) == 1
+        datasets = executions[0].datasets[SourceDatasetType.obs4MIPs]
+        assert datasets["source_id"].tolist() == ["A", "B"]
+        assert datasets.selector_dict() == {"activity_id": "obs4MIPs"}
+
+    def test_a_missing_fallback_catalog_is_tolerated(self):
+        catalogs = {SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"])}
+
+        catalog = catalog_for_requirement(catalogs, self._requirement((self.FALLBACK,)))
+
+        assert catalog["source_id"].tolist() == ["A"]
+
+    def test_nothing_ingested_under_the_primary_or_any_fallback(self):
+        assert catalog_for_requirement({}, self._requirement((self.FALLBACK,))) is None
+
+    def test_the_union_is_idempotent(self):
+        # The global fold and the per-requirement union both run, so applying twice must not double up.
+        primary = self._frame("obs4MIPs", ["A"])
+        fallback = self._frame("obs4REF", ["A", "B"], start=10)
+
+        once = union_with_fallbacks(primary, [fallback], SourceDatasetType.obs4MIPs)
+        twice = union_with_fallbacks(once, [fallback], SourceDatasetType.obs4MIPs)
+
+        assert twice is once
+        pd.testing.assert_frame_equal(once, twice)
+        assert once["source_id"].tolist() == ["A", "B"]
+        assert once.index.tolist() == [0, 1]

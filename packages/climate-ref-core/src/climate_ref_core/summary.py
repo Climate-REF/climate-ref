@@ -42,6 +42,14 @@ class DataRequirementSummary:
     which is what :mod:`climate_ref_core.reference_data` uses to work out where that dataset comes from.
     """
 
+    fallback_source_types: tuple[str, ...] = ()
+    """
+    Values of the source types that may supply the requirement when ``source_type`` does not.
+
+    :mod:`climate_ref_core.reference_data` reads this to resolve which registry carries a dataset,
+    so an obs4MIPs requirement served from the obs4REF registry is not reported as unobtainable.
+    """
+
 
 @frozen
 class RequirementSetSummary:
@@ -162,6 +170,7 @@ def summarize_data_requirement(req: DataRequirement) -> DataRequirementSummary:
         frequencies=_extract_facet_values(req.filters, "frequency"),
         group_by=req.group_by,
         source_ids=_extract_facet_values(req.filters, "source_id"),
+        fallback_source_types=tuple(t.value for t in req.fallback_source_types),
     )
 
 

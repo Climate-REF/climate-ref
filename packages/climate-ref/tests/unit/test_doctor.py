@@ -7,6 +7,10 @@ so no database or ingest is needed.
 
 import pandas as pd
 import pytest
+from climate_ref_esmvaltool import provider as esmvaltool_provider
+from climate_ref_example import provider as example_provider
+from climate_ref_ilamb import provider as ilamb_provider
+from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.doctor import (
     DoctorContext,
@@ -478,3 +482,30 @@ class TestRunChecks:
         findings = [Finding(severity=s, summary="s") for s in severities]
 
         assert worst_severity(findings) == expected
+
+
+def test_diagnose_snapshot_seeded(db_seeded, config, data_regression):
+    """
+    Pin the doctor findings over the seeded catalogs and every in-repo provider.
+
+    This is the doctor half of the oracle for the obs4REF fallback work,
+    so do not regenerate it with ``--force-regen``.
+    """
+    context = DoctorContext(config=config, database=db_seeded)
+    context._providers = [example_provider, pmp_provider, esmvaltool_provider, ilamb_provider]
+
+    findings = diagnose(context).findings
+
+    reported = [
+        {
+            "check": finding.check,
+            "severity": str(finding.severity),
+            "summary": finding.summary,
+            "detail": finding.detail,
+            "remedy": finding.remedy,
+            "command": finding.command,
+        }
+        for finding in findings
+    ]
+
+    data_regression.check(sorted(reported, key=lambda entry: tuple(sorted(entry.items()))))

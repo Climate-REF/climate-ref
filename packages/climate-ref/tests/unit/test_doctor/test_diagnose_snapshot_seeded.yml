@@ -1,0 +1,244 @@
+- check: missing-reference-data
+  command: ''
+  detail: Needed for areacello, sic by esmvaltool/sea-ice-area-basic.
+  remedy: No registry carries these and they are not known to be on ESGF.
+  severity: warning
+  summary: OSI-450-nh (esmvaltool-reference) is not ingested, so 1 diagnostic will
+    not run
+- check: missing-reference-data
+  command: ''
+  detail: Needed for areacello, sic by esmvaltool/sea-ice-area-basic.
+  remedy: No registry carries these and they are not known to be on ESGF.
+  severity: warning
+  summary: OSI-450-sh (esmvaltool-reference) is not ingested, so 1 diagnostic will
+    not run
+- check: missing-reference-data
+  command: ''
+  detail: Needed for lai by ilamb/lai-avh15c1.
+  remedy: These are published to obs4MIPs on ESGF, and `scripts/fetch-esgf.py` has
+    a request for each. See the 'Download required datasets' guide.
+  severity: warning
+  summary: NOAA-NCEI-LAI-AVHRR-5-0 (obs4mips) is not ingested, so 1 diagnostic will
+    not run
+- check: missing-reference-data
+  command: ''
+  detail: Needed for psl by pmp/extratropical-modes-of-variability-nam, pmp/extratropical-modes-of-variability-nao,
+    pmp/extratropical-modes-of-variability-npo, pmp/extratropical-modes-of-variability-pna,
+    pmp/extratropical-modes-of-variability-sam.
+  remedy: These are published to obs4MIPs on ESGF, and `scripts/fetch-esgf.py` has
+    a request for each. See the 'Download required datasets' guide.
+  severity: warning
+  summary: 20CR-V2 (obs4mips) is not ingested, so 5 diagnostics will not run
+- check: missing-reference-data
+  command: ''
+  detail: Needed for rlut, rlutcs, rsut, rsutcs by esmvaltool/cloud-radiative-effects.
+  remedy: These are published to obs4MIPs on ESGF, and `scripts/fetch-esgf.py` has
+    a request for each. See the 'Download required datasets' guide.
+  severity: warning
+  summary: CERES-EBAF-4-2-1 (obs4mips) is not ingested, so 1 diagnostic will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry obs4ref --output-directory <dir>
+  detail: Needed for burntFractionAll by ilamb/burntfractionall-gfed.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: GFED-5-0 (obs4mips) is not ingested, so 1 diagnostic will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry obs4ref --output-directory <dir>
+  detail: Needed for cSoil by ilamb/csoil-hwsd2.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: HWSD-2-0 (obs4mips) is not ingested, so 1 diagnostic will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry obs4ref --output-directory <dir>
+  detail: Needed for mrro by ilamb/mrro-lora.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: LORA-1-0 (obs4mips) is not ingested, so 1 diagnostic will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry obs4ref --output-directory <dir>
+  detail: Needed for msftmz by ilamb/amoc-rapid.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: RAPID-2023-1a (obs4mips) is not ingested, so 1 diagnostic will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry obs4ref --output-directory <dir>
+  detail: Needed for nbp by ilamb/nbp-hoffman.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: Hoffman-1-0 (obs4mips) is not ingested, so 1 diagnostic will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry obs4ref --output-directory <dir>
+  detail: Needed for snc by ilamb/snc-esacci.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: CCI-CryoClim-FSC-1 (obs4mips) is not ingested, so 1 diagnostic will not
+    run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry obs4ref --output-directory <dir>
+  detail: Needed for so, thetao by ilamb/so-woa2023-surface, ilamb/thetao-woa2023-surface.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: WOA-23 (obs4mips) is not ingested, so 2 diagnostics will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry pmp-climatology --output-directory <dir>
+  detail: Needed for pr by pmp/annual-cycle.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: GPCP-3-3 (pmp-climatology) is not ingested, so 1 diagnostic will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry pmp-climatology --output-directory <dir>
+  detail: Needed for psl, ta, ts, ua, uas, va, vas, zg by pmp/annual-cycle.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: ERA-5 (pmp-climatology) is not ingested, so 1 diagnostic will not run
+- check: missing-reference-data
+  command: ref datasets fetch-data --registry pmp-climatology --output-directory <dir>
+  detail: Needed for rlds, rlus, rlut, rsds, rsdt, rsus, rsut by pmp/annual-cycle.
+  remedy: Fetch these, then ingest the directory they land in.
+  severity: warning
+  summary: CERES-EBAF-4-2 (pmp-climatology) is not ingested, so 1 diagnostic will
+    not run
+- check: overlapping-registries
+  command: ''
+  detail: 'Carried by: obs4ref, quickstart.'
+  remedy: Fetch each of these from one registry only. Ingesting two copies of the
+    same version gives one dataset holding both sets of files.
+  severity: info
+  summary: HadISST-1-1 is carried by 2 registries
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no cmip6 datasets match experiment_id=historical, table_id=Amon,
+    variable_id=hurs|pr|tas|tasmax; experiment_id=historical, table_id=Lmon, variable_id=cVeg|treeFrac;
+    experiment_id=historical, table_id=Emon, variable_id=vegFrac. nothing is ingested
+    as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: esmvaltool/climate-drivers-for-fire has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no cmip6 datasets match experiment_id=historical|land-hist, frequency=mon,
+    table_id=AERmonZ|Amon|CFmon|Emon|EmonZ|LImon|Lmon|Omon|SImon, variable_id=emp|evspsbl.
+    nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/emp-gleamgpcp2.3 has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match frequency=mon, source_id=CERES-EBAF-4-2-1,
+    variable_id=rlut|rlutcs|rsut|rsutcs. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: esmvaltool/cloud-radiative-effects has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gm, source_id=Hoffman-1-0,
+    variable_id=nbp, version=v20251117. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/nbp-hoffman has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gm, source_id=RAPID-2023-1a,
+    variable_id=msftmz, version=v20250902. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/amoc-rapid has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gn, source_id=CCI-CryoClim-FSC-1,
+    variable_id=snc, version=v20250519. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/snc-esacci has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gn, source_id=HWSD-2-0, variable_id=cSoil,
+    version=v20250903. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/csoil-hwsd2 has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gn, source_id=LORA-1-0, variable_id=mrro,
+    version=v20250902. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/mrro-lora has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gn, source_id=NOAA-NCEI-LAI-AVHRR-5-0,
+    variable_id=lai. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/lai-avh15c1 has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gn, source_id=WECANN-1-0,
+    variable_id=gpp, version=v20250902. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/gpp-wecann has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gn, source_id=WOA-23, variable_id=so,
+    version=v20251024. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/so-woa2023-surface has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gn, source_id=WOA-23, variable_id=thetao,
+    version=v20251024. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/thetao-woa2023-surface has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match grid_label=gr, source_id=GFED-5-0, variable_id=burntFractionAll,
+    version=v20260128. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: ilamb/burntfractionall-gfed has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match source_id=20CR-V2, variable_id=psl.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: pmp/extratropical-modes-of-variability-nam has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match source_id=20CR-V2, variable_id=psl.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: pmp/extratropical-modes-of-variability-nao has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match source_id=20CR-V2, variable_id=psl.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: pmp/extratropical-modes-of-variability-npo has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match source_id=20CR-V2, variable_id=psl.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: pmp/extratropical-modes-of-variability-pna has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: no obs4mips datasets match source_id=20CR-V2, variable_id=psl.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: pmp/extratropical-modes-of-variability-sam has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: nothing is ingested as esmvaltool-reference. nothing is ingested
+    as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: esmvaltool/sea-ice-area-basic has no executions
+- check: unsolvable-diagnostics
+  command: ''
+  detail: 'Unmet: nothing is ingested as pmp-climatology.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: pmp/annual-cycle has no executions

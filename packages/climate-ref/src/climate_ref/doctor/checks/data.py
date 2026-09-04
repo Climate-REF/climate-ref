@@ -11,7 +11,7 @@ and diagnostics the ingested data cannot solve at all.
 """
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 import pandas as pd
 
@@ -23,6 +23,7 @@ from climate_ref.doctor.registry import check
 from climate_ref.solver import (
     apply_obs4ref_fallback,
     as_frame,
+    catalog_for_requirement,
     extract_covered_datasets,
     obs_dataset_key,
     solve_executions,
@@ -30,6 +31,7 @@ from climate_ref.solver import (
 from climate_ref.text import pluralise
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import InvalidDiagnosticException
+from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.reference_data import (
     ESGF_OBS4MIPS,
     ReferenceDataset,
@@ -109,6 +111,29 @@ def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
     return findings
 
 
+def _declared_fallbacks(providers: Iterable[DiagnosticProvider]) -> dict[str, set[str]]:
+    """
+    Collect the fallback source types the providers' requirements declare.
+
+    Parameters
+    ----------
+    providers
+        The providers to inspect.
+
+    Returns
+    -------
+    :
+        Source type values mapped to the source type values that may stand in for them.
+    """
+    declared: dict[str, set[str]] = defaultdict(set)
+    for provider in providers:
+        for diagnostic in summarize_provider(provider).diagnostics:
+            for requirement_set in diagnostic.requirement_sets:
+                for requirement in requirement_set.requirements:
+                    declared[requirement.source_type].update(requirement.fallback_source_types)
+    return declared
+
+
 def _collection_root(path: str, depth: int = 4) -> str:
     """Shorten a file path to the directory that identifies which collection it came from."""
     parts = str(path).split("/")
@@ -148,6 +173,9 @@ def check_missing_reference_data(context: DoctorContext) -> list[Finding]:
 
     # obs4REF fills in whatever obs4MIPs lacks, so either satisfies an obs4MIPs requirement.
     ingested[SourceDatasetType.obs4MIPs.value] |= ingested[SourceDatasetType.obs4REF.value]
+    for requested_type, fallbacks in _declared_fallbacks(context.providers).items():
+        for fallback in fallbacks:
+            ingested[requested_type] |= ingested[fallback]
 
     findings = []
     for dataset in sorted(required, key=lambda d: (d.supplier, d.source_id)):
@@ -219,6 +247,7 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
             for requirement_set in diagnostic.requirement_sets:
                 for requirement in requirement_set.requirements:
                     requested.add(requirement.source_type)
+                    requested.update(requirement.fallback_source_types)
     if SourceDatasetType.obs4MIPs.value in requested:
         requested.add(SourceDatasetType.obs4REF.value)
 
@@ -413,9 +442,8 @@ def _why_unsolvable(
     reasons = []
     for requirements in normalize_requirement_sets(diagnostic.data_requirements):
         for requirement in requirements:
-            catalog = available[requirement.source_type]
-            frame = as_frame(catalog)
-            if not len(frame):
+            catalog = catalog_for_requirement(available, requirement)
+            if catalog is None or not len(as_frame(catalog)):
                 reasons.append(f"nothing is ingested as {requirement.source_type.value}")
                 break
             if not extract_covered_datasets(catalog, requirement):

@@ -6,7 +6,6 @@
 TEMP_FILE := $(shell mktemp)
 
 # Workers used by the parallel test run.
-# `auto` takes every core, which leaves a developer machine unusable while the suite runs.
 PYTEST_WORKERS ?= 4
 
 # A helper script to get short descriptions of each target in the Makefile

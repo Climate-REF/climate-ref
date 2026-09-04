@@ -447,8 +447,8 @@ class DataRequirement:
     """
     Source types that may supply this requirement when ``source_type`` does not hold the dataset.
 
-    A dataset present under ``source_type`` always wins, and the data is delivered under
-    ``source_type`` whichever collection it came from.
+    A dataset present under ``source_type`` always wins,
+    and the data is delivered under ``source_type`` whichever collection it came from.
     """
 
     def apply_filters(self, data_catalog: pd.DataFrame) -> pd.DataFrame:

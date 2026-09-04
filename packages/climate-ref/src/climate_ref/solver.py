@@ -317,7 +317,7 @@ def union_with_fallbacks(
         if "activity_id" in taken.columns:
             taken = taken.assign(activity_id=primary_type.name)
         if len(merged):
-            beaten = obs_dataset_key(merged["instance_id"]).isin(obs_dataset_key(taken["instance_id"]))
+            beaten = _obs_dataset_key(merged["instance_id"]).isin(_obs_dataset_key(taken["instance_id"]))
             merged = pd.concat([merged[~beaten], taken], ignore_index=True)
         else:
             merged = taken.reset_index(drop=True)
@@ -329,6 +329,16 @@ def union_with_fallbacks(
         # No adapter can reload the merge, so the result carries none and never reloads.
         return DataCatalog.from_frame(merged)
     return merged
+
+
+def _obs_dataset_version(instance_id: pd.Series) -> pd.Series:
+    """Read the numeric version key off the end of an obs4MIPs or obs4REF ``instance_id``."""
+    return instance_id.astype(str).str.rsplit(".", n=1).str[1].map(version_sort_key)
+
+
+def _obs_dataset_key(instance_id: pd.Series) -> pd.Series:
+    """Strip the collection prefix to be common between obs4MIPs or obs4REF"""
+    return instance_id.astype(str).str.split(".", n=2).str[2].str.rsplit(".", n=1).str[0]
 
 
 def newer_rows(candidate: pd.DataFrame, held: pd.DataFrame) -> pd.DataFrame:
@@ -350,50 +360,13 @@ def newer_rows(candidate: pd.DataFrame, held: pd.DataFrame) -> pd.DataFrame:
     if not len(held):
         return candidate
     held_version = pd.Series(
-        obs_dataset_version(held["instance_id"]).to_numpy(),
-        index=obs_dataset_key(held["instance_id"]).to_numpy(),
+        _obs_dataset_version(held["instance_id"]).to_numpy(),
+        index=_obs_dataset_key(held["instance_id"]).to_numpy(),
     )
     held_version = held_version.groupby(level=0).max()
-    current = obs_dataset_key(candidate["instance_id"]).map(held_version)
-    wins = current.isna() | (obs_dataset_version(candidate["instance_id"]) > current)
+    current = _obs_dataset_key(candidate["instance_id"]).map(held_version)
+    wins = current.isna() | (_obs_dataset_version(candidate["instance_id"]) > current)
     return candidate[wins]
-
-
-def obs_dataset_version(instance_id: pd.Series) -> pd.Series:
-    """
-    Read the numeric version key off the end of an obs4MIPs or obs4REF ``instance_id``.
-
-    Parameters
-    ----------
-    instance_id
-        Instance ids from either collection.
-
-    Returns
-    -------
-    :
-        The version compared as :func:`version_sort_key` does.
-    """
-    return instance_id.astype(str).str.rsplit(".", n=1).str[1].map(version_sort_key)
-
-
-def obs_dataset_key(instance_id: pd.Series) -> pd.Series:
-    """
-    Reduce an obs4MIPs or obs4REF ``instance_id`` to what identifies the dataset across the two.
-
-    The two collections build the same id apart from the leading collection components
-    and the trailing version.
-
-    Parameters
-    ----------
-    instance_id
-        Instance ids from either collection.
-
-    Returns
-    -------
-    :
-        The id with the collection prefix and version removed.
-    """
-    return instance_id.astype(str).str.split(".", n=2).str[2].str.rsplit(".", n=1).str[0]
 
 
 def apply_obs4ref_fallback(

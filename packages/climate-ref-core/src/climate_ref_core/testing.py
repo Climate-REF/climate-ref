@@ -27,7 +27,7 @@ from climate_ref_core.datasets import (
 )
 from climate_ref_core.esgf.base import ESGFRequest
 from climate_ref_core.paths import safe_path
-from climate_ref_core.regression.manifest import Manifest
+from climate_ref_core.regression.manifest import COMMITTED_DIRNAME, Manifest
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
@@ -231,7 +231,7 @@ class TestCasePaths:
     @property
     def regression(self) -> Path:
         """Path to regression/ directory."""
-        return self.root / "regression"
+        return self.root / COMMITTED_DIRNAME
 
     @property
     def manifest(self) -> Path:

@@ -29,6 +29,7 @@ from climate_ref_core.regression.gate import (
 )
 from climate_ref_core.regression.manifest import (
     COMMITTED_BUNDLE_FILES,
+    COMMITTED_DIRNAME,
     SCHEMA_VERSION,
     Manifest,
     NativeEntry,
@@ -50,6 +51,7 @@ from climate_ref_core.regression.store import (
 
 __all__ = [
     "COMMITTED_BUNDLE_FILES",
+    "COMMITTED_DIRNAME",
     "SCHEMA_VERSION",
     "Action",
     "GateDecision",

@@ -62,6 +62,10 @@ def _validate_digest(digest: str) -> str:
     return digest
 
 
+COMMITTED_DIRNAME = "regression"
+"""The directory a test case's committed bundle sits in, both in git and in an output slot."""
+
+
 COMMITTED_BUNDLE_FILES: tuple[str, ...] = (
     "series.json",
     "diagnostic.json",

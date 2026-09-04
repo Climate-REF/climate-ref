@@ -1,3 +1,4 @@
+import copy
 from pathlib import Path
 
 import pandas
@@ -15,7 +16,7 @@ from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
-from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
@@ -30,6 +31,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
     name = "Sea ice sensitivity"
     slug = "sea-ice-sensitivity"
     base_recipe = "recipe_seaice_sensitivity.yml"
+    version = 2
 
     data_requirements = (
         (
@@ -132,7 +134,8 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
         for region in ("arctic", "antarctic")
     ) + tuple(
         FileDefinition(
-            file_pattern=f"work/{region}/sea_ice_sensitivity_script/plotted_values.csv",
+            # ESMValTool v2.15 registers this file in its provenance without the .csv suffix.
+            file_pattern=f"work/{region}/sea_ice_sensitivity_script/data_values*",
             dimensions={"region": region},
         )
         for region in ("arctic", "antarctic")
@@ -193,25 +196,33 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
         """Update the recipe."""
         cmip_source = get_cmip_source_type(input_files)
         recipe_variables = dataframe_to_recipe(input_files[cmip_source])
-
-        if cmip_source == SourceDatasetType.CMIP7:
-            # CMIP7: use per-variable additional_datasets to preserve correct branding_suffix
-            recipe["datasets"] = []
-            for diagnostic in recipe["diagnostics"].values():
-                for var_name, variable in diagnostic.get("variables", {}).items():
-                    short_name = variable.get("short_name", var_name)
-                    if short_name in recipe_variables:
-                        datasets = recipe_variables[short_name]["additional_datasets"]
-                        for ds in datasets:
-                            ds.pop("mip", None)
-                            ds["timerange"] = "1979/2014"
-                        variable["additional_datasets"] = datasets
-        else:
-            datasets = recipe_variables["tas"]["additional_datasets"]
-            for dataset in datasets:
-                dataset.pop("mip")
+        for variable in recipe_variables.values():
+            for dataset in variable["additional_datasets"]:
+                dataset.pop("mip", None)
                 dataset["timerange"] = "1979/2014"
-            recipe["datasets"] = datasets
+
+        # The REF supplies the models from the solve and has no ESMValTool observations available,
+        # so drop the datasets the recipe carries and the anchors holding them.
+        for key in (
+            "datasets",
+            "model_defaults",
+            "model_datasets",
+            "obs_defaults",
+            "tasa_obs",
+            "arctic_siconc_obs",
+            "antarctic_siconc_obs",
+        ):
+            recipe.pop(key, None)
+
+        for diagnostic in recipe["diagnostics"].values():
+            variables = diagnostic["variables"]
+            for name in list(variables):
+                if name in recipe_variables:
+                    variables[name]["additional_datasets"] = copy.deepcopy(
+                        recipe_variables[name]["additional_datasets"]
+                    )
+                else:
+                    del variables[name]
 
     @staticmethod
     def format_result(
@@ -231,22 +242,33 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
             "region": {},
             "metric": {},
         }
+        dimensions = metric_args[MetricCV.DIMENSIONS.value]
         for region in "antarctic", "arctic":
             df = pd.read_csv(
-                result_dir / "work" / region / "sea_ice_sensitivity_script" / "plotted_values.csv"
+                result_dir / "work" / region / "sea_ice_sensitivity_script" / "data_values.csv",
+                header=[0, 1, 2],
+                index_col=0,
             )
-            df = df.rename(columns={"Unnamed: 0": "source_id"}).drop(columns=["label"])
-            metric_args[MetricCV.DIMENSIONS.value]["region"][region] = {}
-            for metric in df.columns[1:]:
-                metric_args[MetricCV.DIMENSIONS.value]["metric"][metric] = {}
-            for row in df.itertuples(index=False):
-                source_id = row.source_id
-                metric_args[MetricCV.DIMENSIONS.value]["source_id"][source_id] = {}
-                for metric, value in zip(df.columns[1:], row[1:]):
-                    if source_id not in metric_args[MetricCV.RESULTS.value]:
-                        metric_args[MetricCV.RESULTS.value][source_id] = {}
-                    if region not in metric_args[MetricCV.RESULTS.value][source_id]:
-                        metric_args[MetricCV.RESULTS.value][source_id][region] = {}
-                    metric_args[MetricCV.RESULTS.value][source_id][region][metric] = value
+            is_type = df.columns.get_level_values("statistic") == "type"
+            is_model = df.loc[:, is_type].iloc[:, 0] == "model"
+            # The REF solve covers a single period, so keep the last one if the script adds more.
+            period = str(df.columns.get_level_values("period")[-1])
+            values = df.loc[is_model, period]
+
+            dimensions["region"][region] = {}
+            for regression, statistic in values.columns:
+                dimensions["metric"][f"{regression}_{statistic}"] = {}
+            for source_id, row in values.iterrows():
+                dimensions["source_id"][source_id] = {}
+                results = metric_args[MetricCV.RESULTS.value].setdefault(source_id, {}).setdefault(region, {})
+                for (regression, statistic), value in row.items():
+                    results[f"{regression}_{statistic}"] = float(value)
+
+        # Restore the data_values suffix
+        data = output_args[OutputCV.DATA.value]
+        for key in [key for key in data if key.endswith("/data_values")]:
+            entry = data.pop(key)
+            entry[OutputCV.FILENAME.value] = f"{entry[OutputCV.FILENAME.value]}.csv"
+            data[f"{key}.csv"] = entry
 
         return CMECMetric.model_validate(metric_args), CMECOutput.model_validate(output_args)

@@ -49,7 +49,7 @@ from climate_ref.config import (
     DiagnosticProviderConfig,
 )
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
-from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
+from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, Obs4REFDatasetAdapter
 from climate_ref.models import Execution
 from climate_ref.solve_helpers import load_solve_catalog
 from climate_ref.solver import solve_executions
@@ -220,20 +220,26 @@ def cmip6_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame
 @pytest.fixture(scope="session")
 def obs4mips_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
     """obs4MIPs sample data catalog."""
-    adapter = Obs4MIPsDatasetAdapter()
-    obs4ref = adapter.find_local_datasets(sample_data_dir / "obs4REF")
-    obs4mips = adapter.find_local_datasets(sample_data_dir / "obs4MIPs")
-    return pd.concat([obs4ref, obs4mips], ignore_index=True)
+    return Obs4MIPsDatasetAdapter().find_local_datasets(sample_data_dir / "obs4MIPs")
+
+
+@pytest.fixture(scope="session")
+def obs4ref_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
+    """obs4REF sample data catalog."""
+    return Obs4REFDatasetAdapter().find_local_datasets(sample_data_dir / "obs4REF")
 
 
 @pytest.fixture(scope="session")
 def data_catalog(
-    cmip6_data_catalog: pd.DataFrame, obs4mips_data_catalog: pd.DataFrame
+    cmip6_data_catalog: pd.DataFrame,
+    obs4mips_data_catalog: pd.DataFrame,
+    obs4ref_data_catalog: pd.DataFrame,
 ) -> dict[SourceDatasetType, pd.DataFrame]:
-    """Provide combined data catalog with CMIP6 and obs4MIPs sources."""
+    """Provide combined data catalog with CMIP6, obs4MIPs and obs4REF sources."""
     return {
         SourceDatasetType.CMIP6: cmip6_data_catalog,
         SourceDatasetType.obs4MIPs: obs4mips_data_catalog,
+        SourceDatasetType.obs4REF: obs4ref_data_catalog,
     }
 
 

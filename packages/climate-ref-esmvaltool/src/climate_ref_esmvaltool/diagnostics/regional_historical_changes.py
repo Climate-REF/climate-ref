@@ -113,6 +113,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     name = "Regional historical annual cycle of climate variables"
     slug = "regional-historical-annual-cycle"
     base_recipe = "ref/recipe_ref_annual_cycle_region.yml"
+    version = 2
 
     variables = (
         "hus",
@@ -178,6 +179,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={
@@ -383,6 +385,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
     name = "Regional historical mean and anomaly of climate variables"
     slug = "regional-historical-timeseries"
     base_recipe = "ref/recipe_ref_timeseries_region.yml"
+    version = 2
 
     variables = (
         "hus",
@@ -464,6 +467,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={
@@ -654,6 +658,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
     name = "Regional historical trend of climate variables"
     slug = "regional-historical-trend"
     base_recipe = "ref/recipe_ref_trend_regions.yml"
+    version = 2
 
     variables = (
         "hus",
@@ -719,6 +724,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={

@@ -369,35 +369,6 @@ def newer_rows(candidate: pd.DataFrame, held: pd.DataFrame) -> pd.DataFrame:
     return candidate[wins]
 
 
-def apply_obs4ref_fallback(
-    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
-) -> Mapping[SourceDatasetType, pd.DataFrame | DataCatalog]:
-    """
-    Fold the obs4REF catalog into the obs4MIPs one so obs4MIPs requirements can reach it.
-
-    Parameters
-    ----------
-    data_catalog
-        Data catalogs for each source dataset type
-
-    Returns
-    -------
-    :
-        The catalogs with obs4MIPs extended by the obs4REF datasets it lacks
-        (see `union_with_fallbacks`).
-        The mapping is returned unchanged when nothing is ingested as obs4REF.
-    """
-    if SourceDatasetType.obs4REF not in data_catalog:
-        return data_catalog
-    obs4mips = data_catalog.get(SourceDatasetType.obs4MIPs, pd.DataFrame())
-    return {
-        **data_catalog,
-        SourceDatasetType.obs4MIPs: union_with_fallbacks(
-            obs4mips, [data_catalog[SourceDatasetType.obs4REF]], SourceDatasetType.obs4MIPs
-        ),
-    }
-
-
 def solve_executions(
     data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
@@ -425,12 +396,10 @@ def solve_executions(
         raise ValueError(f"Diagnostic {diagnostic.slug!r} has no data requirements")
 
     first_item = next(iter(diagnostic.data_requirements))
-    catalogs = apply_obs4ref_fallback(data_catalog)
-
     if isinstance(first_item, DataRequirement):
         # We have a single collection of data requirements
         yield from _solve_from_data_requirements(
-            catalogs,
+            data_catalog,
             diagnostic,
             typing.cast(Sequence[DataRequirement], diagnostic.data_requirements),
             provider,
@@ -445,7 +414,7 @@ def solve_executions(
             # Buffer executions to check if any were actually produced
             # _solve_from_data_requirements returns empty if source types are missing
             executions = list(
-                _solve_from_data_requirements(catalogs, diagnostic, requirement_collection, provider)
+                _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
             )
             if executions:
                 any_matched = True

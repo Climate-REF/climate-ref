@@ -117,7 +117,8 @@ If you fetch the same dataset from ESGF/obs4MIPs as well as from the obs4REF reg
 the newest version is used.
 The ESGF copy wins when the versions are the same.
 obs4MIPs is the preferred home of the reference data.
-The registry only fills in what is not published yet.
+The registry only fills in what is not published yet,
+and a diagnostic reaches it by declaring `obs4ref` as a fallback for its `obs4mips` requirement.
 ///
 
 ### Future work

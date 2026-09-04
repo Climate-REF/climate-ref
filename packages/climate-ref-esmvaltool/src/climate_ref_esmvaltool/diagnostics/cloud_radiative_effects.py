@@ -28,6 +28,7 @@ _TIMERANGES = {
 def _reference_data_requirement(start_year: int, end_year: int) -> DataRequirement:
     return DataRequirement(
         source_type=SourceDatasetType.obs4MIPs,
+        fallback_source_types=(SourceDatasetType.obs4REF,),
         filters=(
             FacetFilter(
                 facets={
@@ -61,7 +62,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     name = "Climatologies and zonal mean profiles of cloud radiative effects"
     slug = "cloud-radiative-effects"
     base_recipe = "ref/recipe_ref_cre_cmip7.yml"
-    version = 2
+    version = 3
 
     variables = (
         "rlut",

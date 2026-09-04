@@ -5,7 +5,7 @@
     "output.json": "65ffee1ccf2e0f8f5650eb34ae6518882d70becef18e72dd1febb17abc1d5ab3",
     "series.json": "d43a041a4ad5416d93ea4dfb7db4f08367c2ed1fd982479af8da471c656fefb1"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",

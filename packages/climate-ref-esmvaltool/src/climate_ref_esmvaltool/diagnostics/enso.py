@@ -29,6 +29,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
     name = "ENSO Basic Climatology"
     slug = "enso-basic-climatology"
     base_recipe = "ref/recipe_enso_basicclimatology.yml"
+    version = 2
 
     data_requirements = (
         (
@@ -301,6 +302,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     name = "ENSO Characteristics"
     slug = "enso-characteristics"
     base_recipe = "ref/recipe_enso_characteristics.yml"
+    version = 2
 
     data_requirements = (
         (

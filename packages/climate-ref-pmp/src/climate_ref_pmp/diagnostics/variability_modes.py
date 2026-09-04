@@ -90,6 +90,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
             obs_requirement = DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (obs_variable,)}),),
                 group_by=("source_id", "variable_id"),
             )

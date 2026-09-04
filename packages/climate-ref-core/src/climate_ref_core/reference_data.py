@@ -141,21 +141,14 @@ def source_ids_by_registry(
         parser = _registry_key_parser(entry.source_type)
         if parser is None:
             continue
-        # The obs4REF registry carries what obs4MIPs has not published yet,
-        # so it supplies requirements written against either.
-        source_types = {entry.source_type.value}
-        if entry.source_type is SourceDatasetType.obs4REF:
-            source_types.add(SourceDatasetType.obs4MIPs.value)
-
         for key in entry.registry.registry:
             metadata: Mapping[str, Any] = parser(key)
             source_id = metadata.get("source_id")
             if not source_id:
                 continue
-            for source_type in source_types:
-                names = found[(source_type, source_id)]
-                if name not in names:
-                    names.append(name)
+            names = found[(entry.source_type.value, source_id)]
+            if name not in names:
+                names.append(name)
     return dict(found)
 
 

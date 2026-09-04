@@ -234,3 +234,36 @@ tr.moved {
 .stats strong {
   font-weight: 600;
 }
+
+/* Marks a file that lives in git, so a reviewer can find it in the pull request's own diff. */
+.pill {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.75em;
+  letter-spacing: 0.04em;
+  padding: 0.05rem 0.5rem;
+  text-transform: uppercase;
+  vertical-align: 0.1em;
+}
+
+.path {
+  color: var(--muted);
+  font-size: 0.85em;
+  margin: 0 0 0.5rem;
+}
+
+.tree {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tree li {
+  padding-left: calc(var(--depth) * 1.25rem);
+}
+
+.tree .dir {
+  font-weight: 600;
+}

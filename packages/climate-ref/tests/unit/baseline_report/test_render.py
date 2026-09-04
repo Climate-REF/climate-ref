@@ -15,7 +15,14 @@ from climate_ref.baseline_report.analyse import (
     TextDiff,
     analyse,
 )
-from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report, classify
+from climate_ref.baseline_report.collect import (
+    CaseChange,
+    CommittedChange,
+    FileChange,
+    FileKind,
+    Report,
+    classify,
+)
 from climate_ref.baseline_report.render import render_case, render_comment, render_index, write_site
 from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest, NativeEntry
 from climate_ref_core.regression.store import NativeStore
@@ -72,7 +79,19 @@ def _change(name: str, old: NativeEntry | None, new: NativeEntry | None) -> File
     return FileChange(name=name, old=old, new=new, kind=classify(name))
 
 
-def _case_change(changes, label="example/diag/case", base=None, head=None) -> CaseChange:
+def _committed_change() -> CommittedChange:
+    """Build one changed committed artefact."""
+    return CommittedChange(
+        name="series.json",
+        rel_path="packages/climate-ref-example/tests/test-data/diag/case/regression/series.json",
+        old="a" * 64,
+        new="b" * 64,
+        old_text='{"value": 1}',
+        new_text='{"value": 2}',
+    )
+
+
+def _case_change(changes, label="example/diag/case", base=None, head=None, committed=None) -> CaseChange:
     """Build one collected case."""
     return CaseChange(
         label=label,
@@ -80,7 +99,7 @@ def _case_change(changes, label="example/diag/case", base=None, head=None) -> Ca
         base=base,
         head=head,
         files=tuple(changes),
-        committed=("series.json",),
+        committed=(_committed_change(),) if committed is None else tuple(committed),
         metadata=("test_case_version: 3 -> 4",),
     )
 
@@ -226,7 +245,7 @@ class TestCasePage:
             elided=0,
         )
         report = _analysed(
-            [_case_change([_change("series.csv", _entry("1"), _entry("2"))])],
+            [_case_change([_change("series.csv", _entry("1"), _entry("2"))], committed=())],
             tmp_path,
             diffs={"series.csv": diff},
         )
@@ -241,7 +260,7 @@ class TestCasePage:
         assert spans == ["header", "hunk", "remove", "add"]
 
     def test_a_note_replaces_the_diff(self, tmp_path):
-        report = _analysed([_case_change([_change("series.csv", None, _entry("2"))])], tmp_path)
+        report = _analysed([_case_change([_change("series.csv", None, _entry("2"))], committed=())], tmp_path)
 
         html = render_case(report, report.cases[0])
 
@@ -302,6 +321,34 @@ class TestCasePage:
 
         assert "test_case_version: 3 -&gt; 4" in html
         assert "series.json" in html
+
+    def test_a_committed_artefact_is_diffed_and_pilled(self, changed_image_case):
+        html = render_case(changed_image_case, changed_image_case.cases[0])
+
+        assert '<span class="pill"' in html
+        assert "in PR" in html
+        # The diff of the two committed versions, not just the file's name.
+        assert "-  &#34;value&#34;: 1" in html
+        assert "+  &#34;value&#34;: 2" in html
+        assert "test-data/diag/case/regression/series.json" in html
+
+    def test_the_captured_baseline_is_listed_as_a_tree(self, tmp_path):
+        base = evolve(_manifest(3), native={"plots/kept.png": _entry("1")})
+        head = evolve(
+            _manifest(4),
+            native={"plots/kept.png": _entry("1"), "plots/plot.png": _entry("2", 20)},
+        )
+        report = _analysed(
+            [_case_change([_change("plots/plot.png", None, _entry("2", 20))], base=base, head=head)],
+            tmp_path,
+        )
+
+        html = render_case(report, report.cases[0])
+
+        assert "Captured baseline" in html
+        assert '<code class="dir">plots/</code>' in html
+        # An unchanged file is listed too, so the page describes the whole baseline.
+        assert "kept.png" in html
 
 
 class TestWriteSite:

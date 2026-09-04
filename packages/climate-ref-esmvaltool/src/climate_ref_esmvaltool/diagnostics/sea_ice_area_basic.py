@@ -88,7 +88,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     name = "Sea ice area basic"
     slug = "sea-ice-area-basic"
     base_recipe = "ref/recipe_ref_sea_ice_area_basic.yml"
-    version = 2
+    version = 3
 
     data_requirements = (
         (

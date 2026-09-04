@@ -62,9 +62,10 @@ def _provider(requirements, slug="test_provider"):
     return provider
 
 
-def _requirement(source_type, source_id, variable_id):
+def _requirement(source_type, source_id, variable_id, fallback_source_types=()):
     return DataRequirement(
         source_type=source_type,
+        fallback_source_types=fallback_source_types,
         filters=(FacetFilter(facets={"source_id": source_id, "variable_id": variable_id}),),
         group_by=None,
     )
@@ -78,9 +79,7 @@ class TestSourceIdsByRegistry:
 
         found = source_ids_by_registry(manager)
 
-        # The obs4REF registry supplies obs4MIPs requirements too
-        assert found[(SourceDatasetType.obs4REF.value, "WECANN-1-0")] == ["obs4ref"]
-        assert found[(SourceDatasetType.obs4MIPs.value, "WECANN-1-0")] == ["obs4ref"]
+        assert found == {(SourceDatasetType.obs4REF.value, "WECANN-1-0"): ["obs4ref"]}
 
     def test_support_registries_are_ignored(self):
         manager = _FakeManager(
@@ -105,7 +104,7 @@ class TestSourceIdsByRegistry:
 
         found = source_ids_by_registry(manager)
 
-        assert found[(SourceDatasetType.obs4MIPs.value, "HadISST-1-1")] == ["obs4ref", "quickstart"]
+        assert found[(SourceDatasetType.obs4REF.value, "HadISST-1-1")] == ["obs4ref", "quickstart"]
 
 
 class TestCollectRequiredReferenceData:
@@ -113,7 +112,16 @@ class TestCollectRequiredReferenceData:
         manager = _FakeManager(
             {"obs4ref": _FakeEntry([_obs4ref_key("WECANN-1-0", "gpp")], SourceDatasetType.obs4REF)}
         )
-        provider = _provider([_requirement(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp")])
+        provider = _provider(
+            [
+                _requirement(
+                    SourceDatasetType.obs4MIPs,
+                    "WECANN-1-0",
+                    "gpp",
+                    fallback_source_types=(SourceDatasetType.obs4REF,),
+                )
+            ]
+        )
 
         (dataset,) = collect_required_reference_data([provider], manager)
 
@@ -197,7 +205,12 @@ class TestFormatMarkdown:
         )
         provider = _provider(
             [
-                _requirement(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp"),
+                _requirement(
+                    SourceDatasetType.obs4MIPs,
+                    "WECANN-1-0",
+                    "gpp",
+                    fallback_source_types=(SourceDatasetType.obs4REF,),
+                ),
                 _requirement(SourceDatasetType.obs4MIPs, "ERA-5", "ta"),
             ]
         )

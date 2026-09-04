@@ -167,7 +167,7 @@ test-quick: clean  ## run all the tests at once
 	# A new resource_intensive test has to live under a path listed here.
 	uv run \
 		pytest tests packages \
-		-r a -v  --cov-report=term -n $(PYTEST_WORKERS) \
+		-r a -v --cov-report=term -n $(PYTEST_WORKERS) --dist=loadscope \
 		-m "not resource_intensive"
 	uv run \
 		pytest packages/climate-ref-core/tests/integration packages/climate-ref/tests/integration \

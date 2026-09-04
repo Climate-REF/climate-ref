@@ -27,11 +27,12 @@ Provided fixtures
 from __future__ import annotations
 
 import atexit
+import fcntl
 import os
 import re
 import tempfile
-from collections.abc import Callable, Iterator
-from contextlib import ExitStack
+from collections.abc import Callable, Generator, Iterator
+from contextlib import ExitStack, contextmanager
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
@@ -117,6 +118,53 @@ def tmp_path_session() -> Iterator[Path]:
         yield Path(tmpdir)
 
 
+@pytest.fixture(scope="session")
+def shared_session_dir(tmp_path_factory: pytest.TempPathFactory, request: pytest.FixtureRequest) -> Path:
+    """Temporary directory shared by every xdist worker in this pytest run."""
+    base_temp = tmp_path_factory.getbasetemp()
+    if hasattr(request.config, "workerinput"):
+        return base_temp.parent
+    return base_temp
+
+
+@contextmanager
+def _exclusive_file_lock(path: Path) -> Generator[None]:
+    """Hold an advisory process lock for a shared test artifact."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
+
+
+def _run_once(marker_path: Path, action: Callable[[], None]) -> None:
+    """Run an action once across xdist workers in the current pytest run."""
+    with _exclusive_file_lock(marker_path.with_suffix(".lock")):
+        if marker_path.exists():
+            return
+        action()
+        marker_path.touch()
+
+
+def _load_or_create_dataframe(cache_path: Path, builder: Callable[[], pd.DataFrame]) -> pd.DataFrame:
+    """Build and cache a DataFrame once across xdist workers."""
+    with _exclusive_file_lock(cache_path.with_suffix(".lock")):
+        if cache_path.exists():
+            # This is a trusted, run-local cache created by the fixture below.
+            return cast(pd.DataFrame, pd.read_pickle(cache_path))  # noqa: S301
+
+        dataframe = builder()
+        temporary_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
+        try:
+            dataframe.to_pickle(temporary_path)
+            os.replace(temporary_path, cache_path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+        return dataframe
+
+
 @pytest.fixture
 def caplog(caplog: LogCaptureFixture) -> Iterator[LogCaptureFixture]:
     """Capture logs from the loguru default logger."""
@@ -200,33 +248,49 @@ def esgf_data_catalog_trimmed(
 
 
 @pytest.fixture(scope="session")
-def sample_data() -> None:
+def sample_data(shared_session_dir: Path) -> None:
     """Download sample data if not already present."""
     if os.environ.get("REF_TEST_DATA_DIR"):
         logger.warning("Not fetching sample data. Using custom test data directory")
         return
-    logger.disable("climate_ref_core.dataset_registry")
-    fetch_sample_data(force_cleanup=False, symlink=False)
-    logger.enable("climate_ref_core.dataset_registry")
+
+    def _fetch() -> None:
+        logger.disable("climate_ref_core.dataset_registry")
+        try:
+            fetch_sample_data(force_cleanup=False, symlink=False)
+        finally:
+            logger.enable("climate_ref_core.dataset_registry")
+
+    _run_once(shared_session_dir / "sample-data.ready", _fetch)
 
 
 @pytest.fixture(scope="session")
-def cmip6_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
+def cmip6_data_catalog(sample_data: None, sample_data_dir: Path, shared_session_dir: Path) -> pd.DataFrame:
     """CMIP6 sample data catalog."""
-    adapter = CMIP6DatasetAdapter()
-    return adapter.find_local_datasets(sample_data_dir / "CMIP6")
+    return _load_or_create_dataframe(
+        shared_session_dir / "cmip6-data-catalog.pkl",
+        lambda: CMIP6DatasetAdapter().find_local_datasets(sample_data_dir / "CMIP6"),
+    )
 
 
 @pytest.fixture(scope="session")
-def obs4mips_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
+def obs4mips_data_catalog(sample_data: None, sample_data_dir: Path, shared_session_dir: Path) -> pd.DataFrame:
     """obs4MIPs sample data catalog."""
-    return Obs4MIPsDatasetAdapter().find_local_datasets(sample_data_dir / "obs4MIPs")
+    return _load_or_create_dataframe(
+        shared_session_dir / "obs4mips-data-catalog.pkl",
+        lambda: Obs4MIPsDatasetAdapter().find_local_datasets(sample_data_dir / "obs4MIPs"),
+    )
 
 
 @pytest.fixture(scope="session")
-def obs4ref_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
+def obs4ref_data_catalog(
+    sample_data: None, sample_data_dir: Path, shared_session_dir: Path
+) -> pd.DataFrame:
     """obs4REF sample data catalog."""
-    return Obs4REFDatasetAdapter().find_local_datasets(sample_data_dir / "obs4REF")
+    return _load_or_create_dataframe(
+        shared_session_dir / "obs4ref-data-catalog.pkl",
+        lambda: Obs4REFDatasetAdapter().find_local_datasets(sample_data_dir / "obs4REF"),
+    )
 
 
 @pytest.fixture(scope="session")

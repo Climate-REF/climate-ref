@@ -1,4 +1,5 @@
 import dataclasses
+import os
 import shutil
 from collections.abc import Callable, Generator
 from pathlib import Path
@@ -13,6 +14,7 @@ from pytest_regressions.data_regression import RegressionYamlDumper
 from yaml.representer import SafeRepresenter
 
 from climate_ref.config import Config
+from climate_ref.conftest_plugin import _exclusive_file_lock
 from climate_ref.database import Database, _get_sqlite_path
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
@@ -59,15 +61,27 @@ def _clone_db(target_db_url: str, template_db_path: Path) -> None:
 
 
 @pytest.fixture(scope="session")
-def migrated_db_template(tmp_path_session: Path) -> Path:
-    """Build the current database schema once for reuse by isolated test databases."""
-    template_db_path = tmp_path_session / "climate_ref_template.db"
-    # dimensions_cv is left unset so the CV shipped in climate_ref_core is used.
-    template_config = Config()
-    template_config.db.database_url = f"sqlite:///{template_db_path}"
+def migrated_db_template(shared_session_dir: Path) -> Path:
+    """
+    Build the current database schema once.
 
-    database = Database.from_config(template_config, run_migrations=True, skip_backup=True)
-    database.close()
+    This schema is reused across parallel test runners.
+    """
+    template_db_path = shared_session_dir / "climate_ref_template.db"
+    with _exclusive_file_lock(shared_session_dir / "climate_ref_template.lock"):
+        if not template_db_path.exists():
+            temporary_path = shared_session_dir / f".climate_ref_template.{os.getpid()}.db"
+            temporary_path.unlink(missing_ok=True)
+
+            # dimensions_cv is left unset so the CV shipped in climate_ref_core is used.
+            template_config = Config()
+            template_config.db.database_url = f"sqlite:///{temporary_path}"
+            try:
+                database = Database.from_config(template_config, run_migrations=True, skip_backup=True)
+                database.close()
+                os.replace(temporary_path, template_db_path)
+            finally:
+                temporary_path.unlink(missing_ok=True)
 
     return template_db_path
 
@@ -121,40 +135,47 @@ def prepare_db(cmip7_aft_cv):
 
 @pytest.fixture(scope="session")
 def db_seeded_template(  # noqa: PLR0913
-    tmp_path_session: Path,
+    shared_session_dir: Path,
     migrated_db_template: Path,
     cmip6_data_catalog,
     obs4mips_data_catalog,
     obs4ref_data_catalog,
     prepare_db,
 ) -> Path:
-    template_db_path = tmp_path_session / "climate_ref_template_seeded.db"
-    shutil.copy(migrated_db_template, template_db_path)
+    template_db_path = shared_session_dir / "climate_ref_template_seeded.db"
+    with _exclusive_file_lock(shared_session_dir / "climate_ref_template_seeded.lock"):
+        if not template_db_path.exists():
+            temporary_path = shared_session_dir / f".climate_ref_template_seeded.{os.getpid()}.db"
+            temporary_path.unlink(missing_ok=True)
+            shutil.copy(migrated_db_template, temporary_path)
 
-    database = Database(f"sqlite:///{template_db_path}")
+            database = Database(f"sqlite:///{temporary_path}")
+            try:
+                # ``register_dataset`` trusts callers to validate the catalog first.
+                adapter = CMIP6DatasetAdapter()
+                cmip6_validated = adapter.validate_data_catalog(cmip6_data_catalog)
+                with database.session.begin():
+                    for _, data_catalog_dataset in cmip6_validated.groupby(adapter.slug_column):
+                        adapter.register_dataset(database, data_catalog_dataset)
 
-    # Seed the CMIP6 sample datasets. ``register_dataset`` trusts callers to
-    # have already validated the catalog, so do that here before iterating.
-    adapter = CMIP6DatasetAdapter()
-    cmip6_validated = adapter.validate_data_catalog(cmip6_data_catalog)
-    with database.session.begin():
-        for instance_id, data_catalog_dataset in cmip6_validated.groupby(adapter.slug_column):
-            adapter.register_dataset(database, data_catalog_dataset)
+                for adapter_obs, catalog in (
+                    (Obs4MIPsDatasetAdapter(), obs4mips_data_catalog),
+                    (Obs4REFDatasetAdapter(), obs4ref_data_catalog),
+                ):
+                    validated = adapter_obs.validate_data_catalog(catalog)
+                    with database.session.begin():
+                        for _, data_catalog_dataset in validated.groupby(adapter_obs.slug_column):
+                            adapter_obs.register_dataset(database, data_catalog_dataset)
 
-    # Seed the obs4MIPs and obs4REF sample datasets
-    for adapter_obs, catalog in (
-        (Obs4MIPsDatasetAdapter(), obs4mips_data_catalog),
-        (Obs4REFDatasetAdapter(), obs4ref_data_catalog),
-    ):
-        validated = adapter_obs.validate_data_catalog(catalog)
-        with database.session.begin():
-            for instance_id, data_catalog_dataset in validated.groupby(adapter_obs.slug_column):
-                adapter_obs.register_dataset(database, data_catalog_dataset)
+                with database.session.begin():
+                    _register_provider(database, example_provider)
+            finally:
+                database.close()
 
-    with database.session.begin():
-        _register_provider(database, example_provider)
-
-    database.close()
+            try:
+                os.replace(temporary_path, template_db_path)
+            finally:
+                temporary_path.unlink(missing_ok=True)
 
     return template_db_path
 

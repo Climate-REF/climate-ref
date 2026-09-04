@@ -118,7 +118,7 @@ was {{ file.change.old.size | bytes -}}
 {% for row in file.netcdf.rows %}
 <tr{% if row.moved %} class="moved"{% endif %}>
 <td><code>{{ row.name }}</code></td>
-<td>{{ row.shape_old or "-" }} -> {{ row.shape_new or "-" }}</td>
+<td>{{ row.shape_old | dash }} -> {{ row.shape_new | dash }}</td>
 <td>{{ stat_pair(row.min_old, row.min_new) }}</td>
 <td>{{ stat_pair(row.max_old, row.max_new) }}</td>
 <td>{{ stat_pair(row.mean_old, row.mean_new) }}</td>

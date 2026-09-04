@@ -9,7 +9,6 @@ from __future__ import annotations
 import difflib
 import io
 import json
-import warnings
 from collections import Counter
 from contextlib import ExitStack
 from itertools import islice
@@ -132,7 +131,7 @@ class NetcdfDiff:
 
 @frozen
 class AnalysedFile:
-    """One native file, with its blob URLs and its diff where it has one."""
+    """One native file, with its blob URLs and whatever its kind is analysed into."""
 
     change: FileChange
     """The underlying change."""
@@ -146,12 +145,12 @@ class AnalysedFile:
     text: TextDiff | None
     """The diff, set only for :attr:`~climate_ref.baseline_report.collect.FileKind.TEXT` files."""
 
-    size_delta: int | None
-    """Signed byte change, or ``None`` when the file exists on only one side."""
-
-    netcdf: NetcdfDiff | None = None
+    netcdf: NetcdfDiff | None
     """The header and stats diff, set only for
     :attr:`~climate_ref.baseline_report.collect.FileKind.NETCDF` files."""
+
+    size_delta: int | None
+    """Signed byte change, or ``None`` when the file exists on only one side."""
 
 
 @frozen
@@ -377,9 +376,9 @@ def _header(dataset: xr.Dataset | None) -> list[str]:
     return buf.getvalue().splitlines()
 
 
-def _values(dataset: xr.Dataset | None, name: str) -> np.ndarray | None:
+def _variable(dataset: xr.Dataset | None, name: str) -> xr.DataArray | None:
     """
-    Read one data variable as a float array.
+    Look one data variable up on one side.
 
     Parameters
     ----------
@@ -391,26 +390,40 @@ def _values(dataset: xr.Dataset | None, name: str) -> np.ndarray | None:
     Returns
     -------
     :
-        The values as float64, or ``None`` when the variable is absent or not numeric.
+        The variable, or ``None`` when this side does not carry it.
     """
     if dataset is None or name not in dataset.data_vars:
         return None
-    values = dataset[name].values
-    if not np.issubdtype(values.dtype, np.number):
+    return dataset[name]
+
+
+def _values(variable: xr.DataArray | None) -> np.ndarray | None:
+    """
+    Read one variable as a float array.
+
+    Parameters
+    ----------
+    variable
+        The variable, or ``None`` when it is absent on that side.
+
+    Returns
+    -------
+    :
+        The values as float64, or ``None`` when the variable is absent or not numeric.
+    """
+    if variable is None or not np.issubdtype(variable.dtype, np.number):
         return None
-    return np.asarray(values, dtype=float)
+    return np.asarray(variable.values, dtype=float)
 
 
-def _shape(dataset: xr.Dataset | None, name: str) -> str | None:
+def _shape(variable: xr.DataArray | None) -> str | None:
     """
     Render one variable's shape.
 
     Parameters
     ----------
-    dataset
-        The open dataset, or ``None`` when the file is absent on that side.
-    name
-        The variable's name.
+    variable
+        The variable, or ``None`` when it is absent on that side.
 
     Returns
     -------
@@ -418,10 +431,9 @@ def _shape(dataset: xr.Dataset | None, name: str) -> str | None:
         For example ``180x360``, ``scalar`` for a zero-dimensional variable, or ``None``
         when the variable is absent.
     """
-    if dataset is None or name not in dataset.data_vars:
+    if variable is None:
         return None
-    shape = dataset[name].shape
-    return "x".join(str(size) for size in shape) if shape else "scalar"
+    return "x".join(str(size) for size in variable.shape) if variable.shape else "scalar"
 
 
 def _summarise(values: np.ndarray | None) -> tuple[float | None, float | None, float | None, int | None]:
@@ -444,17 +456,12 @@ def _summarise(values: np.ndarray | None) -> tuple[float | None, float | None, f
     nan_count = int(np.isnan(values).sum())
     if values.size in (0, nan_count):
         return None, None, None, nan_count
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        return (
-            float(np.nanmin(values)),
-            float(np.nanmax(values)),
-            float(np.nanmean(values)),
-            nan_count,
-        )
+    return float(np.nanmin(values)), float(np.nanmax(values)), float(np.nanmean(values)), nan_count
 
 
-def _compare(old: np.ndarray | None, new: np.ndarray | None) -> tuple[float | None, float | None, int | None]:
+def _compare(
+    old: np.ndarray | None, new: np.ndarray | None, scale: float
+) -> tuple[float | None, float | None, int | None]:
     """
     Compare two sides of the same variable cell by cell.
 
@@ -466,27 +473,21 @@ def _compare(old: np.ndarray | None, new: np.ndarray | None) -> tuple[float | No
         The base side, or ``None`` when absent or not numeric.
     new
         The head side, or ``None`` when absent or not numeric.
+    scale
+        The base side's largest magnitude, which the relative difference is measured against.
 
     Returns
     -------
     :
-        The largest absolute difference, the same relative to the base side's largest
-        magnitude, and the number of cells that differ. All ``None`` when the sides cannot
-        be compared.
+        The largest absolute difference, the same relative to ``scale``, and the number of
+        cells that differ. All ``None`` when the sides cannot be compared.
     """
     if old is None or new is None or old.shape != new.shape:
         return None, None, None
     same = (old == new) | (np.isnan(old) & np.isnan(new))
     cells_differ = int(np.sum(~same))
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        diff = np.abs(new - old)
-        max_abs = float(np.nanmax(diff)) if diff.size else 0.0
-        scale = float(np.nanmax(np.abs(old))) if old.size else 0.0
-    if np.isnan(max_abs):
-        max_abs = 0.0
-    if np.isnan(scale):
-        scale = 0.0
+    diff = np.abs(new - old)
+    max_abs = 0.0 if np.isnan(diff).all() else float(np.nanmax(diff))
     return max_abs, max_abs / max(scale, float(np.finfo(float).tiny)), cells_differ
 
 
@@ -508,13 +509,16 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
     :
         The row, with ``moved`` set when the shape or any cell changed.
     """
-    old_values = _values(old, name)
-    new_values = _values(new, name)
-    shape_old = _shape(old, name)
-    shape_new = _shape(new, name)
+    old_variable = _variable(old, name)
+    new_variable = _variable(new, name)
+    shape_old = _shape(old_variable)
+    shape_new = _shape(new_variable)
+    old_values = _values(old_variable)
+    new_values = _values(new_variable)
     min_old, max_old, mean_old, nan_old = _summarise(old_values)
     min_new, max_new, mean_new, nan_new = _summarise(new_values)
-    max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values)
+    scale = max(abs(min_old), abs(max_old)) if min_old is not None and max_old is not None else 0.0
+    max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
     return StatRow(
         name=name,
         shape_old=shape_old,
@@ -589,8 +593,8 @@ def _fetch_side(
     entry: NativeEntry | None,
     workdir: Path,
     *,
-    limit: int = MAX_FETCH_BYTES,
-    oversize: str = "too large to diff",
+    limit: int,
+    oversize: str,
 ) -> tuple[Path | None, str | None]:
     """
     Fetch one side of a file.
@@ -629,6 +633,41 @@ def _fetch_side(
     return dest, None
 
 
+def _fetch_pair(
+    change: FileChange,
+    store: NativeStore,
+    workdir: Path,
+    *,
+    limit: int,
+    oversize: str,
+) -> tuple[Path | None, Path | None, str | None]:
+    """
+    Fetch both sides of a file.
+
+    Parameters
+    ----------
+    change
+        The file that moved.
+    store
+        The store to read blobs from.
+    workdir
+        Directory fetched blobs are written into.
+    limit
+        Largest blob worth downloading.
+    oversize
+        Note to return when a blob is past ``limit``.
+
+    Returns
+    -------
+    :
+        An ``(old, new, note)`` triple. ``note`` is the first failure of the two sides, and
+        the paths should be ignored once it is set.
+    """
+    old_path, old_note = _fetch_side(store, change.old, workdir, limit=limit, oversize=oversize)
+    new_path, new_note = _fetch_side(store, change.new, workdir, limit=limit, oversize=oversize)
+    return old_path, new_path, old_note or new_note
+
+
 def _diff_for(
     change: FileChange,
     store: NativeStore,
@@ -660,9 +699,9 @@ def _diff_for(
     if not fetch:
         return TextDiff(lines=(), note="fetching disabled", elided=0)
 
-    old_path, old_note = _fetch_side(store, change.old, workdir)
-    new_path, new_note = _fetch_side(store, change.new, workdir)
-    note = old_note or new_note
+    old_path, new_path, note = _fetch_pair(
+        change, store, workdir, limit=MAX_FETCH_BYTES, oversize="too large to diff"
+    )
     if note is not None:
         return TextDiff(lines=(), note=note, elided=0)
     return text_diff(old_path, new_path, change.name)
@@ -699,13 +738,9 @@ def _netcdf_for(
     if not fetch:
         return NetcdfDiff(header=(), rows=(), note="fetching disabled")
 
-    old_path, old_note = _fetch_side(
-        store, change.old, workdir, limit=NETCDF_FETCH_BYTES, oversize="too large to analyse"
+    old_path, new_path, note = _fetch_pair(
+        change, store, workdir, limit=NETCDF_FETCH_BYTES, oversize="too large to analyse"
     )
-    new_path, new_note = _fetch_side(
-        store, change.new, workdir, limit=NETCDF_FETCH_BYTES, oversize="too large to analyse"
-    )
-    note = old_note or new_note
     if note is not None:
         return NetcdfDiff(header=(), rows=(), note=note)
     return netcdf_diff(old_path, new_path)
@@ -719,7 +754,7 @@ def _analyse_file(
     workdir: Path,
 ) -> AnalysedFile:
     """
-    Build the URLs and, for text, the diff of one native file.
+    Build the URLs and, for text and NetCDF, the analysis of one native file.
 
     Parameters
     ----------
@@ -742,28 +777,28 @@ def _analyse_file(
         old_url=blob_url(store, change.old.sha256) if change.old else None,
         new_url=blob_url(store, change.new.sha256) if change.new else None,
         text=_diff_for(change, store, fetch=fetch, workdir=workdir),
-        size_delta=change.new.size - change.old.size if change.old and change.new else None,
         netcdf=_netcdf_for(change, store, fetch=fetch, workdir=workdir),
+        size_delta=change.new.size - change.old.size if change.old and change.new else None,
     )
 
 
-def _of_kind(files: tuple[AnalysedFile, ...], *kinds: FileKind) -> tuple[AnalysedFile, ...]:
+def _of_kind(files: tuple[AnalysedFile, ...], kind: FileKind) -> tuple[AnalysedFile, ...]:
     """
-    Select the files of the given kinds, keeping their order.
+    Select the files of one kind, keeping their order.
 
     Parameters
     ----------
     files
         The analysed files.
-    kinds
-        The kinds to keep.
+    kind
+        The kind to keep.
 
     Returns
     -------
     :
         The matching files.
     """
-    return tuple(file for file in files if file.change.kind in kinds)
+    return tuple(file for file in files if file.change.kind is kind)
 
 
 def _counts(files: tuple[AnalysedFile, ...]) -> tuple[KindCounts, ...]:

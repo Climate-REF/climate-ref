@@ -56,14 +56,15 @@ def _format_signed(delta: int | None) -> str:
     return f"{delta:+,}"
 
 
-def _format_num(value: float | None) -> str:
+def _format_num(value: float | int | None) -> str:
     """
     Render a statistic.
 
     Parameters
     ----------
     value
-        The number, or ``None`` when it could not be computed.
+        The number, or ``None`` when it could not be computed. Counts arrive as ``int`` and
+        measurements as ``float``, and each reads better in its own format.
 
     Returns
     -------
@@ -75,6 +76,23 @@ def _format_num(value: float | None) -> str:
     if isinstance(value, int):
         return f"{value:,}"
     return f"{value:.6g}"
+
+
+def _format_dash(value: str | None) -> str:
+    """
+    Render a string that may be absent.
+
+    Parameters
+    ----------
+    value
+        The string, or ``None``.
+
+    Returns
+    -------
+    :
+        The string, or ``-`` when there is not one.
+    """
+    return "-" if value is None else value
 
 
 def _format_short(digest: str | None) -> str:
@@ -114,6 +132,7 @@ def _build_env() -> Environment:
     env.filters["bytes"] = _format_bytes
     env.filters["signed"] = _format_signed
     env.filters["num"] = _format_num
+    env.filters["dash"] = _format_dash
     env.filters["short"] = _format_short
     return env
 

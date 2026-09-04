@@ -1,11 +1,11 @@
 {
-  "catalog_hash": "d871cb5c53da24f777a1b4c4a5535ab8fb01de3f",
+  "catalog_hash": "83717573c122607da3b482f4f058d7f4d4e8301c",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "7474e7e327a830c53b821d5320e05bff2f55c24068a4926fb49c76c484ed2c9a",
-    "series.json": "f40c1da8ac81e1ef2317fad9c17dbd78e04f336b226a9313307dbdfadbeb3fc0"
+    "series.json": "2aafaec8f6644cc3884c035b4ad798c49e4be46b1a90b7837bca6b3e90e98f11"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -16,26 +16,26 @@
       "size": 13052
     },
     "executions/recipe/plots/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.png": {
-      "sha256": "4431266ab4bdb21b7d016900dcef88de35821647a9c4eba598dbe60e7f9f5f03",
-      "size": 89280
+      "sha256": "6e64f9345b9a5a6ce61b1ccbdb087916f9a0dac91d30b1f385c896b85721977c",
+      "size": 90943
     },
     "executions/recipe/run/polar_cap_time_series_SH/plot/diagnostic_provenance.yml": {
-      "sha256": "eba310a7f6b9269b1026590a58d612bdbcf830617d91408efdc3bfb9ccbf5e76",
+      "sha256": "2ace5017c82b67bc3075a448c30ba3b0a47b550936e3cf52044d0635677a4cdc",
       "size": 658
     },
     "executions/recipe/work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc": {
-      "sha256": "1e6b935538f4e36d79d4d9dc9ffc59829c2d605c23680b5b32a8ac4d4a9a2da5",
-      "size": 10310
+      "sha256": "51ff370d38a1bb535db23abf8dae6080bc8aab30626c67d36204ebd9a79eaaba",
+      "size": 10128
     },
     "output.json": {
       "sha256": "85f5de5ad39e01de85c3bf9c35f255edf678dc014986df5e033cec81a8522f63",
       "size": 1398
     },
     "series.json": {
-      "sha256": "b6fe210ff96a969bf2b55eb008eec330dd2957466285ed269e996fe1a2e41131",
-      "size": 4139
+      "sha256": "1ebd16d9dc02a2dc5ded23a5694f6b7df34e37bf6d97b533f8d5f8f71bb3f9ba",
+      "size": 4209
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 4
 }

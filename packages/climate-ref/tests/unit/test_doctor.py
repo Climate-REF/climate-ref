@@ -7,6 +7,10 @@ so no database or ingest is needed.
 
 import pandas as pd
 import pytest
+from climate_ref_esmvaltool import provider as esmvaltool_provider
+from climate_ref_example import provider as example_provider
+from climate_ref_ilamb import provider as ilamb_provider
+from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.doctor import (
     DoctorContext,
@@ -18,8 +22,11 @@ from climate_ref.doctor import (
 )
 from climate_ref.doctor.checks.data import (
     check_duplicate_coverage,
+    check_misfiled_obs4ref,
     check_missing_reference_data,
+    check_superseded_obs4ref,
     check_unreachable_source_types,
+    check_unsolvable_diagnostics,
 )
 from climate_ref.doctor.registry import RegisteredCheck, run_checks
 from climate_ref_core.datasets import FacetFilter
@@ -146,35 +153,41 @@ class TestMissingReferenceData:
         assert check_missing_reference_data(context) == []
 
     def test_data_under_another_source_type_does_not_satisfy_a_requirement(self):
-        # The obs4ref trap: the data is present, but in a table no requirement reads.
-        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp")
-        catalog = _catalog(
-            [("obs4REF.WECANN-1-0.gpp", "WECANN-1-0", "gpp", "2007-01-01", "2015-12-01", "/d/gpp.nc")]
-        )
+        # The data is present, but in a table the requirement does not read.
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
+        catalog = _catalog([("pmp.ERA-5.ta", "ERA-5", "ta", "2000-01-01", "2000-12-01", "/d/ta.nc")])
         context = _context(
-            {SourceDatasetType.obs4MIPs: _catalog([]), SourceDatasetType.obs4REF: catalog},
+            {SourceDatasetType.obs4MIPs: _catalog([]), SourceDatasetType.PMPClimatology: catalog},
             [provider],
         )
 
         findings = check_missing_reference_data(context)
 
         assert len(findings) == 1
-        assert "WECANN-1-0" in findings[0].summary
+        assert "ERA-5" in findings[0].summary
 
-
-class TestUnreachableSourceTypes:
-    def test_data_no_requirement_asks_for_is_reported(self):
-        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
+    def test_obs4mips_requirement_is_met_by_obs4ref_data(self):
+        # obs4REF fills in what obs4MIPs has not published, so this is not missing.
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp")
         catalog = _catalog(
             [("obs4REF.WECANN-1-0.gpp", "WECANN-1-0", "gpp", "2007-01-01", "2015-12-01", "/d/gpp.nc")]
         )
         context = _context({SourceDatasetType.obs4REF: catalog}, [provider])
 
+        assert check_missing_reference_data(context) == []
+
+
+class TestUnreachableSourceTypes:
+    def test_data_no_requirement_asks_for_is_reported(self):
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
+        catalog = _catalog([("pmp.ERA-5.ta", "ERA-5", "ta", "2000-01-01", "2000-12-01", "/d/ta.nc")])
+        context = _context({SourceDatasetType.PMPClimatology: catalog}, [provider])
+
         findings = check_unreachable_source_types(context)
 
         assert len(findings) == 1
-        assert "obs4ref" in findings[0].summary
-        assert "--source-type obs4mips" in findings[0].remedy
+        assert "pmp-climatology" in findings[0].summary
+        assert "source type the diagnostics ask for" in findings[0].remedy
 
     def test_requested_source_type_is_not_reported(self):
         provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
@@ -182,6 +195,231 @@ class TestUnreachableSourceTypes:
         context = _context({SourceDatasetType.obs4MIPs: catalog}, [provider])
 
         assert check_unreachable_source_types(context) == []
+
+    def test_obs4ref_data_is_reachable_through_obs4mips_requirements(self):
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp")
+        catalog = _catalog(
+            [("obs4REF.WECANN-1-0.gpp", "WECANN-1-0", "gpp", "2007-01-01", "2015-12-01", "/d/gpp.nc")]
+        )
+        context = _context({SourceDatasetType.obs4REF: catalog}, [provider])
+
+        assert check_unreachable_source_types(context) == []
+
+
+class TestSupersededObs4ref:
+    def test_dataset_in_both_is_reported(self):
+        obs4mips = _catalog(
+            [
+                (
+                    "obs4MIPs.obs4MIPs.C.WECANN-1-0.mon.gpp.gn.v2",
+                    "WECANN-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/a",
+                )
+            ]
+        )
+        obs4ref = _catalog(
+            [
+                (
+                    "obs4REF.obs4REF.C.WECANN-1-0.mon.gpp.gn.v1",
+                    "WECANN-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/b",
+                ),
+                (
+                    "obs4REF.obs4REF.C.WECANN-1-0.mon.hfls.gn.v1",
+                    "WECANN-1-0",
+                    "hfls",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/c",
+                ),
+            ]
+        )
+        context = _context({SourceDatasetType.obs4MIPs: obs4mips, SourceDatasetType.obs4REF: obs4ref})
+
+        findings = check_superseded_obs4ref(context)
+
+        assert len(findings) == 1
+        assert findings[0].severity == Severity.INFO
+        assert findings[0].summary.startswith("obs4REF.obs4REF.C.WECANN-1-0.mon.gpp.gn.v1")
+
+    def test_a_newer_obs4ref_version_is_not_superseded(self):
+        obs4mips = _catalog(
+            [
+                (
+                    "obs4MIPs.obs4MIPs.C.WECANN-1-0.mon.gpp.gn.v1",
+                    "WECANN-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/a",
+                )
+            ]
+        )
+        obs4ref = _catalog(
+            [
+                (
+                    "obs4REF.obs4REF.C.WECANN-1-0.mon.gpp.gn.v2",
+                    "WECANN-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/b",
+                )
+            ]
+        )
+        context = _context({SourceDatasetType.obs4MIPs: obs4mips, SourceDatasetType.obs4REF: obs4ref})
+
+        assert check_superseded_obs4ref(context) == []
+
+    def test_a_misfiled_row_does_not_supersede(self):
+        # Mid-upgrade both rows exist. Calling this superseded contradicts misfiled-obs4ref.
+        obs4mips = _catalog(
+            [
+                (
+                    "obs4MIPs.obs4MIPs.C.WECANN-1-0.mon.gpp.gn.v2",
+                    "WECANN-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/d/obs4REF/C/gpp.nc",
+                )
+            ]
+        )
+        obs4ref = _catalog(
+            [
+                (
+                    "obs4REF.obs4REF.C.WECANN-1-0.mon.gpp.gn.v1",
+                    "WECANN-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/d/obs4REF/C/gpp.nc",
+                )
+            ]
+        )
+        context = _context({SourceDatasetType.obs4MIPs: obs4mips, SourceDatasetType.obs4REF: obs4ref})
+
+        assert check_superseded_obs4ref(context) == []
+
+    def test_nothing_ingested(self):
+        assert check_superseded_obs4ref(_context()) == []
+
+
+class TestMisfiledObs4ref:
+    def test_obs4ref_layout_under_obs4mips_is_reported(self):
+        catalog = _catalog(
+            [
+                (
+                    "obs4MIPs.obs4MIPs.X.gpp",
+                    "X-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/d/obs4REF/X/gpp.nc",
+                ),
+                (
+                    "obs4MIPs.obs4MIPs.ERA-5.ta",
+                    "ERA-5",
+                    "ta",
+                    "2000-01-01",
+                    "2000-12-01",
+                    "/d/obs4MIPs/ta.nc",
+                ),
+            ]
+        )
+        context = _context({SourceDatasetType.obs4MIPs: catalog})
+
+        findings = check_misfiled_obs4ref(context)
+
+        assert len(findings) == 1
+        assert findings[0].severity == Severity.WARNING
+        assert findings[0].summary == "obs4MIPs.obs4MIPs.X.gpp is obs4REF data ingested as obs4mips"
+        assert findings[0].command == "ref datasets ingest --source-type obs4ref <dir>"
+
+    def test_each_misfiled_dataset_gets_its_own_finding(self):
+        catalog = _catalog(
+            [
+                (
+                    "obs4MIPs.obs4MIPs.X.gpp",
+                    "X-1-0",
+                    "gpp",
+                    "2007-01-01",
+                    "2015-12-01",
+                    "/d/obs4REF/X/gpp.nc",
+                ),
+                ("obs4MIPs.obs4MIPs.Y.ts", "Y-1-0", "ts", "2007-01-01", "2015-12-01", "/d/obs4REF/Y/ts.nc"),
+            ]
+        )
+        context = _context({SourceDatasetType.obs4MIPs: catalog})
+
+        findings = check_misfiled_obs4ref(context)
+
+        # One remedy shared across them, so the report groups them under it.
+        assert len(findings) == 2
+        assert len({f.remedy for f in findings}) == 1
+
+    def test_registry_source_id_from_esgf_is_not_reported(self):
+        # HadISST-1-1 sits in both collections, so an ESGF copy is legitimately ingested as obs4MIPs.
+        catalog = _catalog(
+            [("obs4MIPs.obs4MIPs.HadISST.ts", "HadISST-1-1", "ts", "2000-01-01", "2000-12-01", "/d/ts.nc")]
+        )
+        context = _context({SourceDatasetType.obs4MIPs: catalog})
+
+        assert check_misfiled_obs4ref(context) == []
+
+    def test_esgf_data_is_not_reported(self):
+        catalog = _catalog([("obs4MIPs.ERA-5.ta", "ERA-5", "ta", "2000-01-01", "2000-12-01", "/d/ta.nc")])
+        context = _context({SourceDatasetType.obs4MIPs: catalog})
+
+        assert check_misfiled_obs4ref(context) == []
+
+    def test_nothing_ingested(self):
+        assert check_misfiled_obs4ref(_context()) == []
+
+
+class TestUnsolvableDiagnostics:
+    def test_diagnostic_with_nothing_ingested_is_reported(self):
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
+        context = _context({}, [provider])
+
+        findings = check_unsolvable_diagnostics(context)
+
+        assert len(findings) == 1
+        assert findings[0].severity == Severity.WARNING
+        assert "test_provider/needs-reference has no executions" == findings[0].summary
+        assert "nothing is ingested as obs4mips" in findings[0].detail
+
+    def test_unmatched_filter_names_the_facets(self):
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
+        catalog = _catalog([("obs4MIPs.ERA-5.psl", "ERA-5", "psl", "2000-01-01", "2000-12-01", "/d/psl.nc")])
+        context = _context({SourceDatasetType.obs4MIPs: catalog}, [provider])
+
+        findings = check_unsolvable_diagnostics(context)
+
+        assert len(findings) == 1
+        assert "no obs4mips datasets match source_id=ERA-5, variable_id=ta" in findings[0].detail
+
+    def test_solvable_diagnostic_is_not_reported(self):
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "ERA-5", "ta")
+        catalog = _catalog([("obs4MIPs.ERA-5.ta", "ERA-5", "ta", "2000-01-01", "2000-12-01", "/d/ta.nc")])
+        context = _context({SourceDatasetType.obs4MIPs: catalog}, [provider])
+
+        assert check_unsolvable_diagnostics(context) == []
+
+    def test_obs4mips_requirement_solves_from_obs4ref_data(self):
+        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp")
+        catalog = _catalog(
+            [("obs4REF.WECANN-1-0.gpp", "WECANN-1-0", "gpp", "2007-01-01", "2015-12-01", "/d/gpp.nc")]
+        )
+        context = _context({SourceDatasetType.obs4REF: catalog}, [provider])
+
+        assert check_unsolvable_diagnostics(context) == []
 
 
 class TestDiagnose:
@@ -273,3 +511,30 @@ class TestRunChecks:
         findings = [Finding(severity=s, summary="s") for s in severities]
 
         assert worst_severity(findings) == expected
+
+
+def test_diagnose_snapshot_seeded(db_seeded, config, data_regression):
+    """
+    Pin the doctor findings over the seeded catalogs and every in-repo provider.
+
+    This is the doctor half of the oracle for the obs4REF fallback work,
+    so do not regenerate it with ``--force-regen``.
+    """
+    context = DoctorContext(config=config, database=db_seeded)
+    context._providers = [example_provider, pmp_provider, esmvaltool_provider, ilamb_provider]
+
+    findings = diagnose(context).findings
+
+    reported = [
+        {
+            "check": finding.check,
+            "severity": str(finding.severity),
+            "summary": finding.summary,
+            "detail": finding.detail,
+            "remedy": finding.remedy,
+            "command": finding.command,
+        }
+        for finding in findings
+    ]
+
+    data_regression.check(sorted(reported, key=lambda entry: tuple(sorted(entry.items()))))

@@ -10,13 +10,28 @@ Before you begin, ensure you have:
 
 ## 1. Ingest reference datasets
 
-The `obs4REF` collection we downloaded in the previous step uses the `obs4mips` source type as the data are obs4MIPs compatible. This command will extract metadata from the files and store it in the Climate-REF catalog, and print a summary of the ingested datasets.
+The `obs4REF` collection we downloaded in the previous step is ingested under the `obs4ref` source type.
+The files follow the obs4MIPs conventions, but are not yet published on ESGF.
+
+Where a dataset is ingested from both, the newest version is used.
+The obs4MIPs copy wins when the versions are the same.
+This command extracts metadata from the files and stores it in the Climate-REF catalog.
+It then prints a summary of the ingested datasets.
 
 ```bash
-ref datasets ingest --source-type obs4mips $REF_CONFIGURATION/datasets/obs4ref
+ref datasets ingest --source-type obs4ref $REF_CONFIGURATION/datasets/obs4ref
 ```
 
 Replace `$REF_CONFIGURATION/datasets/obs4ref` with the directory used when [fetched the obs4REF data](02-download-datasets.md#fetch-obs4ref-datasets).
+
+/// admonition | Upgrading from an earlier release
+    type: note
+
+Earlier releases ingested this collection with `--source-type obs4mips`.
+Those datasets still solve, but the catalog cannot tell them apart from published obs4MIPs data.
+Re-ingest the collection with `--source-type obs4ref`, then retract the old rows.
+`ref doctor` lists them under `misfiled-obs4ref`.
+///
 
 ## 2. Ingest CMIP6 data
 

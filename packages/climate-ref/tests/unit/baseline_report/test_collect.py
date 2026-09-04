@@ -160,3 +160,11 @@ class TestCollect:
 
     def test_no_changes_gives_no_cases(self, repo):
         assert collect(repo, "HEAD").cases == ()
+
+    def test_an_unreadable_manifest_is_skipped(self, repo, tmp_path):
+        # A manifest written by an incompatible version should cost its own case, not the report.
+        (tmp_path / MANIFEST_PATH).write_text('{"schema": 1}')
+        repo.git.add("-A")
+        repo.index.commit("break the manifest")
+
+        assert collect(repo, "HEAD~1").cases == ()

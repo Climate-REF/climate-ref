@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from attrs import frozen
+from loguru import logger
 
 from climate_ref_core.regression.manifest import Manifest, NativeEntry
 
@@ -302,12 +303,17 @@ def build_case_change(repo: Repo, base: str, rel_path: str) -> CaseChange | None
     Returns
     -------
     :
-        The case's changes, or ``None`` when the manifest is absent from both sides,
-        which leaves nothing to say.
+        The case's changes, or ``None`` when the manifest is absent from both sides
+        or cannot be parsed, both of which leave nothing to say.
     """
     head_path = Path(repo.working_tree_dir or ".") / rel_path
-    head = Manifest.load(head_path) if head_path.exists() else None
-    base_manifest = load_at_ref(repo, base, rel_path)
+    # One unreadable manifest should cost its own case, not the whole report.
+    try:
+        head = Manifest.load(head_path) if head_path.exists() else None
+        base_manifest = load_at_ref(repo, base, rel_path)
+    except ValueError as exc:
+        logger.warning(f"Skipping {rel_path}: {exc}")
+        return None
     if head is None and base_manifest is None:
         return None
 

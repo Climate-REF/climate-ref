@@ -712,8 +712,8 @@ def _scale(values: np.ndarray | None) -> float:
     Returns
     -------
     :
-        The largest finite magnitude, or ``0.0`` when there is none. An infinite value is
-        skipped because scaling by it would tolerate every difference.
+        The largest finite magnitude, or ``0.0`` when there is none.
+        An infinite value is skipped because scaling by it would tolerate every difference.
     """
     if values is None:
         return 0.0
@@ -736,15 +736,14 @@ def _compare(
     new
         The head side, or ``None`` when absent or not numeric.
     scale
-        The base side's largest finite magnitude, which the relative difference is measured
-        against.
+        The base side's largest finite magnitude,
+        which the relative difference is measured against.
 
     Returns
     -------
     :
-        The largest absolute difference, the same relative to ``scale``, and the number of
-        cells that differ. The two differences are ``None`` when a cell moved between NaN and
-        a number, because that gap has no magnitude and the finite maximum would read as zero.
+        The largest absolute difference, the absolute relative difference to ``scale``,
+        and the number of cells that differ.
         All three are ``None`` when the sides cannot be compared.
     """
     if old is None or new is None or old.shape != new.shape:
@@ -792,8 +791,8 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
     min_new, max_new, mean_new, nan_new = _summarise(new_values)
     scale = _scale(old_values)
     max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
+
     sides = [values for values in (old_values, new_values) if values is not None]
-    # An integer carries no rounding wobble, so any difference in one is real.
     integral = bool(sides) and all(np.issubdtype(values.dtype, np.integer) for values in sides)
     atol = 0.0 if integral else scale * NOISE_RTOL
     shape = Pair(old=shape_old, new=shape_new)

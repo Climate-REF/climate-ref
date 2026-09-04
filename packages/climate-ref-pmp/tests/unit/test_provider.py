@@ -110,8 +110,10 @@ class TestPMPProviderHooks:
         result = provider.validate_setup(mock_config)
         assert result is True
 
-    def test_configure_sets_env_vars(self, mocker, tmp_path):
+    def test_configure_sets_env_vars(self, mocker, tmp_path, monkeypatch):
         """Test that configure sets the required environment variables."""
+        for name in _THREAD_LIMIT_VARS:
+            monkeypatch.delenv(name, raising=False)
         test_provider, mock_config = configured_provider(mocker, tmp_path)
 
         assert "PCMDI_CONDA_EXE" in test_provider.env_overrides

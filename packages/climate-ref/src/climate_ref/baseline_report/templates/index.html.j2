@@ -6,16 +6,15 @@
 <tr>
 <th>case</th>
 <th>versions</th>
-<th>images</th>
-<th>text</th>
-<th>netcdf</th>
-<th>other</th>
+{% for kind in report.kinds %}
+<th>{{ kind }}</th>
+{% endfor %}
 </tr>
 </thead>
 <tbody>
 {% for case in report.cases %}
 <tr>
-<td><a href="{{ case.change.slug }}/index.html"><code>{{ case.change.label }}</code></a></td>
+<td><a href="{{ case.change.label }}/index.html"><code>{{ case.change.label }}</code></a></td>
 <td>
 {% if case.change.is_removed %}
 removed
@@ -25,11 +24,11 @@ new
 v{{ case.change.base.test_case_version }} -&gt; v{{ case.change.head.test_case_version }}
 {% endif %}
 </td>
-{% for kind in ("image", "text", "netcdf", "other") %}
+{% for count in case.counts %}
 <td class="counts">
-{% if case.counts[kind].added %}<span class="added">+{{ case.counts[kind].added }}</span>{% endif %}
-{% if case.counts[kind].changed %}<span class="changed">~{{ case.counts[kind].changed }}</span>{% endif %}
-{% if case.counts[kind].removed %}<span class="removed">-{{ case.counts[kind].removed }}</span>{% endif %}
+{% if count.added %}<span class="added">+{{ count.added }}</span>{% endif %}
+{% if count.changed %}<span class="changed">~{{ count.changed }}</span>{% endif %}
+{% if count.removed %}<span class="removed">-{{ count.removed }}</span>{% endif %}
 </td>
 {% endfor %}
 </tr>

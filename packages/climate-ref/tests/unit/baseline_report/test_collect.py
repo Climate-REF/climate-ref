@@ -116,7 +116,6 @@ class TestCollect:
 
         case = report.cases[0]
         assert case.label == "example/global-mean-timeseries/default"
-        assert case.slug == case.label
         assert not case.is_new
         assert not case.is_removed
 

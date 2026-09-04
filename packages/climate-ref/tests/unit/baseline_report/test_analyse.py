@@ -32,7 +32,6 @@ def _report(files):
     """Wrap file changes in a single-case report."""
     case = CaseChange(
         label="example/diag/case",
-        slug="example/diag/case",
         rel_path="packages/climate-ref-example/tests/test-data/diag/case/manifest.json",
         base=None,
         head=None,
@@ -118,11 +117,16 @@ class TestAnalyse:
             ]
         )
 
-        counts = analyse(report, store, fetch=False, workdir=tmp_path).cases[0].counts
+        rows = analyse(report, store, fetch=False, workdir=tmp_path).cases[0].counts
+        counts = {row.label: row for row in rows}
 
-        assert counts[FileKind.IMAGE.value] == {"added": 1, "changed": 1, "removed": 0}
-        assert counts[FileKind.NETCDF.value] == {"added": 0, "changed": 0, "removed": 1}
-        assert counts[FileKind.TEXT.value] == {"added": 0, "changed": 0, "removed": 0}
+        assert (counts["image"].added, counts["image"].changed, counts["image"].removed) == (1, 1, 0)
+        assert (counts["netcdf"].added, counts["netcdf"].changed, counts["netcdf"].removed) == (0, 0, 1)
+        assert (counts["text"].added, counts["text"].changed, counts["text"].removed) == (0, 0, 0)
+        # Every kind gets a column, in the enum's order, so the index header cannot drift.
+        assert [
+            row.label for row in analyse(report, store, fetch=False, workdir=tmp_path).cases[0].counts
+        ] == [kind.value for kind in FileKind]
 
     def test_partitions_and_back_link(self, tmp_path):
         store = MagicMock(spec=NativeStore)
@@ -142,14 +146,14 @@ class TestAnalyse:
         assert [f.change.name for f in case.images] == ["a.png"]
         assert [f.change.name for f in case.texts] == ["b.json"]
         assert [f.change.name for f in case.binaries] == ["c.nc", "d.bin"]
-        # The slug has three segments, so the index sits three levels up.
+        # The label has three segments, so the index sits three levels up.
         assert case.back_link == "../../../index.html"
 
-    def test_the_back_link_follows_the_slug_depth(self, tmp_path):
+    def test_the_back_link_follows_the_label_depth(self, tmp_path):
         store = MagicMock(spec=NativeStore)
         store.url = "https://store"
         report = _report([])
-        shallow = evolve(report.cases[0], label="pmp", slug="pmp")
+        shallow = evolve(report.cases[0], label="pmp")
         report = evolve(report, cases=(shallow,))
 
         case = analyse(report, store, fetch=False, workdir=tmp_path).cases[0]

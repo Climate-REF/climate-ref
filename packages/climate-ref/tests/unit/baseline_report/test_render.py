@@ -1,13 +1,16 @@
 """Tests for the static HTML the report is written as."""
 
 from html.parser import HTMLParser
+from unittest.mock import MagicMock
 
 import pytest
+from attrs import evolve
 
-from climate_ref.baseline_report.analyse import AnalysedCase, AnalysedFile, AnalysedReport, DiffLine, TextDiff
-from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report
+from climate_ref.baseline_report.analyse import AnalysedReport, DiffLine, TextDiff, analyse
+from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report, classify
 from climate_ref.baseline_report.render import render_case, render_index, write_site
 from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest, NativeEntry
+from climate_ref_core.regression.store import NativeStore
 
 STORE_URL = "https://store.example"
 
@@ -56,70 +59,76 @@ def _entry(char: str, size: int = 10) -> NativeEntry:
     return NativeEntry(sha256=char * 64, size=size)
 
 
-def _analysed_file(name, kind, old, new, text=None) -> AnalysedFile:
-    """Build one analysed file with URLs derived from its entries."""
-    change = FileChange(name=name, old=old, new=new, kind=kind)
-    return AnalysedFile(
-        change=change,
-        old_url=f"{STORE_URL}/{old.sha256}" if old else None,
-        new_url=f"{STORE_URL}/{new.sha256}" if new else None,
-        text=text,
-        size_delta=new.size - old.size if old and new else None,
-    )
+def _change(name: str, old: NativeEntry | None, new: NativeEntry | None) -> FileChange:
+    """Build one file change with the kind its name implies."""
+    return FileChange(name=name, old=old, new=new, kind=classify(name))
 
 
-def _case(files, *, label="example/diag/case", base=None, head=None) -> AnalysedCase:
-    """Build one analysed case with tallied counts."""
-    counts = {kind.value: {"added": 0, "changed": 0, "removed": 0} for kind in FileKind}
-    for file in files:
-        counts[file.change.kind.value][file.change.status] += 1
-    change = CaseChange(
+def _case_change(changes, label="example/diag/case", base=None, head=None) -> CaseChange:
+    """Build one collected case."""
+    return CaseChange(
         label=label,
-        slug=label,
         rel_path=f"packages/climate-ref-{label.split('/')[0]}/tests/test-data/manifest.json",
         base=base,
         head=head,
-        files=tuple(file.change for file in files),
+        files=tuple(changes),
         committed=("series.json",),
         metadata=("test_case_version: 3 -> 4",),
     )
-    return AnalysedCase(
-        change=change,
-        files=tuple(files),
-        counts=counts,
-        images=tuple(f for f in files if f.change.kind is FileKind.IMAGE),
-        texts=tuple(f for f in files if f.change.kind is FileKind.TEXT),
-        binaries=tuple(f for f in files if f.change.kind in (FileKind.NETCDF, FileKind.OTHER)),
-        back_link="/".join([*[".."] * len(label.split("/")), "index.html"]),
+
+
+def _analysed(cases, tmp_path, diffs=None) -> AnalysedReport:
+    """
+    Analyse collected cases with a store that is never read.
+
+    Running the real :func:`analyse` keeps these tests pinned to the counts, partitions and
+    back links the pages are actually built from. ``diffs`` replaces the placeholder note on a
+    named file, which is how a specific diff shape is put in front of the templates.
+    """
+    store = MagicMock(spec=NativeStore)
+    store.url = STORE_URL
+    report = analyse(
+        Report(base_ref="origin/main", head_sha="a" * 40, cases=tuple(cases)),
+        store,
+        fetch=False,
+        workdir=tmp_path,
     )
-
-
-def _report(cases) -> AnalysedReport:
-    """Wrap analysed cases in a report."""
-    return AnalysedReport(
-        report=Report(base_ref="origin/main", head_sha="a" * 40, cases=tuple(c.change for c in cases)),
-        store_url=STORE_URL,
-        cases=tuple(cases),
+    if not diffs:
+        return report
+    return evolve(
+        report,
+        cases=tuple(
+            evolve(
+                case,
+                files=tuple(evolve(file, text=diffs.get(file.change.name, file.text)) for file in case.files),
+                texts=tuple(evolve(file, text=diffs.get(file.change.name, file.text)) for file in case.texts),
+            )
+            for case in report.cases
+        ),
     )
 
 
 @pytest.fixture
-def changed_image_case():
-    """A case whose single image changed."""
-    return _case(
-        [_analysed_file("plot.png", FileKind.IMAGE, _entry("1"), _entry("2", 20))],
-        base=_manifest(3),
-        head=_manifest(4),
+def changed_image_case(tmp_path):
+    """A report whose single case has one changed image."""
+    return _analysed(
+        [
+            _case_change(
+                [_change("plot.png", _entry("1"), _entry("2", 20))], base=_manifest(3), head=_manifest(4)
+            )
+        ],
+        tmp_path,
     )
 
 
 class TestIndex:
-    def test_one_row_per_case(self):
-        report = _report(
+    def test_one_row_per_case(self, tmp_path):
+        report = _analysed(
             [
-                _case([], label="example/diag/a", base=_manifest(1), head=_manifest(2)),
-                _case([], label="pmp/diag/b", base=_manifest(1), head=_manifest(2)),
-            ]
+                _case_change([], label="example/diag/a", base=_manifest(1), head=_manifest(2)),
+                _case_change([], label="pmp/diag/b", base=_manifest(1), head=_manifest(2)),
+            ],
+            tmp_path,
         )
 
         html = render_index(report)
@@ -128,18 +137,43 @@ class TestIndex:
         assert "example/diag/a" in html
         assert "pmp/diag/b" in html
 
-    def test_every_link_ends_in_index_html(self):
-        report = _report([_case([], base=_manifest(1), head=_manifest(2))])
+    def test_every_link_ends_in_index_html(self, tmp_path):
+        report = _analysed([_case_change([], base=_manifest(1), head=_manifest(2))], tmp_path)
 
         assert _hrefs(render_index(report)) == ["example/diag/case/index.html"]
 
-    def test_versions_column(self):
-        report = _report([_case([], base=_manifest(3), head=_manifest(4))])
+    def test_versions_column(self, tmp_path):
+        report = _analysed([_case_change([], base=_manifest(3), head=_manifest(4))], tmp_path)
 
         assert "v3 -&gt; v4" in render_index(report)
 
-    def test_an_empty_report_says_so(self):
-        html = render_index(_report([]))
+    def test_a_column_header_per_kind(self, tmp_path):
+        report = _analysed([_case_change([], base=_manifest(1), head=_manifest(2))], tmp_path)
+
+        headers = render_index(report)
+
+        for kind in FileKind:
+            assert f"<th>{kind.value}</th>" in headers
+
+    def test_counts_appear_per_kind(self, tmp_path):
+        report = _analysed(
+            [
+                _case_change(
+                    [_change("a.png", None, _entry("1")), _change("b.nc", _entry("2"), None)],
+                    base=_manifest(1),
+                    head=_manifest(2),
+                )
+            ],
+            tmp_path,
+        )
+
+        html = render_index(report)
+
+        assert '<span class="added">+1</span>' in html
+        assert '<span class="removed">-1</span>' in html
+
+    def test_an_empty_report_says_so(self, tmp_path):
+        html = render_index(_analysed([], tmp_path))
 
         assert "No baseline manifests changed" in html
         assert "<tbody>" not in html
@@ -147,23 +181,20 @@ class TestIndex:
 
 class TestCasePage:
     def test_a_changed_image_renders_two_images(self, changed_image_case):
-        report = _report([changed_image_case])
-
-        images = _tags(render_case(report, changed_image_case), "img")
+        images = _tags(render_case(changed_image_case, changed_image_case.cases[0]), "img")
 
         assert len(images) == 2
         assert all(image["src"].startswith(STORE_URL) for image in images)
 
-    def test_an_added_image_renders_one_image_and_a_placeholder(self):
-        case = _case([_analysed_file("plot.png", FileKind.IMAGE, None, _entry("2"))])
-        report = _report([case])
+    def test_an_added_image_renders_one_image_and_a_placeholder(self, tmp_path):
+        report = _analysed([_case_change([_change("plot.png", None, _entry("2"))])], tmp_path)
 
-        html = render_case(report, case)
+        html = render_case(report, report.cases[0])
 
         assert len(_tags(html, "img")) == 1
         assert 'class="absent"' in html
 
-    def test_a_text_diff_renders_one_span_per_line(self):
+    def test_a_text_diff_renders_one_span_per_line(self, tmp_path):
         diff = TextDiff(
             lines=(
                 DiffLine(kind="header", text="--- old"),
@@ -174,10 +205,13 @@ class TestCasePage:
             note=None,
             elided=0,
         )
-        case = _case([_analysed_file("series.csv", FileKind.TEXT, _entry("1"), _entry("2"), text=diff)])
-        report = _report([case])
+        report = _analysed(
+            [_case_change([_change("series.csv", _entry("1"), _entry("2"))])],
+            tmp_path,
+            diffs={"series.csv": diff},
+        )
 
-        html = render_case(report, case)
+        html = render_case(report, report.cases[0])
         spans = [
             attrs["class"]
             for attrs in _tags(html, "span")
@@ -186,65 +220,65 @@ class TestCasePage:
 
         assert spans == ["header", "hunk", "remove", "add"]
 
-    def test_a_note_replaces_the_diff(self):
-        diff = TextDiff(lines=(), note="fetching disabled", elided=0)
-        case = _case([_analysed_file("series.csv", FileKind.TEXT, None, _entry("2"), text=diff)])
-        report = _report([case])
+    def test_a_note_replaces_the_diff(self, tmp_path):
+        report = _analysed([_case_change([_change("series.csv", None, _entry("2"))])], tmp_path)
 
-        html = render_case(report, case)
+        html = render_case(report, report.cases[0])
 
         assert "fetching disabled" in html
         assert '<pre class="diff">' not in html
 
-    def test_elided_lines_are_reported(self):
+    def test_elided_lines_are_reported(self, tmp_path):
         diff = TextDiff(lines=(DiffLine(kind="add", text="+a"),), note=None, elided=7)
-        case = _case([_analysed_file("series.csv", FileKind.TEXT, None, _entry("2"), text=diff)])
-        report = _report([case])
+        report = _analysed(
+            [_case_change([_change("series.csv", None, _entry("2"))])],
+            tmp_path,
+            diffs={"series.csv": diff},
+        )
 
-        assert "7 further diff line(s) elided" in render_case(report, case)
+        assert "7 further diff line(s) elided" in render_case(report, report.cases[0])
 
-    def test_netcdf_renders_as_a_row(self):
-        case = _case([_analysed_file("out.nc", FileKind.NETCDF, _entry("1"), None)])
-        report = _report([case])
+    def test_netcdf_renders_as_a_row(self, tmp_path):
+        report = _analysed([_case_change([_change("out.nc", _entry("1"), None)])], tmp_path)
 
-        html = render_case(report, case)
+        html = render_case(report, report.cases[0])
 
         assert "out.nc" in html
         assert "was 10 B" in html
         assert not _tags(html, "img")
 
-    def test_the_back_link_matches_the_slug_depth(self):
-        case = _case([], label="pmp/diag/one")
-        report = _report([case])
+    def test_the_back_link_matches_the_label_depth(self, tmp_path):
+        report = _analysed([_case_change([], label="pmp/diag/one")], tmp_path)
 
-        assert "../../../index.html" in _hrefs(render_case(report, case))
+        assert "../../../index.html" in _hrefs(render_case(report, report.cases[0]))
 
-    def test_a_shallow_slug_gets_a_shallow_back_link(self):
-        case = _case([], label="pmp")
-        report = _report([case])
+    def test_a_shallow_label_gets_a_shallow_back_link(self, tmp_path):
+        report = _analysed([_case_change([], label="pmp")], tmp_path)
 
-        assert "../index.html" in _hrefs(render_case(report, case))
+        assert "../index.html" in _hrefs(render_case(report, report.cases[0]))
 
     def test_a_changed_file_shows_its_signed_size_delta(self, changed_image_case):
-        assert "(+10)" in render_case(_report([changed_image_case]), changed_image_case)
+        assert "(+10)" in render_case(changed_image_case, changed_image_case.cases[0])
 
-    def test_a_text_diff_names_both_digests(self):
+    def test_a_text_diff_names_both_digests(self, tmp_path):
         diff = TextDiff(lines=(DiffLine(kind="add", text="+a"),), note=None, elided=0)
-        case = _case([_analysed_file("series.csv", FileKind.TEXT, _entry("1"), _entry("2"), text=diff)])
+        report = _analysed(
+            [_case_change([_change("series.csv", _entry("1"), _entry("2"))])],
+            tmp_path,
+            diffs={"series.csv": diff},
+        )
 
-        html = render_case(_report([case]), case)
+        html = render_case(report, report.cases[0])
 
         assert "1" * 12 in html
         assert "2" * 12 in html
 
     def test_links_are_internal_index_pages_or_store_blobs(self, changed_image_case):
-        report = _report([changed_image_case])
-
-        for href in _hrefs(render_case(report, changed_image_case)):
+        for href in _hrefs(render_case(changed_image_case, changed_image_case.cases[0])):
             assert href.endswith("index.html") or href.startswith(STORE_URL)
 
     def test_metadata_and_committed_are_listed(self, changed_image_case):
-        html = render_case(_report([changed_image_case]), changed_image_case)
+        html = render_case(changed_image_case, changed_image_case.cases[0])
 
         assert "test_case_version: 3 -&gt; 4" in html
         assert "series.json" in html
@@ -252,15 +286,13 @@ class TestCasePage:
 
 class TestWriteSite:
     def test_writes_an_index_and_a_page_per_case(self, tmp_path, changed_image_case):
-        report = _report([changed_image_case])
-
-        index = write_site(report, tmp_path / "out")
+        index = write_site(changed_image_case, tmp_path / "out")
 
         assert index == tmp_path / "out" / "index.html"
         assert index.exists()
         assert (tmp_path / "out" / "example" / "diag" / "case" / "index.html").exists()
 
     def test_an_empty_report_still_writes_an_index(self, tmp_path):
-        index = write_site(_report([]), tmp_path / "out")
+        index = write_site(_analysed([], tmp_path), tmp_path / "out")
 
         assert index.exists()

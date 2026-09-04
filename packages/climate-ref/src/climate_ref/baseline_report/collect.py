@@ -98,9 +98,6 @@ class CaseChange:
     label: str
     """``provider/diagnostic/test-case``."""
 
-    slug: str
-    """The output subdirectory for this case's page. Equal to :attr:`label`."""
-
     rel_path: str
     """Repo-relative path of the case's ``manifest.json``."""
 
@@ -325,10 +322,8 @@ def build_case_change(repo: Repo, base: str, rel_path: str) -> CaseChange | None
             continue
         files.append(FileChange(name=name, old=old, new=new, kind=classify(name)))
 
-    label = case_label(rel_path)
     return CaseChange(
-        label=label,
-        slug=label,
+        label=case_label(rel_path),
         rel_path=rel_path,
         base=base_manifest,
         head=head,

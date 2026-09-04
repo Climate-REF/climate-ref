@@ -12,14 +12,13 @@ from typing import TYPE_CHECKING
 
 from jinja2 import Environment, PackageLoader, select_autoescape
 
+from climate_ref.baseline_report.analyse import SHORT_DIGEST
+
 if TYPE_CHECKING:
     from climate_ref.baseline_report.analyse import AnalysedCase, AnalysedReport
 
-# Digest prefix shown in the report. Long enough to identify a blob, short enough to read.
-_SHORT_DIGEST = 12
 
-
-def _format_bytes(size: object) -> str:
+def _format_bytes(size: int | None) -> str:
     """
     Render a byte count with thousands separators.
 
@@ -33,12 +32,12 @@ def _format_bytes(size: object) -> str:
     :
         For example ``101,204 B``, or ``-`` when there is no count.
     """
-    if not isinstance(size, int) or isinstance(size, bool):
+    if size is None:
         return "-"
     return f"{size:,} B"
 
 
-def _format_signed(delta: object) -> str:
+def _format_signed(delta: int | None) -> str:
     """
     Render a signed byte change.
 
@@ -52,12 +51,12 @@ def _format_signed(delta: object) -> str:
     :
         For example ``+1,024``, or ``-`` when there is no change to show.
     """
-    if not isinstance(delta, int) or isinstance(delta, bool):
+    if delta is None:
         return "-"
     return f"{delta:+,}"
 
 
-def _format_short(digest: object) -> str:
+def _format_short(digest: str | None) -> str:
     """
     Render the readable prefix of a digest.
 
@@ -71,9 +70,9 @@ def _format_short(digest: object) -> str:
     :
         The first twelve hex characters, or ``-`` when there is no digest.
     """
-    if not isinstance(digest, str):
+    if digest is None:
         return "-"
-    return digest[:_SHORT_DIGEST]
+    return digest[:SHORT_DIGEST]
 
 
 def _build_env() -> Environment:
@@ -138,7 +137,7 @@ def render_case(report: AnalysedReport, case: AnalysedCase) -> str:
 
 def write_site(report: AnalysedReport, out_dir: Path) -> Path:
     """
-    Write the overview ``index.html`` plus one ``index.html`` per case, under the case slug.
+    Write the overview ``index.html`` plus one ``index.html`` per case, under the case label.
 
     Parameters
     ----------
@@ -156,7 +155,7 @@ def write_site(report: AnalysedReport, out_dir: Path) -> Path:
     index = out_dir / "index.html"
     index.write_text(render_index(report), encoding="utf-8")
     for case in report.cases:
-        page = out_dir / case.change.slug / "index.html"
+        page = out_dir / case.change.label / "index.html"
         page.parent.mkdir(parents=True, exist_ok=True)
         page.write_text(render_case(report, case), encoding="utf-8")
     return index

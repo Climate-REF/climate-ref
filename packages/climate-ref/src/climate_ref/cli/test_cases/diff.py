@@ -1,8 +1,8 @@
 """
 ``ref test-cases diff``.
 
-Renders an HTML report of every regression baseline that moved on this branch, with images
-shown old and new side by side and text outputs diffed inline.
+Renders an HTML report of every regression baseline that moved on this branch.
+Images are shown old and new side by side and text outputs diffed inline.
 """
 
 from __future__ import annotations
@@ -39,9 +39,10 @@ def diff_baselines(
     """
     Render an HTML report of the regression baselines changed on this branch.
 
-    Compares every committed ``manifest.json`` to its counterpart on ``--base`` and writes one page
-    per changed test case, with images shown old and new side by side.
-    Exits 0 whether or not anything changed. This reports, it does not gate.
+    Compares every committed ``manifest.json`` to its counterpart on ``--base``
+    and writes one page per changed test case.
+
+    Exits 0 whether or not anything changed.
 
     Examples
     --------

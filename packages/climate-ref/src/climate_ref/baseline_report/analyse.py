@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import difflib
 import json
+from collections import Counter
+from itertools import islice
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING
 
@@ -22,6 +24,9 @@ if TYPE_CHECKING:
 # A blob larger than this is summarised rather than diffed. Keeps a runaway report
 # from stalling the job on the download alone.
 MAX_FETCH_BYTES = 2_000_000
+
+# Digest prefix shown wherever a blob is named. Long enough to identify it, short enough to read.
+SHORT_DIGEST = 12
 
 # Unified-diff lines kept per file before the rest is elided.
 MAX_DIFF_LINES = 5000
@@ -73,6 +78,23 @@ class AnalysedFile:
 
 
 @frozen
+class KindCounts:
+    """How many files of one kind were added, changed and removed."""
+
+    label: str
+    """The kind's name, as the report column header."""
+
+    added: int
+    """Files present only on HEAD."""
+
+    changed: int
+    """Files present on both sides with a different digest."""
+
+    removed: int
+    """Files present only on the base ref."""
+
+
+@frozen
 class AnalysedCase:
     """One test case, with its files analysed and tallied."""
 
@@ -82,8 +104,8 @@ class AnalysedCase:
     files: tuple[AnalysedFile, ...]
     """Every analysed file, in the order collection produced them."""
 
-    counts: dict[str, dict[str, int]]
-    """``kind -> {added, changed, removed}``, with every kind present."""
+    counts: tuple[KindCounts, ...]
+    """One entry per kind, in report column order."""
 
     images: tuple[AnalysedFile, ...]
     """The image files, which render as a two-up comparison."""
@@ -110,6 +132,9 @@ class AnalysedReport:
 
     cases: tuple[AnalysedCase, ...]
     """The analysed cases, in the order collection produced them."""
+
+    kinds: tuple[str, ...]
+    """The count column headers, matching the order of every case's ``counts``."""
 
 
 def blob_url(store_url: str, digest: str) -> str:
@@ -204,24 +229,21 @@ def text_diff(old: Path | None, new: Path | None, name: str) -> TextDiff:
     :
         The diff, or a note explaining why there is not one.
     """
-    raw = list(
-        difflib.unified_diff(
-            _as_lines(old, name),
-            _as_lines(new, name),
-            fromfile="old" if old is not None else "(absent)",
-            tofile="new" if new is not None else "(absent)",
-            lineterm="",
-            n=3,
-        )
+    raw = difflib.unified_diff(
+        _as_lines(old, name),
+        _as_lines(new, name),
+        fromfile="old" if old is not None else "(absent)",
+        tofile="new" if new is not None else "(absent)",
+        lineterm="",
+        n=3,
     )
-    if not raw:
+    kept = list(islice(raw, MAX_DIFF_LINES))
+    if not kept:
         return TextDiff(lines=(), note="identical after decoding", elided=0)
-    elided = max(len(raw) - MAX_DIFF_LINES, 0)
-    kept = raw[:MAX_DIFF_LINES]
     return TextDiff(
         lines=tuple(DiffLine(kind=_classify_line(line), text=line) for line in kept),
         note=None,
-        elided=elided,
+        elided=sum(1 for _ in raw),
     )
 
 
@@ -257,8 +279,47 @@ def _fetch_side(
     try:
         store.fetch(digest, dest)
     except (OSError, ValueError) as exc:
-        return None, f"could not fetch {digest[:12]} ({exc})"
+        return None, f"could not fetch {digest[:SHORT_DIGEST]} ({exc})"
     return dest, None
+
+
+def _diff_for(
+    change: FileChange,
+    store: NativeStore,
+    *,
+    fetch: bool,
+    workdir: Path,
+) -> TextDiff | None:
+    """
+    Build the diff for one file, or ``None`` when its kind is not diffed.
+
+    Parameters
+    ----------
+    change
+        The file that moved.
+    store
+        The store to read blobs from.
+    fetch
+        Whether blobs may be downloaded.
+    workdir
+        Directory fetched blobs are written into.
+
+    Returns
+    -------
+    :
+        The diff, a note explaining why there is not one, or ``None`` for a non-text file.
+    """
+    if change.kind is not FileKind.TEXT:
+        return None
+    if not fetch:
+        return TextDiff(lines=(), note="fetching disabled", elided=0)
+
+    old_path, old_note = _fetch_side(store, change.old, workdir)
+    new_path, new_note = _fetch_side(store, change.new, workdir)
+    note = old_note or new_note
+    if note is not None:
+        return TextDiff(lines=(), note=note, elided=0)
+    return text_diff(old_path, new_path, change.name)
 
 
 def _analyse_file(
@@ -290,28 +351,13 @@ def _analyse_file(
     :
         The analysed file.
     """
-
-    def build(text: TextDiff | None) -> AnalysedFile:
-        """Build the file with the URLs and delta that do not depend on the diff."""
-        return AnalysedFile(
-            change=change,
-            old_url=blob_url(store_url, change.old.sha256) if change.old else None,
-            new_url=blob_url(store_url, change.new.sha256) if change.new else None,
-            text=text,
-            size_delta=change.new.size - change.old.size if change.old and change.new else None,
-        )
-
-    if change.kind is not FileKind.TEXT:
-        return build(None)
-    if not fetch:
-        return build(TextDiff(lines=(), note="fetching disabled", elided=0))
-
-    old_path, old_note = _fetch_side(store, change.old, workdir)
-    new_path, new_note = _fetch_side(store, change.new, workdir)
-    note = old_note or new_note
-    if note is not None:
-        return build(TextDiff(lines=(), note=note, elided=0))
-    return build(text_diff(old_path, new_path, change.name))
+    return AnalysedFile(
+        change=change,
+        old_url=blob_url(store_url, change.old.sha256) if change.old else None,
+        new_url=blob_url(store_url, change.new.sha256) if change.new else None,
+        text=_diff_for(change, store, fetch=fetch, workdir=workdir),
+        size_delta=change.new.size - change.old.size if change.old and change.new else None,
+    )
 
 
 def _of_kind(files: tuple[AnalysedFile, ...], *kinds: FileKind) -> tuple[AnalysedFile, ...]:
@@ -333,7 +379,7 @@ def _of_kind(files: tuple[AnalysedFile, ...], *kinds: FileKind) -> tuple[Analyse
     return tuple(file for file in files if file.change.kind in kinds)
 
 
-def _counts(files: tuple[AnalysedFile, ...]) -> dict[str, dict[str, int]]:
+def _counts(files: tuple[AnalysedFile, ...]) -> tuple[KindCounts, ...]:
     """
     Tally each file kind's added, changed and removed counts.
 
@@ -345,13 +391,21 @@ def _counts(files: tuple[AnalysedFile, ...]) -> dict[str, dict[str, int]]:
     Returns
     -------
     :
-        ``kind -> {added, changed, removed}``, with every kind present so a template
-        never has to test for a missing key.
+        One entry per kind, in report column order, so a template never has to test
+        for a missing kind or decide the column order itself.
     """
-    tally = {kind.value: {"added": 0, "changed": 0, "removed": 0} for kind in FileKind}
+    tally: dict[FileKind, Counter[str]] = {kind: Counter() for kind in FileKind}
     for analysed in files:
-        tally[analysed.change.kind.value][analysed.change.status] += 1
-    return tally
+        tally[analysed.change.kind][analysed.change.status] += 1
+    return tuple(
+        KindCounts(
+            label=kind.value,
+            added=tally[kind]["added"],
+            changed=tally[kind]["changed"],
+            removed=tally[kind]["removed"],
+        )
+        for kind in FileKind
+    )
 
 
 def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -> AnalysedReport:
@@ -384,7 +438,7 @@ def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -
         files = tuple(
             _analyse_file(change, store, store_url, fetch=fetch, workdir=workdir) for change in case.files
         )
-        depth = len(PurePosixPath(case.slug).parts)
+        depth = len(PurePosixPath(case.label).parts)
         cases.append(
             AnalysedCase(
                 change=case,
@@ -396,4 +450,9 @@ def analyse(report: Report, store: NativeStore, *, fetch: bool, workdir: Path) -
                 back_link="/".join([*[".."] * depth, "index.html"]),
             )
         )
-    return AnalysedReport(report=report, store_url=store_url, cases=tuple(cases))
+    return AnalysedReport(
+        report=report,
+        store_url=store_url,
+        cases=tuple(cases),
+        kinds=tuple(kind.value for kind in FileKind),
+    )

@@ -301,7 +301,8 @@ def build_report_store(config: _ReportStoreConfigProtocol, *, writable: bool) ->
         )
     if not config.bucket:
         raise ValueError(
-            "Uploading a report needs a bucket name. Set REF_REPORT_STORE_BUCKET (e.g. ref-baseline-reports)."
+            "Uploading a report needs a bucket name. Set REF_REPORT_STORE_BUCKET "
+            "(e.g. ref-baselines-reports)."
         )
     return ReportStore(
         url=config.url,

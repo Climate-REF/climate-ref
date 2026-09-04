@@ -229,7 +229,7 @@ filename = "sqlite://climate_ref.db"
             "report_store": {
                 "url": "https://reports.baselines.climate-ref.org",
                 "s3_endpoint_url": "https://2aa5172b2bba093c516027d6fa13cdc8.r2.cloudflarestorage.com",
-                "bucket": "ref-baseline-reports",
+                "bucket": "ref-baselines-reports",
             },
             "paths": {
                 "log": f"{default_path}/log",
@@ -263,7 +263,7 @@ filename = "sqlite://climate_ref.db"
 
     def test_report_store_defaults(self, config):
         assert config.report_store.url == "https://reports.baselines.climate-ref.org"
-        assert config.report_store.bucket == "ref-baseline-reports"
+        assert config.report_store.bucket == "ref-baselines-reports"
 
     def test_report_store_from_env_variables(self, monkeypatch, config):
         monkeypatch.setenv("REF_REPORT_STORE_URL", "file:///tmp/ref-reports")

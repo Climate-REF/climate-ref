@@ -328,7 +328,7 @@ class ReportStoreConfig:
     Set ``REF_REPORT_STORE_S3_ENDPOINT_URL`` to override (e.g. a staging account).
     """
 
-    bucket: str = env_field(name="REPORT_STORE_BUCKET", default="ref-baseline-reports")
+    bucket: str = env_field(name="REPORT_STORE_BUCKET", default="ref-baselines-reports")
     """
     Name of the writable (Cloudflare R2) reports bucket.
 

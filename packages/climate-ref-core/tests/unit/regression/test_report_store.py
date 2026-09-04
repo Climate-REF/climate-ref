@@ -12,7 +12,7 @@ from climate_ref_core.regression.store import NativeStoreUnavailableError
 
 REMOTE_URL = "https://reports.example.com"
 S3_ENDPOINT = "https://account.r2.cloudflarestorage.com"
-BUCKET = "ref-baseline-reports"
+BUCKET = "ref-baselines-reports"
 KEY = "912/0c7e1d4abc12/index.html"
 HTML = "text/html; charset=utf-8"
 

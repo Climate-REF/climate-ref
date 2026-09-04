@@ -1,9 +1,14 @@
 # Diagnose a deployment
 
-`ref doctor` looks for the problems that a solve hides rather than reports: reference data that is missing,
-so its diagnostics quietly plan no executions;
-data ingested under a source type no diagnostic requires, so nothing selects it;
-and datasets whose files cover the same period twice, so a diagnostic reads that period more than once.
+`ref doctor` looks for the problems that a solve hides rather than reports.
+
+- Reference data is missing, so its diagnostics quietly plan no executions.
+- Data is ingested under a source type no diagnostic requires, so nothing selects it.
+- obs4REF data is ingested as `obs4mips`, so the catalog cannot say where it came from.
+- An obs4REF dataset has since been published to obs4MIPs, so the registry copy is no longer used.
+- A dataset's files cover the same period twice, so a diagnostic reads that period more than once.
+- A diagnostic cannot be solved at all by the ingested data.
+  The finding names the requirement that goes unmet.
 
 ```bash
 ref doctor
@@ -14,7 +19,7 @@ under the remedy they have in common,
 so a deployment missing twenty reference datasets reads as one instruction and twenty names:
 
 ```text
-3 findings from 4 checks: 3 warnings
+3 findings from 7 checks: 3 warnings
 
 missing-reference-data 3 warnings
   Fetch these, then ingest the directory they land in.

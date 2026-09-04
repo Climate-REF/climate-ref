@@ -6,7 +6,14 @@ from unittest.mock import MagicMock
 import pytest
 from attrs import evolve
 
-from climate_ref.baseline_report.analyse import AnalysedReport, DiffLine, TextDiff, analyse
+from climate_ref.baseline_report.analyse import (
+    AnalysedReport,
+    DiffLine,
+    NetcdfDiff,
+    StatRow,
+    TextDiff,
+    analyse,
+)
 from climate_ref.baseline_report.collect import CaseChange, FileChange, FileKind, Report, classify
 from climate_ref.baseline_report.render import render_case, render_index, write_site
 from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest, NativeEntry
@@ -96,13 +103,24 @@ def _analysed(cases, tmp_path, diffs=None) -> AnalysedReport:
     )
     if not diffs:
         return report
+
+    def _replace(file):
+        """Swap in the fixture diff for a named file, leaving the rest as analysed."""
+        found = diffs.get(file.change.name)
+        if found is None:
+            return file
+        if isinstance(found, NetcdfDiff):
+            return evolve(file, netcdf=found)
+        return evolve(file, text=found)
+
     return evolve(
         report,
         cases=tuple(
             evolve(
                 case,
-                files=tuple(evolve(file, text=diffs.get(file.change.name, file.text)) for file in case.files),
-                texts=tuple(evolve(file, text=diffs.get(file.change.name, file.text)) for file in case.texts),
+                files=tuple(_replace(file) for file in case.files),
+                texts=tuple(_replace(file) for file in case.texts),
+                netcdfs=tuple(_replace(file) for file in case.netcdfs),
             )
             for case in report.cases
         ),
@@ -297,3 +315,114 @@ class TestWriteSite:
         index = write_site(_analysed([], tmp_path), tmp_path / "out")
 
         assert index.exists()
+
+
+def _stat_row(name, *, moved, **overrides):
+    """Build a stats row with every field set, so a template cannot pass on a missing one."""
+    fields = dict(
+        shape_old="2x2",
+        shape_new="2x2",
+        min_old=1.0,
+        min_new=1.0,
+        max_old=4.0,
+        max_new=4.0,
+        mean_old=2.5,
+        mean_new=2.5,
+        nan_old=0,
+        nan_new=0,
+        max_abs_diff=0.0,
+        max_rel_diff=0.0,
+        cells_differ=0,
+    )
+    fields.update(overrides)
+    return StatRow(name=name, moved=moved, **fields)
+
+
+def _netcdf_case(tmp_path, diff, name="out.nc"):
+    """A report whose single case has one changed NetCDF file carrying ``diff``."""
+    return _analysed(
+        [_case_change([_change(name, _entry("1"), _entry("2", 20))], base=_manifest(3), head=_manifest(4))],
+        tmp_path,
+        diffs={name: diff},
+    )
+
+
+class TestNetcdfBlock:
+    def test_only_the_moved_row_is_shaded(self, tmp_path):
+        diff = NetcdfDiff(
+            header=(DiffLine(kind="add", text="+title: b"),),
+            rows=(
+                _stat_row("tas", moved=True, max_abs_diff=0.5, max_rel_diff=0.125, cells_differ=1),
+                _stat_row("pr", moved=False),
+            ),
+            note=None,
+        )
+        report = _netcdf_case(tmp_path, diff)
+
+        html = render_case(report, report.cases[0])
+
+        assert html.count('<tr class="moved">') == 1
+        assert [attrs.get("class") for attrs in _tags(html, "table")] == ["stats"]
+        assert "0.5" in html
+        assert "0.125" in html
+
+    def test_a_note_replaces_the_table(self, tmp_path):
+        report = _netcdf_case(tmp_path, NetcdfDiff(header=(), rows=(), note="could not open: boom"))
+
+        html = render_case(report, report.cases[0])
+
+        assert "could not open: boom" in html
+        assert "<table" not in html
+
+    def test_an_absent_statistic_renders_as_an_ascii_hyphen(self, tmp_path):
+        diff = NetcdfDiff(
+            header=(),
+            rows=(
+                _stat_row(
+                    "tas",
+                    moved=True,
+                    shape_old=None,
+                    min_old=None,
+                    max_old=None,
+                    mean_old=None,
+                    nan_old=None,
+                    max_abs_diff=None,
+                    max_rel_diff=None,
+                    cells_differ=None,
+                ),
+            ),
+            note=None,
+        )
+        report = _netcdf_case(tmp_path, diff)
+
+        html = render_case(report, report.cases[0])
+
+        assert "- -> 2x2" in html
+        assert "<td>-</td>" in html
+
+    def test_the_page_carries_no_dash_that_is_not_ascii(self, tmp_path):
+        diff = NetcdfDiff(header=(), rows=(_stat_row("tas", moved=False),), note=None)
+        report = _netcdf_case(tmp_path, diff)
+
+        html = render_case(report, report.cases[0])
+
+        assert "\u2013" not in html
+        assert "\u2014" not in html
+
+    def test_a_wide_table_is_wrapped_so_it_can_scroll(self, tmp_path):
+        diff = NetcdfDiff(header=(), rows=(_stat_row("tas", moved=False),), note=None)
+        report = _netcdf_case(tmp_path, diff, name="a" * 120 + ".nc")
+
+        html = render_case(report, report.cases[0])
+
+        assert '<div class="scroll-x">' in html
+        assert "a" * 120 in html
+
+    def test_matching_headers_say_so_rather_than_showing_an_empty_diff(self, tmp_path):
+        diff = NetcdfDiff(header=(), rows=(_stat_row("tas", moved=False),), note=None)
+        report = _netcdf_case(tmp_path, diff)
+
+        html = render_case(report, report.cases[0])
+
+        assert "The headers match." in html
+        assert '<pre class="diff">' not in html

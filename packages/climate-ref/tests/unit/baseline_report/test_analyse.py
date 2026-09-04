@@ -3,10 +3,19 @@
 import json
 from unittest.mock import MagicMock
 
+import numpy as np
 import pytest
+import xarray as xr
 from attrs import evolve
 
-from climate_ref.baseline_report.analyse import MAX_FETCH_BYTES, analyse, blob_url, text_diff
+from climate_ref.baseline_report.analyse import (
+    MAX_FETCH_BYTES,
+    NETCDF_FETCH_BYTES,
+    analyse,
+    blob_url,
+    netcdf_diff,
+    text_diff,
+)
 from climate_ref.baseline_report.collect import (
     CaseChange,
     FileChange,
@@ -159,7 +168,8 @@ class TestAnalyse:
 
         assert [f.change.name for f in case.images] == ["a.png"]
         assert [f.change.name for f in case.texts] == ["b.json"]
-        assert [f.change.name for f in case.binaries] == ["c.nc", "d.bin"]
+        assert [f.change.name for f in case.netcdfs] == ["c.nc"]
+        assert [f.change.name for f in case.others] == ["d.bin"]
         # The label has three segments, so the index sits three levels up.
         assert case.back_link == "../../../index.html"
 
@@ -214,7 +224,7 @@ class TestAnalyse:
             ]
         )
 
-        analysed = analyse(report, store, fetch=True, workdir=tmp_path / "work")
+        analysed = analyse(report, store, fetch=True, workdir=tmp_path)
 
         diff = analysed.cases[0].files[0].text
         assert diff.note is None
@@ -264,3 +274,174 @@ class TestAnalyse:
         assert file.old_url == f"https://store/{'1' * 64}"
         assert file.new_url is None
         assert analysed.store_url == "https://store"
+
+
+def _write_nc(path, data, attrs=None, name="tas"):
+    """Write a single-variable dataset to a NetCDF file and return its path."""
+    values = np.asarray(data)
+    dataset = xr.Dataset(
+        {name: (("lat", "lon"), values)},
+        coords={"lat": np.arange(values.shape[0], dtype=float), "lon": np.arange(values.shape[1])},
+        attrs=attrs or {"title": "a"},
+    )
+    dataset.to_netcdf(path)
+    return path
+
+
+@pytest.fixture
+def base_nc(tmp_path):
+    """A two by two dataset both sides of every pair start from."""
+    return _write_nc(tmp_path / "old.nc", [[1.0, 2.0], [3.0, 4.0]])
+
+
+class TestNetcdfDiff:
+    def test_identical_files_have_no_header_diff_and_no_moved_rows(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0]])
+
+        diff = netcdf_diff(base_nc, new)
+
+        assert diff.note is None
+        assert diff.header == ()
+        assert diff.rows[0].moved is False
+        assert diff.rows[0].cells_differ == 0
+        assert diff.rows[0].max_abs_diff == 0.0
+
+    def test_a_changed_attribute_shows_in_the_header_only(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.0]], attrs={"title": "b"})
+
+        diff = netcdf_diff(base_nc, new)
+
+        assert sum(1 for line in diff.header if line.kind == "add") == 1
+        assert sum(1 for line in diff.header if line.kind == "remove") == 1
+        assert all(row.moved is False for row in diff.rows)
+
+    def test_one_changed_value_is_counted_and_measured(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0], [3.0, 4.5]])
+
+        row = netcdf_diff(base_nc, new).rows[0]
+
+        assert row.cells_differ == 1
+        assert row.max_abs_diff == pytest.approx(0.5)
+        assert row.max_rel_diff == pytest.approx(0.125)
+        assert row.moved is True
+
+    def test_a_changed_shape_cannot_be_compared_cell_by_cell(self, tmp_path, base_nc):
+        new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+
+        row = netcdf_diff(base_nc, new).rows[0]
+
+        assert row.max_abs_diff is None
+        assert row.cells_differ is None
+        assert row.shape_old == "2x2"
+        assert row.shape_new == "2x3"
+        assert row.moved is True
+
+    def test_a_nan_in_the_same_cell_on_both_sides_is_not_a_change(self, tmp_path):
+        old = _write_nc(tmp_path / "old.nc", [[1.0, np.nan], [3.0, 4.0]])
+        new = _write_nc(tmp_path / "new.nc", [[1.0, np.nan], [3.0, 4.0]])
+
+        row = netcdf_diff(old, new).rows[0]
+
+        assert row.cells_differ == 0
+        assert row.moved is False
+        assert row.nan_old == 1
+        assert row.nan_new == 1
+
+    def test_an_all_nan_array_reports_no_statistics(self, tmp_path):
+        old = _write_nc(tmp_path / "old.nc", [[np.nan, np.nan], [np.nan, np.nan]])
+        new = _write_nc(tmp_path / "new.nc", [[np.nan, np.nan], [np.nan, np.nan]])
+
+        row = netcdf_diff(old, new).rows[0]
+
+        assert (row.min_old, row.max_old, row.mean_old) == (None, None, None)
+        assert row.nan_old == 4
+        assert row.moved is False
+
+    def test_an_absent_old_side_leaves_every_old_statistic_unset(self, tmp_path, base_nc):
+        row = netcdf_diff(None, base_nc).rows[0]
+
+        assert (row.shape_old, row.min_old, row.max_old, row.mean_old, row.nan_old) == (
+            None,
+            None,
+            None,
+            None,
+            None,
+        )
+        assert row.shape_new == "2x2"
+        assert row.moved is True
+
+    def test_a_file_that_is_not_netcdf_becomes_a_note(self, tmp_path, base_nc):
+        broken = tmp_path / "broken.nc"
+        broken.write_text("not a netcdf file at all")
+
+        diff = netcdf_diff(base_nc, broken)
+
+        assert diff.note.startswith("could not open")
+        assert diff.rows == ()
+
+    def test_a_string_variable_gets_shapes_but_no_statistics(self, tmp_path):
+        for path in (tmp_path / "old.nc", tmp_path / "new.nc"):
+            xr.Dataset({"label": (("i",), np.array(["a", "b"], dtype=object))}).to_netcdf(path)
+
+        row = netcdf_diff(tmp_path / "old.nc", tmp_path / "new.nc").rows[0]
+
+        assert row.shape_old == "2"
+        assert row.shape_new == "2"
+        assert (row.min_old, row.max_old, row.nan_old, row.cells_differ) == (None, None, None, None)
+        assert row.moved is False
+
+    def test_a_variable_added_on_one_side_only_moves(self, tmp_path, base_nc):
+        new = tmp_path / "new.nc"
+        xr.Dataset(
+            {
+                "tas": (("lat", "lon"), np.array([[1.0, 2.0], [3.0, 4.0]])),
+                "pr": (("lat", "lon"), np.array([[0.0, 0.0], [0.0, 0.0]])),
+            },
+            coords={"lat": np.arange(2, dtype=float), "lon": np.arange(2)},
+            attrs={"title": "a"},
+        ).to_netcdf(new)
+
+        rows = {row.name: row for row in netcdf_diff(base_nc, new).rows}
+
+        assert sorted(rows) == ["pr", "tas"]
+        assert rows["pr"].moved is True
+        assert rows["pr"].shape_old is None
+        assert rows["tas"].moved is False
+
+
+class TestAnalyseNetcdf:
+    def test_a_netcdf_file_is_fetched_and_analysed(self, tmp_path, base_nc):
+        store = MagicMock(spec=NativeStore)
+        store.url = "https://store"
+        store.root = None
+        store.fetch.side_effect = lambda digest, dest: dest.write_bytes(base_nc.read_bytes())
+        entry = NativeEntry(sha256="1" * 64, size=base_nc.stat().st_size)
+        report = _report([_file_change("out.nc", entry, evolve(entry, sha256="2" * 64))])
+
+        file = analyse(report, store, fetch=True, workdir=tmp_path).cases[0].files[0]
+
+        assert file.netcdf.note is None
+        assert [row.name for row in file.netcdf.rows] == ["tas"]
+        assert file.text is None
+
+    def test_an_oversized_netcdf_file_is_not_fetched(self, tmp_path):
+        store = MagicMock(spec=NativeStore)
+        store.url = "https://store"
+        store.root = None
+        entry = NativeEntry(sha256="1" * 64, size=NETCDF_FETCH_BYTES + 1)
+        report = _report([_file_change("out.nc", None, entry)])
+
+        file = analyse(report, store, fetch=True, workdir=tmp_path).cases[0].files[0]
+
+        assert "too large to analyse" in file.netcdf.note
+        store.fetch.assert_not_called()
+
+    def test_fetching_disabled_leaves_a_note(self, tmp_path):
+        store = MagicMock(spec=NativeStore)
+        store.url = "https://store"
+        store.root = None
+        report = _report([_file_change("out.nc", None, NativeEntry(sha256="1" * 64, size=10))])
+
+        file = analyse(report, store, fetch=False, workdir=tmp_path).cases[0].files[0]
+
+        assert file.netcdf.note == "fetching disabled"

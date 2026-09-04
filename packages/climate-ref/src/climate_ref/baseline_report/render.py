@@ -56,6 +56,27 @@ def _format_signed(delta: int | None) -> str:
     return f"{delta:+,}"
 
 
+def _format_num(value: float | None) -> str:
+    """
+    Render a statistic.
+
+    Parameters
+    ----------
+    value
+        The number, or ``None`` when it could not be computed.
+
+    Returns
+    -------
+    :
+        An integer with thousands separators, a float to six significant figures, or ``-``.
+    """
+    if value is None:
+        return "-"
+    if isinstance(value, int):
+        return f"{value:,}"
+    return f"{value:.6g}"
+
+
 def _format_short(digest: str | None) -> str:
     """
     Render the readable prefix of a digest.
@@ -92,6 +113,7 @@ def _build_env() -> Environment:
     )
     env.filters["bytes"] = _format_bytes
     env.filters["signed"] = _format_signed
+    env.filters["num"] = _format_num
     env.filters["short"] = _format_short
     return env
 

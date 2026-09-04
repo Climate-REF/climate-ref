@@ -9,6 +9,7 @@
   --add-fg: #14532d;
   --remove-bg: #fbe4e4;
   --remove-fg: #7f1d1d;
+  --moved-bg: #fdeeee;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,6 +23,7 @@
     --add-fg: #86e29b;
     --remove-bg: #3a1c1c;
     --remove-fg: #f2a1a1;
+    --moved-bg: #2c1717;
   }
 }
 
@@ -153,4 +155,34 @@ summary {
 .note {
   color: var(--muted);
   font-style: italic;
+}
+
+/* Table wrapper. A wide stats table scrolls inside its card rather than pushing the card wider. */
+.scroll-x {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.stats {
+  font-variant-numeric: tabular-nums;
+  min-width: 100%;
+  white-space: nowrap;
+  width: auto;
+}
+
+.stats th, .stats td {
+  font-size: 0.9em;
+}
+
+tr.moved {
+  background: var(--moved-bg);
+}
+
+/* A baseline file name can be long and has no spaces to break on. */
+.file h3 code, .binaries code {
+  overflow-wrap: anywhere;
+}
+
+.binaries td:first-child {
+  max-width: 40rem;
 }

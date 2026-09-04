@@ -97,8 +97,12 @@ was {{ file.change.old.size | bytes -}}
 </div>
 {% endmacro %}
 
-{% macro stat_pair(old, new) -%}
-{{ old | num }} -> {{ new | num }}
+{% macro emphasise(value, changed) -%}
+{% if changed %}<strong>{{ value }}</strong>{% else %}{{ value }}{% endif %}
+{%- endmacro %}
+
+{% macro pair_cell(old, new, changed) -%}
+{{ old }} -> {{ emphasise(new, changed) }}
 {%- endmacro %}
 
 {% macro netcdf_block(file) %}
@@ -141,14 +145,14 @@ was {{ file.change.old.size | bytes -}}
 {% for row in file.netcdf.rows %}
 <tr{% if row.moved %} class="moved"{% endif %}>
 <td><code>{{ row.name }}</code></td>
-<td>{{ row.shape_old | dash }} -> {{ row.shape_new | dash }}</td>
-<td>{{ stat_pair(row.min_old, row.min_new) }}</td>
-<td>{{ stat_pair(row.max_old, row.max_new) }}</td>
-<td>{{ stat_pair(row.mean_old, row.mean_new) }}</td>
-<td>{{ stat_pair(row.nan_old, row.nan_new) }}</td>
-<td>{{ row.max_abs_diff | num }}</td>
-<td>{{ row.max_rel_diff | num }}</td>
-<td>{{ row.cells_differ | num }}</td>
+<td>{{ pair_cell(row.shape.old | dash, row.shape.new | dash, row.shape.changed) }}</td>
+<td>{{ pair_cell(row.minimum.old | num, row.minimum.new | num, row.minimum.changed) }}</td>
+<td>{{ pair_cell(row.maximum.old | num, row.maximum.new | num, row.maximum.changed) }}</td>
+<td>{{ pair_cell(row.mean.old | num, row.mean.new | num, row.mean.changed) }}</td>
+<td>{{ pair_cell(row.nan.old | num, row.nan.new | num, row.nan.changed) }}</td>
+<td>{{ emphasise(row.max_abs_diff | num, row.differs) }}</td>
+<td>{{ emphasise(row.max_rel_diff | num, row.differs) }}</td>
+<td>{{ emphasise(row.cells_differ | num, row.differs) }}</td>
 </tr>
 {% endfor %}
 </tbody>

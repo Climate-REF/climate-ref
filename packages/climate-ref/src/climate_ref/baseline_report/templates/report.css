@@ -229,3 +229,8 @@ tr.moved {
 .header .split .diff span {
   white-space: pre;
 }
+
+/* The moved half of a pair, so a column can be scanned for what actually shifted. */
+.stats strong {
+  font-weight: 600;
+}

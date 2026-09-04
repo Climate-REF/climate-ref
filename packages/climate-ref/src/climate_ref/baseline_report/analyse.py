@@ -32,8 +32,7 @@ MAX_FETCH_BYTES = 2_000_000
 # Digest prefix shown wherever a blob is named. Long enough to identify it, short enough to read.
 SHORT_DIGEST = 12
 
-# A NetCDF blob larger than this is left unopened. Well above the largest baseline file,
-# because opening one is cheap next to downloading it.
+# A NetCDF blob larger than this is left unopened.
 NETCDF_FETCH_BYTES = 100_000_000
 
 # Unified-diff lines kept per file before the rest is elided.
@@ -66,41 +65,49 @@ class TextDiff:
 
 
 @frozen
+class Pair[T]:
+    """One statistic on each side of the change."""
+
+    old: T | None
+    """The value on the base ref, or ``None`` when it could not be computed."""
+
+    new: T | None
+    """The value on HEAD, or ``None`` when it could not be computed."""
+
+    @property
+    def changed(self) -> bool:
+        """
+        Whether the two sides differ.
+
+        Returns
+        -------
+        :
+            ``True`` when the value moved, which is what emphasises it in the table.
+        """
+        return self.old != self.new
+
+
+@frozen
 class StatRow:
     """Whole-array statistics for one data variable, on each side of the change."""
 
     name: str
     """The variable's name."""
 
-    shape_old: str | None
-    """Dimensions on the base ref, as ``180x360``, or ``None`` when the variable is absent."""
+    shape: Pair[str]
+    """Dimensions on each side, as ``180x360``, or ``scalar``."""
 
-    shape_new: str | None
-    """Dimensions on HEAD, as ``180x360``, or ``None`` when the variable is absent."""
+    minimum: Pair[float]
+    """Minimum on each side, ignoring NaN."""
 
-    min_old: float | None
-    """Minimum on the base ref, ignoring NaN. ``None`` when unavailable."""
+    maximum: Pair[float]
+    """Maximum on each side, ignoring NaN."""
 
-    min_new: float | None
-    """Minimum on HEAD, ignoring NaN. ``None`` when unavailable."""
+    mean: Pair[float]
+    """Mean on each side, ignoring NaN."""
 
-    max_old: float | None
-    """Maximum on the base ref, ignoring NaN. ``None`` when unavailable."""
-
-    max_new: float | None
-    """Maximum on HEAD, ignoring NaN. ``None`` when unavailable."""
-
-    mean_old: float | None
-    """Mean on the base ref, ignoring NaN. ``None`` when unavailable."""
-
-    mean_new: float | None
-    """Mean on HEAD, ignoring NaN. ``None`` when unavailable."""
-
-    nan_old: int | None
-    """NaN cells on the base ref, or ``None`` when the variable is absent or not numeric."""
-
-    nan_new: int | None
-    """NaN cells on HEAD, or ``None`` when the variable is absent or not numeric."""
+    nan: Pair[int]
+    """NaN cells on each side, ``None`` when the variable is absent or not numeric."""
 
     max_abs_diff: float | None
     """Largest absolute change, or ``None`` when the shapes differ or a side is absent."""
@@ -113,6 +120,18 @@ class StatRow:
 
     moved: bool
     """Whether anything about this variable changed, which is what shades its row."""
+
+    @property
+    def differs(self) -> bool:
+        """
+        Whether the cell by cell comparison found a change.
+
+        Returns
+        -------
+        :
+            ``True`` when at least one cell moved, which is what emphasises the diff columns.
+        """
+        return bool(self.cells_differ)
 
 
 @frozen
@@ -570,22 +589,18 @@ def _stat_row(old: xr.Dataset | None, new: xr.Dataset | None, name: str) -> Stat
     min_new, max_new, mean_new, nan_new = _summarise(new_values)
     scale = max(abs(min_old), abs(max_old)) if min_old is not None and max_old is not None else 0.0
     max_abs_diff, max_rel_diff, cells_differ = _compare(old_values, new_values, scale)
+    shape = Pair(old=shape_old, new=shape_new)
     return StatRow(
         name=name,
-        shape_old=shape_old,
-        shape_new=shape_new,
-        min_old=min_old,
-        min_new=min_new,
-        max_old=max_old,
-        max_new=max_new,
-        mean_old=mean_old,
-        mean_new=mean_new,
-        nan_old=nan_old,
-        nan_new=nan_new,
+        shape=shape,
+        minimum=Pair(old=min_old, new=min_new),
+        maximum=Pair(old=max_old, new=max_new),
+        mean=Pair(old=mean_old, new=mean_new),
+        nan=Pair(old=nan_old, new=nan_new),
         max_abs_diff=max_abs_diff,
         max_rel_diff=max_rel_diff,
         cells_differ=cells_differ,
-        moved=(cells_differ or 0) > 0 or shape_old != shape_new,
+        moved=(cells_differ or 0) > 0 or shape.changed,
     )
 
 

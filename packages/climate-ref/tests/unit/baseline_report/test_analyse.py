@@ -328,6 +328,9 @@ class TestNetcdfDiff:
         assert row.max_abs_diff == pytest.approx(0.5)
         assert row.max_rel_diff == pytest.approx(0.125)
         assert row.moved is True
+        assert row.differs is True
+        assert row.maximum.changed is True  # 4.0 -> 4.5
+        assert row.minimum.changed is False
 
     def test_a_changed_shape_cannot_be_compared_cell_by_cell(self, tmp_path, base_nc):
         new = _write_nc(tmp_path / "new.nc", [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -336,8 +339,9 @@ class TestNetcdfDiff:
 
         assert row.max_abs_diff is None
         assert row.cells_differ is None
-        assert row.shape_old == "2x2"
-        assert row.shape_new == "2x3"
+        assert row.shape.old == "2x2"
+        assert row.shape.new == "2x3"
+        assert row.shape.changed is True
         assert row.moved is True
 
     def test_a_nan_in_the_same_cell_on_both_sides_is_not_a_change(self, tmp_path):
@@ -348,8 +352,9 @@ class TestNetcdfDiff:
 
         assert row.cells_differ == 0
         assert row.moved is False
-        assert row.nan_old == 1
-        assert row.nan_new == 1
+        assert row.nan.old == 1
+        assert row.nan.new == 1
+        assert row.nan.changed is False
 
     def test_an_all_nan_array_reports_no_statistics(self, tmp_path):
         old = _write_nc(tmp_path / "old.nc", [[np.nan, np.nan], [np.nan, np.nan]])
@@ -357,8 +362,8 @@ class TestNetcdfDiff:
 
         row = netcdf_diff(old, new).rows[0]
 
-        assert (row.min_old, row.max_old, row.mean_old) == (None, None, None)
-        assert row.nan_old == 4
+        assert (row.minimum.old, row.maximum.old, row.mean.old) == (None, None, None)
+        assert row.nan.old == 4
         assert row.moved is False
 
     def test_an_absent_old_side_leaves_every_old_statistic_unset(self, tmp_path, base_nc):
@@ -368,14 +373,15 @@ class TestNetcdfDiff:
         assert diff.header_old == ()
         assert diff.header_new
 
-        assert (row.shape_old, row.min_old, row.max_old, row.mean_old, row.nan_old) == (
+        assert (row.shape.old, row.minimum.old, row.maximum.old, row.mean.old, row.nan.old) == (
             None,
             None,
             None,
             None,
             None,
         )
-        assert row.shape_new == "2x2"
+        assert row.shape.new == "2x2"
+        assert row.shape.changed is True
         assert row.moved is True
 
     def test_a_file_that_is_not_netcdf_becomes_a_note(self, tmp_path, base_nc):
@@ -394,9 +400,14 @@ class TestNetcdfDiff:
 
         row = netcdf_diff(tmp_path / "old.nc", tmp_path / "new.nc").rows[0]
 
-        assert row.shape_old == "2"
-        assert row.shape_new == "2"
-        assert (row.min_old, row.max_old, row.nan_old, row.cells_differ) == (None, None, None, None)
+        assert row.shape.old == "2"
+        assert row.shape.new == "2"
+        assert (row.minimum.old, row.maximum.old, row.nan.old, row.cells_differ) == (
+            None,
+            None,
+            None,
+            None,
+        )
         assert row.moved is False
 
     def test_a_variable_added_on_one_side_only_moves(self, tmp_path, base_nc):
@@ -414,7 +425,7 @@ class TestNetcdfDiff:
 
         assert sorted(rows) == ["pr", "tas"]
         assert rows["pr"].moved is True
-        assert rows["pr"].shape_old is None
+        assert rows["pr"].shape.old is None
         assert rows["tas"].moved is False
 
 

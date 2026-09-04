@@ -10,6 +10,7 @@ from climate_ref.baseline_report.analyse import (
     AnalysedReport,
     DiffLine,
     NetcdfDiff,
+    Pair,
     StatRow,
     TextDiff,
     analyse,
@@ -320,16 +321,11 @@ class TestWriteSite:
 def _stat_row(name, *, moved, **overrides):
     """Build a stats row with every field set, so a template cannot pass on a missing one."""
     fields = dict(
-        shape_old="2x2",
-        shape_new="2x2",
-        min_old=1.0,
-        min_new=1.0,
-        max_old=4.0,
-        max_new=4.0,
-        mean_old=2.5,
-        mean_new=2.5,
-        nan_old=0,
-        nan_new=0,
+        shape=Pair("2x2", "2x2"),
+        minimum=Pair(1.0, 1.0),
+        maximum=Pair(4.0, 4.0),
+        mean=Pair(2.5, 2.5),
+        nan=Pair(0, 0),
         max_abs_diff=0.0,
         max_rel_diff=0.0,
         cells_differ=0,
@@ -372,6 +368,35 @@ class TestNetcdfBlock:
         assert "0.5" in html
         assert "0.125" in html
 
+    def test_only_the_values_that_moved_are_emphasised(self, tmp_path):
+        diff = _netcdf_diff(
+            rows=(
+                _stat_row(
+                    "tas",
+                    moved=True,
+                    maximum=Pair(4.0, 4.5),
+                    max_abs_diff=0.5,
+                    max_rel_diff=0.125,
+                    cells_differ=1,
+                ),
+            ),
+        )
+        report = _netcdf_case(tmp_path, diff)
+
+        html = render_case(report, report.cases[0])
+
+        assert "4 -> <strong>4.5</strong>" in html  # the max moved
+        assert "1 -> 1" in html  # the min did not, so it stays plain
+        assert "<strong>0.5</strong>" in html  # and so do the three diff columns
+        assert html.count("<strong>") == 4
+
+    def test_an_unchanged_row_emphasises_nothing(self, tmp_path):
+        report = _netcdf_case(tmp_path, _netcdf_diff(rows=(_stat_row("tas", moved=False),)))
+
+        html = render_case(report, report.cases[0])
+
+        assert "<strong>" not in html
+
     def test_a_note_replaces_the_table(self, tmp_path):
         report = _netcdf_case(tmp_path, _netcdf_diff(rows=(), note="could not open: boom"))
 
@@ -386,11 +411,11 @@ class TestNetcdfBlock:
                 _stat_row(
                     "tas",
                     moved=True,
-                    shape_old=None,
-                    min_old=None,
-                    max_old=None,
-                    mean_old=None,
-                    nan_old=None,
+                    shape=Pair(None, "2x2"),
+                    minimum=Pair(None, 1.0),
+                    maximum=Pair(None, 4.0),
+                    mean=Pair(None, 2.5),
+                    nan=Pair(None, 0),
                     max_abs_diff=None,
                     max_rel_diff=None,
                     cells_differ=None,
@@ -401,7 +426,7 @@ class TestNetcdfBlock:
 
         html = render_case(report, report.cases[0])
 
-        assert "- -> 2x2" in html
+        assert "- -> <strong>2x2</strong>" in html
         assert "<td>-</td>" in html
 
     def test_the_page_carries_no_dash_that_is_not_ascii(self, tmp_path):
@@ -455,7 +480,7 @@ class TestNetcdfBlock:
             header=(DiffLine(kind="add", text="+ dimensions:"),),
             header_old=(),
             header_new=("dimensions:",),
-            rows=(_stat_row("tas", moved=True, shape_old=None),),
+            rows=(_stat_row("tas", moved=True, shape=Pair(None, "2x2")),),
         )
         report = _netcdf_case(tmp_path, diff)
 

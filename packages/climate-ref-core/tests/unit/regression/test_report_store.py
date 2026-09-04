@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 from pytest_mock import MockerFixture
 
 from climate_ref_core.regression.report_store import (
@@ -141,6 +141,14 @@ class TestRemoteStore:
         store.preflight()
 
         client.head_object.assert_called_once()
+
+    def test_preflight_reports_absent_credentials(self, mocker: MockerFixture) -> None:
+        client = mocker.MagicMock()
+        client.head_object.side_effect = NoCredentialsError()
+        store = self._store(mocker, client)
+
+        with pytest.raises(NativeStoreUnavailableError, match="REF_REPORT_STORE_ACCESS_KEY_ID"):
+            store.preflight()
 
     def test_preflight_rejects_bad_credentials(self, mocker: MockerFixture) -> None:
         client = mocker.MagicMock()

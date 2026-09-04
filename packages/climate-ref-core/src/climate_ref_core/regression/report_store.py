@@ -200,10 +200,17 @@ class ReportStore:
         if write is None:
             return
 
-        from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
+        from botocore.exceptions import BotoCoreError, ClientError  # noqa: PLC0415 - optional dep
 
         try:
             write.client().head_object(Bucket=write.bucket, Key=_PREFLIGHT_PROBE_KEY)
+        except BotoCoreError as exc:
+            # Covers NoCredentialsError, where the whole chain resolved nothing, and DNS failures.
+            raise NativeStoreUnavailableError(
+                f"Report store could not be reached for bucket {write.bucket!r} at "
+                f"{write.endpoint_url}: {exc} Check REF_REPORT_STORE_PROFILE, or "
+                f"REF_REPORT_STORE_ACCESS_KEY_ID / REF_REPORT_STORE_SECRET_ACCESS_KEY."
+            ) from exc
         except ClientError as exc:
             status = _http_status(exc)
             if status == _HTTP_NOT_FOUND:

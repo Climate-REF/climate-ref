@@ -577,6 +577,28 @@ class TestComment:
         header = next(line for line in markdown.splitlines() if line.startswith("| case |"))
         assert all(row.count("|") == header.count("|") for row in _rows(markdown))
 
+    def test_each_count_sits_under_its_own_kind(self, tmp_path):
+        report = _analysed(
+            [
+                _case_change(
+                    [_change("added.png", None, _entry("1")), _change("gone.txt", _entry("4"), None)],
+                    base=_manifest(3),
+                    head=_manifest(4),
+                )
+            ],
+            tmp_path,
+        )
+        markdown = render_comment(report, BASE_URL)
+
+        header = [
+            c.strip()
+            for c in next(line for line in markdown.splitlines() if line.startswith("| case |")).split("|")
+        ]
+        cells = [c.strip() for c in _rows(markdown)[0].split("|")]
+        assert cells[header.index("image")] == "+1"
+        assert cells[header.index("text")] == "-1"
+        assert cells[header.index("netcdf")] == "none"
+
     def test_zero_cases_renders_the_no_change_message(self, tmp_path):
         markdown = render_comment(_analysed([], tmp_path), BASE_URL)
 

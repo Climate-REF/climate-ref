@@ -365,7 +365,7 @@ Key characteristics:
 
 - The backend is a **read-only consumer** of the REF database.
   It opens the database without running migrations
-  (SQLite is opened read-only so the state volume can be mounted read-only)
+  (SQLite is opened with `mode=ro`, so the state volume can be mounted read-only)
   and reports the results the compute engine has already produced.
 - It depends on the `climate-ref` library directly for configuration, models and the provider registry.
   The database schema remains owned by `climate-ref` migrations.

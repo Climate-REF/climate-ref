@@ -99,7 +99,7 @@ def _make_readonly_sqlite_url(database_url: str) -> tuple[str, dict[str, Any]]:
         return database_url, {}
 
     if encoded_path.startswith("file:"):
-        # Already URI form — caller is responsible for any read-only flags.
+        # Already URI form, so the caller is responsible for any read-only flags.
         return database_url, {"uri": True}
 
     return f"sqlite:///file:{encoded_path}?mode=ro&uri=true", {"uri": True}

@@ -1,9 +1,10 @@
 """
 Push a rendered report into the report store.
 
-The store is a plain object store with no directory semantics, so every file is uploaded under an
-explicit key and the content type has to be set per object or a browser will download the page
-instead of rendering it.
+The files are uploaded to
+The store is a plain object store with no directory semantics,
+so every file is uploaded under an explicit key.
+The content type has to be set per object, or a browser will download the page instead of rendering it.
 """
 
 from __future__ import annotations
@@ -26,8 +27,8 @@ CONTENT_TYPES = {
 """
 Content types for the file kinds a report is made of.
 
-A deliberate allowlist rather than :mod:`mimetypes`, whose answers vary with the host's
-registry, and which would not add the charset a browser needs on the text types.
+A deliberate allowlist rather than :mod:`mimetypes`, whose answers vary with the host's registry,
+and which would not add the charset a browser needs on the text types.
 """
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"

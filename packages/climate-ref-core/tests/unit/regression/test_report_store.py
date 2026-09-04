@@ -94,6 +94,14 @@ class TestLocalStore:
         assert local_store.root is not None
         assert local_store.root.is_dir()
 
+    def test_preflight_reports_an_unwritable_root(
+        self, local_store: ReportStore, mocker: MockerFixture
+    ) -> None:
+        mocker.patch("climate_ref_core.regression.report_store.os.access", return_value=False)
+
+        with pytest.raises(NativeStoreUnavailableError, match="not writable"):
+            local_store.preflight()
+
     def test_preflight_reports_an_uncreatable_root(self, tmp_path: Path) -> None:
         blocker = tmp_path / "blocker"
         blocker.write_text("not a directory", encoding="utf-8")
@@ -157,6 +165,26 @@ class TestRemoteStore:
 
         with pytest.raises(NativeStoreUnavailableError, match="REF_REPORT_STORE_ACCESS_KEY_ID"):
             store.preflight()
+
+    @pytest.mark.parametrize(
+        "code, status, expected",
+        [
+            ("AccessDenied", 403, "access denied"),
+            ("InternalError", 500, "preflight failed"),
+        ],
+    )
+    def test_preflight_reports_other_failures(
+        self, mocker: MockerFixture, code: str, status: int, expected: str
+    ) -> None:
+        client = mocker.MagicMock()
+        client.head_object.side_effect = _client_error(code, status)
+        store = self._store(mocker, client)
+
+        with pytest.raises(NativeStoreUnavailableError, match=expected):
+            store.preflight()
+
+    def test_a_read_only_remote_store_has_nothing_to_preflight(self) -> None:
+        ReportStore(url=REMOTE_URL).preflight()
 
 
 class TestBuildReportStore:

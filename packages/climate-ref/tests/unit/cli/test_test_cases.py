@@ -2981,6 +2981,30 @@ class TestDiff:
             expected_exit_code=1,
         )
 
+    def test_an_unusable_report_store_exits_one(self, invoke_cli, mocker, tmp_path, monkeypatch):
+        blocker = tmp_path / "blocker"
+        blocker.write_text("not a directory")
+        monkeypatch.setenv("REF_REPORT_STORE_URL", str(blocker / "reports"))
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(tmp_path / "out"),
+                "--no-fetch",
+                "--upload",
+                "912/abc",
+            ],
+            expected_exit_code=1,
+        )
+
     def test_the_comment_links_locally_without_upload(self, invoke_cli, mocker, tmp_path):
         from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest
 

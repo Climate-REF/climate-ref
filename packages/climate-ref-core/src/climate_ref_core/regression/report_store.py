@@ -6,12 +6,12 @@ That makes it the opposite of :class:`~climate_ref_core.regression.store.NativeS
 content-addressed and must stay that way, so this is a sibling class rather than a new method on it.
 
 Reports live in their own public bucket, served at ``{url}/{key}``.
-The bucket is separate from the baselines bucket because an R2 token cannot be scoped to a prefix,
-so a token that can write reports must not also be able to overwrite baseline blobs.
 
-Write credentials are resolved from ``REF_REPORT_STORE_ACCESS_KEY_ID`` /
-``REF_REPORT_STORE_SECRET_ACCESS_KEY``, then ``REF_REPORT_STORE_PROFILE``, then boto3's default
-chain. They are never read from the persisted config.
+Write credentials are resolved from the following in order:
+
+- ``REF_REPORT_STORE_ACCESS_KEY_ID`` / ``REF_REPORT_STORE_SECRET_ACCESS_KEY``,
+- ``REF_REPORT_STORE_PROFILE``,
+- boto3's default chain
 """
 
 import os

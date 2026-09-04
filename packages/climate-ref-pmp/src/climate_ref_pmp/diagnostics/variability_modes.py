@@ -121,7 +121,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             RegistryRequest(
                                 slug=f"mov-{self.mode_id.lower()}-obs",
                                 registry_name="obs4ref",
-                                source_type="obs4MIPs",
+                                source_type="obs4REF",
                                 facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
                             ),
                             CMIP6Request(
@@ -144,7 +144,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             RegistryRequest(
                                 slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
                                 registry_name="obs4ref",
-                                source_type="obs4MIPs",
+                                source_type="obs4REF",
                                 facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
                             ),
                             CMIP7Request(

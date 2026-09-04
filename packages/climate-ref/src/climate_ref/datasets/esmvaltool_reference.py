@@ -103,7 +103,6 @@ class ESMValToolReferenceDatasetAdapter(DatasetAdapter):
             paths=[str(file_or_directory)],
             parsing_func=parse_esmvaltool_reference,
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=self.n_jobs,
         )
         if datasets.empty:

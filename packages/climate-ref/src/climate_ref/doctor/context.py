@@ -8,6 +8,7 @@ import pandas as pd
 from attrs import define, field
 
 from climate_ref.config import Config
+from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref_core.providers import DiagnosticProvider
@@ -73,6 +74,28 @@ class DoctorContext:
             )
             self._providers = list(registry.providers)
         return self._providers
+
+    def data_catalog(self, source_type: SourceDatasetType) -> DataCatalog:
+        """
+        Load the ingested catalog as the solver sees it.
+
+        The adapter and database are carried through where there are any,
+        so an unfinalised dataset can still be finalised during a solve.
+
+        Parameters
+        ----------
+        source_type
+            The source type to load.
+
+        Returns
+        -------
+        :
+            A catalog the solver can be run against.
+        """
+        frame = self.catalog(source_type)
+        if self.database is None:
+            return DataCatalog.from_frame(frame)
+        return DataCatalog(database=self.database, adapter=get_dataset_adapter(source_type.value), df=frame)
 
     def catalog(self, source_type: SourceDatasetType) -> pd.DataFrame:
         """

@@ -62,9 +62,10 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
             logger.debug("Setting env variable 'FI_PROVIDER=tcp'")
             self.env_overrides["FI_PROVIDER"] = "tcp"
 
-        for name in _THREAD_LIMIT_VARS:
-            if name not in os.environ:
-                logger.debug(f"Setting env variable '{name}={_DEFAULT_THREAD_LIMIT}'")
+        # One of these being set means someone has chosen a thread budget, so leave all five alone.
+        if not any(name in os.environ for name in _THREAD_LIMIT_VARS):
+            logger.debug(f"Limiting threads to {_DEFAULT_THREAD_LIMIT}")
+            for name in _THREAD_LIMIT_VARS:
                 self.env_overrides[name] = _DEFAULT_THREAD_LIMIT
 
     def fetch_data(self, config: Config) -> None:

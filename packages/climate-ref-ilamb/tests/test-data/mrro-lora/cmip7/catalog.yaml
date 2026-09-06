@@ -1,5 +1,5 @@
 _metadata:
-  hash: 0e829f0c068988872b72f8c59f30166349934e39
+  hash: 7def52adbcc385408a1758e8cd4b91573a549a5e
 cmip7:
   slug_column: instance_id
   selector:
@@ -127,7 +127,7 @@ obs4mips:
     variable_id: mrro
     version: v20250902
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2012-12-16 12:00:00'
     filename: mrro_mon_LORA-1-0_REF_gn_198001-201212.nc
     finalised: true

@@ -1,7 +1,7 @@
 {
-  "catalog_hash": "87b300cc7dbd0c1cb52fafa85b7db0fbc32cae9b",
+  "catalog_hash": "6d8e11cb420ea2eea2b55f3f35c2643cafa40126",
   "committed": {
-    "diagnostic.json": "fbf82f5001796b5fb712b2ef1fda21be84879be0f65c261e0a918ce186994b0c",
+    "diagnostic.json": "7348a4c2a4ff2ce07b788e9675fbcffee007e3b572c2576d11242a0dc16f042d",
     "output.json": "c16fe6deb9262706639724846b509021e1e93352c8d4f25e059233ea359f4293",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
@@ -77,5 +77,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

@@ -102,7 +102,15 @@ class _MsftmzToRapid(msftmz_to_rapid):
     The ``RAPID-2023-1a`` file does not include a basin dimension.
     """
 
+    def required_variables(self) -> list[str]:
+        """Keep both MIP-era names through ILAMB's pre-transform filtering."""
+        return ["msftmz", "msftm"]
+
     def __call__(self, ds: xr.Dataset) -> xr.Dataset:
+        # CMIP7 renamed this DReq variable from ``msftmz`` to ``msftm``.
+        # ILAMB's transform still uses the CMIP6 name internally.
+        if "msftmz" not in ds and "msftm" in ds:
+            ds = ds.rename(msftm="msftmz")
         if "msftmz" in ds and "basin" not in ds["msftmz"].dims:
             ds = ds.assign(msftmz=ds["msftmz"].expand_dims("basin"))
         return super().__call__(ds)
@@ -293,6 +301,23 @@ def _get_branded_variable(
             logger.debug(f"No CMIP7 branded variable name found for {var_id}")
 
     return tuple(branded)
+
+
+def _get_cmip7_variable_ids(variable_ids: tuple[str, ...], realm: str) -> tuple[str, ...]:
+    """Translate CMIP6 variable IDs to their CMIP7 Data Request IDs."""
+    tables = _LAND_TABLES if realm == "land" else _OCEAN_TABLES
+    translated: list[str] = []
+    for var_id in variable_ids:
+        cmip7_id = var_id
+        for table in tables:
+            try:
+                cmip7_id = get_dreq_entry(table, var_id).variable_id
+                break
+            except KeyError:
+                continue
+        if cmip7_id not in translated:
+            translated.append(cmip7_id)
+    return tuple(translated)
 
 
 def _get_cmip_source_type(
@@ -908,6 +933,9 @@ class ILAMBStandard(Diagnostic):
 
         relationship_variable_ids = tuple(ilamb_kwargs.get("relationships", {}).keys())
 
+        cmip7_primary_variable_ids = _get_cmip7_variable_ids(primary_variable_ids, realm)
+        cmip7_relationship_variable_ids = _get_cmip7_variable_ids(relationship_variable_ids, realm)
+
         # Create the data requirement for the dataset under test
         cmip6_requirement = _build_cmip_data_requirement(
             source_type=SourceDatasetType.CMIP6,
@@ -942,8 +970,8 @@ class ILAMBStandard(Diagnostic):
                 "region": "glb",
             },
             group_by=("experiment_id", "source_id", "variant_label", "grid_label"),
-            primary_variable_ids=primary_variable_ids,
-            relationship_variable_ids=relationship_variable_ids,
+            primary_variable_ids=cmip7_primary_variable_ids,
+            relationship_variable_ids=cmip7_relationship_variable_ids,
             is_land=is_land,
         )
 

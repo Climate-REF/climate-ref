@@ -1,5 +1,5 @@
 _metadata:
-  hash: 9d7163dec1fb5df3ee332ad6c38889fd21dfe4be
+  hash: df56ec2ae995f10d06845a27c76bc833026b0bf1
 cmip6:
   slug_column: instance_id
   selector:
@@ -136,7 +136,7 @@ obs4mips:
     variable_id: cSoil
     version: v20250903
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '1991-01-01 00:00:00'
     filename: cSoil_fx_HWSD-2-0_REF_gn_2023.nc
     finalised: true

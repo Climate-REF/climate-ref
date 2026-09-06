@@ -65,6 +65,34 @@
       "filename": "CanESM5_global_biasscore.png",
       "long_name": "The bias score for CanESM5 over the Global - Land region."
     },
+    "CanESM5_global_cycle.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Annual cycle"
+      },
+      "filename": "CanESM5_global_cycle.png",
+      "long_name": "The annual cycle for CanESM5 over the Global - Land region."
+    },
+    "CanESM5_global_cyclescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Annual cycle score"
+      },
+      "filename": "CanESM5_global_cyclescore.png",
+      "long_name": "The annual cycle score for CanESM5 over the Global - Land region."
+    },
     "CanESM5_global_distribution-pr.png": {
       "description": "",
       "dimensions": {
@@ -163,6 +191,34 @@
       "filename": "CanESM5_global_rmsescore.png",
       "long_name": "The RMSE score for CanESM5 over the Global - Land region."
     },
+    "CanESM5_global_shift.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Shift in maximum month"
+      },
+      "filename": "CanESM5_global_shift.png",
+      "long_name": "The shift in maximum month for CanESM5 over the Global - Land region."
+    },
+    "CanESM5_global_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Maximum month"
+      },
+      "filename": "CanESM5_global_tmax.png",
+      "long_name": "The maxmimum month for CanESM5 over the Global - Land region."
+    },
     "CanESM5_global_trace.png": {
       "description": "",
       "dimensions": {
@@ -204,6 +260,34 @@
       },
       "filename": "CanESM5_tropical_biasscore.png",
       "long_name": "The bias score for CanESM5 over the Tropical climates region."
+    },
+    "CanESM5_tropical_cycle.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Annual cycle"
+      },
+      "filename": "CanESM5_tropical_cycle.png",
+      "long_name": "The annual cycle for CanESM5 over the Tropical climates region."
+    },
+    "CanESM5_tropical_cyclescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Annual cycle score"
+      },
+      "filename": "CanESM5_tropical_cyclescore.png",
+      "long_name": "The annual cycle score for CanESM5 over the Tropical climates region."
     },
     "CanESM5_tropical_distribution-pr.png": {
       "description": "",
@@ -303,6 +387,34 @@
       "filename": "CanESM5_tropical_rmsescore.png",
       "long_name": "The RMSE score for CanESM5 over the Tropical climates region."
     },
+    "CanESM5_tropical_shift.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Shift in maximum month"
+      },
+      "filename": "CanESM5_tropical_shift.png",
+      "long_name": "The shift in maximum month for CanESM5 over the Tropical climates region."
+    },
+    "CanESM5_tropical_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Maximum month"
+      },
+      "filename": "CanESM5_tropical_tmax.png",
+      "long_name": "The maxmimum month for CanESM5 over the Tropical climates region."
+    },
     "CanESM5_tropical_trace.png": {
       "description": "",
       "dimensions": {
@@ -378,6 +490,17 @@
       "filename": "Reference_global_mean.png",
       "long_name": "The period mean for the reference data over the Global - Land region."
     },
+    "Reference_global_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "statistic": "Maximum month"
+      },
+      "filename": "Reference_global_tmax.png",
+      "long_name": "The maxmimum month for the reference data over the Global - Land region."
+    },
     "Reference_tropical_distribution-pr.png": {
       "description": "",
       "dimensions": {
@@ -410,6 +533,17 @@
       },
       "filename": "Reference_tropical_mean.png",
       "long_name": "The period mean for the reference data over the Tropical climates region."
+    },
+    "Reference_tropical_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "Maximum month"
+      },
+      "filename": "Reference_tropical_tmax.png",
+      "long_name": "The maxmimum month for the reference data over the Tropical climates region."
     }
   },
   "provenance": {

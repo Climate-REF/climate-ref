@@ -10,7 +10,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -134,28 +134,10 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            TestCase(
-                name="cmip7",
-                description="Test with CMIP7 data.",
-                requests=(
-                    CMIP7Request(
-                        slug="cmip7",
-                        facets={
-                            "experiment_id": ["esm-flat10", "esm-flat10-zec"],
-                            "source_id": "ACCESS-ESM1-5",
-                            "variable_id": ["areacella", "tas"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
-                            ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
-                            "region": "glb",
-                        },
-                        remove_ensembles=True,
-                    ),
-                ),
-            ),
+            # CMIP7 integration case disabled until valid esm-flat10 and
+            # esm-flat10-zec inputs exist. CMIP7Request only converts CMIP6 data;
+            # its branch experiments cannot substitute for these experiments.
+            # Keep CMIP7 data requirements and recipe support for real inputs.
         )
     )
 

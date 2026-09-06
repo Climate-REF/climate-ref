@@ -39,7 +39,9 @@ def test_expected_executions():
     executions = list(solve_executions(data_catalog, diagnostic, provider=pmp_provider))
     assert len(executions) == 3
 
-    # ts
+    # ts, with the Emon row filtered out
+    ts_datasets = executions[0].datasets[SourceDatasetType.CMIP6].datasets
+    assert ts_datasets["table_id"].tolist() == ["Amon"]
     assert executions[0].datasets[SourceDatasetType.CMIP6].selector == (
         ("experiment_id", "historical"),
         ("grid_label", "gn"),

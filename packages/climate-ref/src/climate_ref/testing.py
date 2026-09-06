@@ -32,7 +32,6 @@ from climate_ref_core.testing import (
     TestCasePaths,
     collect_test_case_params,
     is_test_case_excluded,
-    load_datasets_from_yaml,
     validate_catalog_paths,
 )
 
@@ -229,8 +228,7 @@ def assert_test_case_no_drift(
         )
 
     tc = diagnostic.test_data_spec.get_case(test_case_name)
-    validate_catalog_paths(paths.catalog, paths.catalog_paths)
-    datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
+    datasets = validate_catalog_paths(paths.catalog, paths.catalog_paths)
 
     slot = work_dir / "slot"
     slot.mkdir(parents=True, exist_ok=True)

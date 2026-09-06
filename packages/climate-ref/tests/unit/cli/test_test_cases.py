@@ -485,7 +485,7 @@ class TestFetchTestDataCommand:
 
         result = invoke_cli(["test-cases", "fetch", "--strict"], expected_exit_code=1)
 
-        assert "Catalog metadata changed during fetch" in result.stderr
+        assert "Catalog metadata is new or changed after fetch" in result.stderr
 
     def test_fetch_strict_force_accepts_unchanged_catalog(self, invoke_cli, mocker, tmp_path):
         """--force rewriting identical catalog content is not metadata drift."""

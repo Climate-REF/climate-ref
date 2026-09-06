@@ -307,7 +307,7 @@ baselines fail instead of becoming silent skips. Explicit `REF_TEST_CASES_SKIP`
 diagnostic exclusions still apply. Local test runs retain the default skip behaviour.
 
 The CMIP7 test cases for `transient-climate-response-emissions` and
-`zero-emission-commitment` are explicitly disabled in their test specifications.
+`zero-emission-commitment` have been removed from their test specifications.
 The current fetcher converts CMIP6 data and cannot supply the required `esm-flat10`
 and `esm-flat10-zec` experiments. CMIP6 cases and the diagnostics' CMIP7 support
 remain enabled. Restore the CMIP7 cases when valid experiment inputs and reviewed

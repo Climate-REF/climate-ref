@@ -203,7 +203,7 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                             or (catalog_written and _catalog_content(paths.catalog) != catalog_before)
                         ):
                             raise ValueError(
-                                "Catalog metadata changed during fetch. Commit the updated "
+                                "Catalog metadata is new or changed after fetch. Commit the updated "
                                 f"catalog before running downstream jobs: {paths.catalog}"
                             )
                     if not catalog_written:

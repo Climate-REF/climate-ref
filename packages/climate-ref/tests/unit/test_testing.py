@@ -510,7 +510,7 @@ class TestAssertTestCaseNoDrift:
             patch(f"{stages}.stage_execute"),
             patch(f"{stages}.stage_build"),
             patch(f"{stages}.stage_compare", return_value=(failures, [])),
-            patch("climate_ref.testing.load_datasets_from_yaml"),
+            patch("climate_ref.testing.validate_catalog_paths"),
             patch("climate_ref.testing.Manifest"),
         )
 
@@ -529,7 +529,6 @@ class TestAssertTestCaseNoDrift:
             compare as compare_m,
             load_yaml,
             manifest,
-            patch("climate_ref.testing.validate_catalog_paths"),
         ):
             assert_test_case_no_drift(config, diagnostic, "default", paths, tmp_path)
 
@@ -555,7 +554,6 @@ class TestAssertTestCaseNoDrift:
             compare,
             load_yaml,
             manifest,
-            patch("climate_ref.testing.validate_catalog_paths"),
         ):
             with pytest.raises(AssertionError, match="my-provider/my-diag/default: committed bundle drift"):
                 assert_test_case_no_drift(config, diagnostic, "default", paths, tmp_path)

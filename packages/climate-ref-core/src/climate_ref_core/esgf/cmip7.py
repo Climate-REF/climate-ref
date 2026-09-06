@@ -64,17 +64,18 @@ def _invalid_conversion_reason(path: Path) -> str | None:
             if variable_id not in ds.variables:
                 return f"missing data variable: {variable_id}"
             if variable_id == "o3":
-                quantized = [
+                quantised = [
                     str(name)
                     for name in ds.data_vars
                     if ds[name].encoding.get("least_significant_digit") == _LOSSY_DECIMAL_DIGITS
                 ]
-                if quantized:
-                    return f"ozone dataset uses destructive decimal quantization: {', '.join(quantized)}"
+                if quantised:
+                    return f"ozone dataset uses destructive decimal quantisation: {', '.join(quantised)}"
             if "time" in ds.variables and ds.sizes.get("time", 0):
                 time = ds["time"]
                 if not time.attrs.get("units"):
                     return "time coordinate has no units"
+                # Reading both endpoints catches a truncated file.
                 time.isel(time=[0, -1]).load()
     except (OSError, ValueError) as e:
         return f"cannot read metadata: {e}"
@@ -82,7 +83,7 @@ def _invalid_conversion_reason(path: Path) -> str | None:
 
 
 def _load_time_coordinates(ds: xr.Dataset) -> None:
-    """Materialize the small CF time variables before a Dask-backed NetCDF write."""
+    """Materialise the small CF time variables before a Dask-backed NetCDF write."""
     time_variables = {"time"}
     if "time" in ds:
         bounds_name = ds["time"].attrs.get("bounds")

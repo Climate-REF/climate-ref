@@ -312,7 +312,7 @@ class TestConvertedCacheIntegrity:
         path = tmp_path / "quantized-o3.nc"
         self._write_file(path, variable_id="o3", data_variable="o3", least_significant_digit=3)
 
-        assert _invalid_conversion_reason(path) == ("ozone dataset uses destructive decimal quantization: o3")
+        assert _invalid_conversion_reason(path) == ("ozone dataset uses destructive decimal quantisation: o3")
 
     def test_rejects_ozone_cache_with_quantized_formula_term(self, tmp_path):
         path = tmp_path / "quantized-o3-coefficients.nc"
@@ -322,7 +322,7 @@ class TestConvertedCacheIntegrity:
         ds["b"] = ("lev", np.array([0.0011, 0.0012]))
         ds.to_netcdf(path, encoding={"b": {"least_significant_digit": 3}})
 
-        assert _invalid_conversion_reason(path) == ("ozone dataset uses destructive decimal quantization: b")
+        assert _invalid_conversion_reason(path) == ("ozone dataset uses destructive decimal quantisation: b")
 
     def test_accepts_scientifically_valid_zero_ozone_cache(self, tmp_path):
         path = tmp_path / "zero-o3.nc"

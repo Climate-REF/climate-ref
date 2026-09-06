@@ -134,7 +134,6 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            # No CMIP7 case: CMIP7Request converts CMIP6 data and cannot supply esm-flat10-zec.
         )
     )
 

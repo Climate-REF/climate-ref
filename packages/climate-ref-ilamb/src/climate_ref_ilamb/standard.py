@@ -19,7 +19,7 @@ from ilamb3.transform.amoc import msftmz_to_rapid
 from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
-from climate_ref_core.cmip6_to_cmip7 import get_dreq_entry
+from climate_ref_core.cmip6_to_cmip7 import DReqVariableMapping, get_dreq_entry
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets
 from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.dataset_registry import dataset_registry_manager
@@ -285,36 +285,37 @@ def _get_branded_variable(
     :
         Branded variable names found in the Data Request
     """
-    tables = _LAND_TABLES if realm == "land" else _OCEAN_TABLES
-
     branded: list[str] = []
-    for var_id in variable_ids:
-        found = False
-        for table in tables:
-            try:
-                entry = get_dreq_entry(table, var_id)
-                branded.append(entry.branded_variable)
-                found = True
-            except KeyError:
-                continue
-        if not found:
+    for var_id, entries in _lookup_dreq_entries(variable_ids, realm):
+        if not entries:
             logger.debug(f"No CMIP7 branded variable name found for {var_id}")
+        branded.extend(entry.branded_variable for entry in entries)
 
     return tuple(branded)
 
 
-def _get_cmip7_variable_ids(variable_ids: tuple[str, ...], realm: str) -> tuple[str, ...]:
-    """Translate CMIP6 variable IDs to their CMIP7 Data Request IDs."""
+def _lookup_dreq_entries(
+    variable_ids: tuple[str, ...], realm: str
+) -> list[tuple[str, list[DReqVariableMapping]]]:
+    """Find the Data Request entries for each CMIP6 variable ID across the realm's tables."""
     tables = _LAND_TABLES if realm == "land" else _OCEAN_TABLES
-    translated: list[str] = []
+    found: list[tuple[str, list[DReqVariableMapping]]] = []
     for var_id in variable_ids:
-        cmip7_id = var_id
+        entries: list[DReqVariableMapping] = []
         for table in tables:
             try:
-                cmip7_id = get_dreq_entry(table, var_id).variable_id
-                break
+                entries.append(get_dreq_entry(table, var_id))
             except KeyError:
                 continue
+        found.append((var_id, entries))
+    return found
+
+
+def _get_cmip7_variable_ids(variable_ids: tuple[str, ...], realm: str) -> tuple[str, ...]:
+    """Translate CMIP6 variable IDs to their CMIP7 Data Request IDs."""
+    translated: list[str] = []
+    for var_id, entries in _lookup_dreq_entries(variable_ids, realm):
+        cmip7_id = entries[0].variable_id if entries else var_id
         if cmip7_id not in translated:
             translated.append(cmip7_id)
     return tuple(translated)

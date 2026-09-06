@@ -169,58 +169,55 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                     continue
                 paths = TestCasePaths.from_diagnostic(diag, tc.name)
                 case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
-                # Skip if catalog exists when using --only-missing
-                if only_missing and paths and paths.catalog.exists():
+                existing_catalog = paths.catalog if paths is not None and paths.catalog.exists() else None
+                if not tc.requests or (only_missing and existing_catalog is not None):
                     if strict and (error := _existing_catalog_error(paths)):
                         failed_cases.append(case_id)
                         logger.warning(f"  Existing catalog is not usable for {tc.name}: {error}")
-                    logger.info(f"  Skipping test case: {tc.name} (catalog exists)")
+                    if tc.requests:
+                        logger.info(f"  Skipping test case: {tc.name} (catalog exists)")
                     continue
-                if tc.requests:
-                    catalog_before = None
-                    if strict and paths is not None and paths.catalog.exists():
-                        try:
-                            catalog_before = _catalog_content(paths.catalog)
-                        except (OSError, AttributeError, yaml.YAMLError):
-                            # A ``None`` snapshot still reports the committed input as changed.
-                            pass
-                    if paths and paths.catalog.exists() and not force:
-                        logger.info(
-                            f"  Refreshing existing catalog for {tc.name} "
-                            "(use --only-missing to skip existing catalogs)"
-                        )
-                    logger.info(f"  Processing test case: {tc.name}")
+                catalog_before = None
+                if strict and existing_catalog is not None:
                     try:
-                        _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force)
-                        if paths is None:
-                            if strict:
-                                raise ValueError("Could not determine where to write the test-case catalog")
-                        else:
-                            validate_catalog_paths(paths.catalog, paths.catalog_paths)
-                        if (
-                            strict
-                            and paths is not None
-                            and (catalog_before is None or _catalog_content(paths.catalog) != catalog_before)
+                        catalog_before = _catalog_content(existing_catalog)
+                    except (OSError, AttributeError, yaml.YAMLError):
+                        # A ``None`` snapshot still reports the committed input as changed.
+                        pass
+                if existing_catalog is not None and not force:
+                    logger.info(
+                        f"  Refreshing existing catalog for {tc.name} "
+                        "(use --only-missing to skip existing catalogs)"
+                    )
+                logger.info(f"  Processing test case: {tc.name}")
+                try:
+                    _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force)
+                    if paths is None:
+                        if strict:
+                            raise ValueError("Could not determine where to write the test-case catalog")
+                    else:
+                        validate_catalog_paths(paths.catalog, paths.catalog_paths)
+                        # An unchanged save leaves the file untouched, so only a rewrite needs comparing.
+                        if strict and (
+                            catalog_before is None
+                            or (catalog_written and _catalog_content(paths.catalog) != catalog_before)
                         ):
                             raise ValueError(
                                 "Catalog metadata changed during fetch. Commit the updated "
                                 f"catalog before running downstream jobs: {paths.catalog}"
                             )
-                        if not catalog_written:
-                            logger.info(f"  Catalog unchanged for {tc.name}")
-                    except (
-                        OSError,
-                        AttributeError,
-                        yaml.YAMLError,
-                        DatasetResolutionError,
-                        InvalidDiagnosticException,
-                        ValueError,
-                    ) as e:
-                        failed_cases.append(case_id)
-                        logger.warning(f"  Could not build catalog for {tc.name}: {e}")
-                elif strict and (error := _existing_catalog_error(paths)):
+                    if not catalog_written:
+                        logger.info(f"  Catalog unchanged for {tc.name}")
+                except (
+                    OSError,
+                    AttributeError,
+                    yaml.YAMLError,
+                    DatasetResolutionError,
+                    InvalidDiagnosticException,
+                    ValueError,
+                ) as e:
                     failed_cases.append(case_id)
-                    logger.warning(f"  Existing catalog is not usable for {tc.name}: {error}")
+                    logger.warning(f"  Could not build catalog for {tc.name}: {e}")
 
     if failed_cases:  # pragma: no cover
         logger.warning(

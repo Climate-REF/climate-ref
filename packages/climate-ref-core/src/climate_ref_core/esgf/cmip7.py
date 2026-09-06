@@ -247,13 +247,11 @@ def _convert_file_to_cmip7(
 
                 # gpp and o3 magnitudes sit below the quantisation floor.
                 # Ozone also needs lossless hybrid-coordinate coefficients.
-                encoding: dict[str, dict[str, Any]] = {}
                 lossless_dataset = ds_cmip7.attrs.get("variable_id") == "o3"
+                encoding: dict[str, dict[str, Any]] = {}
                 for var in ds_cmip7.data_vars:
                     var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
-
-                    lossless_variables = {"gpp", "o3"}
-                    if not lossless_dataset and str(var) not in lossless_variables:
+                    if not lossless_dataset and str(var) != "gpp":
                         var_encoding["least_significant_digit"] = _LOSSY_DECIMAL_DIGITS
                     encoding[str(var)] = var_encoding
 

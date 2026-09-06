@@ -393,8 +393,8 @@ def load_datasets_from_yaml(path: Path, paths_file: Path) -> ExecutionDatasetCol
     return ExecutionDatasetCollection(collections)
 
 
-def validate_catalog_paths(path: Path, paths_file: Path) -> None:
-    """Check that every catalog row resolves to a local file.
+def validate_catalog_paths(path: Path, paths_file: Path) -> ExecutionDatasetCollection:
+    """Load a catalog and check that every row resolves to a local file.
 
     Loading remains permissive because callers also use catalogs for metadata-only
     operations. Fetch and execution entry points can call this function when they
@@ -406,6 +406,11 @@ def validate_catalog_paths(path: Path, paths_file: Path) -> None:
         Path to the catalog YAML file.
     paths_file
         Path to the machine-local paths sidecar.
+
+    Returns
+    -------
+    :
+        The loaded datasets, so callers need not parse the catalog a second time.
 
     Raises
     ------
@@ -450,6 +455,7 @@ def validate_catalog_paths(path: Path, paths_file: Path) -> None:
             f"Catalog paths are incomplete for {path} ({'. '.join(problems)}). "
             "Run `ref test-cases fetch` to rebuild the paths file."
         )
+    return datasets
 
 
 def get_catalog_hash(path: Path) -> str | None:

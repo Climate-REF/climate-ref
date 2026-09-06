@@ -15,12 +15,21 @@ def test_expected_executions():
     data_catalog = {
         SourceDatasetType.CMIP6: pd.DataFrame(
             [
-                ["ts", "ACCESS-ESM1-5", "historical", "r1i1p1f1", "mon", "gn"],
-                ["ts", "ACCESS-ESM1-5", "ssp119", "r1i1p1f1", "mon", "gn"],
-                ["ts", "ACCESS-ESM1-5", "historical", "r2i1p1f1", "mon", "gn"],
-                ["pr", "ACCESS-ESM1-5", "historical", "r1i1p1f1", "mon", "gn"],
+                ["ts", "ACCESS-ESM1-5", "historical", "r1i1p1f1", "mon", "Amon", "gn"],
+                ["ts", "ACCESS-ESM1-5", "ssp119", "r1i1p1f1", "mon", "Amon", "gn"],
+                ["ts", "ACCESS-ESM1-5", "historical", "r2i1p1f1", "mon", "Amon", "gn"],
+                ["pr", "ACCESS-ESM1-5", "historical", "r1i1p1f1", "mon", "Amon", "gn"],
+                ["ts", "ACCESS-ESM1-5", "historical", "r1i1p1f1", "mon", "Emon", "gn"],
             ],
-            columns=("variable_id", "source_id", "experiment_id", "member_id", "frequency", "grid_label"),
+            columns=(
+                "variable_id",
+                "source_id",
+                "experiment_id",
+                "member_id",
+                "frequency",
+                "table_id",
+                "grid_label",
+            ),
         ),
         SourceDatasetType.PMPClimatology: pd.DataFrame(
             [["ERA-5", "ts"], ["ERA-5", "pr"], ["GPCP-3-3", "pr"]],
@@ -30,7 +39,9 @@ def test_expected_executions():
     executions = list(solve_executions(data_catalog, diagnostic, provider=pmp_provider))
     assert len(executions) == 3
 
-    # ts
+    # ts, with the Emon row filtered out
+    ts_datasets = executions[0].datasets[SourceDatasetType.CMIP6].datasets
+    assert ts_datasets["table_id"].tolist() == ["Amon"]
     assert executions[0].datasets[SourceDatasetType.CMIP6].selector == (
         ("experiment_id", "historical"),
         ("grid_label", "gn"),

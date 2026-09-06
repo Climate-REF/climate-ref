@@ -71,6 +71,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                 FacetFilter(
                     facets={
                         "frequency": "mon",
+                        "table_id": "Amon",
                         "experiment_id": ("historical", "esm-hist", "hist-GHG", *extra_experiments),
                         "variable_id": model_variable,
                     }
@@ -133,6 +134,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                     "variable_id": "ts",
                                     "member_id": "r1i1p1f1",
                                     "frequency": "mon",
+                                    "table_id": "Amon",
                                 },
                                 time_span=("2000-01", "2014-12"),
                             ),
@@ -188,6 +190,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                     "variable_id": "psl",
                                     "member_id": "r1i1p1f1",
                                     "frequency": "mon",
+                                    "table_id": "Amon",
                                 },
                                 time_span=("2000-01", "2014-12"),
                             ),

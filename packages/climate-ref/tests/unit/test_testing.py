@@ -334,6 +334,7 @@ class TestCreateNoDriftTest:
     @pytest.fixture(autouse=True)
     def clear_strict_mode(self, monkeypatch):
         monkeypatch.delenv("REF_TEST_CASES_STRICT", raising=False)
+        monkeypatch.delenv("REF_TEST_CASES_SKIP", raising=False)
 
     @pytest.mark.parametrize("missing", ["directory", "catalog", "manifest", "regression"])
     def test_strict_mode_fails_for_missing_test_inputs(

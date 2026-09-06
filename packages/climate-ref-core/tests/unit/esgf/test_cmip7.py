@@ -4,16 +4,20 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import cftime
+import dask
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
 
+from climate_ref_core.cmip6_to_cmip7 import create_cmip7_filename, create_cmip7_path
 from climate_ref_core.esgf import CMIP7Request
 from climate_ref_core.esgf.cmip7 import (
+    _MANDATORY_CONVERTED_ATTRS,
     _bump_version,
     _convert_file_to_cmip7,
     _get_cmip7_cache_dir,
+    _invalid_conversion_reason,
     _latest_file,
 )
 
@@ -236,8 +240,162 @@ class TestGetCmip7CacheDir:
         assert "cmip7-converted" in str(result)
 
 
+class TestConvertedCacheIntegrity:
+    """Exercise conversion-cache checks against real NetCDF files."""
+
+    def _write_file(
+        self,
+        path: Path,
+        *,
+        missing_attr: str | None = None,
+        variable_id: str = "cli",
+        data_variable: str = "cli",
+        time_units: str | None = "days since 2000-01-01",
+        values: np.ndarray | None = None,
+        least_significant_digit: int | None = None,
+    ) -> None:
+        attrs = {name: name for name in _MANDATORY_CONVERTED_ATTRS}
+        attrs["variable_id"] = variable_id
+        if missing_attr is not None:
+            attrs.pop(missing_attr)
+        time_attrs = {} if time_units is None else {"units": time_units, "calendar": "noleap"}
+        data = np.ones((2, 1)) if values is None else values
+        ds = xr.Dataset(
+            {data_variable: (("time", "lat"), data)},
+            coords={
+                "time": xr.DataArray([0.0, 31.0], dims="time", attrs=time_attrs),
+                "lat": [0.0],
+            },
+            attrs=attrs,
+        )
+        encoding = (
+            {data_variable: {"least_significant_digit": least_significant_digit}}
+            if least_significant_digit is not None
+            else None
+        )
+        ds.to_netcdf(path, encoding=encoding)
+
+    def test_accepts_valid_legacy_file_without_marker(self, tmp_path):
+        path = tmp_path / "legacy.nc"
+        self._write_file(path)
+
+        assert _invalid_conversion_reason(path) is None
+
+    def test_reports_missing_mandatory_attribute(self, tmp_path):
+        path = tmp_path / "missing-attribute.nc"
+        self._write_file(path, missing_attr="branding_suffix")
+
+        assert _invalid_conversion_reason(path) == "missing mandatory attributes: branding_suffix"
+
+    def test_reports_missing_declared_variable(self, tmp_path):
+        path = tmp_path / "missing-variable.nc"
+        self._write_file(path, variable_id="msftm")
+
+        assert _invalid_conversion_reason(path) == "missing data variable: msftm"
+
+    def test_reports_missing_time_units(self, tmp_path):
+        path = tmp_path / "missing-time-units.nc"
+        self._write_file(path, time_units=None)
+
+        assert _invalid_conversion_reason(path) == "time coordinate has no units"
+
+    def test_reports_unreadable_file(self, tmp_path):
+        path = tmp_path / "truncated.nc"
+        path.write_bytes(b"not a netcdf file")
+
+        reason = _invalid_conversion_reason(path)
+
+        assert reason is not None
+        assert reason.startswith("cannot read metadata:")
+
+    def test_rejects_destructively_quantized_ozone_cache(self, tmp_path):
+        path = tmp_path / "quantized-o3.nc"
+        self._write_file(path, variable_id="o3", data_variable="o3", least_significant_digit=3)
+
+        assert _invalid_conversion_reason(path) == ("ozone dataset uses destructive decimal quantisation: o3")
+
+    def test_rejects_ozone_cache_with_quantized_formula_term(self, tmp_path):
+        path = tmp_path / "quantized-o3-coefficients.nc"
+        self._write_file(path, variable_id="o3", data_variable="o3")
+        with xr.open_dataset(path) as original:
+            ds = original.load()
+        ds["b"] = ("lev", np.array([0.0011, 0.0012]))
+        ds.to_netcdf(path, encoding={"b": {"least_significant_digit": 3}})
+
+        assert _invalid_conversion_reason(path) == ("ozone dataset uses destructive decimal quantisation: b")
+
+    def test_accepts_scientifically_valid_zero_ozone_cache(self, tmp_path):
+        path = tmp_path / "zero-o3.nc"
+        self._write_file(path, variable_id="o3", data_variable="o3", values=np.zeros((2, 1)))
+
+        assert _invalid_conversion_reason(path) is None
+
+
 class TestConvertFileToCmip7:
     """Tests for _convert_file_to_cmip7 function."""
+
+    def test_chunked_conversion_round_trips_real_netcdf(self, tmp_path, monkeypatch):
+        """The bounded Dask write preserves data and publishes a readable NetCDF file."""
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path / "cache"))
+        source = tmp_path / "o3.nc"
+        values = np.linspace(1e-9, 16e-8, 16, dtype=np.float32).reshape(2, 2, 2, 2)
+        hybrid_b = np.array([0.0011, 0.0012], dtype=np.float64)
+        hybrid_ap = np.zeros(2, dtype=np.float64)
+        times = [cftime.DatetimeNoLeap(2000, 1, 16), cftime.DatetimeNoLeap(2000, 2, 16)]
+        time_bounds = np.array(
+            [
+                [cftime.DatetimeNoLeap(2000, 1, 1), cftime.DatetimeNoLeap(2000, 2, 1)],
+                [cftime.DatetimeNoLeap(2000, 2, 1), cftime.DatetimeNoLeap(2000, 3, 1)],
+            ]
+        )
+        xr.Dataset(
+            {
+                "o3": (("time", "lev", "lat", "lon"), values),
+                "time_bnds": (("time", "bnds"), time_bounds),
+                "ap": ("lev", hybrid_ap),
+                "b": ("lev", hybrid_b),
+            },
+            coords={
+                "time": xr.DataArray(times, dims="time", attrs={"bounds": "time_bnds"}),
+                "lat": [-45.0, 45.0],
+                "lon": [0.0, 180.0],
+                "lev": [1, 2],
+            },
+            attrs={
+                "table_id": "AERmon",
+                "variable_id": "o3",
+                "activity_id": "CMIP",
+                "institution_id": "CSIRO",
+                "source_id": "ACCESS-ESM1-5",
+                "experiment_id": "historical",
+                "variant_label": "r1i1p1f1",
+                "grid_label": "gn",
+            },
+        ).to_netcdf(source)
+        facets = {
+            "activity_id": "CMIP",
+            "institution_id": "CSIRO",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "frequency": "mon",
+            "variable_id": "o3",
+            "table_id": "AERmon",
+            "grid_label": "gn",
+            "version": "v1",
+            "branding_suffix": "tavg-al-hxy-u",
+            "region": "glb",
+        }
+
+        output = _convert_file_to_cmip7(source, facets)
+
+        with xr.open_dataset(output) as converted:
+            np.testing.assert_array_equal(converted["o3"].values, values)
+            np.testing.assert_array_equal(converted["b"].values, hybrid_b)
+            pressure = converted["ap"].values + converted["b"].values * 100_000.0
+            assert np.all(np.diff(pressure) > 0)
+            np.testing.assert_array_equal(converted["time_bnds"].values, time_bounds)
+            assert converted.attrs["mip_era"] == "CMIP7"
 
     @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
@@ -252,6 +410,10 @@ class TestConvertFileToCmip7:
 
         # Set up mock for open_dataset context manager
         mock_ds = MagicMock()
+        mock_ds.attrs = {name: name for name in _MANDATORY_CONVERTED_ATTRS}
+        mock_ds.variables = {"variable_id": MagicMock()}
+        mock_ds.attrs["variable_id"] = "variable_id"
+        mock_ds.sizes = {}
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
         mock_open.return_value.__exit__ = MagicMock(return_value=False)
 
@@ -300,7 +462,7 @@ class TestConvertFileToCmip7:
         result = _convert_file_to_cmip7(cmip6_path, cmip7_facets)
 
         assert result == cached_file
-        mock_open.assert_called_once()  # Dataset is opened to derive time range
+        assert mock_open.call_count == 2  # Source time range and cached-file integrity
         mock_convert.assert_not_called()  # Should not convert (cached)
 
     @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
@@ -318,7 +480,15 @@ class TestConvertFileToCmip7:
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
         mock_open.return_value.__exit__ = MagicMock(return_value=False)
         mock_converted_ds = MagicMock()
-        mock_convert.return_value = mock_converted_ds
+        mock_converted_ds.attrs = {}
+        mock_converted_ds.to_netcdf.side_effect = lambda path, **kwargs: Path(path).touch()
+
+        def convert_with_bounded_scheduler(ds):
+            assert dask.config.get("array.chunk-size") == "64MiB"
+            assert dask.config.get("scheduler") == "single-threaded"
+            return mock_converted_ds
+
+        mock_convert.side_effect = convert_with_bounded_scheduler
 
         cmip7_facets = {
             "activity_id": "CMIP",
@@ -343,6 +513,7 @@ class TestConvertFileToCmip7:
 
         # Check that conversion happened
         mock_open.assert_called_once()
+        assert mock_open.call_args.kwargs["chunks"] == "auto"
         mock_convert.assert_called_once_with(mock_ds)
         mock_converted_ds.to_netcdf.assert_called_once()
 
@@ -350,6 +521,106 @@ class TestConvertFileToCmip7:
         assert "CMIP" in str(result)
         assert "ACCESS-ESM1-5" in str(result)
         assert result.name == "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
+
+    @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
+    @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
+    @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
+    @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
+    def test_rebuilds_stale_cached_conversion(
+        self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path
+    ):
+        """A cached file from an older converter cannot bypass regeneration."""
+        cache_dir = tmp_path / "cache"
+        mock_cache_dir.return_value = cache_dir
+        source = MagicMock()
+        stale = MagicMock()
+        stale.attrs = {}
+        mock_open.side_effect = [
+            MagicMock(__enter__=MagicMock(return_value=source), __exit__=MagicMock(return_value=False)),
+            MagicMock(__enter__=MagicMock(return_value=stale), __exit__=MagicMock(return_value=False)),
+        ]
+        converted = MagicMock(attrs={})
+        converted.to_netcdf.side_effect = lambda path, **kwargs: Path(path).touch()
+        mock_convert.return_value = converted
+        facets = {
+            "activity_id": "CMIP",
+            "institution_id": "NCAR",
+            "source_id": "CESM2",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "frequency": "mon",
+            "variable_id": "cli",
+            "grid_label": "gn",
+            "version": "20190308",
+            "branding_suffix": "tavg-al-hxy-u",
+            "region": "glb",
+        }
+        expected = (
+            cache_dir
+            / create_cmip7_path({"drs_specs": "MIP-DRS7", "mip_era": "CMIP7", **facets}, "20190308")
+            / create_cmip7_filename(facets)
+        )
+        expected.parent.mkdir(parents=True)
+        expected.touch()
+
+        result = _convert_file_to_cmip7(tmp_path / "cli.nc", facets)
+
+        assert result == expected
+        mock_convert.assert_called_once_with(source)
+
+    @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
+    @patch("climate_ref_core.esgf.cmip7._invalid_conversion_reason", return_value="truncated")
+    @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
+    @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
+    @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
+    def test_interrupted_rebuild_preserves_existing_cache(
+        self,
+        mock_cache_dir,
+        mock_convert,
+        mock_open,
+        mock_invalid_reason,
+        mock_time_range,
+        tmp_path,
+    ):
+        """A failed write cannot replace the existing cache entry with a partial file."""
+        cache_dir = tmp_path / "cache"
+        mock_cache_dir.return_value = cache_dir
+        source = MagicMock()
+        mock_open.return_value.__enter__.return_value = source
+        converted = MagicMock(attrs={})
+
+        def interrupted_write(path, **kwargs):
+            Path(path).write_bytes(b"partial")
+            raise OSError("interrupted")
+
+        converted.to_netcdf.side_effect = interrupted_write
+        mock_convert.return_value = converted
+        facets = {
+            "activity_id": "CMIP",
+            "institution_id": "NCAR",
+            "source_id": "CESM2",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "frequency": "mon",
+            "variable_id": "cli",
+            "grid_label": "gn",
+            "version": "20190308",
+            "branding_suffix": "tavg-al-hxy-u",
+            "region": "glb",
+        }
+        output = (
+            cache_dir
+            / create_cmip7_path({"drs_specs": "MIP-DRS7", "mip_era": "CMIP7", **facets}, "20190308")
+            / create_cmip7_filename(facets)
+        )
+        output.parent.mkdir(parents=True)
+        output.write_bytes(b"previous")
+
+        with pytest.raises(OSError, match="interrupted"):
+            _convert_file_to_cmip7(tmp_path / "cli.nc", facets)
+
+        assert output.read_bytes() == b"previous"
+        assert list(output.parent.glob("*.tmp.nc")) == []
 
     @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
@@ -368,6 +639,8 @@ class TestConvertFileToCmip7:
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
         mock_open.return_value.__exit__ = MagicMock(return_value=False)
         mock_converted_ds = MagicMock()
+        mock_converted_ds.attrs = {}
+        mock_converted_ds.to_netcdf.side_effect = lambda path, **kwargs: Path(path).touch()
         mock_convert.return_value = mock_converted_ds
 
         # Use integer values for some facets; include all required fields
@@ -407,6 +680,10 @@ class TestConvertFileToCmip7:
 
         # Set up mocks
         mock_ds = MagicMock()
+        mock_ds.attrs = {name: name for name in _MANDATORY_CONVERTED_ATTRS}
+        mock_ds.variables = {"variable_id": MagicMock()}
+        mock_ds.attrs["variable_id"] = "variable_id"
+        mock_ds.sizes = {}
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
         mock_open.return_value.__exit__ = MagicMock(return_value=False)
         mock_converted_ds = MagicMock()

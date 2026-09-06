@@ -331,6 +331,40 @@ class TestLogResources:
 class TestCreateNoDriftTest:
     """Tests for the per-provider drift-test factory."""
 
+    @pytest.fixture(autouse=True)
+    def clear_strict_mode(self, monkeypatch):
+        monkeypatch.delenv("REF_TEST_CASES_STRICT", raising=False)
+        monkeypatch.delenv("REF_TEST_CASES_SKIP", raising=False)
+
+    @pytest.mark.parametrize("missing", ["directory", "catalog", "manifest", "regression"])
+    def test_strict_mode_fails_for_missing_test_inputs(
+        self, missing, monkeypatch, provider, config, tmp_path
+    ):
+        monkeypatch.setenv("REF_TEST_CASES_STRICT", "true")
+        test_fn = create_no_drift_test(provider)
+        diagnostic = MagicMock()
+        diagnostic.slug = "my-diag"
+        diagnostic.provider.slug = "example"
+        paths = None if missing == "directory" else self._make_paths(**{missing: False})
+
+        with (
+            patch("climate_ref.testing.TestCasePaths.from_diagnostic", return_value=paths),
+            pytest.raises(
+                pytest.fail.Exception, match=r"No (test-data directory|catalog file|committed baseline)"
+            ),
+        ):
+            test_fn(diagnostic, "default", config, tmp_path)
+
+    def test_strict_mode_preserves_explicit_exclusions(self, monkeypatch, provider, config, tmp_path):
+        monkeypatch.setenv("REF_TEST_CASES_STRICT", "true")
+        monkeypatch.setenv("REF_TEST_CASES_SKIP", "example/my-diag")
+        diagnostic = MagicMock()
+        diagnostic.slug = "my-diag"
+        diagnostic.provider.slug = "example"
+
+        with pytest.raises(pytest.skip.Exception, match="excluded via REF_TEST_CASES_SKIP"):
+            create_no_drift_test(provider)(diagnostic, "default", config, tmp_path)
+
     def test_returns_marked_test(self, provider):
         """The factory returns a test function carrying the standard marks."""
         test_fn = create_no_drift_test(provider)
@@ -433,6 +467,23 @@ class TestCreateNoDriftTest:
 class TestAssertTestCaseNoDrift:
     """Tests for the execute/build/compare drift assertion."""
 
+    def test_incomplete_paths_fail_before_execution(self, config, tmp_path):
+        diagnostic = MagicMock()
+        paths = MagicMock()
+        paths.catalog = tmp_path / "catalog.yaml"
+        paths.catalog_paths = tmp_path / "catalog.paths.yaml"
+        paths.catalog.write_text(
+            "cmip6:\n  datasets:\n    - instance_id: model\n      filename: missing.nc\n"
+        )
+        paths.catalog_paths.write_text("{}\n")
+
+        with (
+            patch("climate_ref.cli.test_cases._stages.stage_execute") as execute,
+            pytest.raises(DatasetResolutionError, match=r"model::missing\.nc"),
+        ):
+            assert_test_case_no_drift(config, diagnostic, "default", paths, tmp_path)
+        execute.assert_not_called()
+
     def test_raises_without_test_data_spec(self, config, tmp_path):
         """A diagnostic with no test_data_spec cannot be drift-checked."""
         diagnostic = MagicMock()
@@ -460,7 +511,7 @@ class TestAssertTestCaseNoDrift:
             patch(f"{stages}.stage_execute"),
             patch(f"{stages}.stage_build"),
             patch(f"{stages}.stage_compare", return_value=(failures, [])),
-            patch("climate_ref.testing.load_datasets_from_yaml"),
+            patch("climate_ref.testing.validate_catalog_paths"),
             patch("climate_ref.testing.Manifest"),
         )
 
@@ -472,7 +523,14 @@ class TestAssertTestCaseNoDrift:
         paths = MagicMock()
 
         baseline_ph, execute, build, compare, load_yaml, manifest = self._patch_stages(failures=[])
-        with baseline_ph, execute as execute_m, build as build_m, compare as compare_m, load_yaml, manifest:
+        with (
+            baseline_ph,
+            execute as execute_m,
+            build as build_m,
+            compare as compare_m,
+            load_yaml,
+            manifest,
+        ):
             assert_test_case_no_drift(config, diagnostic, "default", paths, tmp_path)
 
         execute_m.assert_called_once()
@@ -490,6 +548,13 @@ class TestAssertTestCaseNoDrift:
 
         failures = ["diagnostic.json: value drift beyond tolerance"]
         baseline_ph, execute, build, compare, load_yaml, manifest = self._patch_stages(failures)
-        with baseline_ph, execute, build, compare, load_yaml, manifest:
+        with (
+            baseline_ph,
+            execute,
+            build,
+            compare,
+            load_yaml,
+            manifest,
+        ):
             with pytest.raises(AssertionError, match="my-provider/my-diag/default: committed bundle drift"):
                 assert_test_case_no_drift(config, diagnostic, "default", paths, tmp_path)

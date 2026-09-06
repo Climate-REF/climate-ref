@@ -83,6 +83,7 @@ def make_data_requirement(
         FacetFilter(
             facets={
                 "frequency": "mon",
+                "table_id": "Amon",
                 "experiment_id": ("amip", "historical", "esm-hist", "hist-GHG"),
                 "variable_id": (variable_id,),
             }

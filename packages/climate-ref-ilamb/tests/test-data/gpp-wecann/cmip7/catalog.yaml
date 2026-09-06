@@ -1,5 +1,5 @@
 _metadata:
-  hash: a7a45bec8353c20c020524afe2e387654ed954d5
+  hash: 61141cd2413c04d92722a786948f6278c5d1b1dd
 cmip7:
   slug_column: instance_id
   selector:
@@ -202,7 +202,7 @@ obs4mips:
     variable_id: gpp
     version: v20250902
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2015-12-16 12:00:00'
     filename: gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc
     finalised: true

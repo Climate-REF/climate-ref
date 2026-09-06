@@ -393,6 +393,71 @@ def load_datasets_from_yaml(path: Path, paths_file: Path) -> ExecutionDatasetCol
     return ExecutionDatasetCollection(collections)
 
 
+def validate_catalog_paths(path: Path, paths_file: Path) -> ExecutionDatasetCollection:
+    """Load a catalog and check that every row resolves to a local file.
+
+    Loading remains permissive because callers also use catalogs for metadata-only
+    operations. Fetch and execution entry points can call this function when they
+    require usable input files.
+
+    Parameters
+    ----------
+    path
+        Path to the catalog YAML file.
+    paths_file
+        Path to the machine-local paths sidecar.
+
+    Returns
+    -------
+    :
+        The loaded datasets, so callers need not parse the catalog a second time.
+
+    Raises
+    ------
+    DatasetResolutionError
+        If the sidecar is absent for a non-empty catalog, incomplete, or points to missing files.
+    """
+    from climate_ref_core.exceptions import DatasetResolutionError  # noqa: PLC0415
+
+    try:
+        datasets = load_datasets_from_yaml(path, paths_file)
+    except Exception as e:
+        raise DatasetResolutionError(f"Could not load catalog paths for {path}: {e}") from e
+
+    has_rows = any(len(collection.datasets) for collection in datasets.values())
+    if has_rows and not paths_file.exists():
+        raise DatasetResolutionError(
+            f"Paths file is missing for catalog {path}: {paths_file}. "
+            "Run `ref test-cases fetch` to rebuild it."
+        )
+
+    missing_entries: list[str] = []
+    missing_files: list[str] = []
+    for source_type, collection in datasets.items():
+        for _, dataset in collection.datasets.iterrows():
+            instance_id = dataset.get(collection.slug_column)
+            filename = dataset.get("filename")
+            key = f"{instance_id}::{filename}" if instance_id and filename else instance_id
+            resolved_path = dataset.get("path")
+            label = f"{source_type.value}:{key or '<unknown dataset>'}"
+            if not isinstance(resolved_path, (str, Path)) or not str(resolved_path):
+                missing_entries.append(label)
+            elif not Path(resolved_path).is_file():
+                missing_files.append(f"{label} -> {resolved_path}")
+
+    if missing_entries or missing_files:
+        problems = []
+        if missing_entries:
+            problems.append(f"missing path entries: {', '.join(missing_entries)}")
+        if missing_files:
+            problems.append(f"files not found: {', '.join(missing_files)}")
+        raise DatasetResolutionError(
+            f"Catalog paths are incomplete for {path} ({'. '.join(problems)}). "
+            "Run `ref test-cases fetch` to rebuild the paths file."
+        )
+    return datasets
+
+
 def get_catalog_hash(path: Path) -> str | None:
     """
     Get the hash stored in an existing catalog file.
@@ -493,17 +558,25 @@ def _serialise_datasets(
         filtered_records = []
         for record in datasets_records:
             instance_id = record.get(slug_column)
-            if instance_id and "path" in record:  # pragma: no branch
-                file_path = record.pop("path")
-                filename = Path(file_path).name
-                # Store filename in record for matching when loading
-                record["filename"] = filename
-                # Use composite key to support multiple files per instance_id
-                paths_map[f"{instance_id}::{filename}"] = file_path
-                # Sanitize and sort fields within each record alphabetically
-                sanitized_record = {k: _sanitize_for_yaml(v) for k, v in record.items()}
-                sorted_record = dict(sorted(sanitized_record.items()))
-                filtered_records.append(sorted_record)
+            if not isinstance(instance_id, str) or not instance_id:
+                raise ValueError(
+                    f"Dataset is missing the required {slug_column!r} identity field and cannot be saved"
+                )
+            file_path = record.get("path")
+            if not isinstance(file_path, (str, Path)) or not str(file_path):
+                raise ValueError(
+                    f"Dataset {instance_id!r} is missing the required 'path' field and cannot be saved"
+                )
+            record.pop("path")
+            filename = Path(file_path).name
+            # Store filename in record for matching when loading
+            record["filename"] = filename
+            # Use composite key to support multiple files per instance_id
+            paths_map[f"{instance_id}::{filename}"] = str(file_path)
+            # Sanitize and sort fields within each record alphabetically
+            sanitized_record = {k: _sanitize_for_yaml(v) for k, v in record.items()}
+            sorted_record = dict(sorted(sanitized_record.items()))
+            filtered_records.append(sorted_record)
 
         # Sort records by instance_id, then by filename for stability
         filtered_records.sort(key=lambda r: (r.get(slug_column, ""), r.get("filename", "")))
@@ -544,11 +617,9 @@ def save_datasets_to_yaml(
     By default, the catalog is only written if the content has changed
     (detected via hash comparison). Use `force=True` to always write.
 
-    The paths sidecar is (re)generated whenever it is **missing**, even when the catalog
-    content is unchanged: on a machine with a cold cache the version-controlled
-    `catalog.yaml` exists but the sidecar does not, and `run`/`mint` need it to resolve
-    inputs. In that case the catalog itself is left untouched (so a plain
-    `ref test-cases fetch` is enough, no `--force` required) and only the sidecar is written.
+    The paths sidecar is regenerated on every save, even when the catalog content is
+    unchanged. Local cache contents can change independently of the version-controlled
+    catalog, so retaining an existing sidecar can leave missing or stale paths behind.
 
     Parameters
     ----------
@@ -569,19 +640,15 @@ def save_datasets_to_yaml(
     """
     new_hash = datasets.hash
 
+    data, paths_map = _serialise_datasets(datasets)
+
     if not force and get_catalog_hash(path) == new_hash:
-        # Catalog content is unchanged. Still regenerate the paths sidecar if it is missing
-        # (e.g. a cold dataset cache) so run/mint can resolve inputs, but leave the
-        # version-controlled catalog untouched to avoid spurious diffs.
-        if paths_file.exists():
-            logger.info(f"Catalog unchanged, skipping write: {path}")
-        else:
-            _, paths_map = _serialise_datasets(datasets)
-            _write_paths_file(paths_file, paths_map)
-            logger.info(f"Catalog unchanged; regenerated missing paths file: {paths_file}")
+        # Keep the tracked catalog byte-identical, but always refresh its machine-local
+        # paths. An existing sidecar may be partial or point at an old cache location.
+        _write_paths_file(paths_file, paths_map)
+        logger.info(f"Catalog unchanged, refreshed paths file: {paths_file}")
         return False
 
-    data, paths_map = _serialise_datasets(datasets)
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w") as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False)

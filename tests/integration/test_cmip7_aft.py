@@ -43,8 +43,9 @@ def config_cmip7_aft(config):
         DiagnosticProviderConfig(provider=provider)
         for provider in ["climate_ref_esmvaltool", "climate_ref_ilamb", "climate_ref_pmp"]
     ]
-    # Use the local executor to parallise the executions
+    # Run a single diagnostic to avoid OOMs on the CI
     config.executor.executor = "climate_ref.executor.LocalExecutor"
+    config.executor.config = {"n": 1}
 
     # Write the config to disk so it is used by the CLI
     # This overwrites the default config

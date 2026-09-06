@@ -24,6 +24,7 @@
       "r1i1p1f1": {}
     },
     "metric": {
+      "Annual Cycle": {},
       "Bias": {},
       "RMSE": {},
       "Spatial Distribution": {}
@@ -67,11 +68,19 @@
         "type": "scalar",
         "units": "g d-1 m-2"
       },
+      "Phase Shift": {
+        "type": "scalar",
+        "units": "month"
+      },
       "RMSE": {
         "type": "scalar",
         "units": "g d-1 m-2"
       },
       "RMSE Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Seasonal Cycle Score": {
         "type": "score",
         "units": "1"
       },
@@ -92,6 +101,10 @@
             "r1i1p1f1": {
               "gn": {
                 "global": {
+                  "Annual Cycle": {
+                    "Phase Shift": 0.5804878,
+                    "Seasonal Cycle Score": 0.8056911
+                  },
                   "Bias": {
                     "Bias": -0.02364837,
                     "Bias Score": 0.6188074,
@@ -108,6 +121,10 @@
                   }
                 },
                 "tropical": {
+                  "Annual Cycle": {
+                    "Phase Shift": 0.2666667,
+                    "Seasonal Cycle Score": 0.5777778
+                  },
                   "Bias": {
                     "Bias": 0.2766514,
                     "Bias Score": 0.385412,

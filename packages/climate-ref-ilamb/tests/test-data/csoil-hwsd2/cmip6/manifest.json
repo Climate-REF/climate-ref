@@ -8,44 +8,44 @@
   "diagnostic_version": 3,
   "native": {
     "CanESM5.csv": {
-      "sha256": "b34a55b16945c5e3ac0893226e8c4f4fcf78e0f1cd914ca81eb0a7d6dc098829",
-      "size": 1165
+      "sha256": "efad7412dcac894a7978a922b8bf8ccfc86397023704af14c486dfe59bf19f00",
+      "size": 1158
     },
     "CanESM5.nc": {
-      "sha256": "257ce67cb391fe107aca71d1f33221597bc8de250347c33c581c11093dfa65ce",
-      "size": 6707755
+      "sha256": "9a2ad0b803cc2718e6660b44b5b9d2389e52bfc30f6be35f29bf05527cca3496",
+      "size": 5861263
     },
     "CanESM5_global_bias.png": {
-      "sha256": "5191cc514b536c8ab0db874448ab10e74b1067aae7c36a45ccb0a663e29a45d9",
-      "size": 35342
+      "sha256": "2bb3b884651f29c7c41f7da3f748bc00bbd4467465e37ac159ca9e752997e295",
+      "size": 35383
     },
     "CanESM5_global_biasscore.png": {
-      "sha256": "b58dc8569a712bb0772f047c0edc29a6a06e29d4352e1b0cf31402b0b5754a52",
-      "size": 52578
+      "sha256": "c76bfb5525a75e033746849d0bafa393235eae6a64a9e7c6de11177b8662dbc1",
+      "size": 52815
     },
     "CanESM5_global_mean.png": {
       "sha256": "b86653f5451cc1bd965fcac2f56cc363e1c17cc7adbe9731346b3389d29be4ed",
       "size": 23965
     },
     "CanESM5_tropical_bias.png": {
-      "sha256": "0228a517862843f7fe84e3cf24ddfe4a53a9d5e574bfa5e6492bfbfe8f90f2ea",
-      "size": 16096
+      "sha256": "02867abf218405141a6a01c9d105f77a0d867d378a7e0f74e77c95f8fbcb26ec",
+      "size": 16159
     },
     "CanESM5_tropical_biasscore.png": {
-      "sha256": "db68451242e5748fcc9c69d92a35ecc223ba3d7f68998bddfba1f6fcfa5bca8d",
-      "size": 24420
+      "sha256": "7f21a954fdc5ac9c5b042f573395224c46883f4f8791c9b3ddfbbbf718c5281e",
+      "size": 24507
     },
     "CanESM5_tropical_mean.png": {
       "sha256": "5fe4dbee05be3d91139a7b6e0b9e36ba195fedb6e7bad99f904fccd7a653f5e7",
       "size": 13495
     },
     "None_global_taylor.png": {
-      "sha256": "972fac5d319730bfa92ab88c5990271ed0c86a83d8b93a144f952d79ac2c6517",
-      "size": 101292
+      "sha256": "55db7ef7c326a34a2ab33e2ad682976d670e888463ac9642bbba6d54fc9136ce",
+      "size": 101309
     },
     "None_tropical_taylor.png": {
-      "sha256": "c13a20decd108cc6bd67afdeaa871b9412bcd4e91b985d84dbf153d07cd359c0",
-      "size": 101299
+      "sha256": "06c03e81fe0a072f1c4e007172f7f2c44be4e38a9306d427c50fe8bd1160e3c8",
+      "size": 101295
     },
     "Reference.nc": {
       "sha256": "f574d5f2933ff669d6d3d1399d2dff7f6b15591de665de7e9e6e50c8a4feea61",
@@ -60,12 +60,12 @@
       "size": 19157
     },
     "diagnostic.json": {
-      "sha256": "37af6aeb60d5fe03eb2f2204b1ce78bf30cf4c8d1c0c150063c0b7c95c0657e7",
-      "size": 2734
+      "sha256": "a51e19be6ad851b858de53b09415c09b377141490e975b841f8e813bf761ff26",
+      "size": 2731
     },
     "index.html": {
-      "sha256": "94d39a8e05675c11e8007d34b0a5fe5724346e0aeabfbf3b4291aeadac6d8f54",
-      "size": 16181
+      "sha256": "386883a2e1f26743d339818d0b970613843defb48e6278695e935c4c240e7dbc",
+      "size": 16173
     },
     "output.json": {
       "sha256": "e78f0edddbd57eda086e295dc8c03abf111ee1a684e0f3becf44d7f692ecf74c",

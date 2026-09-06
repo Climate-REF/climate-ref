@@ -44,6 +44,7 @@ dependencies = [
     # ESGF data fetching
     "intake-esgf>=2025.7.16",
     "pyarrow>=17.0.0",
+    "dask[array]>=2024.10.0",
 
     # SPEC 0000 constraints
     # We follow [SPEC-0000](https://scientific-python.org/specs/spec-0000/)

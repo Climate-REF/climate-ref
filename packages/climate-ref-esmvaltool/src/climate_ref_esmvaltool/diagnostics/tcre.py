@@ -11,7 +11,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -153,29 +153,6 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            TestCase(
-                name="cmip7",
-                description="Test with CMIP7 data.",
-                requests=(
-                    CMIP7Request(
-                        slug="cmip7",
-                        facets={
-                            "experiment_id": ["esm-flat10", "esm-piControl"],
-                            "source_id": "MPI-ESM1-2-LR",
-                            "variable_id": ["areacella", "fco2antt", "tas"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "fco2antt_tavg-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
-                            ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
-                            "region": "glb",
-                        },
-                        remove_ensembles=True,
-                    ),
-                ),
-            ),
         )
     )
 
@@ -204,10 +181,12 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         )
         recipe_variables = dataframe_to_recipe(df[df.variable_id == "fco2antt"])
 
-        fco2antt_esm_1pctCO2 = next(
-            ds for ds in recipe_variables["fco2antt"]["additional_datasets"] if ds["exp"] == "esm-1pctCO2"
+        fco2antt_co2_increase = next(
+            ds
+            for ds in recipe_variables["fco2antt"]["additional_datasets"]
+            if ds["exp"] == tas_co2_increase["exp"]
         )
-        fco2antt_esm_1pctCO2["timerange"] = tas_co2_increase["timerange"]
+        fco2antt_co2_increase["timerange"] = tas_co2_increase["timerange"]
 
         recipe["diagnostics"]["tcre"]["variables"] = {
             "tas": {
@@ -221,7 +200,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
             },
             "fco2antt": {
                 "preprocessor": "global_cumulative_sum",
-                "additional_datasets": [fco2antt_esm_1pctCO2],
+                "additional_datasets": [fco2antt_co2_increase],
             },
         }
 

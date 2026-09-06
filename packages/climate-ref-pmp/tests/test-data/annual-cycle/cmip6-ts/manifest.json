@@ -1,19 +1,19 @@
 {
   "catalog_hash": "8fe7eddb18ede3fe8ed9689e02e4b11cf40da1ab",
   "committed": {
-    "diagnostic.json": "620124369f70cec8fe9ae7a93eca7d3a6a871989a07354beab6e7fd75958cd95",
-    "output.json": "b9e27881c00befded5e8721c9c4064919ccb85ca415992b07f5be34fcad4483f",
+    "diagnostic.json": "c802cdbff2f4f4bdda994319980722782abeca4649a65e11bbb891f4368c8c5b",
+    "output.json": "f68399dfd63c40d0aafda1f08ba298a0d1fe2569953dbf5fa9b764e2961e5567",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "diagnostic_version": 5,
   "native": {
     "diagnostic.json": {
-      "sha256": "8045de16421c636539dd8fca9003e31831ea6bad92a9fc079e7c64703cf0eaaf",
-      "size": 5506
+      "sha256": "0110425056882c131de523129c98c5987af24d60e9fa5d6495952186b34c85ec",
+      "size": 5510
     },
     "output.json": {
-      "sha256": "80abcfba2f34d4151f54ef2c449c25ec8bc12e182ebb40fd9d2ac52fa0c20649",
-      "size": 2937
+      "sha256": "a5c47c7ee420d2bb497e0245fffb8af403acd34dd9ad431de688f113f56a2644",
+      "size": 2941
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -40,10 +40,10 @@
       "size": 414260
     },
     "ts_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "95d8fa7c519489aed0506f078969035c5929c17335ad92978723212e22e8fef9",
-      "size": 12557
+      "sha256": "b50baecd1f80a669ddb476df0714fcb34dd3a3290014256e5f3811591466efe4",
+      "size": 12561
     }
   },
   "schema": 2,
-  "test_case_version": 4
+  "test_case_version": 5
 }

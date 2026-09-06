@@ -837,6 +837,7 @@ source = { editable = "packages/climate-ref-core" }
 dependencies = [
     { name = "attrs" },
     { name = "cattrs" },
+    { name = "dask", extra = ["array"] },
     { name = "environs" },
     { name = "fastprogress" },
     { name = "intake-esgf" },
@@ -870,6 +871,7 @@ requires-dist = [
     { name = "attrs", specifier = ">=23.2.0" },
     { name = "boto3", marker = "extra == 'aws'", specifier = ">=1.34" },
     { name = "cattrs", specifier = ">=24.1" },
+    { name = "dask", extras = ["array"], specifier = ">=2024.10.0" },
     { name = "environs", specifier = ">=11" },
     { name = "fastprogress", specifier = "==1.0.5" },
     { name = "intake-esgf", specifier = ">=2025.7.16" },
@@ -1367,6 +1369,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d6/39/cbd21c9133d02b4e60899ed466ad5e876553ea68ebffee6209e7dcafc8d4/dask-2026.7.1.tar.gz", hash = "sha256:5727484427665f051e86bf87d021a64d6411141cdc8a20bfe3c1ad2968cc06b7", size = 11548794, upload-time = "2026-07-14T01:06:22.46Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/5f/7c22733da92b3a6cc4dddcaa8731089d213c2790bbc997e51c429a4e8f8b/dask-2026.7.1-py3-none-any.whl", hash = "sha256:985ffd6c5e9d7979ede515e84ae8d39b647d6aa64f77600f15714ff65f578fe6", size = 1496882, upload-time = "2026-07-14T01:06:20.341Z" },
+]
+
+[package.optional-dependencies]
+array = [
+    { name = "numpy" },
 ]
 
 [[package]]

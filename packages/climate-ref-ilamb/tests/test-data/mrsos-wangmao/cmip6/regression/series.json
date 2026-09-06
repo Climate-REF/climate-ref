@@ -1,6 +1,100 @@
 [
   {
     "attributes": {
+      "long_name": "Moisture in Upper Portion of Soil Column",
+      "standard_name": "mass_content_of_water_in_soil_layer",
+      "units": "dimensionless"
+    },
+    "dimensions": {
+      "experiment_id": "historical",
+      "grid_label": "gn",
+      "member_id": "r1i1p1f1",
+      "metric": "cycle",
+      "reference_source_id": "WangMao",
+      "region": "global",
+      "source_id": "CanESM5"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "value_long_name": "Moisture in Upper Portion of Soil Column",
+    "value_units": "dimensionless",
+    "values": [
+      0.3043818,
+      0.3027509,
+      0.2991924,
+      0.2940197,
+      0.2830095,
+      0.2646568,
+      0.2491054,
+      0.2457162,
+      0.2488129,
+      0.2628601,
+      0.2834567,
+      0.2979956
+    ]
+  },
+  {
+    "attributes": {
+      "long_name": "Moisture in Upper Portion of Soil Column",
+      "standard_name": "mass_content_of_water_in_soil_layer",
+      "units": "dimensionless"
+    },
+    "dimensions": {
+      "experiment_id": "historical",
+      "grid_label": "gn",
+      "member_id": "r1i1p1f1",
+      "metric": "cycle",
+      "reference_source_id": "WangMao",
+      "region": "tropical",
+      "source_id": "CanESM5"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "value_long_name": "Moisture in Upper Portion of Soil Column",
+    "value_units": "dimensionless",
+    "values": [
+      0.2174078,
+      0.2012419,
+      0.2040359,
+      0.2271655,
+      0.2450333,
+      0.2422723,
+      0.2254703,
+      0.2164165,
+      0.2136693,
+      0.213631,
+      0.2214049,
+      0.2259903
+    ]
+  },
+  {
+    "attributes": {
       "calendar": "noleap",
       "long_name": "Moisture in Upper Portion of Soil Column",
       "standard_name": "mass_content_of_water_in_soil_layer",
@@ -2211,6 +2305,94 @@
   },
   {
     "attributes": {
+      "long_name": "cycle_global",
+      "standard_name": "soil_moisture_content",
+      "units": "m3 m-3"
+    },
+    "dimensions": {
+      "metric": "cycle",
+      "reference_source_id": "WangMao",
+      "region": "global"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "kind": "reference",
+    "value_long_name": "cycle_global",
+    "value_units": "m3 m-3",
+    "values": [
+      0.2467539,
+      0.2485539,
+      0.2490331,
+      0.2483839,
+      0.2429423,
+      0.2367682,
+      0.2310688,
+      0.2286748,
+      0.2297674,
+      0.2323247,
+      0.2380273,
+      0.2432495
+    ]
+  },
+  {
+    "attributes": {
+      "long_name": "cycle_tropical",
+      "standard_name": "soil_moisture_content",
+      "units": "m3 m-3"
+    },
+    "dimensions": {
+      "metric": "cycle",
+      "reference_source_id": "WangMao",
+      "region": "tropical"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "kind": "reference",
+    "value_long_name": "cycle_tropical",
+    "value_units": "m3 m-3",
+    "values": [
+      0.2921779,
+      0.2903871,
+      0.2934639,
+      0.2980236,
+      0.298622,
+      0.2963895,
+      0.2936546,
+      0.2914783,
+      0.2947199,
+      0.2993584,
+      0.2992325,
+      0.296105
+    ]
+  },
+  {
+    "attributes": {
       "calendar": "noleap",
       "long_name": "trace_global",
       "standard_name": "soil_moisture_content",
@@ -2762,8 +2944,7 @@
       "2014-09-15T00:00:00",
       "2014-10-15T00:00:00",
       "2014-11-15T00:00:00",
-      "2014-12-15T00:00:00",
-      "2015-01-15T00:00:00"
+      "2014-12-15T00:00:00"
     ],
     "index_name": "time",
     "kind": "reference",
@@ -3309,8 +3490,7 @@
       0.228468,
       0.2300982,
       0.2380622,
-      0.2433089,
-      0.2452059
+      0.2433089
     ]
   },
   {
@@ -3866,8 +4046,7 @@
       "2014-09-15T00:00:00",
       "2014-10-15T00:00:00",
       "2014-11-15T00:00:00",
-      "2014-12-15T00:00:00",
-      "2015-01-15T00:00:00"
+      "2014-12-15T00:00:00"
     ],
     "index_name": "time",
     "kind": "reference",
@@ -4413,8 +4592,7 @@
       0.2912023,
       0.2927484,
       0.2973459,
-      0.2926177,
-      0.2844861
+      0.2926177
     ]
   }
 ]

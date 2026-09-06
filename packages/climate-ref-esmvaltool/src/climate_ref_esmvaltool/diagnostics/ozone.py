@@ -300,28 +300,55 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
     name = "Ozone Diagnostics"
     slug = "ozone-zonal"
     base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 4
+    version = 5
 
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "o3",
-                        "experiment_id": ("historical", "esm-hist"),
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "o3",
+                            "experiment_id": ("historical", "esm-hist"),
+                            "table_id": "Amon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(2005, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireContiguousTimerange(group_by=("instance_id",)),
                 ),
             ),
-            group_by=("source_id", "experiment_id", "member_id", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(2005, 1),
-                    end=PartialDateTime(2014, 12),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "o3",
+                            "experiment_id": ("historical", "esm-hist"),
+                            "branded_variable": "o3_tavg-p19-hxy-air",
+                            "frequency": "mon",
+                            "region": "glb",
+                        },
+                    ),
                 ),
-                RequireContiguousTimerange(group_by=("instance_id",)),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(2005, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                ),
             ),
         ),
         # TODO: Use ESACCI-OZONE (SAGE-OMPS, variable o3) from obs4MIPs once available.
@@ -357,7 +384,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                             "source_id": "GFDL-ESM4",
                             "variable_id": "o3",
                             "branded_variable": [
-                                "o3_tavg-al-hxy-u",
+                                "o3_tavg-p19-hxy-air",
                             ],
                             "variant_label": "r1i1p1f1",
                             "frequency": ["fx", "mon"],

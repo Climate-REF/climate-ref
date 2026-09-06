@@ -410,11 +410,17 @@ def validate_catalog_paths(path: Path, paths_file: Path) -> None:
     Raises
     ------
     DatasetResolutionError
-        If the sidecar is absent, incomplete, or points to missing files.
+        If the sidecar is absent for a non-empty catalog, incomplete, or points to missing files.
     """
     from climate_ref_core.exceptions import DatasetResolutionError  # noqa: PLC0415
 
-    if not paths_file.exists():
+    try:
+        datasets = load_datasets_from_yaml(path, paths_file)
+    except Exception as e:
+        raise DatasetResolutionError(f"Could not load catalog paths for {path}: {e}") from e
+
+    has_rows = any(len(collection.datasets) for collection in datasets.values())
+    if has_rows and not paths_file.exists():
         raise DatasetResolutionError(
             f"Paths file is missing for catalog {path}: {paths_file}. "
             "Run `ref test-cases fetch` to rebuild it."
@@ -422,10 +428,6 @@ def validate_catalog_paths(path: Path, paths_file: Path) -> None:
 
     missing_entries: list[str] = []
     missing_files: list[str] = []
-    try:
-        datasets = load_datasets_from_yaml(path, paths_file)
-    except Exception as e:
-        raise DatasetResolutionError(f"Could not load catalog paths for {path}: {e}") from e
     for source_type, collection in datasets.items():
         for _, dataset in collection.datasets.iterrows():
             instance_id = dataset.get(collection.slug_column)
@@ -445,7 +447,7 @@ def validate_catalog_paths(path: Path, paths_file: Path) -> None:
         if missing_files:
             problems.append(f"files not found: {', '.join(missing_files)}")
         raise DatasetResolutionError(
-            f"Catalog paths are incomplete for {path} ({'; '.join(problems)}). "
+            f"Catalog paths are incomplete for {path} ({'. '.join(problems)}). "
             "Run `ref test-cases fetch` to rebuild the paths file."
         )
 
@@ -638,7 +640,7 @@ def save_datasets_to_yaml(
         # Keep the tracked catalog byte-identical, but always refresh its machine-local
         # paths. An existing sidecar may be partial or point at an old cache location.
         _write_paths_file(paths_file, paths_map)
-        logger.info(f"Catalog unchanged; refreshed paths file: {paths_file}")
+        logger.info(f"Catalog unchanged, refreshed paths file: {paths_file}")
         return False
 
     path.parent.mkdir(parents=True, exist_ok=True)

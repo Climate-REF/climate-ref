@@ -25,11 +25,9 @@ if TYPE_CHECKING:
 
 
 def _catalog_content(path: Path) -> dict[str, Any]:
-    """Load stable catalog content that must be shared by downstream checkouts.
+    """Load the catalog content that a downstream checkout must reproduce.
 
-    ``tracking_id`` is generated afresh when a fabricated CMIP7 cache entry is
-    rebuilt. It is provenance for that local conversion, not part of the dataset
-    identity that a downstream checkout must reproduce.
+    ``tracking_id`` is regenerated whenever a CMIP7 conversion is rebuilt, so it is dropped.
     """
     with open(path) as f:
         data = yaml.safe_load(f) or {}
@@ -41,6 +39,17 @@ def _catalog_content(path: Path) -> dict[str, Any]:
         ]
         source_data["datasets"] = sorted(stable_datasets, key=lambda row: yaml.safe_dump(row, sort_keys=True))
     return content
+
+
+def _existing_catalog_error(paths: TestCasePaths | None) -> str | None:
+    """Return why a committed catalog cannot be used as-is, or ``None`` if it can."""
+    if paths is None or not paths.catalog.exists():
+        return "Test case has no fetch requests and no committed catalog"
+    try:
+        validate_catalog_paths(paths.catalog, paths.catalog_paths)
+    except DatasetResolutionError as e:
+        return str(e)
+    return None
 
 
 @app.command(name="fetch")
@@ -159,14 +168,12 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                 if test_case and tc.name != test_case:
                     continue
                 paths = TestCasePaths.from_diagnostic(diag, tc.name)
+                case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
                 # Skip if catalog exists when using --only-missing
                 if only_missing and paths and paths.catalog.exists():
-                    if strict:
-                        try:
-                            validate_catalog_paths(paths.catalog, paths.catalog_paths)
-                        except DatasetResolutionError as e:
-                            failed_cases.append(f"{diag.provider.slug}/{diag.slug}/{tc.name}")
-                            logger.warning(f"  Existing catalog is not usable for {tc.name}: {e}")
+                    if strict and (error := _existing_catalog_error(paths)):
+                        failed_cases.append(case_id)
+                        logger.warning(f"  Existing catalog is not usable for {tc.name}: {error}")
                     logger.info(f"  Skipping test case: {tc.name} (catalog exists)")
                     continue
                 if tc.requests:
@@ -175,8 +182,7 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                         try:
                             catalog_before = _catalog_content(paths.catalog)
                         except (OSError, AttributeError, yaml.YAMLError):
-                            # Fetch may repair an invalid catalog. A ``None`` snapshot still
-                            # makes strict mode report that the committed input changed.
+                            # A ``None`` snapshot still reports the committed input as changed.
                             pass
                     if paths and paths.catalog.exists() and not force:
                         logger.info(
@@ -210,18 +216,11 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                         InvalidDiagnosticException,
                         ValueError,
                     ) as e:
-                        failed_cases.append(f"{diag.provider.slug}/{diag.slug}/{tc.name}")
+                        failed_cases.append(case_id)
                         logger.warning(f"  Could not build catalog for {tc.name}: {e}")
-                elif strict:
-                    try:
-                        if paths is None or not paths.catalog.exists():
-                            raise DatasetResolutionError(
-                                "Test case has no fetch requests and no committed catalog"
-                            )
-                        validate_catalog_paths(paths.catalog, paths.catalog_paths)
-                    except DatasetResolutionError as e:
-                        failed_cases.append(f"{diag.provider.slug}/{diag.slug}/{tc.name}")
-                        logger.warning(f"  Existing catalog is not usable for {tc.name}: {e}")
+                elif strict and (error := _existing_catalog_error(paths)):
+                    failed_cases.append(case_id)
+                    logger.warning(f"  Existing catalog is not usable for {tc.name}: {error}")
 
     if failed_cases:  # pragma: no cover
         logger.warning(

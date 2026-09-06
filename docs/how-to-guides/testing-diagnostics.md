@@ -293,8 +293,8 @@ This means it is shared by every checkout on the machine,
 and a fresh checkout cannot lose it.
 `ref test-cases fetch` refreshes it after each successful fetch, even when the catalog
 metadata is unchanged. This repairs partial path maps and paths to old cache locations.
-The fetch command and provider integration tests check that every catalog row resolves
-to an existing file before running a diagnostic.
+The fetch, run and mint commands and the no-drift tests check that every catalog row
+resolves to an existing file before running a diagnostic.
 
 CI uses `ref test-cases fetch --strict`. It attempts all selected cases and returns a
 non-zero exit status if any cannot be resolved. It also rejects changes to catalog
@@ -304,14 +304,14 @@ catalog hash or dataset row order do not trigger this check.
 
 Provider test jobs set `REF_TEST_CASES_STRICT=true` so missing catalogs or committed
 baselines fail instead of becoming silent skips. Explicit `REF_TEST_CASES_SKIP`
-diagnostic exclusions still apply. Local test runs retain the default skip behavior.
+diagnostic exclusions still apply. Local test runs retain the default skip behaviour.
 
 The CMIP7 test cases for `transient-climate-response-emissions` and
 `zero-emission-commitment` are explicitly disabled in their test specifications.
 The current fetcher converts CMIP6 data and cannot supply the required `esm-flat10`
 and `esm-flat10-zec` experiments. CMIP6 cases and the diagnostics' CMIP7 support
 remain enabled. Restore the CMIP7 cases when valid experiment inputs and reviewed
-baselines are available; do not relabel CMIP6 experiments to stand in for them.
+baselines are available. Do not relabel CMIP6 experiments to stand in for them.
 
 #### Data Caching
 
@@ -326,12 +326,12 @@ The fetch command saves a catalog YAML file that records the paths to these file
 so subsequent test runs can locate the data without re-scanning directories.
 
 Cached CMIP7 conversions are checked for required metadata, their declared data variable,
-and readable time endpoints before reuse. Invalid files are rebuilt individually;
-valid cached files are retained. New conversions are written to a temporary file and
+and readable time endpoints before reuse. Invalid files are rebuilt individually.
+Valid cached files are retained. New conversions are written to a temporary file and
 renamed into place only after the write completes. Data fields use 64 MiB automatic
 chunks with a single-threaded writer to limit peak memory during compression.
-Ozone datasets remain lossless, including hybrid-coordinate coefficients and bounds;
-older quantized ozone conversions are rebuilt.
+Ozone datasets remain lossless, including hybrid-coordinate coefficients and bounds.
+Older quantised ozone conversions are rebuilt.
 
 /// Note | Using shared ESGF data (HPC/shared drives)
 

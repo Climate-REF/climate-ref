@@ -175,7 +175,7 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
 
     Returns True if successful, False otherwise.
     """
-    from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
+    from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml, validate_catalog_paths
 
     provider_slug = diag.provider.slug
     diagnostic_slug = diag.slug
@@ -213,6 +213,11 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
                 )
                 return False
             logger.info(f"Loading catalog from {paths.catalog}")
+            try:
+                validate_catalog_paths(paths.catalog, paths.catalog_paths)
+            except DatasetResolutionError as e:
+                logger.error(f"Catalog for {case_id} is not usable: {e}")
+                return False
             datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
 
         paths.create()

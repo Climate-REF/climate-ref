@@ -307,17 +307,17 @@ def create_no_drift_test(provider: DiagnosticProvider) -> Callable[..., None]:
 
         diagnostic.provider.configure(config)
 
-        unavailable = pytest.fail if env.bool("REF_TEST_CASES_STRICT", default=False) else pytest.skip
+        report_missing = pytest.fail if env.bool("REF_TEST_CASES_STRICT", default=False) else pytest.skip
         paths = TestCasePaths.from_diagnostic(diagnostic, test_case_name)
         if paths is None:
-            unavailable(f"No test-data directory for {diagnostic.slug} (not a development checkout)")
+            report_missing(f"No test-data directory for {diagnostic.slug} (not a development checkout)")
         if not paths.catalog.exists():
-            unavailable(
+            report_missing(
                 f"No catalog file for {diagnostic.slug}/{test_case_name}. "
                 f"Run `ref test-cases fetch --provider {provider.slug}` first."
             )
         if not paths.manifest.exists() or not paths.regression.exists():
-            unavailable(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
+            report_missing(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
 
         case_id = f"{diagnostic.provider.slug}/{diagnostic.slug}/{test_case_name}"
         with log_resources(case_id):

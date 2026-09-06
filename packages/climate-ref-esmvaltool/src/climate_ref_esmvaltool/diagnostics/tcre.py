@@ -153,9 +153,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            # CMIP7 integration case disabled until valid esm-flat10 inputs exist.
-            # CMIP7Request converts CMIP6 data; esm-1pctCO2 is not a substitute.
-            # Keep CMIP7 data requirements and recipe support for real inputs.
+            # No CMIP7 case: CMIP7Request converts CMIP6 data and cannot supply esm-flat10.
         )
     )
 

@@ -207,9 +207,7 @@ def _convert_file_to_cmip7(
     logger.info(f"Converting to CMIP7: {cmip6_path.name}")
 
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    # A non-chunked xarray NetCDF write materializes the complete source variable
-    # before compression. Some CMIP fields are several GiB, so keep both chunk size
-    # and write concurrency bounded during conversion.
+    # Some CMIP fields are several GiB, so bound chunk size and write concurrency.
     with dask.config.set({"array.chunk-size": "64MiB", "scheduler": "single-threaded"}):
         with xr.open_dataset(cmip6_path, decode_times=time_coder, chunks="auto") as ds:
             # When fabricating extended historical coverage, pad the series first so both the
@@ -243,16 +241,12 @@ def _convert_file_to_cmip7(
 
             try:
                 logger.info(f"Writing translated CMIP7 file: {output_file}")
-                # Xarray cannot infer a numeric dtype when CF-encoding a Dask-backed
-                # cftime bounds array. Time and bounds are tiny relative to climate
-                # fields, so materialize only these coordinates before the chunked write.
+                # Xarray cannot CF-encode a Dask-backed cftime bounds array.
                 _load_time_coordinates(ds_cmip7)
                 suppress_bounds_coordinates(ds_cmip7)
 
-                # Preserve the existing quantization for other test data. GPP and
-                # ozone concentrations are below its precision floor. Ozone also
-                # needs lossless hybrid-coordinate coefficients and bounds so the
-                # derived pressure levels remain valid.
+                # gpp and o3 magnitudes sit below the quantisation floor.
+                # Ozone also needs lossless hybrid-coordinate coefficients.
                 encoding: dict[str, dict[str, Any]] = {}
                 lossless_dataset = ds_cmip7.attrs.get("variable_id") == "o3"
                 for var in ds_cmip7.data_vars:

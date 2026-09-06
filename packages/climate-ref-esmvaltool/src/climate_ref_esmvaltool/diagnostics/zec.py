@@ -134,10 +134,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            # CMIP7 integration case disabled until valid esm-flat10 and
-            # esm-flat10-zec inputs exist. CMIP7Request only converts CMIP6 data;
-            # its branch experiments cannot substitute for these experiments.
-            # Keep CMIP7 data requirements and recipe support for real inputs.
+            # No CMIP7 case: CMIP7Request converts CMIP6 data and cannot supply esm-flat10-zec.
         )
     )
 

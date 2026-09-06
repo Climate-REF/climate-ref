@@ -201,7 +201,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
     """
     from climate_ref_core.regression.manifest import Manifest
     from climate_ref_core.regression.store import NativeStoreUnavailableError, build_native_store
-    from climate_ref_core.testing import load_datasets_from_yaml
+    from climate_ref_core.testing import load_datasets_from_yaml, validate_catalog_paths
 
     config: Config = ctx.obj.config
     console: Console = ctx.obj.console
@@ -265,6 +265,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
                     placeholders=placeholders,
                 )
             else:
+                validate_catalog_paths(paths.catalog, paths.catalog_paths)
                 datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
                 source = stage_execute(
                     config=config,

@@ -16,7 +16,6 @@ from climate_ref_core.testing import collect_test_case_params
 def test_flat10_cases_disabled_until_real_inputs_available(slug, expected_cases):
     """Exclude unsupported fetches and integration cases without removing CMIP7 support."""
     diagnostic = next(d for d in provider.diagnostics() if d.slug == slug)
-    # Fetch uses this specification; no CMIP7-to-CMIP6 experiment substitution is valid.
     assert diagnostic.test_data_spec is not None
     assert [case.name for case in diagnostic.test_data_spec.test_cases] == expected_cases
     for case in diagnostic.test_data_spec.test_cases:

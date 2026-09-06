@@ -366,6 +366,26 @@ class TestYamlSerialization:
         validate_catalog_paths(yaml_path, paths_file)
         assert len(yaml.safe_load(paths_file.read_text())) == 2
 
+    def test_validate_catalog_paths_accepts_empty_catalog_without_sidecar(self, tmp_path):
+        yaml_path = tmp_path / "catalog.yaml"
+        yaml_path.write_text("_metadata:\n  hash: abc123\n")
+
+        validate_catalog_paths(yaml_path, _paths_file(yaml_path))
+
+    def test_validate_catalog_paths_requires_sidecar_for_rows(self, tmp_path):
+        yaml_path = tmp_path / "catalog.yaml"
+        yaml_path.write_text(
+            """cmip6:
+  slug_column: instance_id
+  datasets:
+    - instance_id: CMIP6.test.one
+      filename: one.nc
+"""
+        )
+
+        with pytest.raises(DatasetResolutionError, match="Paths file is missing"):
+            validate_catalog_paths(yaml_path, _paths_file(yaml_path))
+
     @pytest.mark.parametrize("invalid_path", [None, 42, [], ""])
     def test_validate_catalog_paths_reports_all_problems(self, tmp_path, invalid_path):
         yaml_path = tmp_path / "catalog.yaml"

@@ -42,10 +42,10 @@ _THREAD_LIMIT_VARS = (
 # Without a default BLAS will take as many CPUs as available
 _DEFAULT_THREAD_LIMIT = "2"
 
-# pcmdi_metrics 4.2.1 chunks the variability-modes SVD, cutting its runtime by roughly 40x.
-# It goes on with --no-deps over the 3.9.2 conda pin, which cannot move until #906 is resolved.
-_PMP_VERSION = "v4.2.1"
-_PMP_URL = f"git+https://github.com/PCMDI/pcmdi_metrics.git@{_PMP_VERSION}"
+# enso_metrics 2.0.0 breaks the ENSO feedback metrics on partial calendar years (CLIVAR-PRP/ENSO_metrics#98).
+# The fix goes on with --no-deps over the conda pin until it is released.
+_ENSO_METRICS_COMMIT = "aaed1c51df4a29b7d7e5782cf820c0b41d12e6db"
+_ENSO_METRICS_URL = f"git+https://github.com/lewisjared/ENSO_metrics.git@{_ENSO_METRICS_COMMIT}"
 
 
 # Create the PMP diagnostics provider
@@ -143,7 +143,7 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
 
 
 provider = PMPDiagnosticProvider("PMP", __version__)
-provider.pip_packages = [_PMP_URL]
+provider.pip_packages = [_ENSO_METRICS_URL]
 
 
 # Annual cycle diagnostics and metrics

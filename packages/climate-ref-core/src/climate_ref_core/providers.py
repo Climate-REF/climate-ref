@@ -534,8 +534,9 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         Environment variables overriding the process environment
         for commands run in the conda environment.
     pip_packages
-        Pip packages to install (as URLs) with ``--no-deps``
+        Pip packages to install (as URLs) with ``--no-deps --force-reinstall``
         after creating the conda environment.
+        The reinstall is needed because pip skips a package whose version already exists in the environment.
 
     """
 
@@ -718,6 +719,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                     "pip",
                     "install",
                     "--no-deps",
+                    "--force-reinstall",
                     pkg,
                 ]
                 logger.debug(f"Running {' '.join(cmd)}")

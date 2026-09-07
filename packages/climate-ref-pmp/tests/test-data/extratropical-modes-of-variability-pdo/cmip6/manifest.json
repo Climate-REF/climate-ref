@@ -1,63 +1,63 @@
 {
   "catalog_hash": "0330309abd5f3802aeb1cde06164422c961c9195",
   "committed": {
-    "diagnostic.json": "2d6b023ec89c72caa6ee32218c37bc54ef3714982f77725f8b8c7491819db8ef",
+    "diagnostic.json": "df51545ea62029b829d94e1bf99969eadc791909b56bbf0acc8f046117a85547",
     "output.json": "a882dd976926ecf89e7fc7efbea9e0fd2ddd2280c45760a4cff284d6bbe73f62",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "diagnostic_version": 4,
   "native": {
     "EG_Spec_North_test_PDO_monthly_HadISST-1-1_1900-2005.png": {
-      "sha256": "b39032778d59e47a7c3269e66aed9aadab04c887de0c19de65317350df53fe19",
-      "size": 31168
+      "sha256": "fe3eee737b06fb5792da4881695dba97ca48d7ce6ad535bdd81e9936178536c3",
+      "size": 28458
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "ee96c3e82d9c6eadfdb040dc7c467bca68fc9ae6e5b47cf020cbdc68c70b1a23",
-      "size": 710422
+      "sha256": "cc8e96060a0a57da6415ba230ce8fbb3845429637a287d49b2f72eee42ba2dec",
+      "size": 710423
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "5937060c6d16466f116d2e08a728bb7db1e951013f73b106f40d1e7c2729548e",
-      "size": 87118
+      "sha256": "b84a85c193d98638565942ce3dc0c206583ac9be34eaa3c50ac32c5251706333",
+      "size": 64214
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "8ed3b841d28aa0456a12ed8426d682b5420f7ab7c5ea0df5f84ba26b6f405134",
-      "size": 710068
+      "sha256": "a9e2b14f2746731843fa20c475596eae4e49b7bb3dde195e05c71b7d8159c4b1",
+      "size": 710124
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
-      "sha256": "c1c80f45405e7d77ad4e16266e1fc126b6db5476152a76addb0f880c87e3f332",
-      "size": 87320
+      "sha256": "e2975a561febe81c313e98a4039fb692a412ec86117681b93428a489fb46b67b",
+      "size": 64142
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
-      "sha256": "4290755fc3abc3e9f3019121de183e9acb05ead0a70614069f40ed6c02d1c2dc",
-      "size": 223728
+      "sha256": "973be67c829b43ca809a4e22e59769e200c89dfa94ec3b883d1445f1a4290050",
+      "size": 191815
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
-      "sha256": "313b612ae6c8998d6c21ef02582e581c6ee2c740b35d6db0bdcfcebcda6e7f76",
-      "size": 124267
+      "sha256": "02e86620ea94047e359ecb05c91f30e3b3fba1c18b359cbb15f22f2f0c11a06e",
+      "size": 105716
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof1_compare_obs.png": {
-      "sha256": "7ad1cc92445348547136b3c7352e5d1d3341965c48441283298c2ad296db5d27",
-      "size": 224169
+      "sha256": "79ce86d398fb3e45025b8a2c5eb6a01514772a2ae3a63f3a60a9208682b2904f",
+      "size": 192629
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
-      "sha256": "2636a3440d9f02aa1a78fc8f46eaf2e9b2068b336432bec1959a59672c997cc2",
-      "size": 124341
+      "sha256": "4d58b34f91ce9b882ef132c42e521e25c91e95c2fe60935524fe5734414109a3",
+      "size": 105696
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005.nc": {
-      "sha256": "a60cb3510329745a22202d283865617b5a5f02d751dcf19ca9e9d061a6316e38",
-      "size": 1598768
+      "sha256": "61d7e5ccad3d72ea5aea951edb8f681a8f781f1f71b9fe58467c9531df1cab3e",
+      "size": 1598769
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005.png": {
-      "sha256": "516065727b67c2ddc90d247c3beed055928710d50a22f57aacb02ac49236fe5b",
-      "size": 81954
+      "sha256": "05dd3be240d0521162fd5ae82174b71745b5afaa6ff232236bc2a3c2dcfcb4fd",
+      "size": 62977
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005_teleconnection.png": {
-      "sha256": "ee31e852f53d44212c664a98fb4db13ff8dbba2cc9c2f5e6824ecb25fdf01a7f",
-      "size": 120774
+      "sha256": "ea34698b9c4b095b8644b68fdc2ed2795953cfd01805935a9fdf32afdddb1181",
+      "size": 101417
     },
     "diagnostic.json": {
-      "sha256": "60cc7670affe673dae448118c8dce181777e31ae485cb8362aefd11e192627bf",
-      "size": 3321
+      "sha256": "d5f600508930d8e82cd13d4a2229f438b04de9e57e4b8b52245194f328bf6e71",
+      "size": 3326
     },
     "output.json": {
       "sha256": "7b145b622831ea31ec4e2743579d02112d4b38b009e16bcebd9401033baa95d8",
@@ -68,10 +68,10 @@
       "size": 2
     },
     "var_mode_PDO_EOF1_stat_cmip6_historical_mo_atm_ACCESS-ESM1-5_r1i1p1f1_1900-2005_cmec.json": {
-      "sha256": "459266c5c95759e3b2b0ff596f330a04383908d191f26bc9f561e1211c60c68e",
-      "size": 4461
+      "sha256": "fd3361cd425a071275769837db90965f36d9883e1d3a9e39248cbc50283f3758",
+      "size": 4466
     }
   },
   "schema": 2,
-  "test_case_version": 5
+  "test_case_version": 6
 }

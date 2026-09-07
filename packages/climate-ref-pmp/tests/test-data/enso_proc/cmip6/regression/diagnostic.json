@@ -26,10 +26,14 @@
       "BiasSstLonRmse": {},
       "BiasTauxLonRmse": {},
       "EnsoAmpl": {},
+      "EnsoFbSshSst": {},
       "EnsoFbSstTaux": {},
+      "EnsoFbSstThf": {},
+      "EnsoFbTauxSsh": {},
       "EnsoSeasonality": {},
       "EnsoSstLonRmse": {},
-      "EnsoSstSkew": {}
+      "EnsoSstSkew": {},
+      "EnsodSstOce_2": {}
     },
     "mip_id": {
       "cmip6": {}
@@ -62,16 +66,16 @@
     "packages": {
       "PMP": "4.2.1",
       "PMPObs": "See 'References' key below, for detailed obs provenance information.",
-      "cdat_info": "8.2.1",
+      "cdat_info": null,
       "cdp": "1.7.0",
-      "esmf": "0.8.10",
-      "esmpy": "8.9.0",
-      "matplotlib": "3.10.6",
+      "esmf": "0.9.2",
+      "esmpy": "8.9.1",
+      "matplotlib": "3.11.1",
       "numpy": "2.0.2",
-      "python": "3.10.10",
-      "scipy": "1.15.2",
-      "xarray": "2025.6.1",
-      "xcdat": "0.10.0"
+      "python": "3.12.14",
+      "scipy": "1.18.0",
+      "xarray": "2026.7.0",
+      "xcdat": "0.11.3"
     },
     "platform": {
       "Name": "<HOSTNAME>",
@@ -88,32 +92,36 @@
             "gn": {
               "historical": {
                 "BiasSstLonRmse": {
-                  "HadISST": 0.5024881,
-                  "Tropflux": 0.5861183
+                  "HadISST": 0.5005937,
+                  "Tropflux": 0.5874834
                 },
                 "BiasTauxLonRmse": {
-                  "Tropflux": 7.546285
+                  "Tropflux": 7.612324
                 },
                 "EnsoAmpl": {
                   "HadISST": 4.523476,
                   "Tropflux": 11.96119
                 },
+                "EnsoFbSshSst": {},
                 "EnsoFbSstTaux": {
                   "HadISST_Tropflux": 72.75427,
                   "Tropflux_Tropflux": 71.91334
                 },
+                "EnsoFbSstThf": {},
+                "EnsoFbTauxSsh": {},
                 "EnsoSeasonality": {
-                  "HadISST": 32.72831,
-                  "Tropflux": 45.59915
+                  "HadISST": 36.56282,
+                  "Tropflux": 46.42257
                 },
                 "EnsoSstLonRmse": {
-                  "HadISST": 0.2041643,
-                  "Tropflux": 0.2053258
+                  "HadISST": 0.2034656,
+                  "Tropflux": 0.204581
                 },
                 "EnsoSstSkew": {
                   "HadISST": 217.1324,
                   "Tropflux": 223.0274
-                }
+                },
+                "EnsodSstOce_2": {}
               }
             }
           }

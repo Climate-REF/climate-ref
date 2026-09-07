@@ -9,13 +9,13 @@
 # To update a single package to the latest version compatible with the version constraints in the source:
 #     conda-lock lock  --lockfile conda-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
-#     conda-lock -f ../../../../../../Users/jared/code/climate-ref/climate-ref/.worktrees/pmp-fix/packages/climate-ref-pmp/src/climate_ref_pmp/requirements/environment.yml --lockfile conda-lock.yml
+#     conda-lock -f environment.yml --lockfile conda-lock.yml
 version: 1
 metadata:
   content_hash:
-    linux-64: 6fb5fb20ee7d530eed26d496f1eb65788cf037992aebfe059ef388c9ba8a7eb7
-    osx-64: 5be3205d99300314724984f21029c342cecb659725e03ce06716074860412ed8
-    osx-arm64: c1a2b26338ca0eb9b11aa12f3d008e27c56616414d7211feb5dcd46365aef3ef
+    linux-64: e1e96e888a1cc5584461141429039a720151a9777ea3065c69a0c74a1f6d00d8
+    osx-64: f272780557b5a896f8688c09dc8367d4240242a53b99f211a3b2bb9eb7da07aa
+    osx-arm64: c882ec90b181df33138d53af5fec9cb7393c3b9fc0cb57193ff68b89833fedb8
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -24,7 +24,7 @@ metadata:
   - osx-64
   - osx-arm64
   sources:
-  - ../../../../../../Users/jared/code/climate-ref/climate-ref/.worktrees/pmp-fix/packages/climate-ref-pmp/src/climate_ref_pmp/requirements/environment.yml
+  - environment.yml
 package:
 - name: _openmp_mutex
   version: '4.5'
@@ -11107,58 +11107,58 @@ package:
   category: main
   optional: false
 - name: numpy
-  version: 2.0.2
+  version: 2.5.3
   manager: conda
   platform: linux-64
   dependencies:
     __glibc: '>=2.17,<3.0.a0'
     libblas: '>=3.9.0,<4.0a0'
     libcblas: '>=3.9.0,<4.0a0'
-    libgcc: '>=13'
+    libgcc: '>=15'
     liblapack: '>=3.9.0,<4.0a0'
-    libstdcxx: '>=13'
-    python: '>=3.12,<3.13.0a0'
+    libstdcxx: '>=15'
+    python: ''
     python_abi: 3.12.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/numpy-2.0.2-py312h58c1407_1.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/numpy-2.5.3-py312he827f4e_0.conda
   hash:
-    md5: 46c8b5eb9925ef7c228fddd09078e16e
-    sha256: 02e095740ab89deae5a8563fe60823e375aa2b7234593704980f01caa16a3ded
+    md5: 5abf073f2cf066f2f3d28229b3cbe94d
+    sha256: 5b0e4c7757a2df883c5615a8f64bc4c113c4cd303ae6caa3ada5d397d114ce2a
   category: main
   optional: false
 - name: numpy
-  version: 2.0.2
+  version: 2.5.3
   manager: conda
   platform: osx-64
   dependencies:
-    __osx: '>=10.13'
+    __osx: '>=11.0'
     libblas: '>=3.9.0,<4.0a0'
     libcblas: '>=3.9.0,<4.0a0'
-    libcxx: '>=18'
+    libcxx: '>=21'
     liblapack: '>=3.9.0,<4.0a0'
-    python: '>=3.12,<3.13.0a0'
+    python: ''
     python_abi: 3.12.*
-  url: https://conda.anaconda.org/conda-forge/osx-64/numpy-2.0.2-py312hfc93d17_1.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/numpy-2.5.3-py312h66ee8b4_0.conda
   hash:
-    md5: 716d5eee22681698bf4463ca754e5a6c
-    sha256: 7e954718f7e560c796774d05c34cd8c0259ebdfad96aeb40adb767f98ce4d2ac
+    md5: 30b2d0e32aa01eac561bddd9b02437af
+    sha256: a5d0309845eb22552a5a29185525398ee450ba297804c7b87161c44e4e487c98
   category: main
   optional: false
 - name: numpy
-  version: 2.0.2
+  version: 2.5.3
   manager: conda
   platform: osx-arm64
   dependencies:
     __osx: '>=11.0'
     libblas: '>=3.9.0,<4.0a0'
     libcblas: '>=3.9.0,<4.0a0'
-    libcxx: '>=18'
+    libcxx: '>=21'
     liblapack: '>=3.9.0,<4.0a0'
-    python: '>=3.12,<3.13.0a0,>=3.12,<3.13.0a0'
+    python: ''
     python_abi: 3.12.*
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/numpy-2.0.2-py312h94ee1e1_1.conda
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/numpy-2.5.3-py312hff34920_0.conda
   hash:
-    md5: a58476ff56fb71e1c89e2ed972d66368
-    sha256: 533741cc6ff2b8379b9e04fdde92aa5c86665d1885964107e01359e40edeb639
+    md5: 6c950b1c9f19db9df914704508f3be20
+    sha256: 35088d35c23273076b9e2ba98e002ca5b765f743333a9889598cfd41d07b7eaa
   category: main
   optional: false
 - name: openjpeg

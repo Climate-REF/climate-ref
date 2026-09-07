@@ -1,7 +1,7 @@
 {
   "catalog_hash": "493c90454da6e604e600db5e28772a764812d0bf",
   "committed": {
-    "diagnostic.json": "ee6b83368c0c04f34e29e59ecdc9f7ef17dab192c75c7d589c6ad9de8239568d",
+    "diagnostic.json": "4bd5aae93a35e27850a914db7b334a6b47270406a267bbc00e70712e594a52a4",
     "output.json": "37f0eed421f73813e27df652aeab97a28a142adda89d3f5e26862b345c92168c",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
@@ -12,7 +12,7 @@
       "size": 28458
     },
     "PDO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "a9c8c72c285294ee5f115cbd59785c72fc7d6cfafe7511eb8f9f537e83864445",
+      "sha256": "74b00879b1a411aeccd612bddfaac8197879cf72e222d573b0438db959e22101",
       "size": 710423
     },
     "PDO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -20,7 +20,7 @@
       "size": 64216
     },
     "PDO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "829883c20d2fa5962d51e37515d58382c0235bab31df442fac9d059dc4d5c9c8",
+      "sha256": "4b58dc1f174a25b67f423603de2105790264c5be9c9354a351b2e85ab8de7617",
       "size": 710124
     },
     "PDO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
@@ -44,7 +44,7 @@
       "size": 105579
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005.nc": {
-      "sha256": "a8651b68ebafa7b4cc344c23ab60bcdceb3fe77cb9ef6859aad662a390349db9",
+      "sha256": "5cad8469635cc2ebd8610d784022e58119a4d2d0a02d8e179f8f76bbabddb342",
       "size": 1598769
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005.png": {
@@ -56,8 +56,8 @@
       "size": 101417
     },
     "diagnostic.json": {
-      "sha256": "a392ebf5b4c72cbe7b8d9c6ae37949f194bc025e9fb9b2c4eac6f8fbc52d7ce3",
-      "size": 3323
+      "sha256": "84369ae3a541943c0cef6a59da5db00e4f78923cc60289686055e099078590e5",
+      "size": 3320
     },
     "output.json": {
       "sha256": "584c6335e22ee817f21aaccfb8ebf5f90b1d3ad4cfa858a11c71ad0f67c9393d",
@@ -68,10 +68,10 @@
       "size": 2
     },
     "var_mode_PDO_EOF1_stat_cmip7_historical_mo_atm_ACCESS-ESM1-5_r1i1p1f1_1900-2005_cmec.json": {
-      "sha256": "0aa6bdeb19628f25508df16fea2d02898c8432c8d2ba46e005144ceeeef0a142",
-      "size": 4463
+      "sha256": "25ab4cbfad5f20a2b39f963ef306a46c5ddd4bc7e59e33574c43e4155dbbfe08",
+      "size": 4460
     }
   },
   "schema": 2,
-  "test_case_version": 6
+  "test_case_version": 7
 }

@@ -536,7 +536,6 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     pip_packages
         Pip packages to install (as URLs) with ``--no-deps --force-reinstall``
         after creating the conda environment.
-        The reinstall is needed because pip skips a package whose version already exists in the environment.
 
     """
 

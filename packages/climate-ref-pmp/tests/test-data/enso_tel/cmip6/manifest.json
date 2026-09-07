@@ -1,8 +1,8 @@
 {
   "catalog_hash": "1f93514a8c2d9a298cd7e59e12b221cb7d97d557",
   "committed": {
-    "diagnostic.json": "328e01c2261b54c11c62e414c6e48e7484aa1b79c387d318ad9ca2ffd2def2dc",
-    "output.json": "b0781a18d07b0b7029b95b52f06dafeef54bd7cad4fd2edf4f489ad2ffe93716",
+    "diagnostic.json": "c453de5617c83ac45002dacff0438e6066b9c50e7c692afd3e2bc8211fd2cdbd",
+    "output.json": "5db06db37cd6f1c07889d04d8eb09384ef05e62451bc68221a51843a300e73de",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "diagnostic_version": 3,
@@ -24,7 +24,7 @@
       "size": 51076
     },
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf.nc": {
-      "sha256": "98f8dcefa9220ddf7977c534e201f153710ec9eab72db06d79b0fd36b728dfad",
+      "sha256": "56c5111961b145319b2dbe36ca0b6d4d4648d21c47bd0d3830b98a2b3bb1252b",
       "size": 2632369
     },
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown01.png": {
@@ -76,7 +76,7 @@
       "size": 105352
     },
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja.nc": {
-      "sha256": "90b875eb3752edbff3340c888635d533ade56d969423bd0bbf919f4cf3570a32",
+      "sha256": "844789f2e8bd6eaee8b3a3341e3e66d19cee87bab526469ae8c077d13b361436",
       "size": 2632369
     },
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown01.png": {
@@ -172,15 +172,15 @@
       "size": 76897
     },
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json": {
-      "sha256": "c266ba8aa0ac64e92e64d3c7cccfeb9ff116603d52b0f3a29ad5754dc9c6aab6",
-      "size": 5753
+      "sha256": "029ca8f1ba1be378ffe0eed42040c15c3dda01c96a2b4ff2d9ae9a869dcc9ce7",
+      "size": 5752
     },
     "diagnostic.json": {
-      "sha256": "d0290043e3373be6701866cba1fbedad1ce19c3d02191ad9e2206c7e77e394bf",
-      "size": 3937
+      "sha256": "819c2f80a1ea0f226bbd05d00a70d1c24256fcf5d427f6d65dea90975909d4de",
+      "size": 3936
     },
     "output.json": {
-      "sha256": "944a3b68f0b1220164bf4d24989b0a6cc2ac05758f2a6643900386d10e72df92",
+      "sha256": "4e010363b1e33a045aa82d8ac62bf7f908da3cf0807e89675905da828d65566c",
       "size": 13755
     },
     "series.json": {
@@ -189,5 +189,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 6
+  "test_case_version": 7
 }

@@ -1,7 +1,7 @@
 {
   "catalog_hash": "493c90454da6e604e600db5e28772a764812d0bf",
   "committed": {
-    "diagnostic.json": "ce15ad383ebf484709dc907da53180c40eda9763d7537cd1f299a6b88b5649b1",
+    "diagnostic.json": "5c88f4748cc81f6f8abd6c4b8415552cce9e76237a5966f12f189019a7ec6db5",
     "output.json": "000fe71a4613185d864720121db10eaadb1a312e5e20199346421223a804999e",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
@@ -12,7 +12,7 @@
       "size": 28733
     },
     "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "0a9668d28c6d5d29286b38dfb4fe1748cea87de660c4e0951805b769ba176e36",
+      "sha256": "b51e779af164b0b0c9e2a4534527204b6e89c63232e2191a48a25cad071d13d6",
       "size": 710423
     },
     "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -24,7 +24,7 @@
       "size": 105855
     },
     "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "8eaa8d55fcef4747bd235419829bbb50df757feb0f5f4933dfac33e823b51f39",
+      "sha256": "688b38899f340fe2c5e23797d14c12789aaf76d01eefe030bb053afb5abd695e",
       "size": 710423
     },
     "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -32,7 +32,7 @@
       "size": 63482
     },
     "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "16e6785ea5890b4a65da9737c7af9d609b3295362f8b31aa07bb358f58b0e715",
+      "sha256": "52fda8259f1b4f524126dbddb2e21aba184165287fa4360d48e8231f0280b0ee",
       "size": 710124
     },
     "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
@@ -56,7 +56,7 @@
       "size": 104734
     },
     "NPGO_ts_EOF2_monthly_obs_1900-2005.nc": {
-      "sha256": "8f1a5dc504b4f948ab2e5cbef34ea492ba130152bbbbb2255696bab235faa4d1",
+      "sha256": "0173e2c507adaa51914008958d75fd860a2528421508bb90e3a58c00d07ff27e",
       "size": 1598769
     },
     "NPGO_ts_EOF2_monthly_obs_1900-2005.png": {
@@ -68,8 +68,8 @@
       "size": 98564
     },
     "diagnostic.json": {
-      "sha256": "8a42b4b531be5385d59389aaddc9a6cb29c58f73f1ecedf5899829dbf3531d9f",
-      "size": 4094
+      "sha256": "09366e57c2383e1dbba84cf4d8d200f0679a260f403cfe9614777e8857fb0883",
+      "size": 4091
     },
     "output.json": {
       "sha256": "7de120f14ae2e9f96a89ca159090f101049b60b10b78021c113d0689e225a731",
@@ -80,10 +80,10 @@
       "size": 2
     },
     "var_mode_NPGO_EOF2_stat_cmip7_historical_mo_atm_ACCESS-ESM1-5_r1i1p1f1_1900-2005_cmec.json": {
-      "sha256": "96dd30c72f1f15fe94771a5644cc67ec3cf9b1c937a308f8ee9ddf92b23b5f62",
-      "size": 5461
+      "sha256": "292c38977dfa6730d7cae921c682b779314989be13fda2903c72f37a72b524b6",
+      "size": 5460
     }
   },
   "schema": 2,
-  "test_case_version": 6
+  "test_case_version": 7
 }

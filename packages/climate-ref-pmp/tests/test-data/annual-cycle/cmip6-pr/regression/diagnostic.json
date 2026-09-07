@@ -62,7 +62,7 @@
   "DISCLAIMER": null,
   "NOTES": null,
   "PROVENANCE": {
-    "commandLine": "<SOFTWARE_ROOT_DIR>/conda/pmp-e313dcdc6cd70703483a917b67cd99fdd6009a67/bin/mean_climate_driver.py -p <SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars pr --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc --metrics_output_path <OUTPUT_DIR> --cmec",
+    "commandLine": "<SOFTWARE_ROOT_DIR>/conda/pmp-4cee84b26df88385789eba0b7cbeb9aaea9db748/bin/mean_climate_driver.py -p <SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars pr --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc --metrics_output_path <OUTPUT_DIR> --cmec",
     "conda": {
       "Platform": "<CONDA_PLATFORM>"
     },
@@ -82,7 +82,7 @@
       "esmf": "0.9.2",
       "esmpy": "8.9.1",
       "matplotlib": "3.11.1",
-      "numpy": "2.0.2",
+      "numpy": "2.5.3",
       "python": "3.12.14",
       "scipy": "1.18.0",
       "xarray": "2026.7.0",

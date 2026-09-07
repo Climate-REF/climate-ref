@@ -42,10 +42,10 @@ _THREAD_LIMIT_VARS = (
 # Without a default BLAS will take as many CPUs as available
 _DEFAULT_THREAD_LIMIT = "2"
 
-# A fork of pcmdi_metrics 4.2.0 that chunks the variability-modes SVD, cutting its runtime by roughly 40x.
+# pcmdi_metrics 4.2.1 chunks the variability-modes SVD, cutting its runtime by roughly 40x.
 # It goes on with --no-deps over the 3.9.2 conda pin, which cannot move until #906 is resolved.
-_PMP_COMMIT = "d0a79e54d02f89310852f9210dd3287e3e065e31"
-_PMP_URL = f"git+https://github.com/lewisjared/pcmdi_metrics.git@{_PMP_COMMIT}"
+_PMP_VERSION = "v4.2.1"
+_PMP_URL = f"git+https://github.com/PCMDI/pcmdi_metrics.git@{_PMP_VERSION}"
 
 
 # Create the PMP diagnostics provider

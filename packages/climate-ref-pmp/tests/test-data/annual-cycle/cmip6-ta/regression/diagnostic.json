@@ -66,7 +66,7 @@
   "DISCLAIMER": null,
   "NOTES": null,
   "PROVENANCE": {
-    "commandLine": "<SOFTWARE_ROOT_DIR>/conda/pmp-f692047a7ccec285251319436a981aa42bc50b96/bin/mean_climate_driver.py -p <SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ta-200 ta-850 --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc --metrics_output_path <OUTPUT_DIR> --cmec",
+    "commandLine": "<SOFTWARE_ROOT_DIR>/conda/pmp-6771c3ebec2c8d25d3917f131fd49961a928982d/bin/mean_climate_driver.py -p <SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ta-200 ta-850 --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc --metrics_output_path <OUTPUT_DIR> --cmec",
     "conda": {
       "Platform": "<CONDA_PLATFORM>"
     },
@@ -79,7 +79,7 @@
     },
     "osAccess": false,
     "packages": {
-      "PMP": "4.2.0",
+      "PMP": "4.2.1",
       "PMPObs": "See 'References' key below, for detailed obs provenance information.",
       "cdat_info": "8.2.1",
       "cdp": "1.7.0",

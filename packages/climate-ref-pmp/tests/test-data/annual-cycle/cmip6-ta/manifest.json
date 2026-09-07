@@ -1,19 +1,19 @@
 {
   "catalog_hash": "6a80523273aeb4691608f733c05c3589767043fc",
   "committed": {
-    "diagnostic.json": "614b20856a69b2b1c2bd856f696f16cead2dfe92d280f5105d14de2d6966b5b0",
-    "output.json": "c483cee2cba950e00be6ff244e57e243f60c92b944926fa63d8ca6503b0ef356",
+    "diagnostic.json": "326ad8e849b59a69db7f29224bd0576e77867db3e8ef72c4f4336e59b6aac8f2",
+    "output.json": "08a7f63551b95352d7fe48d2bdda2ef2c97117759c04b97ec194856176d2bbff",
     "series.json": "493623e9b3cbe328b718310828269f4fe1478508d35aa50875670f16eb3b803e"
   },
   "diagnostic_version": 6,
   "native": {
     "diagnostic.json": {
-      "sha256": "0dcac75781eb09ff83742729326678342c566579c75d801cc2ffd9f103de7839",
-      "size": 8965
+      "sha256": "eabe56b252261e178c09be8a7e48bed4cba7c03981112a99ce8b16e886c877bc",
+      "size": 8966
     },
     "output.json": {
-      "sha256": "b0f729271d5029da13c1e10fec7dc8ac1d5d970d63a2d3a0d2ad58f4e98d5d17",
-      "size": 4530
+      "sha256": "97dcd15daae87142ebb1b1e4a95f1d7e5368c6b101e1b395deba22096ba19f31",
+      "size": 4531
     },
     "series.json": {
       "sha256": "0238c6194f2c8b7ff6c6ce1748432c736a95157f50a339affc00847edaeea829",
@@ -40,34 +40,34 @@
       "size": 392173
     },
     "ta-200_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "7a6e0c672943ce91271e4c0dd085621f467e8f6ea3680e7e882321e79431ad15",
-      "size": 12608
+      "sha256": "a43a545d9ab41a9bc4f718a7817493d2d5b8cb8a2c2ff385199619a084c77e3b",
+      "size": 12609
     },
     "ta-850/ta-850_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
-      "sha256": "507136a027d56037ff9d94bb9cb0fcb1a2e8f42f6f848e8db56194cdb147e252",
-      "size": 373180
+      "sha256": "40f852a920a2395b2a7c2d3065211da647bd1eae5417d391330aea79eb82a5f2",
+      "size": 373812
     },
     "ta-850/ta-850_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png": {
-      "sha256": "5998c4d07ff6d058a83fd2c3443bbac2391cbb9f760623a0be5dd135b82a80ba",
-      "size": 393056
+      "sha256": "9dcd4e86c1077f7ac0a4ea76a120c8d9f2c64d3f1f90585117bf7d524e2dc37e",
+      "size": 393717
     },
     "ta-850/ta-850_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
-      "sha256": "6a1b08c9353302855706e917f1fdbb4c7e1a56bd735baee6f5bb0094ae1dc940",
-      "size": 393618
+      "sha256": "1f5cff26fdff6ff23c07cdf9ef288b89705e18302a574abe6fd75bf0a2dd6a21",
+      "size": 394268
     },
     "ta-850/ta-850_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
-      "sha256": "ec0d1710e7eda1f80c5a082fb30c05e110c13136b1d7bb14a40df3a61025825e",
-      "size": 387934
+      "sha256": "f533760be155624406f2a70a7234dcfa8bc74d02be720711a9187b0fdc8e1c56",
+      "size": 388292
     },
     "ta-850/ta-850_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png": {
-      "sha256": "82eca4312bf45e897116c5a404bb3e3b76f4f1d4b9ac1c489f6eeb9aac400ac2",
-      "size": 393173
+      "sha256": "ee5ab8e0f0ffe3e69d6a70e47c84e843a93e15d66f3cb70a9ec9d28da895c0fb",
+      "size": 393750
     },
     "ta-850_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "1316572be6f3d8fa1090a9a742c0d4e57b6e8cf0cebd7fb14f4e194df43dcc0a",
-      "size": 12595
+      "sha256": "2448c8019102a60f226a60e5b3f950ea62512fff98d5afa42871abf363160898",
+      "size": 12596
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

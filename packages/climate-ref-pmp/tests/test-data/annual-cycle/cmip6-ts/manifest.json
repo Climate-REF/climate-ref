@@ -1,19 +1,19 @@
 {
   "catalog_hash": "8fe7eddb18ede3fe8ed9689e02e4b11cf40da1ab",
   "committed": {
-    "diagnostic.json": "8d43c13c6d6086b1bd0eb2a7d2c28ab8943327176d684952f84e9ae295e87107",
-    "output.json": "bc45f5442058d6b7bca2a4379afde774b97d699115f64f591dc5ed0c49323274",
+    "diagnostic.json": "937dda5b168f848999e83be994ab0b2668ff6a1d1137fbd1b42f9cc6bb8c3990",
+    "output.json": "420033f9d5f5c225e3800397a4baea7ff7715ee1ed71d0296c240d7b8aae1c89",
     "series.json": "89cd652bc3c6694799e810f9682ab89ede1b3351a0d6f5ff75a22aa1f742bb5a"
   },
   "diagnostic_version": 6,
   "native": {
     "diagnostic.json": {
-      "sha256": "8b2ab001275dca97cff219fd7061e694ece1fc6fda4fb4592d5e89f0cb9e32c0",
-      "size": 5510
+      "sha256": "6969ed5157c7a164fe57e0defdde72f64328c5e2569b8f639b8d4506a76f0227",
+      "size": 5511
     },
     "output.json": {
-      "sha256": "5b1f946ac2bba76e2600ff33824e0703163ce30c3fccca3c18b0d1e4a3794f98",
-      "size": 2941
+      "sha256": "74a25a9c7b09426c7f6af400dff4a22489fb8a48b354f670aded6f19373c78f4",
+      "size": 2942
     },
     "series.json": {
       "sha256": "31c8522df1318cf31250ba3bf0fd0d0f9953db99735e4ea49ebc682f55d978e0",
@@ -40,10 +40,10 @@
       "size": 390554
     },
     "ts_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "4de03f2e5207759acda2100dbd18a6325cd3ed173cb7617d2f8b024ee1c13c22",
-      "size": 12561
+      "sha256": "e82d7eec1e89a87213bde38c191ce422866fd9f234dfde46dc3ef29982fb7198",
+      "size": 12562
     }
   },
   "schema": 2,
-  "test_case_version": 5
+  "test_case_version": 6
 }

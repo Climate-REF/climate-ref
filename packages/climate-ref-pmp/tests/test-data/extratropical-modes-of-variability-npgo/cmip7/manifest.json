@@ -1,5 +1,5 @@
 {
-  "catalog_hash": "f08a7aebd0f75f6aee658e536ee9de9f28317bba",
+  "catalog_hash": "493c90454da6e604e600db5e28772a764812d0bf",
   "committed": {
     "diagnostic.json": "74e44edd462c401930b1b9fcedd3a4d1129f40abeda6125199519d60a17978ff",
     "output.json": "000fe71a4613185d864720121db10eaadb1a312e5e20199346421223a804999e",
@@ -12,7 +12,7 @@
       "size": 31403
     },
     "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "b08ea47298ee8c24194849db20b47b13f3b8467040d730f963fb482d78a6f118",
+      "sha256": "abef4dd924960db04aec8694277986fb430e859605d5f895b51456de1ec83ad9",
       "size": 710422
     },
     "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -24,7 +24,7 @@
       "size": 124502
     },
     "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "0f2b210d5be5d3308a2b23e0f1ca795da33e5dbbb47d593db0098a1e111138b0",
+      "sha256": "ebb213ec0a5c1d701c387465cefe9e4c3acbadcbbee66f9f45b926e8a3be35fb",
       "size": 710422
     },
     "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -32,7 +32,7 @@
       "size": 87285
     },
     "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "d6316c2b5107b55c81e62f02f899ced9c51219e7999b22645acc0b66d9036fc7",
+      "sha256": "105977003645c335986cee86cb890157d36a5f4812e099dff17b81e47256e7d4",
       "size": 710123
     },
     "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
@@ -56,7 +56,7 @@
       "size": 124828
     },
     "NPGO_ts_EOF2_monthly_obs_1900-2005.nc": {
-      "sha256": "30c7c260da0c61cd578f847ada2629011c9fd7330c0b1135c3d2bbe4f16c4377",
+      "sha256": "287adb683992f9eefbbf5d801da28a2f35f5f94264fc22ea97b6714f6362553d",
       "size": 1598768
     },
     "NPGO_ts_EOF2_monthly_obs_1900-2005.png": {
@@ -85,5 +85,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 4
+  "test_case_version": 5
 }

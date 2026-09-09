@@ -4,6 +4,4 @@ channels:
 dependencies:
     - python=3.12
     - pcmdi_metrics=4.2.1
-    - enso_metrics=2.0.0
-    # Needed to apply enso_metrics fix
-    - pip
+    - enso_metrics=2.0.1

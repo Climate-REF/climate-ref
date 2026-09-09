@@ -21,6 +21,29 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.18.2 (2026-09-09)
+
+### Features
+
+- Added the monthly annual cycle values as series in the PMP annual cycle diagnostic.
+  Each region and statistic pair now produces a 12 point series indexed by month number,
+  with a `level` dimension for the 3D pressure-level variables. ([#901](https://github.com/Climate-REF/climate-ref/pull/901))
+
+### Bug Fixes
+
+- Updated the PMP conda environment to `pcmdi_metrics` 4.2.1, `enso_metrics` 2.0.1 and Python 3.12.
+  The extratropical modes of variability diagnostics now run roughly 40x faster
+  because the variability modes analysis chunks its SVD (singular value decomposition).
+  `enso_metrics` 2.0.1 fixes the ENSO feedback metrics on partial calendar years (CLIVAR-PRP/ENSO_metrics#98). ([#901](https://github.com/Climate-REF/climate-ref/pull/901))
+- Fixed integration tests silently passing when test-case data was missing or stale.
+  `ref test-cases fetch --strict` now fails if any catalog cannot be resolved,
+  and cached CMIP7 conversions are validated and rebuilt when broken.
+  Added a CMIP7 test case for the ozone diagnostic. ([#925](https://github.com/Climate-REF/climate-ref/pull/925))
+- Pinned the PMP annual cycle and modes of variability CMIP6 requirements to the `Amon` table.
+  Previously monthly variables published under other tables, such as `Emon` or `AERmonZ`,
+  were included in the same execution and the diagnostic failed to find its input files. ([#926](https://github.com/Climate-REF/climate-ref/pull/926))
+
+
 ## climate-ref 0.18.1 (2026-09-04)
 
 ### Improvements

@@ -128,15 +128,15 @@
       "size": 54720
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json": {
-      "sha256": "2bb7ea5bca9ddb6a884c7c7670444eb121e543df8d1f1b53e9991f64349bab66",
+      "sha256": "3e7b20f9aa6d09f48b27aee058d382c8e44d66bc966e2575b5bc682f1ae72802",
       "size": 8762
     },
     "diagnostic.json": {
-      "sha256": "036e43f9bace1bee6ab840446b9b19aab774e2163dae65f575eef19f3c9dd397",
+      "sha256": "fefb53fa4d7564c75352dfffdcc1bc8c10c2440d26b0b0753aa11bcc25204f01",
       "size": 3421
     },
     "output.json": {
-      "sha256": "b2c0f83dd769c150192666fec278f75fae9c3a507e2448154bdcc2493dc6b946",
+      "sha256": "e411048b1254d932d0f782a076206463cb1df03a4ee3ad4d1f0bf9dd6381c205",
       "size": 10372
     },
     "series.json": {
@@ -145,5 +145,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 7
+  "test_case_version": 8
 }

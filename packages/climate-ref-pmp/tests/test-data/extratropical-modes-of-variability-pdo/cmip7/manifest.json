@@ -12,7 +12,7 @@
       "size": 28458
     },
     "PDO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "74b00879b1a411aeccd612bddfaac8197879cf72e222d573b0438db959e22101",
+      "sha256": "cd1e7be2571c58aad02f3f3d580c71d0f8e987cb2ca33f44fc833d82dc864cf4",
       "size": 710423
     },
     "PDO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
@@ -20,7 +20,7 @@
       "size": 64216
     },
     "PDO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "4b58dc1f174a25b67f423603de2105790264c5be9c9354a351b2e85ab8de7617",
+      "sha256": "bcb8ca29bdcfdadd655d06fd3d5398f5b043323b16a90824e3d4def0b4cdeed4",
       "size": 710124
     },
     "PDO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
@@ -44,7 +44,7 @@
       "size": 105579
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005.nc": {
-      "sha256": "5cad8469635cc2ebd8610d784022e58119a4d2d0a02d8e179f8f76bbabddb342",
+      "sha256": "253a0585f8c1f8b3affd4c6e8d9ec913d64426199512ad92967868b74fc6d86b",
       "size": 1598769
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005.png": {
@@ -73,5 +73,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 7
+  "test_case_version": 8
 }

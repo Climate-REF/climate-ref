@@ -172,15 +172,15 @@
       "size": 76897
     },
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json": {
-      "sha256": "b138004c767aec380b21df915f06e3a806392babc4478d29d7d35f1daaacd30d",
+      "sha256": "8f0abc10fc21669dc56b3ba5fda1440a046617f9838aca05e16398ce54b001fe",
       "size": 5760
     },
     "diagnostic.json": {
-      "sha256": "383d97040b3eecbc7fd5c8cffe1beac7206607e3f0f2fe017b15ae26c1fb117f",
+      "sha256": "24fbf70639a6056bf32cabf2a3430f9059ebc026686ca52f75706fb6c9e9a739",
       "size": 3944
     },
     "output.json": {
-      "sha256": "725a4d01277496ed16c0a3efc622f806c53fd58a56e376eab8277134badea582",
+      "sha256": "2aebee913f9e9c7777000d93068a1f02aaf8e8972194da3a882e86eba3333b50",
       "size": 13755
     },
     "series.json": {
@@ -189,5 +189,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 7
+  "test_case_version": 8
 }

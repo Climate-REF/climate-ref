@@ -1,11 +1,11 @@
 _metadata:
-  hash: a0d4fb8b825319f85055f6cb440e6accec4b1424
+  hash: 143d838bb28afc890f7a6997976326764655a836
 obs4mips:
   slug_column: instance_id
   selector:
-    activity_id: obs4REF
+    activity_id: obs4MIPs
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2017-07-16 12:00:00'
     filename: hfls_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
@@ -28,7 +28,7 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2017-07-16 12:00:00'
     filename: hfss_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
@@ -51,7 +51,7 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2017-07-16 12:00:00'
     filename: tauu_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
@@ -74,7 +74,7 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2017-07-15 12:00:00'
     filename: ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
@@ -97,7 +97,7 @@ obs4mips:
     variant_label: PCMDI
     version: v20210727
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2025-01-16 12:00:00'
     filename: ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc
     finalised: true
@@ -120,7 +120,7 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2023-09-16 00:00:00'
     filename: rlds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
     finalised: true
@@ -143,7 +143,7 @@ obs4mips:
     variant_label: RSS
     version: v20230209
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2023-09-16 00:00:00'
     filename: rlus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
     finalised: true
@@ -166,7 +166,7 @@ obs4mips:
     variant_label: RSS
     version: v20230209
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2023-09-16 00:00:00'
     filename: rsds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
     finalised: true
@@ -189,7 +189,7 @@ obs4mips:
     variant_label: RSS
     version: v20230209
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2023-09-16 00:00:00'
     filename: rsus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
     finalised: true

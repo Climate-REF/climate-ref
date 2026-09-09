@@ -40,7 +40,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     ts_modes = ("PDO", "NPGO", "AMO")
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
-    version = 3
+    version = 4
 
     facets = (
         "kind",

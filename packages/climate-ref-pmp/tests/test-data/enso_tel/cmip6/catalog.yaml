@@ -1,11 +1,11 @@
 _metadata:
-  hash: ca7dd5b245c639e149d52467e6f2ec79899f665a
+  hash: 1f93514a8c2d9a298cd7e59e12b221cb7d97d557
 obs4mips:
   slug_column: instance_id
   selector:
-    activity_id: obs4REF
+    activity_id: obs4MIPs
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2017-07-15 12:00:00'
     filename: ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
@@ -28,7 +28,7 @@ obs4mips:
     variant_label: PCMDI
     version: v20210727
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2025-01-16 12:00:00'
     filename: ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc
     finalised: true
@@ -51,7 +51,7 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2023-03-16 12:00:00'
     filename: pr_mon_GPCP-Monthly-3-2_RSS_gn_198301-202303.nc
     finalised: true

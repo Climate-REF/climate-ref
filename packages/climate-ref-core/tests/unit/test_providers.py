@@ -494,7 +494,11 @@ class TestCondaDiagnosticProvider:
 
         pip_install_calls = [c for c in run.call_args_list if "pip" in c.args[0]]
         assert len(pip_install_calls) == 2
-        assert pip_install_calls[0].args[0][-1] == "git+https://example.com/tool.git@abc123"
+        assert pip_install_calls[0].args[0][-3:] == [
+            "--no-deps",
+            "--force-reinstall",
+            "git+https://example.com/tool.git@abc123",
+        ]
         assert pip_install_calls[1].args[0][-1] == "git+https://example.com/core.git@def456"
 
     def test_skip_create_env(self, mocker, caplog, provider):

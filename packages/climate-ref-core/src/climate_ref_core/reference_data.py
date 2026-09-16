@@ -141,21 +141,14 @@ def source_ids_by_registry(
         parser = _registry_key_parser(entry.source_type)
         if parser is None:
             continue
-        # obs4REF data is ingested under the obs4MIPs source type, so a registry declaring
-        # obs4REF supplies requirements written against either.
-        source_types = {entry.source_type.value}
-        if entry.source_type is SourceDatasetType.obs4REF:
-            source_types.add(SourceDatasetType.obs4MIPs.value)
-
         for key in entry.registry.registry:
             metadata: Mapping[str, Any] = parser(key)
             source_id = metadata.get("source_id")
             if not source_id:
                 continue
-            for source_type in source_types:
-                names = found[(source_type, source_id)]
-                if name not in names:
-                    names.append(name)
+            names = found[(entry.source_type.value, source_id)]
+            if name not in names:
+                names.append(name)
     return dict(found)
 
 
@@ -182,6 +175,8 @@ def collect_required_reference_data(
 
     variables: dict[tuple[str, str], set[str]] = defaultdict(set)
     diagnostics: dict[tuple[str, str], set[DiagnosticReference]] = defaultdict(set)
+    # Source types a requirement may be met from, its own first
+    suppliers: dict[tuple[str, str], list[str]] = defaultdict(list)
 
     for provider in providers:
         for diagnostic in summarize_provider(provider).diagnostics:
@@ -198,11 +193,20 @@ def collect_required_reference_data(
                         key = (requirement.source_type, source_id)
                         variables[key].update(requirement.variables)
                         diagnostics[key].add(reference)
+                        for source_type in (requirement.source_type, *requirement.fallback_source_types):
+                            if source_type not in suppliers[key]:
+                                suppliers[key].append(source_type)
 
     datasets = []
     for (source_type, source_id), variable_ids in variables.items():
-        registry_names = registry_of.get((source_type, source_id), [])
-        registry_name = registry_names[0] if registry_names else None
+        registry_name = next(
+            (
+                registry_of[(supplier, source_id)][0]
+                for supplier in suppliers[(source_type, source_id)]
+                if registry_of.get((supplier, source_id))
+            ),
+            None,
+        )
         datasets.append(
             ReferenceDataset(
                 source_type=source_type,

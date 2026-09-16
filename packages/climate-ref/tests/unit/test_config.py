@@ -226,6 +226,11 @@ filename = "sqlite://climate_ref.db"
                 "bucket": "ref-baselines-public",
                 "cache_dir": str(resolve_cache_dir("native-baselines")),
             },
+            "report_store": {
+                "url": "https://reports.baselines.climate-ref.org",
+                "s3_endpoint_url": "https://2aa5172b2bba093c516027d6fa13cdc8.r2.cloudflarestorage.com",
+                "bucket": "ref-baselines-reports",
+            },
             "paths": {
                 "log": f"{default_path}/log",
                 "results": f"{default_path}/results",
@@ -255,6 +260,19 @@ filename = "sqlite://climate_ref.db"
         assert config_new.paths.log == Path("/my/test/logs")
         assert config_new.paths.results == Path("/my/test/executions")
         assert config_new.cmip6_parser == "drs"
+
+    def test_report_store_defaults(self, config):
+        assert config.report_store.url == "https://reports.baselines.climate-ref.org"
+        assert config.report_store.bucket == "ref-baselines-reports"
+
+    def test_report_store_from_env_variables(self, monkeypatch, config):
+        monkeypatch.setenv("REF_REPORT_STORE_URL", "file:///tmp/ref-reports")
+        monkeypatch.setenv("REF_REPORT_STORE_BUCKET", "staging-reports")
+
+        config_new = config.refresh()
+
+        assert config_new.report_store.url == "file:///tmp/ref-reports"
+        assert config_new.report_store.bucket == "staging-reports"
 
     def test_measure_resources_defaults_on(self, config):
         assert config.executor.measure_resources is True

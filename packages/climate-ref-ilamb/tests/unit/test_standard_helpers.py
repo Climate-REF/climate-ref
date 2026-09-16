@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
-from climate_ref_ilamb import standard
+from climate_ref_ilamb import provider, standard
 from climate_ref_ilamb.standard import (
     ILAMBStandard,
     _build_cmec_bundle,
@@ -20,6 +20,7 @@ from climate_ref_ilamb.standard import (
     _set_ilamb3_options,
 )
 from ilamb3.dataset import coarsen_dataset, convert
+from ilamb3.run import find_related_variables, setup_transforms
 from ilamb3.transform.amoc import msftmz_to_rapid
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
@@ -231,6 +232,32 @@ class TestMsftmzToRapid:
         off_section = convert(ds["msftmz"].sel(lat=20.0).max("depth"), "Sv", "msftmz")
         assert not np.allclose(amoc.values, off_section.values)
 
+    def test_accepts_cmip7_msftm_name(self):
+        ds = self._dataset(with_basin=True).rename(msftmz="msftm")
+        transform = ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"]()
+
+        assert transform.required_variables() == ["msftmz", "msftm"]
+        result = transform(ds)
+
+        assert "amoc" in result
+        assert "msftm" not in result
+
+    def test_ilamb_pipeline_filter_keeps_cmip7_msftm(self):
+        """Exercise the same variable filtering used by ``run_single_block``."""
+        transforms = setup_transforms({"transforms": ["climate_ref_msftmz_to_rapid"]})
+        related_vars = [
+            *find_related_variables({}, transforms, []),
+            "areacella",
+            "sftlf",
+            "areacello",
+            "sftof",
+        ]
+        comparison_data = pd.DataFrame({"variable_id": ["msftm", "areacello", "sftof", "unrelated"]})
+
+        filtered = comparison_data[comparison_data["variable_id"].isin(related_vars)]
+
+        assert filtered["variable_id"].tolist() == ["msftm", "areacello", "sftof"]
+
 
 class TestCleanUnits:
     @pytest.mark.parametrize(
@@ -384,6 +411,19 @@ class TestVersionOverride:
         )
 
         assert diagnostic.version == ILAMBStandard.version
+
+
+class TestCmip7VariableRequirements:
+    def test_uses_dreq_variable_id_without_changing_cmip6(self):
+        diagnostic = next(
+            diagnostic for diagnostic in provider.diagnostics() if diagnostic.slug == "amoc-rapid"
+        )
+
+        cmip6_requirement = diagnostic.data_requirements[0][0]
+        cmip7_requirement = diagnostic.data_requirements[1][0]
+
+        assert cmip6_requirement.constraints[0].required_facets == ("amoc", "msftmz")
+        assert cmip7_requirement.constraints[0].required_facets == ("amoc", "msftm")
 
 
 class TestRealmMaskDecoupling:

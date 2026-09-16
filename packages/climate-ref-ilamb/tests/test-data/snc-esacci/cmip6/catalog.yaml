@@ -1,5 +1,5 @@
 _metadata:
-  hash: 4e68d6a28d3de27f21f041b3ed800466c2c8aced
+  hash: 472aa8a681181bdd879307194cfd4702d24fc5d8
 cmip6:
   slug_column: instance_id
   selector:
@@ -143,7 +143,7 @@ obs4mips:
     frequency: mon
     grid: 0.5x0.5 degree
     grid_label: gn
-    instance_id: obs4REF.ESACCI.CCI-CryoClim-FSC-1.mon.snc.gn.v20250519
+    instance_id: obs4REF.obs4REF.ESACCI.CCI-CryoClim-FSC-1.mon.snc.0.5x0.5degree.gn.v20250519
     institution_id: ESACCI
     long_name: Fractional Snow Cover
     nominal_resolution: 0.5x0.5 degree

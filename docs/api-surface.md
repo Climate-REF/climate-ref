@@ -34,6 +34,7 @@ The primary module providers interact with.
 - Override `Diagnostic.build_execution_result(definition) -> ExecutionResult`
 - Set `Diagnostic.data_requirements`, `facets`, `slug`, `name`
 - Set `Diagnostic.test_data_spec` for test case support
+- Set `DataRequirement.fallback_source_types` to name the collections that may supply a requirement
 
 ---
 

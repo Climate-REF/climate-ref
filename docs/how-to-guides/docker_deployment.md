@@ -43,7 +43,7 @@ These data can be ingested into the REF using the following commands (note that 
 
 ```bash
 docker-compose run --rm climate-ref datasets ingest --source-type cmip6 /ref/data/CMIP6
-docker-compose run --rm climate-ref datasets ingest --source-type obs4mips /ref/data/obs4ref
+docker-compose run --rm climate-ref datasets ingest --source-type obs4ref /ref/data/obs4ref
 ```
 
 After the data has been ingested, the REF can be run using the following command.

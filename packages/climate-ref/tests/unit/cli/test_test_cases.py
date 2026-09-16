@@ -15,6 +15,7 @@ from climate_ref.cli.test_cases import (
     _pin_requests_to_catalog,
     _solve_test_case,
 )
+from climate_ref.cli.test_cases.discovery import _catalog_content
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.exceptions import (
@@ -424,6 +425,237 @@ class TestFetchTestDataCommand:
         assert result.exit_code == 0
         assert fetch_mock.call_count == 2
 
+    def test_fetch_strict_fails_after_processing_all_cases(self, invoke_cli, mocker):
+        """--strict reports failure only after attempting the remaining cases."""
+        tc_bad = MagicMock(description="bad", requests=[MagicMock()])
+        tc_bad.name = "bad"
+        tc_good = MagicMock(description="good", requests=[MagicMock()])
+        tc_good.name = "good"
+        mock_diag = MagicMock(
+            slug="test-diag",
+            test_data_spec=MagicMock(test_cases=[tc_bad, tc_good]),
+        )
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+        fetch_mock = mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog",
+            side_effect=[DatasetResolutionError("bad input"), (MagicMock(), True)],
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic",
+            return_value=None,
+        )
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"], expected_exit_code=1)
+
+        assert fetch_mock.call_count == 2
+        assert "example/test-diag/bad" in result.stderr
+
+    def test_fetch_strict_rejects_changed_catalog(self, invoke_cli, mocker, tmp_path):
+        """A catalog changed in one CI job cannot be consumed by a fresh checkout."""
+        tc = MagicMock(description="test", requests=[MagicMock()])
+        tc.name = "default"
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        catalog = tmp_path / "catalog.yaml"
+        catalog.write_text("cmip6:\n  datasets:\n    - instance_id: old\n")
+        paths = MagicMock(catalog=catalog, catalog_paths=tmp_path / "paths.yaml")
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic",
+            return_value=paths,
+        )
+
+        def replace_catalog(*args, **kwargs):
+            catalog.write_text("cmip6:\n  datasets:\n    - instance_id: new\n")
+            return MagicMock(), True
+
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog",
+            side_effect=replace_catalog,
+        )
+        mocker.patch("climate_ref.cli.test_cases.discovery.validate_catalog_paths")
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"], expected_exit_code=1)
+
+        assert "Catalog metadata is new or changed after fetch" in result.stderr
+
+    def test_fetch_strict_force_accepts_unchanged_catalog(self, invoke_cli, mocker, tmp_path):
+        """--force rewriting identical catalog content is not metadata drift."""
+        tc = MagicMock(description="test", requests=[MagicMock()])
+        tc.name = "default"
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        catalog = tmp_path / "catalog.yaml"
+        catalog.write_text("_metadata:\n  hash: old\ncmip6:\n  datasets: []\n")
+        paths = MagicMock(catalog=catalog, catalog_paths=tmp_path / "paths.yaml")
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic",
+            return_value=paths,
+        )
+
+        def update_hash_only(*args, **kwargs):
+            catalog.write_text("_metadata:\n  hash: new\ncmip6:\n  datasets: []\n")
+            return MagicMock(), True
+
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog",
+            side_effect=update_hash_only,
+        )
+        mocker.patch("climate_ref.cli.test_cases.discovery.validate_catalog_paths")
+
+        result = invoke_cli(["test-cases", "fetch", "--strict", "--force"])
+
+        assert result.exit_code == 0
+
+    @pytest.mark.parametrize("changed_field", ["variable_id", "filename", "selector"])
+    def test_catalog_content_ignores_only_volatile_tracking_id(self, tmp_path, changed_field):
+        catalog = tmp_path / "catalog.yaml"
+        catalog.write_text(
+            """cmip7:
+  selector:
+    experiment_id: historical
+  datasets:
+    - filename: tas.nc
+      tracking_id: hdl:21.14107/old
+      variable_id: tas
+"""
+        )
+        expected = _catalog_content(catalog)
+
+        if changed_field == "selector":
+            replacement = "experiment_id: piControl"
+            catalog.write_text(catalog.read_text().replace("experiment_id: historical", replacement))
+        else:
+            old, new = (
+                ("variable_id: tas", "variable_id: pr")
+                if changed_field == "variable_id"
+                else (
+                    "filename: tas.nc",
+                    "filename: pr.nc",
+                )
+            )
+            catalog.write_text(catalog.read_text().replace(old, new))
+        assert _catalog_content(catalog) != expected
+
+        catalog.write_text(catalog.read_text().replace("hdl:21.14107/old", "hdl:21.14107/new"))
+        assert _catalog_content(catalog) != expected
+
+    def test_catalog_content_ignores_tracking_id_change(self, tmp_path):
+        catalog = tmp_path / "catalog.yaml"
+        catalog.write_text("cmip7:\n  datasets:\n    - tracking_id: old\n      variable_id: tas\n")
+        expected = _catalog_content(catalog)
+
+        catalog.write_text("cmip7:\n  datasets:\n    - tracking_id: new\n      variable_id: tas\n")
+
+        assert _catalog_content(catalog) == expected
+
+    def test_fetch_strict_aggregates_catalog_parse_failure(self, invoke_cli, mocker, tmp_path):
+        test_cases = [
+            MagicMock(name="bad", requests=[MagicMock()]),
+            MagicMock(name="good", requests=[MagicMock()]),
+        ]
+        test_cases[0].name = "bad"
+        test_cases[1].name = "good"
+        diagnostic = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=test_cases))
+        diagnostic.provider = MagicMock(slug="example")
+        provider = MagicMock(slug="example")
+        provider.diagnostics.return_value = [diagnostic]
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[provider]),
+        )
+        catalogs = [tmp_path / "bad.yaml", tmp_path / "good.yaml"]
+        for catalog in catalogs:
+            catalog.write_text("cmip6:\n  datasets: []\n")
+        paths = [
+            MagicMock(catalog=catalog, catalog_paths=tmp_path / f"{catalog.stem}.paths.yaml")
+            for catalog in catalogs
+        ]
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", side_effect=paths)
+
+        def fetch_case(*args, **kwargs):
+            if fetch.call_count == 1:
+                catalogs[0].write_text("cmip6: [")
+            return MagicMock(), True
+
+        fetch = mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog", side_effect=fetch_case
+        )
+        mocker.patch("climate_ref.cli.test_cases.discovery.validate_catalog_paths")
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"], expected_exit_code=1)
+
+        assert fetch.call_count == 2
+        assert "example/test-diag/bad" in result.stderr
+
+    def test_fetch_strict_fails_for_requestless_case_without_catalog(self, invoke_cli, mocker):
+        tc = MagicMock(description="test", requests=None)
+        tc.name = "default"
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic",
+            return_value=None,
+        )
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"], expected_exit_code=1)
+
+        assert "no fetch requests and no committed catalog" in result.stderr
+
+    def test_fetch_strict_only_missing_validates_skipped_catalog(self, invoke_cli, mocker, tmp_path):
+        """Strict mode checks cached sidecars before --only-missing skips ESGF work."""
+        tc = MagicMock(description="test", requests=[MagicMock()])
+        tc.name = "default"
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        catalog = tmp_path / "catalog.yaml"
+        catalog.touch()
+        paths = MagicMock(catalog=catalog, catalog_paths=tmp_path / "missing-paths.yaml")
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic",
+            return_value=paths,
+        )
+        validate = mocker.patch(
+            "climate_ref.cli.test_cases.discovery.validate_catalog_paths",
+            side_effect=DatasetResolutionError("paths missing"),
+        )
+        fetch = mocker.patch("climate_ref.cli.test_cases.discovery._fetch_and_build_catalog")
+
+        result = invoke_cli(["test-cases", "fetch", "--strict", "--only-missing"], expected_exit_code=1)
+
+        validate.assert_called_once_with(catalog, paths.catalog_paths)
+        fetch.assert_not_called()
+        assert "Existing catalog is not usable" in result.stderr
+
     def test_fetch_existing_catalog_explains_refresh(self, invoke_cli, mocker, tmp_path):
         """Existing catalogs are refreshed by default, with a pointer to --only-missing."""
         mock_tc = MagicMock(description="test", requests=[MagicMock()])
@@ -450,6 +682,7 @@ class TestFetchTestDataCommand:
             "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog",
             return_value=(MagicMock(), False),
         )
+        mocker.patch("climate_ref.cli.test_cases.discovery.validate_catalog_paths")
 
         result = invoke_cli(["test-cases", "fetch", "--provider", "example"])
 
@@ -485,6 +718,7 @@ class TestFetchTestDataCommand:
         result = invoke_cli(["test-cases", "fetch", "--provider", "example", "--only-missing"])
 
         assert result.exit_code == 0
+        assert "Skipping test case: default (catalog exists)" in result.stderr
         fetch_mock.assert_not_called()
 
 
@@ -2870,6 +3104,187 @@ class TestCIGateCommand:
         result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
         assert result.exit_code == 1
         assert "fail" in result.output
+
+
+class TestDiff:
+    """``ref test-cases diff`` writes a local HTML report."""
+
+    def test_no_changes_still_writes_an_index(self, invoke_cli, mocker, tmp_path):
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        out = tmp_path / "out"
+        invoke_cli(["test-cases", "diff", "--html-dir", str(out), "--no-fetch"])
+
+        assert (out / "index.html").exists()
+        assert "No baseline manifests changed" in (out / "index.html").read_text()
+
+    def test_outside_a_repository_exits_one(self, invoke_cli, mocker, tmp_path):
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=None)
+
+        invoke_cli(
+            ["test-cases", "diff", "--html-dir", str(tmp_path / "out"), "--no-fetch"],
+            expected_exit_code=1,
+        )
+
+    def test_a_changed_case_gets_a_page(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest, NativeEntry
+
+        rel_path = "packages/climate-ref-example/tests/test-data/diag/case/manifest.json"
+        manifest_path = tmp_path / rel_path
+        manifest_path.parent.mkdir(parents=True)
+        Manifest(
+            schema=SCHEMA_VERSION,
+            test_case_version=4,
+            diagnostic_version=1,
+            committed={},
+            native={"plot.png": NativeEntry(sha256="b" * 64, size=20)},
+        ).dump(manifest_path)
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = rel_path
+        repo.git.show.return_value = json.dumps(
+            {
+                "schema": SCHEMA_VERSION,
+                "test_case_version": 3,
+                "diagnostic_version": 1,
+                "committed": {},
+                "native": {"plot.png": {"sha256": "a" * 64, "size": 10}},
+            }
+        )
+        repo.head.commit.hexsha = "c" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        out = tmp_path / "out"
+        invoke_cli(["test-cases", "diff", "--html-dir", str(out), "--no-fetch"])
+
+        page = out / "example" / "diag" / "case" / "index.html"
+        assert page.exists()
+        assert page.read_text().count("<img") == 2
+        assert "example/diag/case/index.html" in (out / "index.html").read_text()
+
+    def test_upload_writes_the_report_and_the_comment(self, invoke_cli, mocker, tmp_path, monkeypatch):
+        reports = tmp_path / "reports"
+        monkeypatch.setenv("REF_REPORT_STORE_URL", str(reports))
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        comment = tmp_path / "comment.md"
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(tmp_path / "out"),
+                "--no-fetch",
+                "--upload",
+                "912/abc",
+                "--comment-output",
+                str(comment),
+            ]
+        )
+
+        assert (reports / "912" / "abc" / "index.html").exists()
+        assert comment.read_text().count("<!-- climate-ref-baseline-diff -->") == 1
+
+    def test_an_unsafe_upload_prefix_exits_one(self, invoke_cli, mocker, tmp_path, monkeypatch):
+        monkeypatch.setenv("REF_REPORT_STORE_URL", str(tmp_path / "reports"))
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(tmp_path / "out"),
+                "--no-fetch",
+                "--upload",
+                "../escape",
+            ],
+            expected_exit_code=1,
+        )
+
+    def test_an_unusable_report_store_exits_one(self, invoke_cli, mocker, tmp_path, monkeypatch):
+        blocker = tmp_path / "blocker"
+        blocker.write_text("not a directory")
+        monkeypatch.setenv("REF_REPORT_STORE_URL", str(blocker / "reports"))
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        repo.head.commit.hexsha = "a" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(tmp_path / "out"),
+                "--no-fetch",
+                "--upload",
+                "912/abc",
+            ],
+            expected_exit_code=1,
+        )
+
+    def test_the_comment_links_locally_without_upload(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest
+
+        rel_path = "packages/climate-ref-example/tests/test-data/diag/case/manifest.json"
+        manifest_path = tmp_path / rel_path
+        manifest_path.parent.mkdir(parents=True)
+        Manifest(
+            schema=SCHEMA_VERSION,
+            test_case_version=4,
+            diagnostic_version=1,
+            committed={},
+            native={},
+        ).dump(manifest_path)
+
+        repo = MagicMock()
+        repo.working_tree_dir = str(tmp_path)
+        repo.git.diff.return_value = rel_path
+        repo.git.show.return_value = json.dumps(
+            {
+                "schema": SCHEMA_VERSION,
+                "test_case_version": 3,
+                "diagnostic_version": 1,
+                "committed": {},
+                "native": {},
+            }
+        )
+        repo.head.commit.hexsha = "c" * 40
+        mocker.patch("climate_ref.cli.test_cases.diff.get_repo_for_path", return_value=repo)
+
+        out = tmp_path / "out"
+        comment = tmp_path / "comment.md"
+        invoke_cli(
+            [
+                "test-cases",
+                "diff",
+                "--html-dir",
+                str(out),
+                "--no-fetch",
+                "--comment-output",
+                str(comment),
+            ]
+        )
+
+        assert f"{out.resolve().as_uri()}/index.html" in comment.read_text()
 
 
 class TestPinRequestsToCatalog:

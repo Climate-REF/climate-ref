@@ -11,6 +11,7 @@
       "values_name": "toz"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gr1",
       "source_id": "GFDL-ESM4",
       "statistic": "Northern Hemisphere March polar mean",

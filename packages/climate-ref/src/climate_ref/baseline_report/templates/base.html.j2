@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Regression baseline diff{% endblock %}</title>
+<style>{% include "report.css" %}</style>
+</head>
+<body>
+<header class="report-header">
+<h1>Regression baseline diff</h1>
+<p class="meta">
+Base <code>{{ report.report.base_ref }}</code>
+against <code>{{ report.report.head_sha | short }}</code>.
+Blobs are served from <code>{{ report.store_url }}</code>.
+</p>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<script>{% include "report.js" %}</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 _metadata:
-  hash: 3c091773f23b91a9c1af25ca7ff5d5275ed26e57
+  hash: 1907e8243343b7c52520cac0c9f6a7cfe87f50ff
 cmip6:
   slug_column: instance_id
   selector:
@@ -136,14 +136,14 @@ obs4mips:
     variable_id: mrro
     version: v20250902
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2012-12-16 12:00:00'
     filename: mrro_mon_LORA-1-0_REF_gn_198001-201212.nc
     finalised: true
     frequency: mon
     grid: 0.5x0.5 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.ARCCSS.LORA-1-0.mon.mrro.gn.v20250902
+    instance_id: obs4REF.obs4REF.ARCCSS.LORA-1-0.mon.mrro.50km.gn.v20250902
     institution_id: ARCCSS
     long_name: Total Runoff
     nominal_resolution: 50 km

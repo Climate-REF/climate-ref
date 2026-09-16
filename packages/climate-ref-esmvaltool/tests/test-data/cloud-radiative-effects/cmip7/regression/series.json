@@ -10,6 +10,7 @@
       "values_name": "lwcre"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "CERES-EBAF-4-2-1",
       "source_id": "CanESM5",
@@ -395,6 +396,7 @@
       "values_name": "swcre"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "CERES-EBAF-4-2-1",
       "source_id": "CanESM5",
@@ -780,6 +782,7 @@
       "values_name": "lwcre"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "zonal mean",
@@ -1163,6 +1166,7 @@
       "values_name": "swcre"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "zonal mean",

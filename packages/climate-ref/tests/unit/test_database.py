@@ -556,14 +556,14 @@ class TestReadOnlyDatabase:
 
     def test_make_readonly_sqlite_url_rewrites_file_url(self):
         url, connect_args = _make_readonly_sqlite_url("sqlite:////tmp/foo.db")
-        assert url == "sqlite:///file:/tmp/foo.db?mode=ro&immutable=1&uri=true"
+        assert url == "sqlite:///file:/tmp/foo.db?mode=ro&uri=true"
         assert connect_args == {"uri": True}
 
     def test_make_readonly_sqlite_url_preserves_percent_encoding(self):
         """Percent-encoded characters must survive the rewrite unchanged."""
         original = "sqlite:///path%20with%20spaces/db.sqlite"
         url, connect_args = _make_readonly_sqlite_url(original)
-        assert url == "sqlite:///file:path%20with%20spaces/db.sqlite?mode=ro&immutable=1&uri=true"
+        assert url == "sqlite:///file:path%20with%20spaces/db.sqlite?mode=ro&uri=true"
         assert connect_args == {"uri": True}
 
     def test_make_readonly_sqlite_url_preserves_uri_form(self):
@@ -589,7 +589,7 @@ class TestReadOnlyDatabase:
     def test_validate_accepts_uri_form_without_mkdir(self, tmp_path):
         """URI-form URLs are accepted verbatim and do not trigger parent mkdir."""
         missing = tmp_path / "does-not-exist" / "foo.db"
-        url = f"sqlite:///file:{missing}?mode=ro&immutable=1&uri=true"
+        url = f"sqlite:///file:{missing}?mode=ro&uri=true"
 
         # Should not create the parent directory
         assert validate_database_url(url) == url

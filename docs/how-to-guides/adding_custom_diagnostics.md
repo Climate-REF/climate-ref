@@ -147,6 +147,23 @@ class GlobalMeanTimeseries(Diagnostic):
         )
 ```
 
+A diagnostic that compares against observations adds a reference requirement.
+The obs4REF registry carries the datasets obs4MIPs has not published yet,
+so the requirement must declare it as a fallback.
+The solver does not fold obs4REF into obs4MIPs on its own.
+
+```python
+DataRequirement(
+    source_type=SourceDatasetType.obs4MIPs,
+    fallback_source_types=(SourceDatasetType.obs4REF,),
+    filters=(FacetFilter(facets={"source_id": "HadISST-1-1", "variable_id": "ts"}),),
+    group_by=("source_id", "variable_id"),
+)
+```
+
+A dataset ingested as `obs4mips` wins a version tie,
+and the data is delivered under `obs4mips` whichever collection it came from.
+
 If your diagnostic must run in its own Conda environment,
 extend [CommandLineDiagnostic][climate_ref_core.diagnostics.CommandLineDiagnostic] instead.
 

@@ -1,5 +1,5 @@
 _metadata:
-  hash: a4d514709c1951603a45a0f826a29ba5b80957ef
+  hash: 6d8e11cb420ea2eea2b55f3f35c2643cafa40126
 cmip7:
   slug_column: instance_id
   selector:
@@ -40,7 +40,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/dd4e265e-87f0-4a3c-bd47-3135a2bd2abf
+    tracking_id: hdl:21.14107/3b2dd0bb-aef7-437c-8147-5b47446cf48c
     units: m2
     variable_id: areacella
     variant_label: r1i1p1f1
@@ -77,7 +77,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/2e53e819-d637-4706-866a-95387c92d604
+    tracking_id: hdl:21.14107/820cd847-4343-4f87-ace3-d6502edcc218
     units: '%'
     variable_id: sftlf
     variant_label: r1i1p1f1
@@ -114,7 +114,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/b7406970-6aea-4a51-b318-4163a7565f18
+    tracking_id: hdl:21.14107/764427fa-5682-48da-b235-646527cb67ec
     units: kg m-2
     variable_id: cSoil
     variant_label: r1i1p1f1
@@ -127,14 +127,14 @@ obs4mips:
     variable_id: cSoil
     version: v20250903
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '1991-01-01 00:00:00'
     filename: cSoil_fx_HWSD-2-0_REF_gn_2023.nc
     finalised: true
     frequency: fx
     grid: 0.5x0.5 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.IIASA-FAO.HWSD-2-0.fx.cSoil.gn.v20250903
+    instance_id: obs4REF.obs4REF.IIASA-FAO.HWSD-2-0.fx.cSoil.0.5x0.5degree.gn.v20250903
     institution_id: IIASA-FAO
     long_name: Carbon Mass in Model Soil Pool
     nominal_resolution: 0.5x0.5 degree

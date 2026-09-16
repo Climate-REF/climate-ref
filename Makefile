@@ -5,6 +5,9 @@
 # compatible so we're not too worried
 TEMP_FILE := $(shell mktemp)
 
+# Workers used by the parallel test run.
+PYTEST_WORKERS ?= 4
+
 # A helper script to get short descriptions of each target in the Makefile
 define PRINT_HELP_PYSCRIPT
 import re, sys
@@ -164,7 +167,7 @@ test-quick: clean  ## run all the tests at once
 	# A new resource_intensive test has to live under a path listed here.
 	uv run \
 		pytest tests packages \
-		-r a -v  --cov-report=term -n auto \
+		-r a -v --cov-report=term -n $(PYTEST_WORKERS) --dist=loadscope \
 		-m "not resource_intensive"
 	uv run \
 		pytest packages/climate-ref-core/tests/integration packages/climate-ref/tests/integration \

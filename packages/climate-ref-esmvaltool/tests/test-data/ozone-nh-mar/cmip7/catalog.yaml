@@ -3,6 +3,7 @@ _metadata:
 cmip7:
   slug_column: instance_id
   selector:
+    experiment_id: historical
     grid_label: gr1
     source_id: GFDL-ESM4
     variant_label: r1i1p1f1

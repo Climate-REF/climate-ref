@@ -2,9 +2,30 @@ import builtins
 from pathlib import Path
 
 import pooch
-from climate_ref_pmp import PMPDiagnosticProvider, __version__, provider
+from climate_ref_pmp import (
+    _DEFAULT_THREAD_LIMIT,
+    _THREAD_LIMIT_VARS,
+    PMPDiagnosticProvider,
+    __version__,
+    provider,
+)
 
 from climate_ref_core.data import LayeredResource, PackagedResource
+
+
+def configured_provider(mocker, tmp_path):
+    """Build a provider and run `configure` against a mock config rooted at `tmp_path`."""
+    test_provider = PMPDiagnosticProvider("PMP-Test", "1.0")
+    mock_config = mocker.Mock()
+    mock_config.paths.software = tmp_path / "software"
+    mock_config.ignore_datasets_file = tmp_path / "ignore.yaml"
+    mock_config.ignore_datasets_file.touch()
+    mock_config.ignore_datasets_resource = LayeredResource(
+        packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
+        override=mock_config.ignore_datasets_file,
+    )
+    test_provider.configure(mock_config)
+    return test_provider, mock_config
 
 
 def test_provider():
@@ -89,19 +110,11 @@ class TestPMPProviderHooks:
         result = provider.validate_setup(mock_config)
         assert result is True
 
-    def test_configure_sets_env_vars(self, mocker, tmp_path):
+    def test_configure_sets_env_vars(self, mocker, tmp_path, monkeypatch):
         """Test that configure sets the required environment variables."""
-        test_provider = PMPDiagnosticProvider("PMP-Test", "1.0")
-        mock_config = mocker.Mock()
-        mock_config.paths.software = tmp_path / "software"
-        mock_config.ignore_datasets_file = tmp_path / "ignore.yaml"
-        mock_config.ignore_datasets_file.touch()
-        mock_config.ignore_datasets_resource = LayeredResource(
-            packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
-            override=mock_config.ignore_datasets_file,
-        )
-
-        test_provider.configure(mock_config)
+        for name in _THREAD_LIMIT_VARS:
+            monkeypatch.delenv(name, raising=False)
+        test_provider, mock_config = configured_provider(mocker, tmp_path)
 
         assert "PCMDI_CONDA_EXE" in test_provider.env_overrides
         # The path is recorded without installing anything, so `configure` stays offline.
@@ -110,6 +123,16 @@ class TestPMPProviderHooks:
         )
         assert "FI_PROVIDER" in test_provider.env_overrides
         assert test_provider.env_overrides["FI_PROVIDER"] == "tcp"
+        for name in _THREAD_LIMIT_VARS:
+            assert test_provider.env_overrides[name] == _DEFAULT_THREAD_LIMIT
+
+    def test_configure_keeps_user_thread_limits(self, mocker, tmp_path, monkeypatch):
+        """One thread limit in the environment suppresses the default for all of them."""
+        monkeypatch.setenv("OMP_NUM_THREADS", "4")
+        test_provider, _ = configured_provider(mocker, tmp_path)
+
+        for name in _THREAD_LIMIT_VARS:
+            assert name not in test_provider.env_overrides
 
     def test_ingest_data_skips_when_climate_ref_not_installed(self, mocker, caplog):
         """Test ingest_data gracefully skips when climate-ref package is not installed."""

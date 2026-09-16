@@ -29,6 +29,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
     name = "ENSO Basic Climatology"
     slug = "enso-basic-climatology"
     base_recipe = "ref/recipe_enso_basicclimatology.yml"
+    version = 2
 
     data_requirements = (
         (
@@ -38,19 +39,19 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": ("pr", "tauu"),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
                     FacetFilter(
                         facets={
                             "variable_id": "tos",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Omon",
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -75,7 +76,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                                 "pr_tavg-u-hxy-u",
                                 "tauu_tavg-u-hxy-u",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -83,13 +84,13 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "tos_tavg-u-hxy-sea",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -301,6 +302,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     name = "ENSO Characteristics"
     slug = "enso-characteristics"
     base_recipe = "ref/recipe_enso_characteristics.yml"
+    version = 2
 
     data_requirements = (
         (
@@ -310,12 +312,12 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": "tos",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Omon",
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -331,13 +333,13 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "tos_tavg-u-hxy-sea",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -347,7 +349,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("experiment_id", "grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     # ENSO pattern and lifecycle are series, but the ESMValTool diagnostic
     # script does not save the values used in the figure.
     series = tuple()

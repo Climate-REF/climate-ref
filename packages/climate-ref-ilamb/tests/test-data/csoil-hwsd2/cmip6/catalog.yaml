@@ -1,5 +1,5 @@
 _metadata:
-  hash: 4cb7417d57135a1d7321bed6a64c50ce5eed18e8
+  hash: df56ec2ae995f10d06845a27c76bc833026b0bf1
 cmip6:
   slug_column: instance_id
   selector:
@@ -136,14 +136,14 @@ obs4mips:
     variable_id: cSoil
     version: v20250903
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '1991-01-01 00:00:00'
     filename: cSoil_fx_HWSD-2-0_REF_gn_2023.nc
     finalised: true
     frequency: fx
     grid: 0.5x0.5 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.IIASA-FAO.HWSD-2-0.fx.cSoil.gn.v20250903
+    instance_id: obs4REF.obs4REF.IIASA-FAO.HWSD-2-0.fx.cSoil.0.5x0.5degree.gn.v20250903
     institution_id: IIASA-FAO
     long_name: Carbon Mass in Model Soil Pool
     nominal_resolution: 0.5x0.5 degree

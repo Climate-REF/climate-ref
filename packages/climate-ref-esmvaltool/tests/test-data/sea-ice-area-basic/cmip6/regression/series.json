@@ -10,6 +10,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "OSI-450-nh",
@@ -60,6 +61,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "OSI-450-nh",
@@ -173,6 +175,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "OSI-450-sh",
@@ -223,6 +226,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "OSI-450-sh",
@@ -352,6 +356,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Northern Hemisphere",
@@ -400,6 +405,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Northern Hemisphere",
@@ -511,6 +517,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Southern Hemisphere",
@@ -559,6 +566,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Southern Hemisphere",

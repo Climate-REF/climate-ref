@@ -1,5 +1,5 @@
 _metadata:
-  hash: 493c90454da6e604e600db5e28772a764812d0bf
+  hash: 6e266c6c35f18a5786a5c3132e229a54963187a2
 obs4mips:
   slug_column: instance_id
   selector:
@@ -13,7 +13,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    instance_id: obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
     institution_id: MOHC
     long_name: Surface Temperature
     nominal_resolution: 250 km
@@ -69,7 +69,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/0e1085b2-a2c1-4e15-8cec-564e9b7d1100
+    tracking_id: hdl:21.14107/dc8a9116-1c97-46c7-8b98-a33aea48fcb0
     units: K
     variable_id: ts
     variant_label: r1i1p1f1

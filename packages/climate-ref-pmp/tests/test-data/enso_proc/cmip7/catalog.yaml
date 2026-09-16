@@ -1,5 +1,5 @@
 _metadata:
-  hash: f6541bf28dfc15aa34c27d3552bfbfb39a6c092a
+  hash: 5c36fb35d18197b0b59d23f8c5af96fd52aeedc0
 obs4mips:
   slug_column: instance_id
   selector:
@@ -12,7 +12,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.hfls.250km.gn.v20250415
+    instance_id: obs4REF.ESSO.TropFlux-1-0.mon.hfls.gn.v20250415
     institution_id: ESSO
     long_name: Surface Upward Latent Heat Flux
     nominal_resolution: 250 km
@@ -35,7 +35,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.hfss.250km.gn.v20250415
+    instance_id: obs4REF.ESSO.TropFlux-1-0.mon.hfss.gn.v20250415
     institution_id: ESSO
     long_name: Surface Upward Sensible Heat Flux
     nominal_resolution: 250 km
@@ -58,7 +58,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.tauu.250km.gn.v20250415
+    instance_id: obs4REF.ESSO.TropFlux-1-0.mon.tauu.gn.v20250415
     institution_id: ESSO
     long_name: Surface Downward Eastward Wind Stress
     nominal_resolution: 250 km
@@ -81,7 +81,7 @@ obs4mips:
     frequency: mon
     grid: 1.0x1.0 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
+    instance_id: obs4REF.ESSO.TropFlux-1-0.mon.ts.gn.v20210727
     institution_id: ESSO
     long_name: Surface Temperature
     nominal_resolution: 250 km
@@ -104,7 +104,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    instance_id: obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
     institution_id: MOHC
     long_name: Surface Temperature
     nominal_resolution: 250 km
@@ -127,7 +127,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.100km.gn.v20230209
+    instance_id: obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.gn.v20230209
     institution_id: NASA-LaRC
     long_name: Surface Downwelling Longwave Radiation
     nominal_resolution: 100 km
@@ -150,7 +150,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.100km.gn.v20230209
+    instance_id: obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.gn.v20230209
     institution_id: NASA-LaRC
     long_name: Surface Upwelling Longwave Radiation
     nominal_resolution: 100 km
@@ -173,7 +173,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.100km.gn.v20230209
+    instance_id: obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.gn.v20230209
     institution_id: NASA-LaRC
     long_name: Surface Downwelling Shortwave Radiation
     nominal_resolution: 100 km
@@ -196,7 +196,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.100km.gn.v20230209
+    instance_id: obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.gn.v20230209
     institution_id: NASA-LaRC
     long_name: Surface Upwelling Shortwave Radiation
     nominal_resolution: 100 km
@@ -252,7 +252,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/b0850d42-b690-4773-a088-376d65f80dd0
+    tracking_id: hdl:21.14107/a28763fb-2698-4896-9d08-b97b210571cd
     units: m2
     variable_id: areacella
     variant_label: r1i1p1f1
@@ -289,7 +289,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/72463829-6acd-45c1-bc07-b0f47e099593
+    tracking_id: hdl:21.14107/de72b9df-6b62-423e-831c-bfe72d32b7d8
     units: '%'
     variable_id: sftlf
     variant_label: r1i1p1f1
@@ -326,7 +326,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/25c0a37b-3996-400a-9fd6-79faa2a513ca
+    tracking_id: hdl:21.14107/ab736425-b473-45b8-af1d-172e4454d4b0
     units: W m-2
     variable_id: hfls
     variant_label: r1i1p1f1
@@ -363,7 +363,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/30d5185f-a0dc-489c-9061-8415eaafb6bd
+    tracking_id: hdl:21.14107/18418577-b07a-48d2-90e1-1ee3519e0543
     units: W m-2
     variable_id: hfss
     variant_label: r1i1p1f1
@@ -400,7 +400,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/5d70d0c1-c749-47eb-ab16-5096b6991ef6
+    tracking_id: hdl:21.14107/5ff9d758-6e60-4de5-a126-0216992caee2
     units: W m-2
     variable_id: rlds
     variant_label: r1i1p1f1
@@ -437,7 +437,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/19779882-fbd9-4e32-a4b1-a694efa28367
+    tracking_id: hdl:21.14107/f6fa8806-b604-401e-acc8-553b1754fae9
     units: W m-2
     variable_id: rlus
     variant_label: r1i1p1f1
@@ -474,7 +474,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/91dee1cc-1422-4b59-9a82-d386c958de70
+    tracking_id: hdl:21.14107/c3cd10ad-d127-4603-883c-34da4646d401
     units: W m-2
     variable_id: rsds
     variant_label: r1i1p1f1
@@ -511,7 +511,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/28f91a07-a33c-488a-b884-fffd084d3782
+    tracking_id: hdl:21.14107/2536375a-7649-480b-a8ff-b4f512c5de98
     units: W m-2
     variable_id: rsus
     variant_label: r1i1p1f1
@@ -548,7 +548,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/ddc2781d-f1fc-4747-a4f7-f6ca0c10e83e
+    tracking_id: hdl:21.14107/a0270d38-6027-48dc-a8d8-3a5c6e9809da
     units: Pa
     variable_id: tauu
     variant_label: r1i1p1f1
@@ -585,7 +585,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/0e1085b2-a2c1-4e15-8cec-564e9b7d1100
+    tracking_id: hdl:21.14107/dc8a9116-1c97-46c7-8b98-a33aea48fcb0
     units: K
     variable_id: ts
     variant_label: r1i1p1f1

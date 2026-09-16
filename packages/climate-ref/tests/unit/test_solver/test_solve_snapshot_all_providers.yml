@@ -28,17 +28,17 @@ esmvaltool/cloud-scatterplots-clwvi-pr/cmip6_historical_mon_gn_r1i1p1f1_CESM2:
   - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clwvi.gn.v20190308
   - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20190401
   - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
-esmvaltool/cloud-scatterplots-reference/obs4mips_obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220:
+esmvaltool/cloud-scatterplots-reference/obs4mips_obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220:
   SourceDatasetType.obs4MIPs:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
 esmvaltool/enso-basic-climatology/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
@@ -110,22 +110,22 @@ esmvaltool/ozone-annual-cycle/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
   SourceDatasetType.obs4MIPs:
-  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+  - obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.gn.v20231115
 esmvaltool/ozone-lat-time/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
   SourceDatasetType.obs4MIPs:
-  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+  - obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.gn.v20231115
 esmvaltool/ozone-nh-mar/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
   SourceDatasetType.obs4MIPs:
-  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+  - obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.gn.v20231115
 esmvaltool/ozone-sh-oct/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
   SourceDatasetType.obs4MIPs:
-  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+  - obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.gn.v20231115
 esmvaltool/ozone-zonal/cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Amon.o3.gr.v20181206
@@ -147,76 +147,76 @@ esmvaltool/regional-historical-annual-cycle/cmip6_historical_gn_r1i1p1f3_HadGEM3
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
 esmvaltool/regional-historical-annual-cycle/obs4mips_ERA-5:
   SourceDatasetType.obs4MIPs:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
 esmvaltool/regional-historical-timeseries/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
@@ -235,76 +235,76 @@ esmvaltool/regional-historical-timeseries/cmip6_historical_gn_r1i1p1f3_HadGEM3-G
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
 esmvaltool/regional-historical-timeseries/obs4mips_ERA-5:
   SourceDatasetType.obs4MIPs:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
 esmvaltool/regional-historical-trend/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
@@ -323,111 +323,111 @@ esmvaltool/regional-historical-trend/cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-L
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
 esmvaltool/regional-historical-trend/obs4mips_ERA-5:
   SourceDatasetType.obs4MIPs:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
+  - obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
 esmvaltool/sea-ice-sensitivity/cmip6_historical:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
@@ -540,7 +540,7 @@ example/global-sst-bias/cmip6_historical_ACCESS-ESM1-5_tos_r1i1p1f1__obs4mips_Ha
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.areacello.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.tos.gn.v20191115
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
 ilamb/gpp-fluxnet2015/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.gpp.gn.v20191115
@@ -558,30 +558,30 @@ pmp/enso_proc/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_obs4MIPs:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.hfls.250km.gn.v20250415
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.hfss.250km.gn.v20250415
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.tauu.250km.gn.v20250415
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
-  - obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.100km.gn.v20230209
-  - obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.100km.gn.v20230209
-  - obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.100km.gn.v20230209
-  - obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.100km.gn.v20230209
+  - obs4REF.ESSO.TropFlux-1-0.mon.hfls.gn.v20250415
+  - obs4REF.ESSO.TropFlux-1-0.mon.hfss.gn.v20250415
+  - obs4REF.ESSO.TropFlux-1-0.mon.tauu.gn.v20250415
+  - obs4REF.ESSO.TropFlux-1-0.mon.ts.gn.v20210727
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
+  - obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.gn.v20230209
+  - obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.gn.v20230209
+  - obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.gn.v20230209
+  - obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.gn.v20230209
 pmp/enso_proc/cmip6_historical_gn_r2i1p1f1_ACCESS-ESM1-5__obs4mips_obs4MIPs:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.Amon.ts.gn.v20191128
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.fx.areacella.gn.v20191128
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.hfls.250km.gn.v20250415
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.hfss.250km.gn.v20250415
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.tauu.250km.gn.v20250415
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
-  - obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.100km.gn.v20230209
-  - obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.100km.gn.v20230209
-  - obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.100km.gn.v20230209
-  - obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.100km.gn.v20230209
+  - obs4REF.ESSO.TropFlux-1-0.mon.hfls.gn.v20250415
+  - obs4REF.ESSO.TropFlux-1-0.mon.hfss.gn.v20250415
+  - obs4REF.ESSO.TropFlux-1-0.mon.tauu.gn.v20250415
+  - obs4REF.ESSO.TropFlux-1-0.mon.ts.gn.v20210727
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
+  - obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.gn.v20230209
+  - obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.gn.v20230209
+  - obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.gn.v20230209
+  - obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.gn.v20230209
 pmp/enso_tel/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_obs4MIPs:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
@@ -589,63 +589,63 @@ pmp/enso_tel/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_obs4MIPs:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
-  - obs4REF.obs4REF.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20231205
+  - obs4REF.ESSO.TropFlux-1-0.mon.ts.gn.v20210727
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
+  - obs4REF.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.gn.v20231205
 pmp/enso_tel/cmip6_historical_gn_r1i1p1f1_CESM2__obs4mips_obs4MIPs:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20190401
   - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
-  - obs4REF.obs4REF.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20231205
+  - obs4REF.ESSO.TropFlux-1-0.mon.ts.gn.v20210727
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
+  - obs4REF.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.gn.v20231205
 pmp/enso_tel/cmip6_historical_gn_r2i1p1f1_ACCESS-ESM1-5__obs4mips_obs4MIPs:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.Amon.ts.gn.v20191128
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.fx.areacella.gn.v20191128
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
-  - obs4REF.obs4REF.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20231205
+  - obs4REF.ESSO.TropFlux-1-0.mon.ts.gn.v20210727
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
+  - obs4REF.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.gn.v20231205
 pmp/extratropical-modes-of-variability-npgo/cmip6_hist-GHG_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts:
   SourceDatasetType.CMIP6:
   - CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.Amon.ts.gn.v20200615
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
 pmp/extratropical-modes-of-variability-npgo/cmip6_hist-GHG_gn_r2i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts:
   SourceDatasetType.CMIP6:
   - CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r2i1p1f1.Amon.ts.gn.v20200615
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
 pmp/extratropical-modes-of-variability-npgo/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ts.gn.v20191115
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
 pmp/extratropical-modes-of-variability-npgo/cmip6_historical_gn_r2i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.Amon.ts.gn.v20191128
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
 pmp/extratropical-modes-of-variability-pdo/cmip6_hist-GHG_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts:
   SourceDatasetType.CMIP6:
   - CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.Amon.ts.gn.v20200615
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
 pmp/extratropical-modes-of-variability-pdo/cmip6_hist-GHG_gn_r2i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts:
   SourceDatasetType.CMIP6:
   - CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r2i1p1f1.Amon.ts.gn.v20200615
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
 pmp/extratropical-modes-of-variability-pdo/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ts.gn.v20191115
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
 pmp/extratropical-modes-of-variability-pdo/cmip6_historical_gn_r2i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.Amon.ts.gn.v20191128
   SourceDatasetType.obs4MIPs:
-  - obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  - obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415

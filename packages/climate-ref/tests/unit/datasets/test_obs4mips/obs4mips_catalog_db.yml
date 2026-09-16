@@ -4,7 +4,7 @@
   frequency: mon
   grid: 0.5x0.5 degree
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ARCCSS.LORA-1-1.mon.mrro.50km.gn.v20250516
+  instance_id: obs4MIPs.ARCCSS.LORA-1-1.mon.mrro.gn.v20250516
   institution_id: ARCCSS
   long_name: Total Runoff
   nominal_resolution: 50 km
@@ -26,7 +26,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.CNES.AVISO-1-0.mon.zos.250km.gn.v20210727
+  instance_id: obs4MIPs.CNES.AVISO-1-0.mon.zos.gn.v20210727
   institution_id: CNES
   long_name: Sea Surface Height Above Geoid
   nominal_resolution: 250 km
@@ -48,7 +48,7 @@
   frequency: mon
   grid: 1x1 degree
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ColumbiaU.WECANN-1-0.mon.gpp.100km.gn.v20250516
+  instance_id: obs4MIPs.ColumbiaU.WECANN-1-0.mon.gpp.gn.v20250516
   institution_id: ColumbiaU
   long_name: Carbon Mass Flux out of Atmosphere Due to Gross Primary Production on
     Land [kgC m-2 s-1]
@@ -71,7 +71,7 @@
   frequency: mon
   grid: 1x1 degree
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ColumbiaU.WECANN-1-0.mon.hfls.100km.gn.v20250516
+  instance_id: obs4MIPs.ColumbiaU.WECANN-1-0.mon.hfls.gn.v20250516
   institution_id: ColumbiaU
   long_name: Surface Upward Latent Heat Flux
   nominal_resolution: 100 km
@@ -93,7 +93,7 @@
   frequency: mon
   grid: 1x1 degree
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ColumbiaU.WECANN-1-0.mon.hfss.100km.gn.v20250516
+  instance_id: obs4MIPs.ColumbiaU.WECANN-1-0.mon.hfss.gn.v20250516
   institution_id: ColumbiaU
   long_name: Surface Upward Sensible Heat Flux
   nominal_resolution: 100 km
@@ -115,7 +115,7 @@
   frequency: mon
   grid: data gridded to 1x1 degree lat x lon
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+  instance_id: obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.gn.v20231115
   institution_id: DLR-BIRA
   long_name: Total Column Ozone
   nominal_resolution: 1x1 degree
@@ -137,7 +137,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -159,7 +159,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -181,7 +181,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -203,7 +203,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -225,7 +225,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -247,7 +247,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -269,7 +269,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -291,7 +291,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -313,7 +313,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -335,7 +335,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -357,7 +357,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -379,7 +379,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -401,7 +401,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -423,7 +423,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -445,7 +445,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -467,7 +467,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -489,7 +489,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -511,7 +511,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -533,7 +533,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -555,7 +555,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -577,7 +577,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -599,7 +599,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -621,7 +621,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -643,7 +643,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -665,7 +665,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -687,7 +687,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -709,7 +709,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -731,7 +731,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -753,7 +753,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -775,7 +775,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -797,7 +797,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -819,7 +819,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -841,7 +841,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -863,7 +863,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -885,7 +885,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250220
   institution_id: ECMWF
   long_name: Sea Level Pressure
   nominal_resolution: 25 km
@@ -907,7 +907,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -929,7 +929,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -951,7 +951,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -973,7 +973,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -995,7 +995,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -1017,7 +1017,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -1039,7 +1039,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -1061,7 +1061,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -1083,7 +1083,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   institution_id: ECMWF
   long_name: Air Temperature
   nominal_resolution: 25 km
@@ -1105,7 +1105,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1127,7 +1127,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1149,7 +1149,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1171,7 +1171,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1193,7 +1193,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1215,7 +1215,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1237,7 +1237,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1259,7 +1259,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1281,7 +1281,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1303,7 +1303,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1325,7 +1325,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1347,7 +1347,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1369,7 +1369,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1391,7 +1391,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1413,7 +1413,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1435,7 +1435,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1457,7 +1457,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1479,7 +1479,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1501,7 +1501,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1523,7 +1523,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1545,7 +1545,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1567,7 +1567,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1589,7 +1589,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1611,7 +1611,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1633,7 +1633,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1655,7 +1655,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1677,7 +1677,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1699,7 +1699,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1721,7 +1721,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1743,7 +1743,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1765,7 +1765,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1787,7 +1787,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1809,7 +1809,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1831,7 +1831,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1853,7 +1853,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.tas.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.tas.gn.v20250220
   institution_id: ECMWF
   long_name: Near-Surface Air Temperature
   nominal_resolution: 25 km
@@ -1875,7 +1875,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -1897,7 +1897,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -1919,7 +1919,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -1941,7 +1941,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -1963,7 +1963,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -1985,7 +1985,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2007,7 +2007,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2029,7 +2029,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2051,7 +2051,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2073,7 +2073,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2095,7 +2095,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2117,7 +2117,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2139,7 +2139,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2161,7 +2161,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2183,7 +2183,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2205,7 +2205,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2227,7 +2227,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2249,7 +2249,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2271,7 +2271,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2293,7 +2293,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2315,7 +2315,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2337,7 +2337,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2359,7 +2359,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2381,7 +2381,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2403,7 +2403,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2425,7 +2425,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2447,7 +2447,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2469,7 +2469,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2491,7 +2491,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2513,7 +2513,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2535,7 +2535,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2557,7 +2557,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2579,7 +2579,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2601,7 +2601,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2623,7 +2623,7 @@
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250220
+  instance_id: obs4MIPs.ECMWF.ERA-5.mon.ua.gn.v20250220
   institution_id: ECMWF
   long_name: Eastward Wind
   nominal_resolution: 25 km
@@ -2645,7 +2645,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.hfls.250km.gn.v20250415
+  instance_id: obs4MIPs.ESSO.TropFlux-1-0.mon.hfls.gn.v20250415
   institution_id: ESSO
   long_name: Surface Upward Latent Heat Flux
   nominal_resolution: 250 km
@@ -2667,7 +2667,7 @@
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.hfns.250km.gn.v20210727
+  instance_id: obs4MIPs.ESSO.TropFlux-1-0.mon.hfns.gn.v20210727
   institution_id: ESSO
   long_name: Net Surface Energy
   nominal_resolution: 250 km
@@ -2689,7 +2689,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.hfss.250km.gn.v20250415
+  instance_id: obs4MIPs.ESSO.TropFlux-1-0.mon.hfss.gn.v20250415
   institution_id: ESSO
   long_name: Surface Upward Sensible Heat Flux
   nominal_resolution: 250 km
@@ -2711,7 +2711,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.tas.250km.gn.v20250415
+  instance_id: obs4MIPs.ESSO.TropFlux-1-0.mon.tas.gn.v20250415
   institution_id: ESSO
   long_name: Near-Surface Air Temperature
   nominal_resolution: 250 km
@@ -2733,7 +2733,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.tauu.250km.gn.v20250415
+  instance_id: obs4MIPs.ESSO.TropFlux-1-0.mon.tauu.gn.v20250415
   institution_id: ESSO
   long_name: Surface Downward Eastward Wind Stress
   nominal_resolution: 250 km
@@ -2755,7 +2755,7 @@
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.tauv.250km.gn.v20210727
+  instance_id: obs4MIPs.ESSO.TropFlux-1-0.mon.tauv.gn.v20210727
   institution_id: ESSO
   long_name: Surface Downward Northward Wind Stress
   nominal_resolution: 250 km
@@ -2777,7 +2777,7 @@
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
+  instance_id: obs4MIPs.ESSO.TropFlux-1-0.mon.ts.gn.v20210727
   institution_id: ESSO
   long_name: Surface Temperature
   nominal_resolution: 250 km
@@ -2799,7 +2799,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+  instance_id: obs4MIPs.MOHC.HadISST-1-1.mon.ts.gn.v20250415
   institution_id: MOHC
   long_name: Surface Temperature
   nominal_resolution: 250 km
@@ -2821,7 +2821,7 @@
   frequency: mon
   grid: 0.5x0.5 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20231205
+  instance_id: obs4MIPs.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.gn.v20231205
   institution_id: NASA-GSFC
   long_name: Precipitation
   nominal_resolution: 50 km
@@ -2843,7 +2843,7 @@
   frequency: mon
   grid: 0.25x0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NASA-GSFC.TRMM-3B43v-7.mon.pr.25km.gn.v20210727
+  instance_id: obs4MIPs.NASA-GSFC.TRMM-3B43v-7.mon.pr.gn.v20210727
   institution_id: NASA-GSFC
   long_name: Precipitation
   nominal_resolution: 25 km
@@ -2865,7 +2865,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.100km.gn.v20230209
+  instance_id: obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.gn.v20230209
   institution_id: NASA-LaRC
   long_name: Surface Downwelling Longwave Radiation
   nominal_resolution: 100 km
@@ -2887,7 +2887,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.100km.gn.v20230209
+  instance_id: obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.gn.v20230209
   institution_id: NASA-LaRC
   long_name: Surface Upwelling Longwave Radiation
   nominal_resolution: 100 km
@@ -2909,7 +2909,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.100km.gn.v20230209
+  instance_id: obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.gn.v20230209
   institution_id: NASA-LaRC
   long_name: Surface Downwelling Shortwave Radiation
   nominal_resolution: 100 km
@@ -2931,7 +2931,7 @@
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.100km.gn.v20230209
+  instance_id: obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.gn.v20230209
   institution_id: NASA-LaRC
   long_name: Surface Upwelling Shortwave Radiation
   nominal_resolution: 100 km
@@ -2953,7 +2953,7 @@
   frequency: mon
   grid: 2.0x2.0 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR.mon.psl.250km.gn.v20210727
+  instance_id: obs4MIPs.NOAA-ESRL-PSD.20CR.mon.psl.gn.v20210727
   institution_id: NOAA-ESRL-PSD
   long_name: Sea Level Pressure
   nominal_resolution: 250 km
@@ -2975,7 +2975,7 @@
   frequency: mon
   grid: 2.0x2.0 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR.mon.ts.250km.gn.v20210727
+  instance_id: obs4MIPs.NOAA-ESRL-PSD.20CR.mon.ts.gn.v20210727
   institution_id: NOAA-ESRL-PSD
   long_name: Surface Temperature
   nominal_resolution: 250 km
@@ -2997,7 +2997,7 @@
   frequency: mon
   grid: 0.25x0.25 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI.CMAP-V1902.mon.pr.100km.gn.v20210727
+  instance_id: obs4MIPs.NOAA-NCEI.CMAP-V1902.mon.pr.gn.v20210727
   institution_id: NOAA-NCEI
   long_name: Precipitation
   nominal_resolution: 100 km
@@ -3019,7 +3019,7 @@
   frequency: mon
   grid: 2.5x2.5 degree latitude x longitude
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI.GPCP-2-3.mon.pr.250km.gn.v20210727
+  instance_id: obs4MIPs.NOAA-NCEI.GPCP-2-3.mon.pr.gn.v20210727
   institution_id: NOAA-NCEI
   long_name: Precipitation
   nominal_resolution: 250 km
@@ -3041,7 +3041,7 @@
   frequency: mon
   grid: 100 km
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI.WOA2023.mon.no3.100km.gn.v20250516
+  instance_id: obs4MIPs.NOAA-NCEI.WOA2023.mon.no3.gn.v20250516
   institution_id: NOAA-NCEI
   long_name: Objectively analyzed mean fields for moles_of_nitrate_per_unit_mass_in_sea_water
     at standard depth levels.
@@ -3064,7 +3064,7 @@
   frequency: mon
   grid: 100 km
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI.WOA2023.mon.o2.100km.gn.v20250516
+  instance_id: obs4MIPs.NOAA-NCEI.WOA2023.mon.o2.gn.v20250516
   institution_id: NOAA-NCEI
   long_name: Objectively analyzed mean fields for moles_of_oxygen_per_unit_mass_in_sea_water
     at standard depth levels.
@@ -3087,7 +3087,7 @@
   frequency: mon
   grid: 100 km
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI.WOA2023.mon.po4.100km.gn.v20250516
+  instance_id: obs4MIPs.NOAA-NCEI.WOA2023.mon.po4.gn.v20250516
   institution_id: NOAA-NCEI
   long_name: Objectively analyzed mean fields for moles_of_phosphate_per_unit_mass_in_sea_water
     at standard depth levels.
@@ -3110,7 +3110,7 @@
   frequency: mon
   grid: 100 km
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI.WOA2023.mon.so.100km.gn.v20250516
+  instance_id: obs4MIPs.NOAA-NCEI.WOA2023.mon.so.gn.v20250516
   institution_id: NOAA-NCEI
   long_name: Objectively analyzed mean fields for sea_water_practical_salinity at
     standard depth levels.
@@ -3133,7 +3133,7 @@
   frequency: mon
   grid: 100 km
   grid_label: gn
-  instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI.WOA2023.mon.thetao.100km.gn.v20250516
+  instance_id: obs4MIPs.NOAA-NCEI.WOA2023.mon.thetao.gn.v20250516
   institution_id: NOAA-NCEI
   long_name: Sea Water Potential Temperature
   nominal_resolution: 100 km
@@ -3155,7 +3155,7 @@
   frequency: mon
   grid: N/A
   grid_label: NA
-  instance_id: obs4MIPs.obs4MIPs.NOC.RAPID.mon.msftmz.N/A.NA.v20250516
+  instance_id: obs4MIPs.NOC.RAPID.mon.msftmz.NA.v20250516
   institution_id: NOC
   long_name: Ocean Meridional Overturning Mass Streamfunction
   nominal_resolution: N/A
@@ -3177,7 +3177,7 @@
   frequency: yr
   grid: global mean data
   grid_label: gm
-  instance_id: obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman.yr.fgco2.N/A.gm.v20250516
+  instance_id: obs4MIPs.UCI-ORNL.Hoffman.yr.fgco2.gm.v20250516
   institution_id: UCI-ORNL
   long_name: global net downward ocean carbon flux
   nominal_resolution: N/A
@@ -3199,7 +3199,7 @@
   frequency: yr
   grid: global mean data
   grid_label: gm
-  instance_id: obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman.yr.nbp.N/A.gm.v20250516
+  instance_id: obs4MIPs.UCI-ORNL.Hoffman.yr.nbp.gm.v20250516
   institution_id: UCI-ORNL
   long_name: global net downward land carbon flux
   nominal_resolution: N/A

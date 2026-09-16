@@ -1,6 +1,7 @@
 """Tests for climate_ref_core.esgf.cmip7 module."""
 
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import cftime
@@ -884,3 +885,55 @@ class TestBumpVersion:
     )
     def test_bump(self, version, expected):
         assert _bump_version(version) == expected
+
+
+class TestPinToDatasets:
+    """CMIP7 test data is converted locally, so a pin filters the CMIP6 source search."""
+
+    recorded: ClassVar = [
+        {
+            "instance_id": "CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.gpp.tavg-u-hxy-lnd.gn.v0",
+            "institution_id": "CCCma",
+            "source_id": "CanESM5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "variable_id": "gpp",
+            "grid_label": "gn",
+            "version": "v0",
+        }
+    ]
+
+    def test_pins_are_cmip6_facets(self):
+        request = CMIP7Request(slug="test", facets={"source_id": "CanESM5"})
+        pinned = request.pin_to_datasets(self.recorded)
+
+        assert pinned is not request
+        assert request.pinned_facets is None
+        # variant_label is spelled member_id by the CMIP6 search, and the fabricated
+        # version has no CMIP6 counterpart to match on
+        assert pinned.pinned_facets == (
+            {
+                "institution_id": "CCCma",
+                "source_id": "CanESM5",
+                "experiment_id": "historical",
+                "member_id": "r1i1p1f1",
+                "variable_id": "gpp",
+                "grid_label": "gn",
+            },
+        )
+
+    def test_incomplete_record_is_not_pinned(self):
+        request = CMIP7Request(slug="test", facets={"source_id": "CanESM5"})
+
+        assert request.pin_to_datasets([{"instance_id": "CMIP7.only"}]) is request
+        assert request.pin_to_datasets([]) is request
+
+    def test_pins_reach_the_source_search(self):
+        request = CMIP7Request(slug="test", facets={"source_id": "CanESM5"})
+        pinned = request.pin_to_datasets(self.recorded)
+
+        with patch("climate_ref_core.esgf.cmip7.CMIP6Request") as mock_request_cls:
+            mock_request_cls.return_value.fetch_datasets.return_value = pd.DataFrame()
+            pinned.fetch_datasets()
+
+        assert mock_request_cls.return_value.pinned_facets == pinned.pinned_facets

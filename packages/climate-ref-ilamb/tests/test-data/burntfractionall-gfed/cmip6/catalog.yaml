@@ -1,5 +1,5 @@
 _metadata:
-  hash: f94b0a576ec6e0537424603e1147cf16551abaf0
+  hash: b8fbd54d3c6c80d0e64707921188efb62a67b197
 cmip6:
   slug_column: instance_id
   selector:
@@ -141,7 +141,7 @@ obs4mips:
     frequency: mon
     grid: 0.25x0.25 degree latitude x longitude
     grid_label: gr
-    instance_id: obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+    instance_id: obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.gr.v20260128
     institution_id: NASA-NOSR
     long_name: Percentage of Entire Grid Cell That Is Covered by Burnt Vegetation
       (All Classes)

@@ -1,5 +1,6 @@
 """Tests for climate_ref_core.esgf.registry module."""
 
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -488,3 +489,56 @@ class TestRegistryRequest:
 
             assert len(result) == 1
             assert all(result["version"] == "v10")
+
+
+class TestPinToDatasets:
+    """Registry data drifts like published data, so a pinned request keeps its version."""
+
+    recorded: ClassVar = [
+        {
+            "instance_id": "obs4MIPs.PCMDI.ERA-5.mon.psl.gr.v20250224",
+            "source_id": "ERA-5",
+            "variable_id": "psl",
+            "grid_label": "gr",
+            "version": "v20250224",
+        }
+    ]
+
+    def test_pins_are_the_recorded_facets(self):
+        request = RegistryRequest(slug="era5", registry_name="pmp-climatology", facets={})
+        pinned = request.pin_to_datasets(self.recorded)
+
+        assert pinned is not request
+        assert request.pinned_facets is None
+        assert pinned.pinned_facets == (
+            {"source_id": "ERA-5", "variable_id": "psl", "grid_label": "gr", "version": "v20250224"},
+        )
+
+    def test_incomplete_record_is_not_pinned(self):
+        request = RegistryRequest(slug="era5", registry_name="pmp-climatology", facets={})
+
+        assert request.pin_to_datasets([{"source_id": "ERA-5"}]) is request
+        assert request.pin_to_datasets([]) is request
+
+    def test_pinned_fetch_keeps_the_recorded_version(self):
+        """The declared facets would resolve the newest version; the pin holds the old one."""
+        mock_registry = MagicMock()
+        mock_registry.registry.keys.return_value = [
+            "PMP_obs4MIPsClims/psl/gr/v20250224/psl_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20250224_2.5x2.5.nc",
+            "PMP_obs4MIPsClims/psl/gr/v20260101/psl_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20260101_2.5x2.5.nc",
+        ]
+        mock_registry.fetch.side_effect = lambda key: f"/path/to/{key}"
+
+        mock_manager = MagicMock()
+        mock_manager.__getitem__ = MagicMock(return_value=mock_registry)
+
+        request = RegistryRequest(slug="era5", registry_name="pmp-climatology", facets={})
+        with patch("climate_ref_core.esgf.registry.dataset_registry_manager", mock_manager):
+            assert request.fetch_datasets()["version"].tolist() == ["v20260101"]
+
+            mock_registry.fetch.reset_mock()
+            result = request.pin_to_datasets(self.recorded).fetch_datasets()
+
+        assert result["version"].tolist() == ["v20250224"]
+        # The superseded version is never downloaded
+        assert all("v20260101" not in call.args[0] for call in mock_registry.fetch.call_args_list)

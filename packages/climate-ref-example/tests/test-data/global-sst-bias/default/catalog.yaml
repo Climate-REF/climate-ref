@@ -1,5 +1,5 @@
 _metadata:
-  hash: 81a4bf72aa73f7e694a6d40e85a30718d13275a9
+  hash: 3f0189d3b32c82e3f366940d73c48153385cde95
 cmip6:
   slug_column: instance_id
   selector:
@@ -99,7 +99,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    instance_id: obs4MIPs.MOHC.HadISST-1-1.mon.ts.gn.v20250415
     institution_id: MOHC
     long_name: Surface Temperature
     nominal_resolution: 250 km

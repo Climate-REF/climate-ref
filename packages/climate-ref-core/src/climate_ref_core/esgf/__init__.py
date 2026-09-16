@@ -5,7 +5,12 @@ This module provides classes for searching and fetching datasets from ESGF
 (Earth System Grid Federation) and other data registries.
 """
 
-from climate_ref_core.esgf.base import ESGFRequest, IntakeESGFMixin, enable_ceda_solr_index
+from climate_ref_core.esgf.base import (
+    ESGFRequest,
+    IntakeESGFMixin,
+    enable_ceda_solr_index,
+    select_pinned,
+)
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 from climate_ref_core.esgf.cmip7 import CMIP7Request
 from climate_ref_core.esgf.fetcher import ESGFFetcher
@@ -21,4 +26,5 @@ __all__ = [
     "Obs4MIPsRequest",
     "RegistryRequest",
     "enable_ceda_solr_index",
+    "select_pinned",
 ]

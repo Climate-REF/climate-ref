@@ -1,6 +1,7 @@
 import json
 import re
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -8,8 +9,10 @@ import pytest
 
 from climate_ref.cli.test_cases import (
     _build_catalog,
+    _check_pinned_datasets_found,
     _fetch_and_build_catalog,
     _iter_test_cases,
+    _pin_requests_to_catalog,
     _solve_test_case,
 )
 from climate_ref.models.diagnostic import Diagnostic
@@ -482,7 +485,6 @@ class TestFetchTestDataCommand:
         result = invoke_cli(["test-cases", "fetch", "--provider", "example", "--only-missing"])
 
         assert result.exit_code == 0
-        assert "Skipping test case: default (catalog exists)" in result.stderr
         fetch_mock.assert_not_called()
 
 
@@ -2868,3 +2870,87 @@ class TestCIGateCommand:
         result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
         assert result.exit_code == 1
         assert "fail" in result.output
+
+
+class TestPinRequestsToCatalog:
+    """A test case with a catalog is fetched by the datasets that catalog records."""
+
+    recorded: ClassVar = {
+        "CMIP6": ({"instance_id": "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.hist.r1i1p1f1.Amon.tas.gn.v1"},)
+    }
+
+    def test_pins_matching_source_type(self):
+        from climate_ref_core.esgf import CMIP6Request
+
+        request = CMIP6Request(slug="tas", facets={"source_id": "ACCESS-ESM1-5"})
+        requests, pinned_source_types = _pin_requests_to_catalog((request,), self.recorded)
+
+        assert pinned_source_types == {"CMIP6"}
+        assert requests[0].pinned_instance_ids == (
+            "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.hist.r1i1p1f1.Amon.tas.gn.v1",
+        )
+
+    def test_request_of_another_source_type_is_left_alone(self):
+        from climate_ref_core.esgf import Obs4MIPsRequest
+
+        request = Obs4MIPsRequest(slug="era5", facets={"source_id": "ERA-5"})
+        requests, pinned_source_types = _pin_requests_to_catalog((request,), self.recorded)
+
+        assert pinned_source_types == set()
+        assert requests == (request,)
+
+    def test_registry_request_is_pinned_by_facets(self):
+        """Registry data carries no id to ask for, so its pin matches the recorded facets."""
+        from climate_ref_core.esgf import RegistryRequest
+
+        recorded = {
+            "PMPClimatology": (
+                {
+                    "instance_id": "obs4MIPs.PCMDI.ERA-5.mon.psl.gr.v20250224",
+                    "source_id": "ERA-5",
+                    "variable_id": "psl",
+                    "grid_label": "gr",
+                    "version": "v20250224",
+                },
+            )
+        }
+        request = RegistryRequest(slug="pmp", registry_name="pmp-climatology", facets={})
+        requests, pinned_source_types = _pin_requests_to_catalog((request,), recorded)
+
+        assert pinned_source_types == {"PMPClimatology"}
+        assert requests[0].pinned_facets == (
+            {"source_id": "ERA-5", "variable_id": "psl", "grid_label": "gr", "version": "v20250224"},
+        )
+
+    def test_request_whose_records_lack_the_facets_is_left_alone(self):
+        """A catalog written before a pinned facet was recorded leaves the request as-is."""
+        from climate_ref_core.esgf import RegistryRequest
+
+        request = RegistryRequest(slug="pmp", registry_name="pmp-climatology", facets={}, source_type="CMIP6")
+        requests, pinned_source_types = _pin_requests_to_catalog((request,), self.recorded)
+
+        assert pinned_source_types == set()
+        assert requests == (request,)
+
+
+class TestCheckPinnedDatasetsFound:
+    """A pinned dataset that can no longer be fetched is reported, not silently dropped."""
+
+    recorded: ClassVar = {"CMIP6": ({"instance_id": "CMIP6.recorded"}, {"instance_id": "CMIP6.gone"})}
+
+    def _catalog(self, instance_ids):
+        from climate_ref_core.datasets import SourceDatasetType
+
+        return {SourceDatasetType.CMIP6: pd.DataFrame({"instance_id": instance_ids})}
+
+    def test_all_found_passes(self):
+        _check_pinned_datasets_found(
+            self._catalog(["CMIP6.recorded", "CMIP6.gone"]), self.recorded, {"CMIP6"}
+        )
+
+    def test_missing_dataset_raises(self):
+        with pytest.raises(DatasetResolutionError, match=re.escape("CMIP6.gone")):
+            _check_pinned_datasets_found(self._catalog(["CMIP6.recorded"]), self.recorded, {"CMIP6"})
+
+    def test_unpinned_source_type_is_not_checked(self):
+        _check_pinned_datasets_found(self._catalog(["CMIP6.recorded"]), self.recorded, set())

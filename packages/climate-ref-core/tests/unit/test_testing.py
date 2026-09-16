@@ -14,6 +14,7 @@ from climate_ref_core.testing import (
     _get_provider_test_data_dir,
     catalog_changed_since_regression,
     get_catalog_hash,
+    load_catalog_datasets,
     load_datasets_from_yaml,
     save_datasets_to_yaml,
 )
@@ -604,6 +605,78 @@ cmip6:
 
         result = get_catalog_hash(yaml_path)
         assert result is None
+
+
+class TestLoadCatalogDatasets:
+    """Tests for load_catalog_datasets function."""
+
+    def _write(self, tmp_path, content):
+        yaml_path = tmp_path / "catalog.yaml"
+        yaml_path.write_text(content)
+        return yaml_path
+
+    def test_returns_records_keyed_by_source_type_name(self, tmp_path):
+        """A request names its source type by the enum name, so the keys match it."""
+        yaml_path = self._write(
+            tmp_path,
+            """
+_metadata:
+  hash: abc123
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets:
+  - instance_id: CMIP6.one
+    variable_id: tas
+obs4mips:
+  slug_column: instance_id
+  selector: {}
+  datasets:
+  - instance_id: obs4MIPs.one
+    variable_id: psl
+""",
+        )
+
+        recorded = load_catalog_datasets(yaml_path)
+
+        assert set(recorded) == {"CMIP6", "obs4MIPs"}
+        assert recorded["CMIP6"] == ({"instance_id": "CMIP6.one", "variable_id": "tas"},)
+
+    def test_multi_file_dataset_is_returned_once(self, tmp_path):
+        """A dataset spanning several files is recorded once per file."""
+        yaml_path = self._write(
+            tmp_path,
+            """
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets:
+  - instance_id: CMIP6.one
+    filename: tas_185001-189912.nc
+  - instance_id: CMIP6.one
+    filename: tas_190001-194912.nc
+""",
+        )
+
+        recorded = load_catalog_datasets(yaml_path)
+
+        assert len(recorded["CMIP6"]) == 1
+        assert recorded["CMIP6"][0]["filename"] == "tas_185001-189912.nc"
+
+    def test_source_type_without_datasets_is_omitted(self, tmp_path):
+        yaml_path = self._write(
+            tmp_path,
+            """
+_metadata:
+  hash: abc123
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets: []
+""",
+        )
+
+        assert load_catalog_datasets(yaml_path) == {}
 
 
 class TestCatalogChangedSinceRegression:

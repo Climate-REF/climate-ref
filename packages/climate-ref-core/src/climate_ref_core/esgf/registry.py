@@ -7,15 +7,17 @@ This module provides request classes for fetching datasets from pooch registries
 
 from __future__ import annotations
 
+import copy
 import re
-from collections.abc import Callable, Collection, Mapping
-from typing import Any
+from collections.abc import Callable, Collection, Mapping, Sequence
+from typing import Any, ClassVar
 
 import pandas as pd
 from loguru import logger
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import select_latest_version
+from climate_ref_core.esgf.base import facet_pins_from_datasets
 
 type FacetValue = str | int | Collection[str | int]
 """
@@ -227,6 +229,23 @@ class RegistryRequest:
     ```
     """
 
+    pinned_facet_fields: ClassVar[dict[str, str]] = {
+        "source_id": "source_id",
+        "variable_id": "variable_id",
+        "grid_label": "grid_label",
+        "version": "version",
+    }
+    """
+    Facets a pin matches registry keys on, and the recorded facet each is spelled as.
+
+    A registry key carries no ``instance_id`` to ask for, so a pin is matched against the
+    facets parsed out of the key. These are the ones every key parser reports, and
+    together they identify a dataset within a registry.
+    """
+
+    pinned_facets: tuple[dict[str, str], ...] | None = None
+    """Facet sets to keep, one per pinned dataset."""
+
     def __init__(  # noqa: PLR0913
         self,
         slug: str,
@@ -243,6 +262,33 @@ class RegistryRequest:
         self.source_type = source_type
         self.time_span = time_span
         self.key_parser = key_parser
+
+    def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> RegistryRequest:
+        """
+        Return a copy of this request that only resolves the given datasets.
+
+        Registry data drifts like published data does: a newly added version of a dataset
+        would otherwise be picked up by :func:`select_latest_version`. A pinned request
+        keeps the recorded version instead.
+
+        Parameters
+        ----------
+        datasets
+            The catalog records of the datasets recorded for this request's source type.
+
+        Returns
+        -------
+        :
+            The pinned request, or this request unchanged if any record is missing one of
+            the facets a pin needs.
+        """
+        pins = facet_pins_from_datasets(datasets, self.pinned_facet_fields, self.slug)
+        if pins is None:
+            return self
+
+        pinned = copy.copy(self)
+        pinned.pinned_facets = pins
+        return pinned
 
     def __repr__(self) -> str:
         return (
@@ -292,8 +338,12 @@ class RegistryRequest:
             if not metadata:
                 continue
 
-            # Check if it matches the requested facets
-            if not _matches_facets(metadata, self.facets):
+            if self.pinned_facets is not None:
+                # The pinned datasets, not the declared facets, decide what is fetched.
+                # Matching before the fetch below keeps superseded versions from downloading.
+                if not any(_matches_facets(metadata, pin) for pin in self.pinned_facets):
+                    continue
+            elif not _matches_facets(metadata, self.facets):
                 continue
 
             # Fetch the file (downloads if not cached)
@@ -321,7 +371,8 @@ class RegistryRequest:
         # Filter to only the latest version for each unique dataset.
         # Datasets are identified by source_id, variable_id, and grid_label.
         # Versions are compared numerically (so v10 > v2) via select_latest_version.
-        if "version" in result.columns:
+        # A pinned request skips this: its pins already name the version of each dataset.
+        if self.pinned_facets is None and "version" in result.columns:
             group_by_cols = [
                 col for col in ("source_id", "variable_id", "grid_label") if col in result.columns
             ]

@@ -393,6 +393,50 @@ def load_datasets_from_yaml(path: Path, paths_file: Path) -> ExecutionDatasetCol
     return ExecutionDatasetCollection(collections)
 
 
+def load_catalog_datasets(path: Path) -> dict[str, tuple[dict[str, Any], ...]]:
+    """
+    Read the datasets recorded in a catalog YAML file.
+
+    These are the exact datasets a test case's regression baseline was built from, so a
+    request can be pinned to them and fetch that data again instead of re-resolving the
+    facets it declares (see
+    :meth:`~climate_ref_core.esgf.PinnableRequest.pin_to_datasets`).
+
+    Parameters
+    ----------
+    path
+        Path to the catalog YAML file
+
+    Returns
+    -------
+    :
+        The records of each source type, keyed by :class:`SourceDatasetType` name (e.g.
+        ``"CMIP6"``), which is how a request names its source type. A dataset spanning
+        several files is returned once. Source types without any recorded datasets are
+        left out.
+    """
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+
+    datasets: dict[str, tuple[dict[str, Any], ...]] = {}
+    for source_type_str, source_data in data.items():
+        if source_type_str == "_metadata":
+            continue
+
+        slug_column = source_data.get("slug_column", "instance_id")
+        # A dataset spanning several files is recorded once per file
+        recorded: dict[str, dict[str, Any]] = {}
+        for dataset in source_data.get("datasets", []):
+            slug = dataset.get(slug_column)
+            if slug:
+                recorded.setdefault(slug, dataset)
+
+        if recorded:
+            datasets[SourceDatasetType(source_type_str).name] = tuple(recorded.values())
+
+    return datasets
+
+
 def get_catalog_hash(path: Path) -> str | None:
     """
     Get the hash stored in an existing catalog file.

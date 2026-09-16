@@ -56,7 +56,9 @@ def obs4ref_style_dir(tmp_path):
 
 class TestObs4REFDatasetAdapter:
     def test_instance_id_prefix(self):
+        # obs4REF data is namespaced, where published obs4MIPs data keeps its published id
         assert Obs4REFDatasetAdapter.instance_id_prefix == "obs4REF"
+        assert Obs4MIPsDatasetAdapter.instance_id_prefix is None
         assert Obs4REFDatasetAdapter.accepted_activity_ids == ("obs4REF",)
 
     def test_load_local_datasets_prefixes_instance_id(self, obs4ref_style_dir):
@@ -64,7 +66,7 @@ class TestObs4REFDatasetAdapter:
         data_catalog = adapter.find_local_datasets(obs4ref_style_dir)
 
         assert len(data_catalog) == 1
-        assert data_catalog["instance_id"].iloc[0].startswith("obs4REF.")
+        assert data_catalog["instance_id"].iloc[0].startswith("obs4REF.obs4REF.")
 
     def test_cross_parsed_by_obs4mips_adapter_warns_and_ingests(self, obs4ref_style_dir, caplog):
         """An obs4REF file parsed by the obs4MIPs adapter is still ingested, with a warning."""
@@ -78,8 +80,9 @@ class TestObs4REFDatasetAdapter:
         obs4mips_instance_id = obs4mips_catalog["instance_id"].iloc[0]
         ref_instance_id = ref_catalog["instance_id"].iloc[0]
 
-        assert obs4mips_instance_id.startswith("obs4MIPs.")
-        assert ref_instance_id.startswith("obs4REF.")
+        # Unprefixed, the id starts with the file's own activity_id
+        assert obs4mips_instance_id.startswith("obs4REF.")
+        assert ref_instance_id.startswith("obs4REF.obs4REF.")
         # Non-colliding slugs -- the cross-parsed file never masquerades as the same dataset.
         assert obs4mips_instance_id != ref_instance_id
 

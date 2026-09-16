@@ -130,8 +130,15 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
     dataset_cls: type[Dataset] = Obs4MIPsDataset
     slug_column = "instance_id"
 
-    instance_id_prefix = "obs4MIPs"
-    """Prefix used to build ``instance_id`` for datasets ingested through this adapter."""
+    instance_id_prefix: str | None = None
+    """
+    Namespace for ``instance_id``, prepended to the DRS facets.
+
+    Published obs4MIPs data takes no prefix, so its ``instance_id`` is the id ESGF
+    publishes it under and can be searched for directly. An adapter for data that merely
+    looks like obs4MIPs sets one, so that a file ingested through both never yields the
+    same (globally unique) slug twice.
+    """
 
     accepted_activity_ids: tuple[str, ...] = ("obs4MIPs",)
     """
@@ -166,14 +173,16 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
 
     file_specific_metadata = ("start_time", "end_time", "path")
     version_metadata = "version"
-    # See ODS2.5 at https://doi.org/10.5281/zenodo.11500474 under "Directory structure template"
+    # The facets ESGF publishes obs4MIPs datasets under, so that a dataset's ``instance_id``
+    # is the same one the ESGF index knows it by and can be searched for directly.
+    # The ODS2.5 directory template (https://doi.org/10.5281/zenodo.11500474) additionally
+    # nests data under ``nominal_resolution``, which is descriptive rather than identifying.
     dataset_id_metadata = (
         "activity_id",
         "institution_id",
         "source_id",
         "frequency",
         "variable_id",
-        "nominal_resolution",
         "grid_label",
     )
 
@@ -216,12 +225,7 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             self.version_metadata,
         ]
 
-        def _transform(item: str, value: Any) -> str:
-            return str(value).replace(" ", "") if item == "nominal_resolution" else str(value)
-
-        datasets = build_instance_id(
-            datasets, drs_items, prefix=self.instance_id_prefix, transform=_transform
-        )
+        datasets = build_instance_id(datasets, drs_items, prefix=self.instance_id_prefix)
         datasets["finalised"] = True
         return datasets
 

@@ -7,7 +7,9 @@ a request class that fetches CMIP6 data and converts it to CMIP7 format.
 
 from __future__ import annotations
 
+import copy
 import re
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, ClassVar, NamedTuple
 
@@ -28,6 +30,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     suppress_bounds_coordinates,
 )
 from climate_ref_core.data import resolve_cache_dir
+from climate_ref_core.esgf.base import facet_pins_from_datasets
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
 
@@ -213,6 +216,22 @@ class CMIP7Request:
 
     source_type = "CMIP7"
 
+    # A pin on these datasets is matched against the results of the CMIP6 source search,
+    # because they are converted locally rather than published under an id ESGF knows.
+    # The recorded version is fabricated during conversion (see ``_bump_version``) and
+    # the CMIP7-only facets have no CMIP6 counterpart, so neither can be matched on.
+    pinned_facet_fields: ClassVar[dict[str, str]] = {
+        "institution_id": "institution_id",
+        "source_id": "source_id",
+        "experiment_id": "experiment_id",
+        "member_id": "variant_label",
+        "variable_id": "variable_id",
+        "grid_label": "grid_label",
+    }
+
+    pinned_facets: tuple[dict[str, str], ...] | None = None
+    """Facet sets to keep from the CMIP6 source search, one per pinned dataset."""
+
     # Map CMIP7 facets to CMIP6 facets
     facet_mapping: ClassVar[dict[str, str]] = {
         "variant_label": "member_id",
@@ -275,6 +294,34 @@ class CMIP7Request:
 
         # Create corresponding CMIP6 facets
         self._cmip6_facets = self._convert_to_cmip6_facets(facets)
+
+    def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> CMIP7Request:
+        """
+        Return a copy of this request that only resolves the given datasets.
+
+        The recorded datasets are not published on ESGF, so unlike
+        :meth:`~climate_ref_core.esgf.IntakeESGFMixin.pin_to_datasets` they cannot be
+        asked for by id: the pins are kept as CMIP6 facets, and the source search's
+        results are filtered down to them.
+
+        Parameters
+        ----------
+        datasets
+            The catalog records of the datasets recorded for this request's source type.
+
+        Returns
+        -------
+        :
+            The pinned request, or this request unchanged if any record is missing one of
+            the facets a pin needs.
+        """
+        pins = facet_pins_from_datasets(datasets, self.pinned_facet_fields, self.slug)
+        if pins is None:
+            return self
+
+        pinned = copy.copy(self)
+        pinned.pinned_facets = pins
+        return pinned
 
     def _convert_to_cmip6_facets(self, cmip7_facets: dict[str, Any]) -> dict[str, Any]:
         """Convert CMIP7 facets to CMIP6 facets for fetching."""
@@ -346,6 +393,9 @@ class CMIP7Request:
             remove_ensembles=self.remove_ensembles,
             time_span=self.time_span,
         )
+        # Pins are already expressed as CMIP6 facets, so the source search applies them
+        # directly rather than searching for the (unpublished) CMIP7 ids
+        cmip6_request.pinned_facets = self.pinned_facets
 
         # Fetch CMIP6 datasets
         cmip6_df = cmip6_request.fetch_datasets()

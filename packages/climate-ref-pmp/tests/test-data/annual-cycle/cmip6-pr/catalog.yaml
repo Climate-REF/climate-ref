@@ -1,5 +1,5 @@
 _metadata:
-  hash: 326fc588c4f244b1efdeade4f781bc72b0c73ba6
+  hash: 466fc164dd008856b4d0d0f6d232c76ceb0f61da
 pmp-climatology:
   slug_column: instance_id
   selector:
@@ -13,7 +13,7 @@ pmp-climatology:
     frequency: mon
     grid: 0.5x0.5 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-GSFC.GPCP-3-3.mon.pr.50km.gn.v20260513
+    instance_id: obs4MIPs.NASA-GSFC.GPCP-3-3.mon.pr.gn.v20260513
     institution_id: NASA-GSFC
     long_name: Precipitation
     nominal_resolution: 50 km

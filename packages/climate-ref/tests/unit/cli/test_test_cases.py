@@ -2906,10 +2906,12 @@ class TestPinRequestsToCatalog:
         recorded = {
             "PMPClimatology": (
                 {
-                    "instance_id": "obs4MIPs.PCMDI.ERA-5.mon.psl.gr.v20250224",
+                    "instance_id": "obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250224",
+                    "institution_id": "ECMWF",
                     "source_id": "ERA-5",
+                    "frequency": "mon",
                     "variable_id": "psl",
-                    "grid_label": "gr",
+                    "grid_label": "gn",
                     "version": "v20250224",
                 },
             )
@@ -2919,7 +2921,7 @@ class TestPinRequestsToCatalog:
 
         assert pinned_source_types == {"PMPClimatology"}
         assert requests[0].pinned_facets == (
-            {"source_id": "ERA-5", "variable_id": "psl", "grid_label": "gr", "version": "v20250224"},
+            {"source_id": "ERA-5", "variable_id": "psl", "version": "v20250224"},
         )
 
     def test_request_whose_records_lack_the_facets_is_left_alone(self):

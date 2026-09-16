@@ -1,0 +1,164 @@
+_metadata:
+  hash: 4f5835b13d6da322b4199f90f0eec764e26d670d
+cmip6:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: CanESM5
+  datasets:
+  - activity_id: CMIP
+    branch_method: Spin-up documentation
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    calendar: null
+    end_time: null
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: areacello_Ofx_CanESM5_historical_r1i1p1f1_gn.nc
+    finalised: true
+    frequency: fx
+    grid: ORCA1 tripolar grid, 1 deg with refinement to 1/3 deg within 20 degrees
+      of the equator; 361 x 290 longitude/latitude; 45 vertical levels; top grid cell
+      0-6.19 m
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.areacello.gn.v20190429
+    institution_id: CCCma
+    long_name: Grid-Cell Area for Ocean Variables
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: ocean
+    source_id: CanESM5
+    source_type: AOGCM
+    standard_name: cell_area
+    start_time: null
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Ofx
+    time_range: null
+    time_units: null
+    units: m2
+    variable_id: areacello
+    variant_label: r1i1p1f1
+    version: v20190429
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: Spin-up documentation
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    calendar: null
+    end_time: null
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: sftof_Ofx_CanESM5_historical_r1i1p1f1_gn.nc
+    finalised: true
+    frequency: fx
+    grid: ORCA1 tripolar grid, 1 deg with refinement to 1/3 deg within 20 degrees
+      of the equator; 361 x 290 longitude/latitude; 45 vertical levels; top grid cell
+      0-6.19 m
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.sftof.gn.v20190429
+    institution_id: CCCma
+    long_name: Sea Area Percentage
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: ocean
+    source_id: CanESM5
+    source_type: AOGCM
+    standard_name: sea_area_fraction
+    start_time: null
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Ofx
+    time_range: null
+    time_units: null
+    units: '%'
+    variable_id: sftof
+    variant_label: r1i1p1f1
+    version: v20190429
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: Spin-up documentation
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: msftmz_Omon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: ORCA1 tripolar grid, 1 deg with refinement to 1/3 deg within 20 degrees
+      of the equator; 361 x 290 longitude/latitude; 45 vertical levels; top grid cell
+      0-6.19 m
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Omon.msftmz.gn.v20190429
+    institution_id: CCCma
+    long_name: Ocean Meridional Overturning Mass Streamfunction
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: ocean
+    source_id: CanESM5
+    source_type: AOGCM
+    standard_name: ocean_meridional_overturning_mass_streamfunction
+    start_time: '1850-01-16 12:00:00'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Omon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01 0:0:0.0
+    units: kg s-1
+    variable_id: msftmz
+    variant_label: r1i1p1f1
+    version: v20190429
+    vertical_levels: 45
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gm
+    source_id: RAPID-2023-1a
+    variable_id: msftmz
+    version: v20250902
+  datasets:
+  - activity_id: obs4REF
+    end_time: '2023-02-15 00:00:00'
+    filename: msftmz_mon_RAPID-2023-1a_REF_gm_200404-202302.nc
+    finalised: true
+    frequency: mon
+    grid: global mean data
+    grid_label: gm
+    instance_id: obs4REF.NOC.RAPID-2023-1a.mon.msftmz.gm.v20250902
+    institution_id: NOC
+    long_name: Ocean Meridional Overturning Mass Streamfunction
+    nominal_resolution: site
+    product: derived
+    realm: ocean
+    source_id: RAPID-2023-1a
+    source_type: insitu
+    source_version_number: 2023.1a
+    start_time: '2004-04-16 00:00:00'
+    time_range: 2004-04-16 00:00:00-2023-02-15 00:00:00
+    units: Sv
+    variable_id: msftmz
+    variant_label: REF
+    version: v20250902
+    vertical_levels: 1

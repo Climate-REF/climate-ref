@@ -25,7 +25,9 @@ class TestParsePMPClimatologyKey:
 
         assert result["variable_id"] == "psl"
         assert result["source_id"] == "ERA-5"
-        assert result["institution_id"] == "PCMDI"
+        # The short name the file is published under, not the dataset's institution
+        assert result["institution_short"] == "PCMDI"
+        assert "institution_id" not in result
         assert result["grid_label"] == "gr"
         assert result["time_range"] == "198101-200412"
         assert result["time_start"] == "198101"
@@ -44,7 +46,7 @@ class TestParsePMPClimatologyKey:
 
         assert result["variable_id"] == "pr"
         assert result["source_id"] == "GPCP-Monthly-3-2"
-        assert result["institution_id"] == "RSS"
+        assert result["institution_short"] == "RSS"
 
     def test_parse_ceres_key(self):
         """Test parsing a CERES climatology key."""
@@ -57,8 +59,8 @@ class TestParsePMPClimatologyKey:
         assert result["variable_id"] == "rlds"
         assert result["source_id"] == "CERES-EBAF-4-2"
 
-    def test_parse_hyphenated_institution_id(self):
-        """A hyphenated institution_id (e.g. NASA-GISS) must still parse."""
+    def test_parse_hyphenated_institution_short(self):
+        """A hyphenated short name (e.g. NASA-GISS) must still parse."""
         key = (
             "PMP_obs4MIPsClims/pr/gr/v20260513/"
             "pr_mon_GPCP-3-3_NASA-GISS_gr_198301-201412_AC_v20260513_2.5x2.5.nc"
@@ -67,7 +69,7 @@ class TestParsePMPClimatologyKey:
 
         assert result["variable_id"] == "pr"
         assert result["source_id"] == "GPCP-3-3"
-        assert result["institution_id"] == "NASA-GISS"
+        assert result["institution_short"] == "NASA-GISS"
 
     def test_parse_invalid_key_wrong_parts(self):
         """Test parsing a key with wrong number of path parts."""
@@ -494,25 +496,46 @@ class TestRegistryRequest:
 class TestPinToDatasets:
     """Registry data drifts like published data, so a pinned request keeps its version."""
 
+    # As a catalog records it: the facets come from the file, so grid_label is the ``gn``
+    # the climatology was derived from and institution_id is ``ECMWF``, where the registry
+    # key says ``gr`` and ``PCMDI``.
     recorded: ClassVar = [
         {
-            "instance_id": "obs4MIPs.PCMDI.ERA-5.mon.psl.gr.v20250224",
+            "instance_id": "obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v20250224",
+            "activity_id": "obs4MIPs",
+            "institution_id": "ECMWF",
+            "variant_label": "PCMDI",
             "source_id": "ERA-5",
+            "frequency": "mon",
             "variable_id": "psl",
-            "grid_label": "gr",
+            "grid_label": "gn",
             "version": "v20250224",
         }
     ]
 
-    def test_pins_are_the_recorded_facets(self):
+    # A real key from the pmp-climatology registry
+    key = "PMP_obs4MIPsClims/psl/gr/v20250224/psl_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20250224_2.5x2.5.nc"
+
+    def test_pins_are_the_facets_that_agree_with_the_key(self):
         request = RegistryRequest(slug="era5", registry_name="pmp-climatology", facets={})
         pinned = request.pin_to_datasets(self.recorded)
 
         assert pinned is not request
         assert request.pinned_facets is None
-        assert pinned.pinned_facets == (
-            {"source_id": "ERA-5", "variable_id": "psl", "grid_label": "gr", "version": "v20250224"},
-        )
+        assert pinned.pinned_facets == ({"source_id": "ERA-5", "variable_id": "psl", "version": "v20250224"},)
+
+    def test_pin_matches_the_key_the_dataset_came_from(self):
+        """The facets a catalog records and those a key carries only partly agree."""
+        request = RegistryRequest(slug="era5", registry_name="pmp-climatology", facets={})
+        pinned = request.pin_to_datasets(self.recorded)
+        metadata = _parse_pmp_climatology_key(self.key)
+
+        assert _matches_facets(metadata, pinned.pinned_facets[0])
+        # Pinning on what the key spells differently would match nothing
+        assert metadata["grid_label"] == "gr" != self.recorded[0]["grid_label"]
+        assert metadata["institution_short"] == "PCMDI" != self.recorded[0]["institution_id"]
+        assert "institution_id" not in metadata
+        assert "frequency" not in metadata
 
     def test_incomplete_record_is_not_pinned(self):
         request = RegistryRequest(slug="era5", registry_name="pmp-climatology", facets={})
@@ -522,11 +545,9 @@ class TestPinToDatasets:
 
     def test_pinned_fetch_keeps_the_recorded_version(self):
         """The declared facets would resolve the newest version; the pin holds the old one."""
+        newer = self.key.replace("v20250224", "v20260101")
         mock_registry = MagicMock()
-        mock_registry.registry.keys.return_value = [
-            "PMP_obs4MIPsClims/psl/gr/v20250224/psl_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20250224_2.5x2.5.nc",
-            "PMP_obs4MIPsClims/psl/gr/v20260101/psl_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20260101_2.5x2.5.nc",
-        ]
+        mock_registry.registry.keys.return_value = [self.key, newer]
         mock_registry.fetch.side_effect = lambda key: f"/path/to/{key}"
 
         mock_manager = MagicMock()

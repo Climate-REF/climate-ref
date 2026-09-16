@@ -42,6 +42,10 @@ def _parse_obs4ref_key(key: str) -> dict[str, Any]:
     Where filename is:
     {variable_id}_{frequency}_{source_id}_{inst_short}_{grid_label}_{time_range}.nc
 
+    ``inst_short`` is the short name the file is published under (e.g. ``PCMDI``) and is
+    reported as ``institution_short``; ``institution_id`` is the institution directory of
+    the key, which is the dataset's own. Some keys carry a placeholder (``NR``) there.
+
     Parameters
     ----------
     key
@@ -103,7 +107,12 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
     PMP_obs4MIPsClims/{variable_id}/{grid_label}/{version}/{filename}
 
     Where filename is:
-    {variable_id}_mon_{source_id}_{institution_id}_{grid_label}_{time_range}_AC_{version}_{resolution}.nc
+    {variable_id}_mon_{source_id}_{inst_short}_{grid_label}_{time_range}_AC_{version}_{resolution}.nc
+
+    ``inst_short`` is the short name the file is published under (e.g. ``PCMDI``), which
+    is not the dataset's ``institution_id`` (``ECMWF`` for that example). These keys carry
+    no institution directory to read the real one from, so none is reported -- the same
+    name is used as in :func:`_parse_obs4ref_key`, where the two are distinguishable.
 
     Parameters
     ----------
@@ -123,13 +132,13 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
 
     _, _variable_id_dir, _grid_label, _version, filename = parts
 
-    # Parse filename: {var}_mon_{source_id}_{inst_id}_{grid}_{time}_AC_{ver}_{res}.nc
-    # source_id and institution_id may both contain hyphens (e.g. "GPCP-3-3", "NASA-GISS");
+    # Parse filename: {var}_mon_{source_id}_{inst_short}_{grid}_{time}_AC_{ver}_{res}.nc
+    # source_id and inst_short may both contain hyphens (e.g. "GPCP-3-3", "NASA-GISS");
     # the literal "_" separators keep tokenisation unambiguous.
     filename_pattern = re.compile(
         r"^(?P<variable_id>[a-z]+)_mon_"
         r"(?P<source_id>[A-Za-z0-9-]+)_"
-        r"(?P<institution_id>[A-Za-z0-9-]+)_"
+        r"(?P<institution_short>[A-Za-z0-9-]+)_"
         r"(?P<grid_label>[a-z]+)_"
         r"(?P<time_range>\d+-\d+)_AC_"
         r"(?P<version>v\d+)_"
@@ -232,15 +241,26 @@ class RegistryRequest:
     pinned_facet_fields: ClassVar[dict[str, str]] = {
         "source_id": "source_id",
         "variable_id": "variable_id",
-        "grid_label": "grid_label",
         "version": "version",
     }
     """
     Facets a pin matches registry keys on, and the recorded facet each is spelled as.
 
     A registry key carries no ``instance_id`` to ask for, so a pin is matched against the
-    facets parsed out of the key. These are the ones every key parser reports, and
-    together they identify a dataset within a registry.
+    facets parsed out of the key. A catalog, though, records the facets read from the
+    *file*, and the two disagree wherever a registry describes a dataset differently from
+    how the data describes itself. Only facets that agree can be pinned on, which rules
+    out three that otherwise look like obvious candidates:
+
+    * ``grid_label``: PMP climatologies are published under ``gr`` because they are
+      regridded, while the files themselves still report the ``gn`` they were derived from.
+    * ``institution_id``: PMP keys do not carry one (only the short name the file is
+      published under, e.g. ``PCMDI`` for data whose institution is ``ECMWF``), and some
+      obs4REF keys carry a placeholder (``NR``) in its place.
+    * ``frequency``: the PMP key parser does not report it at all.
+
+    The three that remain agree across both registries, and identify a dataset within
+    one: no two keys in either registry share them.
     """
 
     pinned_facets: tuple[dict[str, str], ...] | None = None

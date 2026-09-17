@@ -114,13 +114,18 @@ def _check_pinned_datasets_found(
     pinned_source_types: set[str],
 ) -> None:
     """
-    Check that every pinned dataset was fetched.
+    Check that every pinned dataset made it into the catalog.
+
+    A dataset can go missing for more than one reason -- it may no longer be published,
+    but it may equally have failed to download or, for CMIP7, to convert. Those failures
+    are reported where they happen, so the error raised here points at them rather than
+    naming a cause it cannot know.
 
     Raises
     ------
     DatasetResolutionError
-        If a recorded dataset could no longer be resolved, which would silently shrink
-        the catalog and invalidate the test case's regression baseline.
+        If a recorded dataset is missing, which would otherwise silently shrink the
+        catalog and invalidate the test case's regression baseline.
     """
     for source_type_name in sorted(pinned_source_types):
         source = SourceDatasetType[source_type_name]
@@ -135,9 +140,11 @@ def _check_pinned_datasets_found(
         ]
         if missing:
             raise DatasetResolutionError(
-                f"{len(missing)} dataset(s) recorded in the catalog could not be fetched: "
-                f"{', '.join(missing)}. Re-run with --regen to resolve the test case from "
-                "its declared facets again."
+                f"{len(missing)} dataset(s) recorded in the catalog are missing from the "
+                f"fetched data: {', '.join(missing)}. Earlier errors in the log say why each "
+                "one did not arrive; fix those first. Only if the recorded datasets are "
+                "themselves out of date should the test case be re-resolved from its "
+                "declared facets with --regen."
             )
 
 

@@ -514,6 +514,15 @@ class CMIP7Request:
             if converted_files:
                 cmip7_row["files"] = converted_files
                 converted_rows.append(cmip7_row)
+            elif paths:
+                # Every file failed to convert above, so this dataset drops out of the
+                # result. Say so here, while the reason is still next to it in the log:
+                # downstream all that can be seen is a dataset that never arrived.
+                dataset = row_dict.get("key") or cmip7_row.get("variable_id", "<unknown dataset>")
+                logger.error(
+                    f"None of the {len(paths)} file(s) for {dataset} could be converted, "
+                    f"so it is missing from the data fetched for {self.slug}"
+                )
 
         if not converted_rows:
             logger.warning(f"No files converted for request: {self.slug}")

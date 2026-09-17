@@ -367,6 +367,35 @@ class TestYamlSerialization:
         validate_catalog_paths(yaml_path, paths_file)
         assert len(yaml.safe_load(paths_file.read_text())) == 2
 
+    def test_writes_metadata_changes_to_the_same_datasets(self, tmp_path):
+        """
+        A recorded field changing is a change, even though the datasets are the same.
+
+        The stored hash identifies which datasets were selected and deliberately ignores
+        their metadata, so it cannot answer whether the file needs rewriting: a new column,
+        or a corrected value, leaves it identical.
+        """
+        yaml_path = tmp_path / "catalog.yaml"
+
+        def _save(**extra):
+            df = pd.DataFrame({"instance_id": ["CMIP6.test.ds"], "path": ["/path/to/file.nc"], **extra})
+            datasets = ExecutionDatasetCollection(
+                {
+                    SourceDatasetType.CMIP6: DatasetCollection(
+                        datasets=df, slug_column="instance_id", selector=()
+                    )
+                }
+            )
+            return save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
+
+        assert _save() is True
+        assert _save(version=["v20190429"]) is True
+
+        recorded = yaml.safe_load(yaml_path.read_text())
+        assert recorded["cmip6"]["datasets"][0]["version"] == "v20190429"
+        # The selection did not change, so the identity the hash stands for did not either
+        assert _save(version=["v20190429"]) is False
+
     def test_validate_catalog_paths_accepts_empty_catalog_without_sidecar(self, tmp_path):
         yaml_path = tmp_path / "catalog.yaml"
         yaml_path.write_text("_metadata:\n  hash: abc123\n")

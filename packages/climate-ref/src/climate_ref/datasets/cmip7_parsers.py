@@ -158,9 +158,6 @@ def parse_cmip7_complete(file: str, **kwargs: Any) -> dict[str, Any]:
                 "branding_suffix": read_mandatory_attr(ds, "branding_suffix"),
                 "branded_variable": read_mandatory_attr(ds, "branded_variable"),
                 "version": extract_version_from_path(str(Path(file).parent)),
-                # Only set on files converted from CMIP6, where it names the source
-                # dataset the fabricated CMIP7 version above cannot.
-                "cmip6_version": getattr(ds, "cmip6_version", None),
                 # Additional mandatory attributes
                 "mip_era": read_mandatory_attr(ds, "mip_era"),
                 "realm": read_mandatory_attr(ds, "realm"),

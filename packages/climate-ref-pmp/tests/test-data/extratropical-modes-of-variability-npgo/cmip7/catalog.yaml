@@ -69,7 +69,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/dc8a9116-1c97-46c7-8b98-a33aea48fcb0
+    tracking_id: hdl:21.14107/372d630e-fc9a-438e-bc5a-cb0deedba1f5
     units: K
     variable_id: ts
     variant_label: r1i1p1f1

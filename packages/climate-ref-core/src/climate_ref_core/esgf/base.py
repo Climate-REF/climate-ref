@@ -126,44 +126,6 @@ def facet_pins_from_datasets(
     return tuple(dict(facets) for facets in unique)
 
 
-def select_pinned(datasets: pd.DataFrame, pins: Sequence[Mapping[str, str]]) -> pd.DataFrame:
-    """
-    Keep only the search results that match one of the pins.
-
-    Parameters
-    ----------
-    datasets
-        Search results, one row per dataset.
-    pins
-        Facet sets to keep. A row is kept if it matches every facet of any one pin;
-        a pin naming a facet the search does not report matches nothing.
-
-    Returns
-    -------
-    :
-        The matching rows.
-    """
-    mask = pd.Series(False, index=datasets.index)
-
-    for pin in pins:
-        if not set(pin).issubset(datasets.columns):
-            continue
-
-        pin_mask = pd.Series(True, index=datasets.index)
-        for facet, value in pin.items():
-            column = datasets[facet].astype(str)
-            expected = value
-            if facet == "version":
-                # ESGF reports the DRS version as bare digits, while a catalog records
-                # the leading "v" of the directory the dataset was parsed from.
-                column = column.str.removeprefix("v")
-                expected = value.removeprefix("v")
-            pin_mask &= column == expected
-        mask |= pin_mask
-
-    return datasets[mask].copy()
-
-
 def _deduplicate_datasets(datasets: pd.DataFrame) -> pd.DataFrame:
     """
     Deduplicate a dataset collection.
@@ -218,9 +180,6 @@ class IntakeESGFMixin:
 
     pinned_instance_ids: tuple[str, ...] | None = None
     """Ids of the datasets this request is pinned to."""
-
-    pinned_facets: tuple[dict[str, str], ...] | None = None
-    """Facet sets to keep from the search results, one per pinned dataset."""
 
     def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> Self:
         """
@@ -292,15 +251,7 @@ class IntakeESGFMixin:
                 msg = f"ESGF search returned no results for facets: {facets}"
                 raise DatasetResolutionError(msg) from None
 
-            if self.pinned_facets:
-                cat.df = select_pinned(cat.df if cat.df is not None else pd.DataFrame(), self.pinned_facets)
-                if cat.df.empty:
-                    msg = (
-                        f"None of the {len(self.pinned_facets)} pinned datasets could be "
-                        f"resolved for request {self.slug}"
-                    )
-                    raise DatasetResolutionError(msg)
-            elif self.remove_ensembles and not self.pinned_instance_ids:
+            if self.remove_ensembles and not self.pinned_instance_ids:
                 # Pinned ids already name one ensemble member each
                 cat.remove_ensembles()
 

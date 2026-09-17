@@ -9,7 +9,6 @@ from climate_ref_core.esgf.base import (
     ESGFRequest,
     IntakeESGFMixin,
     enable_ceda_solr_index,
-    select_pinned,
 )
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 from climate_ref_core.esgf.cmip7 import CMIP7Request
@@ -26,5 +25,4 @@ __all__ = [
     "Obs4MIPsRequest",
     "RegistryRequest",
     "enable_ceda_solr_index",
-    "select_pinned",
 ]

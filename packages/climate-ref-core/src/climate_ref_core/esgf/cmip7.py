@@ -7,7 +7,6 @@ a request class that fetches CMIP6 data and converts it to CMIP7 format.
 
 from __future__ import annotations
 
-import copy
 import re
 import uuid
 from collections.abc import Mapping, Sequence
@@ -32,7 +31,6 @@ from climate_ref_core.cmip6_to_cmip7 import (
     suppress_bounds_coordinates,
 )
 from climate_ref_core.data import resolve_cache_dir
-from climate_ref_core.esgf.base import facet_pins_from_datasets
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
 _MANDATORY_CONVERTED_ATTRS = (
@@ -84,38 +82,20 @@ def _quantised_variables(ds: xr.Dataset) -> list[str]:
     ]
 
 
-def _invalid_conversion_reason(path: Path, expected_cmip6_version: str | None = None) -> str | None:
-    """
-    Return why a cached conversion cannot be reused.
-
-    Parameters
-    ----------
-    path
-        The cached conversion.
-    expected_cmip6_version
-        The DRS version of the CMIP6 dataset now being converted, when the search reported
-        one. A cached file that records a different version, or none at all because it
-        predates the provenance, is rebuilt so that the version is there to pin on.
-
-    Returns
-    -------
-    :
-        The reason, or ``None`` if the cached file can be used as-is.
-    """
+def _invalid_conversion_reason(path: Path) -> str | None:
+    """Return why a cached conversion cannot be reused, or ``None`` if it can."""
     try:
         with xr.open_dataset(path, decode_times=False) as ds:
-            return _conversion_defect(ds, expected_cmip6_version)
+            return _conversion_defect(ds)
     except (OSError, ValueError) as e:
         return f"cannot read metadata: {e}"
 
 
-def _conversion_defect(ds: xr.Dataset, expected_cmip6_version: str | None) -> str | None:
+def _conversion_defect(ds: xr.Dataset) -> str | None:
     """Return what is wrong with an opened cached conversion, or ``None`` if nothing is."""
     missing = [name for name in _MANDATORY_CONVERTED_ATTRS if not ds.attrs.get(name)]
     if missing:
         return f"missing mandatory attributes: {', '.join(missing)}"
-    if expected_cmip6_version and ds.attrs.get("cmip6_version") != expected_cmip6_version:
-        return f"not recorded as converted from CMIP6 version {expected_cmip6_version}"
 
     variable_id = str(ds.attrs["variable_id"])
     if variable_id not in ds.variables:
@@ -240,7 +220,6 @@ def _convert_file_to_cmip7(
     # (e.g. "C4MIP CDRMIP"). Use only the first activity for the DRS path.
     activity_id = str(cmip7_facets.get("activity_id", "CMIP")).split()[0]
     version = str(cmip7_facets.get("version", "v0"))
-    cmip6_version = str(cmip7_facets.get("cmip6_version") or "")
 
     # Build CMIP7 DRS path using the standard MIP-DRS7 path builder.
     # Provide defaults for fields that may not be in facets.
@@ -274,7 +253,7 @@ def _convert_file_to_cmip7(
             output_file = drs_path / create_cmip7_filename(cmip7_facets, time_range=time_range)
 
             if output_file.exists():
-                invalid_reason = _invalid_conversion_reason(output_file, cmip6_version or None)
+                invalid_reason = _invalid_conversion_reason(output_file)
                 if invalid_reason is None:
                     logger.debug(f"Using cached CMIP7 file: {output_file}")
                     return output_file
@@ -286,11 +265,6 @@ def _convert_file_to_cmip7(
             # so that parse_cmip7_file can extract them for instance_id construction
             ds_cmip7.attrs["version"] = version
             ds_cmip7.attrs["activity_id"] = activity_id
-            if cmip6_version:
-                # The CMIP7 version above is made up, so this attribute is the only record
-                # of which CMIP6 dataset the file was converted from, and the only thing a
-                # pin can hold the source to (see ``CMIP7Request.pinned_facet_fields``).
-                ds_cmip7.attrs["cmip6_version"] = cmip6_version
 
             temporary_file = output_file.with_name(
                 f".{output_file.stem}.{uuid.uuid4().hex}.tmp{output_file.suffix}"
@@ -330,25 +304,6 @@ class CMIP7Request:
     """
 
     source_type = "CMIP7"
-
-    # A pin on these datasets is matched against the results of the CMIP6 source search,
-    # because they are converted locally rather than published under an id ESGF knows.
-    # The search is asked for a CMIP6 ``version``, so it is matched against the recorded
-    # ``cmip6_version`` rather than the recorded ``version``: that one belongs to the
-    # conversion, and ``_bump_version`` moves it again for fabricated output. The
-    # CMIP7-only facets have no CMIP6 counterpart, so they cannot be matched on at all.
-    pinned_facet_fields: ClassVar[dict[str, str]] = {
-        "institution_id": "institution_id",
-        "source_id": "source_id",
-        "experiment_id": "experiment_id",
-        "member_id": "variant_label",
-        "variable_id": "variable_id",
-        "grid_label": "grid_label",
-        "version": "cmip6_version",
-    }
-
-    pinned_facets: tuple[dict[str, str], ...] | None = None
-    """Facet sets to keep from the CMIP6 source search, one per pinned dataset."""
 
     # Map CMIP7 facets to CMIP6 facets
     facet_mapping: ClassVar[dict[str, str]] = {
@@ -415,12 +370,16 @@ class CMIP7Request:
 
     def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> CMIP7Request:
         """
-        Return a copy of this request that only resolves the given datasets.
+        Return this request unchanged: CMIP7 requests are not pinned.
 
-        The recorded datasets are not published on ESGF, so unlike
-        :meth:`~climate_ref_core.esgf.IntakeESGFMixin.pin_to_datasets` they cannot be
-        asked for by id: the pins are kept as CMIP6 facets, and the source search's
-        results are filtered down to them.
+        A recorded CMIP7 dataset names nothing that identifies what it was built from. It
+        is converted locally, so ESGF has no id for it, and the CMIP6 dataset underneath is
+        no longer recognisable in the result: the version is the conversion's own,
+        ``table_id`` has no CMIP7 counterpart, and the Data Request renames variables
+        (``Lmon.mrsos`` and ``Emon.mrsol`` both become ``mrsol``). Recording the source id
+        alongside would fix that, but the whole CMIP6-to-CMIP7 conversion only stands in
+        until CMIP7 data is published, so these requests re-resolve their declared facets
+        and the pinning stays where the data is real.
 
         Parameters
         ----------
@@ -430,16 +389,9 @@ class CMIP7Request:
         Returns
         -------
         :
-            The pinned request, or this request unchanged if any record is missing one of
-            the facets a pin needs.
+            This request, unchanged.
         """
-        pins = facet_pins_from_datasets(datasets, self.pinned_facet_fields, self.slug)
-        if pins is None:
-            return self
-
-        pinned = copy.copy(self)
-        pinned.pinned_facets = pins
-        return pinned
+        return self
 
     def _convert_to_cmip6_facets(self, cmip7_facets: dict[str, Any]) -> dict[str, Any]:
         """Convert CMIP7 facets to CMIP6 facets for fetching."""
@@ -468,13 +420,6 @@ class CMIP7Request:
 
         # Add CMIP7-specific metadata
         cmip7_row["mip_era"] = "CMIP7"
-
-        # The CMIP7 ``version`` is the conversion's own -- it does not survive the round
-        # trip through the DRS path, and ``extend_historical_to`` bumps it again -- so keep
-        # the version of the CMIP6 dataset this came from alongside it. That is what names
-        # the source on ESGF, and so what a pin has to match.
-        if cmip6_row.get("version"):
-            cmip7_row["cmip6_version"] = str(cmip6_row["version"])
 
         # CMIP6 activity_id can contain multiple activities separated by spaces
         # (e.g. "C4MIP CDRMIP"). Use only the first activity for CMIP7.
@@ -518,9 +463,6 @@ class CMIP7Request:
             remove_ensembles=self.remove_ensembles,
             time_span=self.time_span,
         )
-        # Pins are already expressed as CMIP6 facets, so the source search applies them
-        # directly rather than searching for the (unpublished) CMIP7 ids
-        cmip6_request.pinned_facets = self.pinned_facets
 
         # Fetch CMIP6 datasets
         cmip6_df = cmip6_request.fetch_datasets()

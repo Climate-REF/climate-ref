@@ -139,7 +139,7 @@ obs4mips:
     variable_id: msftmz
     version: v20250902
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2023-02-15 00:00:00'
     filename: msftmz_mon_RAPID-2023-1a_REF_gm_200404-202302.nc
     finalised: true

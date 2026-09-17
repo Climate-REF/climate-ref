@@ -658,8 +658,9 @@ def save_datasets_to_yaml(
     one per file. Paths are keyed by `{instance_id}::{filename}` to support
     multiple files per dataset.
 
-    By default, the catalog is only written if the content has changed
-    (detected via hash comparison). Use `force=True` to always write.
+    By default, the catalog is only written if its content would change -- which covers
+    the datasets selected and the metadata recorded for them. Use `force=True` to always
+    write.
 
     The paths sidecar is regenerated on every save, even when the catalog content is
     unchanged. Local cache contents can change independently of the version-controlled
@@ -682,11 +683,14 @@ def save_datasets_to_yaml(
         True if the catalog was (re)written, False if the catalog was left unchanged
         (the paths sidecar may still have been regenerated).
     """
-    new_hash = datasets.hash
-
     data, paths_map = _serialise_datasets(datasets)
+    content = yaml.dump(data, default_flow_style=False, sort_keys=False)
 
-    if not force and get_catalog_hash(path) == new_hash:
+    # Compared as content rather than by the stored hash: that hash identifies which
+    # datasets were selected, deliberately ignoring their metadata, so going by it alone
+    # would leave a catalog whose datasets are unchanged but whose recorded metadata is
+    # stale. The hash is part of the content, so a different selection still writes.
+    if not force and path.exists() and path.read_text() == content:
         # Keep the tracked catalog byte-identical, but always refresh its machine-local
         # paths. An existing sidecar may be partial or point at an old cache location.
         _write_paths_file(paths_file, paths_map)
@@ -694,8 +698,7 @@ def save_datasets_to_yaml(
         return False
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+    path.write_text(content)
     _write_paths_file(paths_file, paths_map)
     logger.info(f"Saved catalog to {path} (paths: {paths_file})")
     return True

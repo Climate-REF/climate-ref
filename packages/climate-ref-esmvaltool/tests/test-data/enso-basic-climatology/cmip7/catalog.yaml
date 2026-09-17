@@ -3,6 +3,7 @@ _metadata:
 cmip7:
   slug_column: instance_id
   selector:
+    experiment_id: historical
     grid_label: gn
     source_id: CanESM5
     variant_label: r1i1p1f1
@@ -39,7 +40,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/1f4f2bb8-3145-4b79-84e2-21c01aef10ec
+    tracking_id: hdl:21.14107/6047bf96-ac6e-44b6-b9bb-007f01a3dd8a
     units: kg m-2 s-1
     variable_id: pr
     variant_label: r1i1p1f1
@@ -76,7 +77,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/e137fc92-3d91-4604-838a-2893e3591cbc
+    tracking_id: hdl:21.14107/5f94fdaf-7cd8-4445-b407-c62c91a4c068
     units: Pa
     variable_id: tauu
     variant_label: r1i1p1f1
@@ -113,7 +114,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/92b774a4-e1c9-422b-b0b8-d15d4e0d4ceb
+    tracking_id: hdl:21.14107/c0ab7d01-4b3f-4fa1-a144-7bd3a0ffd53e
     units: degC
     variable_id: tos
     variant_label: r1i1p1f1

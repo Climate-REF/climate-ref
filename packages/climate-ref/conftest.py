@@ -321,7 +321,7 @@ ADAPTER_CONFIGS = {
         parser_config_attr="cmip7_parser",
         instance_id_prefix="CMIP7",
         instance_id_part_count=12,
-        roundtrip_exclude_columns=["time_range", "tracking_id", "cmip6_version"],
+        roundtrip_exclude_columns=["time_range", "tracking_id"],
         complete_parser_core_fields=[
             "source_id",
             "experiment_id",

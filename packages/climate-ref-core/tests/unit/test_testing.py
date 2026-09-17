@@ -15,6 +15,7 @@ from climate_ref_core.testing import (
     _get_provider_test_data_dir,
     catalog_changed_since_regression,
     get_catalog_hash,
+    load_catalog_datasets,
     load_datasets_from_yaml,
     save_datasets_to_yaml,
     validate_catalog_paths,
@@ -366,6 +367,35 @@ class TestYamlSerialization:
         validate_catalog_paths(yaml_path, paths_file)
         assert len(yaml.safe_load(paths_file.read_text())) == 2
 
+    def test_writes_metadata_changes_to_the_same_datasets(self, tmp_path):
+        """
+        A recorded field changing is a change, even though the datasets are the same.
+
+        The stored hash identifies which datasets were selected and deliberately ignores
+        their metadata, so it cannot answer whether the file needs rewriting: a new column,
+        or a corrected value, leaves it identical.
+        """
+        yaml_path = tmp_path / "catalog.yaml"
+
+        def _save(**extra):
+            df = pd.DataFrame({"instance_id": ["CMIP6.test.ds"], "path": ["/path/to/file.nc"], **extra})
+            datasets = ExecutionDatasetCollection(
+                {
+                    SourceDatasetType.CMIP6: DatasetCollection(
+                        datasets=df, slug_column="instance_id", selector=()
+                    )
+                }
+            )
+            return save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
+
+        assert _save() is True
+        assert _save(version=["v20190429"]) is True
+
+        recorded = yaml.safe_load(yaml_path.read_text())
+        assert recorded["cmip6"]["datasets"][0]["version"] == "v20190429"
+        # The selection did not change, so the identity the hash stands for did not either
+        assert _save(version=["v20190429"]) is False
+
     def test_validate_catalog_paths_accepts_empty_catalog_without_sidecar(self, tmp_path):
         yaml_path = tmp_path / "catalog.yaml"
         yaml_path.write_text("_metadata:\n  hash: abc123\n")
@@ -704,6 +734,78 @@ cmip6:
 
         result = get_catalog_hash(yaml_path)
         assert result is None
+
+
+class TestLoadCatalogDatasets:
+    """Tests for load_catalog_datasets function."""
+
+    def _write(self, tmp_path, content):
+        yaml_path = tmp_path / "catalog.yaml"
+        yaml_path.write_text(content)
+        return yaml_path
+
+    def test_returns_records_keyed_by_source_type_name(self, tmp_path):
+        """A request names its source type by the enum name, so the keys match it."""
+        yaml_path = self._write(
+            tmp_path,
+            """
+_metadata:
+  hash: abc123
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets:
+  - instance_id: CMIP6.one
+    variable_id: tas
+obs4mips:
+  slug_column: instance_id
+  selector: {}
+  datasets:
+  - instance_id: obs4MIPs.one
+    variable_id: psl
+""",
+        )
+
+        recorded = load_catalog_datasets(yaml_path)
+
+        assert set(recorded) == {"CMIP6", "obs4MIPs"}
+        assert recorded["CMIP6"] == ({"instance_id": "CMIP6.one", "variable_id": "tas"},)
+
+    def test_multi_file_dataset_is_returned_once(self, tmp_path):
+        """A dataset spanning several files is recorded once per file."""
+        yaml_path = self._write(
+            tmp_path,
+            """
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets:
+  - instance_id: CMIP6.one
+    filename: tas_185001-189912.nc
+  - instance_id: CMIP6.one
+    filename: tas_190001-194912.nc
+""",
+        )
+
+        recorded = load_catalog_datasets(yaml_path)
+
+        assert len(recorded["CMIP6"]) == 1
+        assert recorded["CMIP6"][0]["filename"] == "tas_185001-189912.nc"
+
+    def test_source_type_without_datasets_is_omitted(self, tmp_path):
+        yaml_path = self._write(
+            tmp_path,
+            """
+_metadata:
+  hash: abc123
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets: []
+""",
+        )
+
+        assert load_catalog_datasets(yaml_path) == {}
 
 
 class TestCatalogChangedSinceRegression:

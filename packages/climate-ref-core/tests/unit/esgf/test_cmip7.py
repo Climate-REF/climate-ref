@@ -1,6 +1,7 @@
 """Tests for climate_ref_core.esgf.cmip7 module."""
 
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import cftime
@@ -11,7 +12,7 @@ import pytest
 import xarray as xr
 
 from climate_ref_core.cmip6_to_cmip7 import create_cmip7_filename, create_cmip7_path
-from climate_ref_core.esgf import CMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.esgf.cmip7 import (
     _MANDATORY_CONVERTED_ATTRS,
     _bump_version,
@@ -1161,3 +1162,47 @@ class TestBumpVersion:
     )
     def test_bump(self, version, expected):
         assert _bump_version(version) == expected
+
+
+class TestPinToDatasets:
+    """CMIP7 data is converted locally and stands in until the real thing is published."""
+
+    recorded: ClassVar = [
+        {
+            "instance_id": "CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.gpp.tavg-u-hxy-lnd.gn.v0",
+            "institution_id": "CCCma",
+            "source_id": "CanESM5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "variable_id": "gpp",
+            "grid_label": "gn",
+            "version": "v0",
+        }
+    ]
+
+    def test_the_request_is_returned_unchanged(self):
+        """
+        Nothing a record carries identifies what it was converted from.
+
+        The version is the conversion's own, ``table_id`` does not survive into CMIP7 at
+        all, and the Data Request renames variables -- ``Lmon.mrsos`` and ``Emon.mrsol``
+        both arrive as ``mrsol``, so a pin built from the recorded facets would ask the
+        CMIP6 search for one dataset where the catalog holds two.
+        """
+        request = CMIP7Request(slug="test", facets={"source_id": "CanESM5"})
+
+        assert request.pin_to_datasets(self.recorded) is request
+        assert request.pin_to_datasets([]) is request
+
+    def test_the_source_search_is_not_pinned(self):
+        """The declared facets are resolved afresh, as they are without a catalog."""
+        request = CMIP7Request(slug="test", facets={"source_id": "CanESM5"})
+        pinned = request.pin_to_datasets(self.recorded)
+
+        source = CMIP6Request(slug="source", facets={})
+        source.fetch_datasets = MagicMock(return_value=pd.DataFrame())
+        with patch("climate_ref_core.esgf.cmip7.CMIP6Request", return_value=source) as mock_request_cls:
+            pinned.fetch_datasets()
+
+        assert mock_request_cls.call_args.kwargs["facets"] == request._cmip6_facets
+        assert source.pinned_instance_ids is None

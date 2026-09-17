@@ -1,5 +1,5 @@
 _metadata:
-  hash: b4bb77dae5865642def4836b939c5cd39bbebc95
+  hash: 9f90805601bba62e2fa0db5e13146626382151c8
 cmip6:
   slug_column: instance_id
   selector:
@@ -60,7 +60,7 @@ obs4mips:
     frequency: mon
     grid: data gridded to 1x1 degree lat x lon
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+    instance_id: obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.gn.v20231115
     institution_id: DLR-BIRA
     long_name: Total Column Ozone
     nominal_resolution: 1x1 degree

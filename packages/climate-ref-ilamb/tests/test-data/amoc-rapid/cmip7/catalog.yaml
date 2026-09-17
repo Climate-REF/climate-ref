@@ -1,0 +1,152 @@
+_metadata:
+  hash: 07cf938aaf2072afb88f7f679fb318c5e4f5a65d
+cmip7:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    source_id: CanESM5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: areacello_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: null
+    filename: areacello_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Grid-Cell Area for Ocean Variables
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: cell_area
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/0aa66ecd-99b7-44fa-bf4d-014f735cad1b
+    units: m2
+    variable_id: areacello
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: sftof_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: areacello
+    filename: sftof_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Area Percentage
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_area_fraction
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/88d54b6f-3fc1-4f2b-b9df-7775cd33003c
+    units: '%'
+    variable_id: sftof
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: msftm_tavg-ol-hyb-sea
+    branding_suffix: tavg-ol-hyb-sea
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: null
+    filename: msftm_tavg-ol-hyb-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.msftm.tavg-ol-hyb-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Ocean Meridional Overturning Mass Streamfunction
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: ocean_meridional_overturning_mass_streamfunction
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/125c231f-a154-416e-b8dd-437d64e6a144
+    units: kg s-1
+    variable_id: msftm
+    variant_label: r1i1p1f1
+    version: v0
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gm
+    source_id: RAPID-2023-1a
+    variable_id: msftmz
+    version: v20250902
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '2023-02-15 00:00:00'
+    filename: msftmz_mon_RAPID-2023-1a_REF_gm_200404-202302.nc
+    finalised: true
+    frequency: mon
+    grid: global mean data
+    grid_label: gm
+    instance_id: obs4REF.NOC.RAPID-2023-1a.mon.msftmz.gm.v20250902
+    institution_id: NOC
+    long_name: Ocean Meridional Overturning Mass Streamfunction
+    nominal_resolution: site
+    product: derived
+    realm: ocean
+    source_id: RAPID-2023-1a
+    source_type: insitu
+    source_version_number: 2023.1a
+    start_time: '2004-04-16 00:00:00'
+    time_range: 2004-04-16 00:00:00-2023-02-15 00:00:00
+    units: Sv
+    variable_id: msftmz
+    variant_label: REF
+    version: v20250902
+    vertical_levels: 1

@@ -83,6 +83,13 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
         bool,
         typer.Option(help="Exit with an error if any requested test case cannot be fetched"),
     ] = False,
+    regen: Annotated[
+        bool,
+        typer.Option(
+            help="Resolve the requests from their declared facets instead of the datasets an "
+            "existing catalog records. This may change which datasets the tests use."
+        ),
+    ] = False,
 ) -> None:
     """
     Fetch test data from ESGF for running diagnostic tests.
@@ -90,12 +97,17 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
     Downloads full-resolution ESGF data based on diagnostic test_data_spec.
     Use --provider or --diagnostic to limit scope.
 
+    A test case that already has a catalog is fetched by the datasets that catalog
+    records, so it keeps the inputs its regression baseline was built from. Use --regen to
+    resolve the requests from their declared facets instead.
+
     Examples
     --------
         ref test-cases fetch                   # Fetch all test data
         ref test-cases fetch --provider ilamb  # Fetch ILAMB test data only
         ref test-cases fetch --diagnostic ecs  # Fetch ECS diagnostic data
         ref test-cases fetch --only-missing    # Skip test cases with existing catalogs
+        ref test-cases fetch --regen           # Re-resolve datasets from the declared facets
     """
     from climate_ref.provider_registry import ProviderRegistry
 
@@ -138,31 +150,12 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
 
     logger.info(f"Found {len(diagnostics_to_process)} diagnostics with test data specifications")
 
-    if dry_run:  # pragma: no cover
-        for diag in diagnostics_to_process:
-            logger.info(f"Would fetch data for: {diag.provider.slug}/{diag.slug}")
-            if diag.test_data_spec:
-                for tc in diag.test_data_spec.test_cases:
-                    if test_case and tc.name != test_case:
-                        continue
-                    # Check if catalog exists when using --only-missing
-                    if only_missing:
-                        paths = TestCasePaths.from_diagnostic(diag, tc.name)
-                        if paths and paths.catalog.exists():
-                            logger.info(f"  Test case: {tc.name} - [SKIP: catalog exists]")
-                            continue
-                    logger.info(f"  Test case: {tc.name} - {tc.description}")
-                    if tc.requests:
-                        for req in tc.requests:
-                            logger.info(f"    Request: {req.slug} ({req.source_type})")
-        return
-
     # Process each diagnostic test case.
     # A failure for one test case must not abort the loop,
     # because later diagnostics would be left without catalogs and paths sidecars.
     failed_cases: list[str] = []
     for diag in diagnostics_to_process:  # pragma: no cover
-        logger.info(f"Fetching data for: {diag.provider.slug}/{diag.slug}")
+        logger.info(f"Checking data for: {diag.provider.slug}/{diag.slug}")
         if diag.test_data_spec:
             for tc in diag.test_data_spec.test_cases:
                 if test_case and tc.name != test_case:
@@ -175,7 +168,7 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                         failed_cases.append(case_id)
                         logger.warning(f"  Existing catalog is not usable for {tc.name}: {error}")
                     if tc.requests:
-                        logger.info(f"  Skipping test case: {tc.name} (catalog exists)")
+                        logger.debug(f"  Skipping test case: {tc.name} (catalog exists)")
                     continue
                 catalog_before = None
                 if strict and existing_catalog is not None:
@@ -189,9 +182,15 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                         f"  Refreshing existing catalog for {tc.name} "
                         "(use --only-missing to skip existing catalogs)"
                     )
-                logger.info(f"  Processing test case: {tc.name}")
+                logger.info(f"  Processing test case: {tc.name} - {tc.description}")
+                if dry_run:
+                    # continue to next iteration before the actual work would be done.
+                    # report what the rest would do though
+                    for req in tc.requests:
+                        logger.info(f"    Would request: {req.slug} ({req.source_type})")
+                    continue
                 try:
-                    _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force)
+                    _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force, regen=regen)
                     if paths is None:
                         if strict:
                             raise ValueError("Could not determine where to write the test-case catalog")

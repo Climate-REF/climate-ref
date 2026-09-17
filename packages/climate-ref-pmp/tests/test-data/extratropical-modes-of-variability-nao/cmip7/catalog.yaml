@@ -1,5 +1,5 @@
 _metadata:
-  hash: 711cd5b3388d0f1f1754eeb749df36d9bc705800
+  hash: e6143f3af2cc4b5254115ff418e8aaaa7a9d6814
 obs4mips:
   slug_column: instance_id
   selector:
@@ -13,7 +13,7 @@ obs4mips:
     frequency: mon
     grid: 2x2 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR-V2.mon.psl.250km.gn.v20250415
+    instance_id: obs4MIPs.NOAA-ESRL-PSD.20CR-V2.mon.psl.gn.v20250415
     institution_id: NOAA-ESRL-PSD
     long_name: Sea Level Pressure
     nominal_resolution: 250 km
@@ -69,7 +69,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/7ee0192a-7e67-42f6-ac9c-2a72d1b7c72f
+    tracking_id: hdl:21.14107/044cc7dd-c91e-4729-961d-55b453adcacb
     units: Pa
     variable_id: psl
     variant_label: r1i1p1f1

@@ -1,5 +1,5 @@
 _metadata:
-  hash: 7e94be8df9ef117fd1e64d66bd3758389fbad6f6
+  hash: 7380aec7baf151e50318d4c6cc7ef2f9001f66b6
 cmip6:
   slug_column: instance_id
   selector:
@@ -21,7 +21,7 @@ cmip6:
     frequency: mon
     grid: native atmosphere N96 grid (145x192 latxlon)
     grid_label: gn
-    instance_id: CMIP6.C4MIP CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.Amon.tas.gn.v20191206
+    instance_id: CMIP6.C4MIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.Amon.tas.gn.v20191206
     institution_id: CSIRO
     long_name: Near-Surface Air Temperature
     member_id: r1i1p1f1
@@ -61,7 +61,7 @@ cmip6:
     frequency: fx
     grid: native atmosphere N96 grid (145x192 latxlon)
     grid_label: gn
-    instance_id: CMIP6.C4MIP CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.fx.areacella.gn.v20191206
+    instance_id: CMIP6.C4MIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.fx.areacella.gn.v20191206
     institution_id: CSIRO
     long_name: Grid-Cell Area for Atmospheric Grid Variables
     member_id: r1i1p1f1

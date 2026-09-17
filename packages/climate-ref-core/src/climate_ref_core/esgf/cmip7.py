@@ -56,32 +56,79 @@ _MANDATORY_CONVERTED_ATTRS = (
 _LOSSY_DECIMAL_DIGITS = 3
 
 
-def _invalid_conversion_reason(path: Path) -> str | None:
-    """Return why a cached conversion cannot satisfy the complete CMIP7 parser."""
+def _write_encoding(ds: xr.Dataset) -> dict[str, dict[str, Any]]:
+    """
+    Per-variable NetCDF encoding for a converted dataset.
+
+    Everything is compressed. Values are also rounded to :data:`_LOSSY_DECIMAL_DIGITS`,
+    except where that would quantise the data away: gpp and o3 magnitudes sit below the
+    rounding floor, and ozone additionally needs lossless hybrid-coordinate coefficients.
+    """
+    lossless_dataset = ds.attrs.get("variable_id") == "o3"
+
+    encoding: dict[str, dict[str, Any]] = {}
+    for var in ds.data_vars:
+        var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
+        if not lossless_dataset and str(var) != "gpp":
+            var_encoding["least_significant_digit"] = _LOSSY_DECIMAL_DIGITS
+        encoding[str(var)] = var_encoding
+    return encoding
+
+
+def _quantised_variables(ds: xr.Dataset) -> list[str]:
+    """Name the variables stored with the lossy decimal quantisation the writer applies."""
+    return [
+        str(name)
+        for name in ds.data_vars
+        if ds[name].encoding.get("least_significant_digit") == _LOSSY_DECIMAL_DIGITS
+    ]
+
+
+def _invalid_conversion_reason(path: Path, expected_cmip6_version: str | None = None) -> str | None:
+    """
+    Return why a cached conversion cannot be reused.
+
+    Parameters
+    ----------
+    path
+        The cached conversion.
+    expected_cmip6_version
+        The DRS version of the CMIP6 dataset now being converted, when the search reported
+        one. A cached file that records a different version, or none at all because it
+        predates the provenance, is rebuilt so that the version is there to pin on.
+
+    Returns
+    -------
+    :
+        The reason, or ``None`` if the cached file can be used as-is.
+    """
     try:
         with xr.open_dataset(path, decode_times=False) as ds:
-            missing = [name for name in _MANDATORY_CONVERTED_ATTRS if not ds.attrs.get(name)]
-            if missing:
-                return f"missing mandatory attributes: {', '.join(missing)}"
-            variable_id = str(ds.attrs["variable_id"])
-            if variable_id not in ds.variables:
-                return f"missing data variable: {variable_id}"
-            if variable_id == "o3":
-                quantised = [
-                    str(name)
-                    for name in ds.data_vars
-                    if ds[name].encoding.get("least_significant_digit") == _LOSSY_DECIMAL_DIGITS
-                ]
-                if quantised:
-                    return f"ozone dataset uses destructive decimal quantisation: {', '.join(quantised)}"
-            if "time" in ds.variables and ds.sizes.get("time", 0):
-                time = ds["time"]
-                if not time.attrs.get("units"):
-                    return "time coordinate has no units"
-                # Reading both endpoints catches a truncated file.
-                time.isel(time=[0, -1]).load()
+            return _conversion_defect(ds, expected_cmip6_version)
     except (OSError, ValueError) as e:
         return f"cannot read metadata: {e}"
+
+
+def _conversion_defect(ds: xr.Dataset, expected_cmip6_version: str | None) -> str | None:
+    """Return what is wrong with an opened cached conversion, or ``None`` if nothing is."""
+    missing = [name for name in _MANDATORY_CONVERTED_ATTRS if not ds.attrs.get(name)]
+    if missing:
+        return f"missing mandatory attributes: {', '.join(missing)}"
+    if expected_cmip6_version and ds.attrs.get("cmip6_version") != expected_cmip6_version:
+        return f"not recorded as converted from CMIP6 version {expected_cmip6_version}"
+
+    variable_id = str(ds.attrs["variable_id"])
+    if variable_id not in ds.variables:
+        return f"missing data variable: {variable_id}"
+    if variable_id == "o3" and (quantised := _quantised_variables(ds)):
+        return f"ozone dataset uses destructive decimal quantisation: {', '.join(quantised)}"
+
+    if "time" in ds.variables and ds.sizes.get("time", 0):
+        time = ds["time"]
+        if not time.attrs.get("units"):
+            return "time coordinate has no units"
+        # Reading both endpoints catches a truncated file.
+        time.isel(time=[0, -1]).load()
     return None
 
 
@@ -193,6 +240,7 @@ def _convert_file_to_cmip7(
     # (e.g. "C4MIP CDRMIP"). Use only the first activity for the DRS path.
     activity_id = str(cmip7_facets.get("activity_id", "CMIP")).split()[0]
     version = str(cmip7_facets.get("version", "v0"))
+    cmip6_version = str(cmip7_facets.get("cmip6_version") or "")
 
     # Build CMIP7 DRS path using the standard MIP-DRS7 path builder.
     # Provide defaults for fields that may not be in facets.
@@ -226,7 +274,7 @@ def _convert_file_to_cmip7(
             output_file = drs_path / create_cmip7_filename(cmip7_facets, time_range=time_range)
 
             if output_file.exists():
-                invalid_reason = _invalid_conversion_reason(output_file)
+                invalid_reason = _invalid_conversion_reason(output_file, cmip6_version or None)
                 if invalid_reason is None:
                     logger.debug(f"Using cached CMIP7 file: {output_file}")
                     return output_file
@@ -238,6 +286,11 @@ def _convert_file_to_cmip7(
             # so that parse_cmip7_file can extract them for instance_id construction
             ds_cmip7.attrs["version"] = version
             ds_cmip7.attrs["activity_id"] = activity_id
+            if cmip6_version:
+                # The CMIP7 version above is made up, so this attribute is the only record
+                # of which CMIP6 dataset the file was converted from, and the only thing a
+                # pin can hold the source to (see ``CMIP7Request.pinned_facet_fields``).
+                ds_cmip7.attrs["cmip6_version"] = cmip6_version
 
             temporary_file = output_file.with_name(
                 f".{output_file.stem}.{uuid.uuid4().hex}.tmp{output_file.suffix}"
@@ -249,17 +302,7 @@ def _convert_file_to_cmip7(
                 _load_time_coordinates(ds_cmip7)
                 suppress_bounds_coordinates(ds_cmip7)
 
-                # gpp and o3 magnitudes sit below the quantisation floor.
-                # Ozone also needs lossless hybrid-coordinate coefficients.
-                lossless_dataset = ds_cmip7.attrs.get("variable_id") == "o3"
-                encoding: dict[str, dict[str, Any]] = {}
-                for var in ds_cmip7.data_vars:
-                    var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
-                    if not lossless_dataset and str(var) != "gpp":
-                        var_encoding["least_significant_digit"] = _LOSSY_DECIMAL_DIGITS
-                    encoding[str(var)] = var_encoding
-
-                ds_cmip7.to_netcdf(temporary_file, encoding=encoding)
+                ds_cmip7.to_netcdf(temporary_file, encoding=_write_encoding(ds_cmip7))
                 temporary_file.replace(output_file)
             except PermissionError:
                 # If we can't write but file exists (race condition or permission issue), use it
@@ -290,8 +333,10 @@ class CMIP7Request:
 
     # A pin on these datasets is matched against the results of the CMIP6 source search,
     # because they are converted locally rather than published under an id ESGF knows.
-    # The recorded version is fabricated during conversion (see ``_bump_version``) and
-    # the CMIP7-only facets have no CMIP6 counterpart, so neither can be matched on.
+    # The search is asked for a CMIP6 ``version``, so it is matched against the recorded
+    # ``cmip6_version`` rather than the recorded ``version``: that one belongs to the
+    # conversion, and ``_bump_version`` moves it again for fabricated output. The
+    # CMIP7-only facets have no CMIP6 counterpart, so they cannot be matched on at all.
     pinned_facet_fields: ClassVar[dict[str, str]] = {
         "institution_id": "institution_id",
         "source_id": "source_id",
@@ -299,6 +344,7 @@ class CMIP7Request:
         "member_id": "variant_label",
         "variable_id": "variable_id",
         "grid_label": "grid_label",
+        "version": "cmip6_version",
     }
 
     pinned_facets: tuple[dict[str, str], ...] | None = None
@@ -422,6 +468,13 @@ class CMIP7Request:
 
         # Add CMIP7-specific metadata
         cmip7_row["mip_era"] = "CMIP7"
+
+        # The CMIP7 ``version`` is the conversion's own -- it does not survive the round
+        # trip through the DRS path, and ``extend_historical_to`` bumps it again -- so keep
+        # the version of the CMIP6 dataset this came from alongside it. That is what names
+        # the source on ESGF, and so what a pin has to match.
+        if cmip6_row.get("version"):
+            cmip7_row["cmip6_version"] = str(cmip6_row["version"])
 
         # CMIP6 activity_id can contain multiple activities separated by spaces
         # (e.g. "C4MIP CDRMIP"). Use only the first activity for CMIP7.

@@ -2,6 +2,7 @@
 
 from typing import ClassVar
 
+import netCDF4
 import pandas as pd
 import pytest
 
@@ -409,6 +410,26 @@ class TestCMIP7ConvertedFile:
         assert not _is_na(result["variable_id"])
         assert not _is_na(result["grid_label"])
         assert not _is_na(result["frequency"])
+
+    def test_cmip6_version_is_absent_when_the_file_does_not_record_one(self, cmip7_converted_file):
+        """The attribute is provenance a converter writes, not something CMIP7 requires."""
+        result = parse_cmip7_complete(str(cmip7_converted_file))
+
+        assert result["cmip6_version"] is None
+
+    def test_cmip6_version_reaches_the_catalog(self, cmip7_converted_file, config):
+        """
+        The CMIP6 version a file was converted from is carried through to the catalog.
+
+        That is where a test case's requests are pinned from, and the CMIP7 ``version``
+        recorded beside it belongs to the conversion rather than to any ESGF dataset.
+        """
+        with netCDF4.Dataset(cmip7_converted_file, "a") as ds:
+            ds.setncattr("cmip6_version", "20190429")
+
+        catalog = CMIP7DatasetAdapter(config=config).find_local_datasets(cmip7_converted_file.parent)
+
+        assert catalog["cmip6_version"].tolist() == ["20190429"]
 
     def test_branded_variable_derived(self, cmip7_converted_file, config):
         """Test that branded_variable is derived as variable_id + branding_suffix."""

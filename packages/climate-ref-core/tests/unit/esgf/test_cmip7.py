@@ -254,11 +254,14 @@ class TestConvertedCacheIntegrity:
         time_units: str | None = "days since 2000-01-01",
         values: np.ndarray | None = None,
         least_significant_digit: int | None = None,
+        cmip6_version: str | None = None,
     ) -> None:
         attrs = {name: name for name in _MANDATORY_CONVERTED_ATTRS}
         attrs["variable_id"] = variable_id
         if missing_attr is not None:
             attrs.pop(missing_attr)
+        if cmip6_version is not None:
+            attrs["cmip6_version"] = cmip6_version
         time_attrs = {} if time_units is None else {"units": time_units, "calendar": "noleap"}
         data = np.ones((2, 1)) if values is None else values
         ds = xr.Dataset(
@@ -331,6 +334,30 @@ class TestConvertedCacheIntegrity:
 
         assert _invalid_conversion_reason(path) is None
 
+    def test_rebuilds_a_cache_that_does_not_record_the_cmip6_version(self, tmp_path):
+        """Files converted before the provenance existed are rebuilt so a pin can use it."""
+        path = tmp_path / "no-provenance.nc"
+        self._write_file(path)
+
+        assert _invalid_conversion_reason(path, "20190429") == (
+            "not recorded as converted from CMIP6 version 20190429"
+        )
+
+    def test_rebuilds_a_cache_converted_from_another_cmip6_version(self, tmp_path):
+        """The cached file is a different dataset's data, however alike the DRS path looks."""
+        path = tmp_path / "other-version.nc"
+        self._write_file(path, cmip6_version="20180101")
+
+        assert _invalid_conversion_reason(path, "20190429") == (
+            "not recorded as converted from CMIP6 version 20190429"
+        )
+
+    def test_accepts_a_cache_converted_from_the_same_cmip6_version(self, tmp_path):
+        path = tmp_path / "same-version.nc"
+        self._write_file(path, cmip6_version="20190429")
+
+        assert _invalid_conversion_reason(path, "20190429") is None
+
 
 class TestConvertFileToCmip7:
     """Tests for _convert_file_to_cmip7 function."""
@@ -397,6 +424,48 @@ class TestConvertFileToCmip7:
             assert np.all(np.diff(pressure) > 0)
             np.testing.assert_array_equal(converted["time_bnds"].values, time_bounds)
             assert converted.attrs["mip_era"] == "CMIP7"
+            # Nothing was passed to convert from, so there is no source version to record
+            assert "cmip6_version" not in converted.attrs
+
+    def test_records_the_cmip6_version_it_converted(self, tmp_path, monkeypatch):
+        """
+        The written file says which CMIP6 dataset it came from.
+
+        The DRS path is built from the CMIP7 version, which the conversion makes up, so
+        this attribute is where the source version has to survive to be pinned on later.
+        """
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path / "cache"))
+        source = tmp_path / "tas.nc"
+        times = [cftime.DatetimeNoLeap(2000, 1, 16), cftime.DatetimeNoLeap(2000, 2, 16)]
+        xr.Dataset(
+            {"tas": (("time", "lat"), np.ones((2, 1), dtype=np.float32))},
+            coords={"time": times, "lat": [0.0]},
+            attrs={"table_id": "Amon", "variable_id": "tas"},
+        ).to_netcdf(source)
+
+        output = _convert_file_to_cmip7(
+            source,
+            {
+                "activity_id": "CMIP",
+                "institution_id": "CSIRO",
+                "source_id": "ACCESS-ESM1-5",
+                "experiment_id": "historical",
+                "variant_label": "r1i1p1f1",
+                "frequency": "mon",
+                "variable_id": "tas",
+                "table_id": "Amon",
+                "grid_label": "gn",
+                "version": "v1",
+                "cmip6_version": "20190429",
+                "branding_suffix": "tavg-h2m-hxy-u",
+                "region": "glb",
+            },
+        )
+
+        with xr.open_dataset(output) as converted:
+            assert converted.attrs["cmip6_version"] == "20190429"
+            # The fabricated version is what the file is published under
+            assert converted.attrs["version"] == "v1"
 
     @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
@@ -1145,6 +1214,25 @@ class TestFetchDatasetsExtendHistorical:
         assert mock_convert.call_args_list[0].kwargs["extend_historical_to"] is None
         assert mock_convert.call_args_list[0].args[1]["version"] == "20190429"
 
+    @patch("climate_ref_core.esgf.cmip7.CMIP6Request")
+    @patch("climate_ref_core.esgf.cmip7._convert_file_to_cmip7")
+    def test_bumping_the_version_keeps_the_cmip6_one(self, mock_convert, mock_cmip6_request_class, tmp_path):
+        """The bump moves the CMIP7 version only; the source stays identifiable on ESGF."""
+        only = self._write_monthly_file(tmp_path / "only.nc", 1950, 2014)
+
+        self._stub_cmip6(mock_cmip6_request_class, [only], version="20190429")
+        mock_convert.return_value = tmp_path / "a.nc"
+
+        CMIP7Request(
+            slug="test",
+            facets={"source_id": "GFDL-ESM4"},
+            extend_historical_to=(2021, 12),
+        ).fetch_datasets()
+
+        facets = mock_convert.call_args_list[0].args[1]
+        assert facets["version"] == "v1"
+        assert facets["cmip6_version"] == "20190429"
+
 
 class TestBumpVersion:
     """Test the version bump that keeps fabricated data out of the real instance_id."""
@@ -1177,6 +1265,7 @@ class TestPinToDatasets:
             "variable_id": "gpp",
             "grid_label": "gn",
             "version": "v0",
+            "cmip6_version": "20190429",
         }
     ]
 
@@ -1186,8 +1275,8 @@ class TestPinToDatasets:
 
         assert pinned is not request
         assert request.pinned_facets is None
-        # variant_label is spelled member_id by the CMIP6 search, and the fabricated
-        # version has no CMIP6 counterpart to match on
+        # variant_label is spelled member_id by the CMIP6 search, and the recorded
+        # version belongs to the conversion, so the CMIP6 one is matched on instead
         assert pinned.pinned_facets == (
             {
                 "institution_id": "CCCma",
@@ -1196,6 +1285,7 @@ class TestPinToDatasets:
                 "member_id": "r1i1p1f1",
                 "variable_id": "gpp",
                 "grid_label": "gn",
+                "version": "20190429",
             },
         )
 
@@ -1204,6 +1294,18 @@ class TestPinToDatasets:
 
         assert request.pin_to_datasets([{"instance_id": "CMIP7.only"}]) is request
         assert request.pin_to_datasets([]) is request
+
+    def test_a_record_without_the_source_version_is_not_pinned(self):
+        """
+        Without it the pin cannot hold the source to a version, so it is not made.
+
+        A catalog written before the source version was recorded, or from CMIP7 files that
+        were never converted from CMIP6, would otherwise pin to every version at once.
+        """
+        request = CMIP7Request(slug="test", facets={"source_id": "CanESM5"})
+        without = [{k: v for k, v in self.recorded[0].items() if k != "cmip6_version"}]
+
+        assert request.pin_to_datasets(without) is request
 
     def test_pins_reach_the_source_search(self):
         request = CMIP7Request(slug="test", facets={"source_id": "CanESM5"})

@@ -141,10 +141,8 @@ def _check_pinned_datasets_found(
         if missing:
             raise DatasetResolutionError(
                 f"{len(missing)} dataset(s) recorded in the catalog are missing from the "
-                f"fetched data: {', '.join(missing)}. Earlier errors in the log say why each "
-                "one did not arrive; fix those first. Only if the recorded datasets are "
-                "themselves out of date should the test case be re-resolved from its "
-                "declared facets with --regen."
+                f"fetched data: {', '.join(missing)}. If the recorded datasets are "
+                "out of date, re-resolve them from their declared facets with --regen."
             )
 
 

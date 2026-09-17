@@ -581,6 +581,15 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
         raise ValueError(f"The series must end in December to repeat whole years, ends {last}")
 
     bounds_name = ds["time"].attrs.get("bounds")
+    if bounds_name and bounds_name in ds.variables:
+        # The repeated blocks below carry their restamped bounds as a NumPy array of cftime
+        # objects. If the source bounds arrived lazily -- a file opened with ``chunks=`` gets
+        # Dask-backed ones -- the concat at the end mixes the two, and Dask refuses to chunk
+        # the NumPy side because it cannot size object dtype. The array is one row per
+        # timestep, so materialise it here rather than make every caller open the file a
+        # particular way. Assigned to a shallow copy, leaving the caller's dataset lazy.
+        ds = ds.copy()
+        ds[bounds_name] = ds[bounds_name].compute()
 
     def _restamp(t: cftime.datetime, shift: int) -> cftime.datetime:
         year = t.year + shift

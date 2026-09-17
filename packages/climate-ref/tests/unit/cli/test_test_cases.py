@@ -715,11 +715,17 @@ class TestFetchTestDataCommand:
         mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
         fetch_mock = mocker.patch("climate_ref.cli.test_cases.discovery._fetch_and_build_catalog")
 
-        result = invoke_cli(["test-cases", "fetch", "--provider", "example", "--only-missing"])
+        # The skip is reported at debug level, so it only shows when asked for
+        result = invoke_cli(["--verbose", "test-cases", "fetch", "--provider", "example", "--only-missing"])
 
         assert result.exit_code == 0
         assert "Skipping test case: default (catalog exists)" in result.stderr
         fetch_mock.assert_not_called()
+
+        quiet = invoke_cli(["test-cases", "fetch", "--provider", "example", "--only-missing"])
+
+        assert quiet.exit_code == 0
+        assert "Skipping test case" not in quiet.stderr
 
 
 class TestListCasesCommand:

@@ -1,5 +1,5 @@
 _metadata:
-  hash: 3d3a006b4eb9496fea3a1a602db2f86d4cd552bd
+  hash: 92fdd3b39a63db0700da388c1db29a6f52e6357c
 cmip6:
   slug_column: instance_id
   selector:
@@ -21,7 +21,7 @@ cmip6:
     frequency: mon
     grid: native atmosphere T42 Gaussian grid
     grid_label: gn
-    instance_id: CMIP6.C4MIP CDRMIP.MIROC.MIROC-ES2L.esm-1pct-brch-1000PgC.r1i1p1f2.Amon.tas.gn.v20200622
+    instance_id: CMIP6.C4MIP.MIROC.MIROC-ES2L.esm-1pct-brch-1000PgC.r1i1p1f2.Amon.tas.gn.v20200622
     institution_id: MIROC
     long_name: Near-Surface Air Temperature
     member_id: r1i1p1f2
@@ -61,7 +61,7 @@ cmip6:
     frequency: mon
     grid: native atmosphere T42 Gaussian grid
     grid_label: gn
-    instance_id: CMIP6.C4MIP CDRMIP.MIROC.MIROC-ES2L.esm-1pct-brch-1000PgC.r1i1p1f2.Amon.tas.gn.v20200622
+    instance_id: CMIP6.C4MIP.MIROC.MIROC-ES2L.esm-1pct-brch-1000PgC.r1i1p1f2.Amon.tas.gn.v20200622
     institution_id: MIROC
     long_name: Near-Surface Air Temperature
     member_id: r1i1p1f2
@@ -101,7 +101,7 @@ cmip6:
     frequency: fx
     grid: native atmosphere T42 Gaussian grid
     grid_label: gn
-    instance_id: CMIP6.C4MIP CDRMIP.MIROC.MIROC-ES2L.esm-1pct-brch-1000PgC.r1i1p1f2.fx.areacella.gn.v20200622
+    instance_id: CMIP6.C4MIP.MIROC.MIROC-ES2L.esm-1pct-brch-1000PgC.r1i1p1f2.fx.areacella.gn.v20200622
     institution_id: MIROC
     long_name: Grid-Cell Area for Atmospheric Variables
     member_id: r1i1p1f2
@@ -140,7 +140,7 @@ cmip6:
     frequency: mon
     grid: native atmosphere T42 Gaussian grid
     grid_label: gn
-    instance_id: CMIP6.C4MIP CDRMIP.MIROC.MIROC-ES2L.esm-1pctCO2.r1i1p1f2.Amon.tas.gn.v20200622
+    instance_id: CMIP6.C4MIP.MIROC.MIROC-ES2L.esm-1pctCO2.r1i1p1f2.Amon.tas.gn.v20200622
     institution_id: MIROC
     long_name: Near-Surface Air Temperature
     member_id: r1i1p1f2
@@ -179,7 +179,7 @@ cmip6:
     frequency: fx
     grid: native atmosphere T42 Gaussian grid
     grid_label: gn
-    instance_id: CMIP6.C4MIP CDRMIP.MIROC.MIROC-ES2L.esm-1pctCO2.r1i1p1f2.fx.areacella.gn.v20200622
+    instance_id: CMIP6.C4MIP.MIROC.MIROC-ES2L.esm-1pctCO2.r1i1p1f2.fx.areacella.gn.v20200622
     institution_id: MIROC
     long_name: Grid-Cell Area for Atmospheric Variables
     member_id: r1i1p1f2

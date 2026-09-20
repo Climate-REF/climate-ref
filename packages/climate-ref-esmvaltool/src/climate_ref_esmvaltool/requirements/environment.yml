@@ -3,4 +3,17 @@ channels:
   - nodefaults
 
 dependencies:
-  - esmvaltool-python
+  - cartopy
+  - cf-units
+  - dask
+  - esmvaltool-base
+  - iris
+  - mapgenerator
+  - matplotlib-base
+  - numpy
+  - pandas
+  - requests
+  - scikit-learn
+  - scipy
+  - seaborn
+  - yaml

@@ -1,15 +1,4 @@
-"""Tests for the migration that rewrites stored instance_ids to the identifiers ESGF publishes.
-
-Covers:
-1. CMIP6 ids naming only the primary activity of a multi-activity dataset.
-2. obs4MIPs-style ids dropping the duplicated collection prefix and the
-   ``nominal_resolution`` segment, across all three reference tables.
-3. ``dataset.slug`` staying in step with the rewritten ``instance_id``.
-4. Rows whose rebuilt id collides with a taken slug being left untouched.
-5. Downgrade restoring the old format.
-
-Driven in-test via ``database.alembic_config(...)`` + ``command.upgrade``/``downgrade``.
-"""
+"""Tests for the migration that rewrites stored instance_ids to the identifiers ESGF publishes."""
 
 import sqlalchemy as sa
 from alembic import command

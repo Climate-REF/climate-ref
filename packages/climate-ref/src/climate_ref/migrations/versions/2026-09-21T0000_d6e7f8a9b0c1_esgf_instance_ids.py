@@ -1,6 +1,6 @@
 """rewrite stored instance_ids to the identifiers ESGF publishes
 
-The adapters now build ``instance_id``s that match the identifiers ESGF publishes:
+#930 fixed some bugs in how ``instance_id``s were created.
 
 - CMIP6 ids name only the primary activity of a dataset that belongs to several,
   so ``CMIP6.C4MIP CDRMIP.MIROC.[...]`` becomes ``CMIP6.C4MIP.MIROC.[...]``.
@@ -9,11 +9,9 @@ The adapters now build ``instance_id``s that match the identifiers ESGF publishe
   so ``obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220``
   becomes ``obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.gn.v20260220``.
 
-Without this rewrite an existing database keeps its old identifiers,
-and the next ingestion re-registers every dataset under a new id alongside the old row.
-The ids are rebuilt from the metadata columns rather than by string surgery,
-so the rewrite is idempotent and independent of the old format.
+``instance_id``s now match ESGF.
 
+This migration rewrites existing ``instance id``s to avoid surrogate execution groups.
 Executions store a hash over the ids of the datasets they consumed.
 Those hashes are not rewritten, so affected execution groups re-run on the next solve.
 
@@ -136,8 +134,7 @@ def _rewrite(table_name: str, columns: Sequence[str], build: Callable[[sa.Row], 
     """Rebuild each row's ``instance_id`` and keep ``dataset.slug`` in step with it.
 
     ``dataset.slug`` is globally unique,
-    so a rebuilt id that is already taken (or produced twice) leaves those rows untouched,
-    because silently collapsing two datasets into one would destroy provenance.
+    so a rebuilt id that is already taken (or produced twice) leaves those rows untouched.
     """
     bind = op.get_bind()
     metadata = sa.MetaData()

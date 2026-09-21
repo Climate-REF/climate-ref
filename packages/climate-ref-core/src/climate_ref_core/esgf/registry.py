@@ -107,12 +107,10 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
     PMP_obs4MIPsClims/{variable_id}/{grid_label}/{version}/{filename}
 
     Where filename is:
-    {variable_id}_mon_{source_id}_{inst_short}_{grid_label}_{time_range}_AC_{version}_{resolution}.nc
+    {variable_id}_mon_{source_id}_{institution_short}_{grid_label}_{time_range}_AC_{version}_{resolution}.nc
 
-    ``inst_short`` is the short name the file is published under (e.g. ``PCMDI``), which
-    is not the dataset's ``institution_id`` (``ECMWF`` for that example). These keys carry
-    no institution directory to read the real one from, so none is reported -- the same
-    name is used as in :func:`_parse_obs4ref_key`, where the two are distinguishable.
+    ``institution_short`` is the short name the file is published under (e.g. ``PCMDI``), which
+    is not the dataset's ``institution_id`` (``ECMWF`` for that example).
 
     Parameters
     ----------

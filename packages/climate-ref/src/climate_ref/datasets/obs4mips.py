@@ -219,9 +219,6 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             self.version_metadata,
         ]
 
-        # No prefix: ``activity_id`` leads the id and has just been set to this adapter's
-        # collection, so an obs4MIPs id is the one ESGF publishes the dataset under while
-        # an obs4REF id still says obs4REF.
         datasets = build_instance_id(datasets, drs_items)
         datasets["finalised"] = True
         return datasets

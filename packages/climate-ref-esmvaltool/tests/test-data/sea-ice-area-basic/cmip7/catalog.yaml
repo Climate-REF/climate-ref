@@ -40,7 +40,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/963a2c5a-1839-4007-acf9-c34887e7d520
+    tracking_id: hdl:21.14107/d9560f41-28c5-572f-8a15-0f68cfc85313
     units: m2
     variable_id: areacello
     variant_label: r1i1p1f1
@@ -77,7 +77,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/0073be72-4f1b-4777-bb14-3b029d336f10
+    tracking_id: hdl:21.14107/e3d6fe28-310d-5579-a8b8-4f6e9f8bbc5d
     units: '%'
     variable_id: siconc
     variant_label: r1i1p1f1

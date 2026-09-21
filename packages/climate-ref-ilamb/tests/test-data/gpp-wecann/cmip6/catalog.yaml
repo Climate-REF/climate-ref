@@ -1,5 +1,5 @@
 _metadata:
-  hash: 4a8af1e910df9104584e2e84ede294ebf46d569a
+  hash: b31c247c3d0a5af8196d3135501efa1bc393cfb1
 cmip6:
   slug_column: instance_id
   selector:
@@ -224,7 +224,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.ColumbiaU.WECANN-1-0.mon.gpp.100km.gn.v20250902
+    instance_id: obs4REF.ColumbiaU.WECANN-1-0.mon.gpp.gn.v20250902
     institution_id: ColumbiaU
     long_name: Carbon Mass Flux out of Atmosphere due to Gross Primary Production
       on Land

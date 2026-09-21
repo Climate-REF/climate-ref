@@ -393,6 +393,50 @@ def load_datasets_from_yaml(path: Path, paths_file: Path) -> ExecutionDatasetCol
     return ExecutionDatasetCollection(collections)
 
 
+def load_catalog_datasets(path: Path) -> dict[str, tuple[dict[str, Any], ...]]:
+    """
+    Read the datasets recorded in a catalog YAML file.
+
+    These are the exact datasets a test case's regression baseline was built from, so a
+    request can be pinned to them and fetch that data again instead of re-resolving the
+    facets it declares (see
+    :meth:`~climate_ref_core.esgf.PinnableRequest.pin_to_datasets`).
+
+    Parameters
+    ----------
+    path
+        Path to the catalog YAML file
+
+    Returns
+    -------
+    :
+        The records of each source type, keyed by :class:`SourceDatasetType` name (e.g.
+        ``"CMIP6"``), which is how a request names its source type. A dataset spanning
+        several files is returned once. Source types without any recorded datasets are
+        left out.
+    """
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+
+    datasets: dict[str, tuple[dict[str, Any], ...]] = {}
+    for source_type_str, source_data in data.items():
+        if source_type_str == "_metadata":
+            continue
+
+        slug_column = source_data.get("slug_column", "instance_id")
+        # A dataset spanning several files is recorded once per file
+        recorded: dict[str, dict[str, Any]] = {}
+        for dataset in source_data.get("datasets", []):
+            slug = dataset.get(slug_column)
+            if slug:
+                recorded.setdefault(slug, dataset)
+
+        if recorded:
+            datasets[SourceDatasetType(source_type_str).name] = tuple(recorded.values())
+
+    return datasets
+
+
 def validate_catalog_paths(path: Path, paths_file: Path) -> ExecutionDatasetCollection:
     """Load a catalog and check that every row resolves to a local file.
 
@@ -614,8 +658,9 @@ def save_datasets_to_yaml(
     one per file. Paths are keyed by `{instance_id}::{filename}` to support
     multiple files per dataset.
 
-    By default, the catalog is only written if the content has changed
-    (detected via hash comparison). Use `force=True` to always write.
+    By default, the catalog is only written if its content would change -- which covers
+    the datasets selected and the metadata recorded for them. Use `force=True` to always
+    write.
 
     The paths sidecar is regenerated on every save, even when the catalog content is
     unchanged. Local cache contents can change independently of the version-controlled
@@ -638,11 +683,14 @@ def save_datasets_to_yaml(
         True if the catalog was (re)written, False if the catalog was left unchanged
         (the paths sidecar may still have been regenerated).
     """
-    new_hash = datasets.hash
-
     data, paths_map = _serialise_datasets(datasets)
+    content = yaml.dump(data, default_flow_style=False, sort_keys=False)
 
-    if not force and get_catalog_hash(path) == new_hash:
+    # Compared as content rather than by the stored hash: that hash identifies which
+    # datasets were selected, deliberately ignoring their metadata, so going by it alone
+    # would leave a catalog whose datasets are unchanged but whose recorded metadata is
+    # stale. The hash is part of the content, so a different selection still writes.
+    if not force and path.exists() and path.read_text() == content:
         # Keep the tracked catalog byte-identical, but always refresh its machine-local
         # paths. An existing sidecar may be partial or point at an old cache location.
         _write_paths_file(paths_file, paths_map)
@@ -650,8 +698,7 @@ def save_datasets_to_yaml(
         return False
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+    path.write_text(content)
     _write_paths_file(paths_file, paths_map)
     logger.info(f"Saved catalog to {path} (paths: {paths_file})")
     return True

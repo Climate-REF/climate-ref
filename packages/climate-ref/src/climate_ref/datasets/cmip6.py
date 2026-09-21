@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 from loguru import logger
@@ -13,6 +14,23 @@ from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.datasets.utils import build_instance_id, clean_branch_time, parse_cftime_dates
 from climate_ref.models.dataset import CMIP6Dataset
+
+
+def _primary_activity(item: str, value: Any) -> str:
+    """
+    Spell one DRS component the way the ``instance_id`` does.
+
+    A dataset can take part in several activities, and its ``activity_id`` then lists them
+    all (e.g. ``"C4MIP CDRMIP"``), whether it is read from the file's attributes or from a
+    directory named after them. The DRS uses only the first, so an id built from the value
+    verbatim names no dataset that ESGF publishes.
+
+    Narrowing it here rather than in a parser keeps the id the same whichever parser built
+    the catalog, and leaves the ``activity_id`` column itself reporting every activity the
+    dataset belongs to.
+    """
+    text = str(value)
+    return text.split(" ", 1)[0] if item == "activity_id" else text
 
 
 def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
@@ -201,7 +219,9 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             datasets["end_time"] = parse_cftime_dates(datasets["end_time"], cal)
 
         drs_items = [*self.dataset_id_metadata, self.version_metadata]
-        datasets = build_instance_id(datasets, drs_items, prefix="CMIP6", copy=False)
+        datasets = build_instance_id(
+            datasets, drs_items, prefix="CMIP6", transform=_primary_activity, copy=False
+        )
 
         missing_columns = set(self.dataset_specific_metadata + self.file_specific_metadata) - set(
             datasets.columns

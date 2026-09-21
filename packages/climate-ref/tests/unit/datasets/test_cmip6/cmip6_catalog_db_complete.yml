@@ -11,7 +11,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.Amon.tas.gn.v20191206
+  instance_id: CMIP6.C4MIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.Amon.tas.gn.v20191206
   institution_id: CSIRO
   long_name: Near-Surface Air Temperature
   member_id: r1i1p1f1
@@ -50,7 +50,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.fx.areacella.gn.v20191206
+  instance_id: CMIP6.C4MIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.fx.areacella.gn.v20191206
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
   member_id: r1i1p1f1
@@ -88,7 +88,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
+  instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
   institution_id: MPI-M
   long_name: Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of
     CO2
@@ -127,7 +127,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
+  instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
   institution_id: MPI-M
   long_name: Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of
     CO2
@@ -166,7 +166,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
+  instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
   institution_id: MPI-M
   long_name: Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of
     CO2
@@ -205,7 +205,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
+  instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
   institution_id: MPI-M
   long_name: Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of
     CO2
@@ -244,7 +244,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
+  instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
   member_id: r1i1p1f1
@@ -282,7 +282,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
+  instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
   member_id: r1i1p1f1
@@ -320,7 +320,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
+  instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
   member_id: r1i1p1f1
@@ -358,7 +358,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
-  instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
+  instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
   member_id: r1i1p1f1

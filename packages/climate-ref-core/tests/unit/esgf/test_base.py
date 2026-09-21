@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from intake_esgf.exceptions import NoSearchResults
 
-from climate_ref_core.esgf import CMIP6Request, ESGFRequest
+from climate_ref_core.esgf import CMIP6Request, ESGFRequest, Obs4MIPsRequest
 from climate_ref_core.esgf.base import _deduplicate_datasets
 from climate_ref_core.exceptions import DatasetResolutionError
 
@@ -300,6 +300,66 @@ class TestIntakeESGFMixin:
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
             with pytest.raises(DatasetResolutionError, match="no results"):
                 request.fetch_datasets()
+
+    def test_fetch_datasets_pinned_asks_for_the_recorded_datasets(self):
+        """A pinned request resolves the recorded ids instead of its declared facets."""
+        request = CMIP6Request(
+            slug="test",
+            facets={"source_id": "ACCESS-ESM1-5", "variable_id": "tas"},
+            remove_ensembles=True,
+        )
+        pinned = request.pin_to_datasets(
+            [
+                {"instance_id": "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v1"},
+                # The same dataset is recorded once per file it holds
+                {"instance_id": "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v1"},
+            ]
+        )
+
+        mock_cat = MagicMock()
+        mock_cat.df = pd.DataFrame({"key": ["ds1"], "source_id": ["ACCESS-ESM1-5"]})
+        mock_cat.to_path_dict.return_value = {"ds1": ["/path/to/file.nc"]}
+
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
+            pinned.fetch_datasets()
+
+        mock_cat.search.assert_called_once_with(
+            instance_id=["CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v1"],
+            # A pin holds even once a newer version has been published
+            latest=[True, False],
+        )
+        # The pinned ids already name one ensemble member each
+        mock_cat.remove_ensembles.assert_not_called()
+
+    def test_pin_to_datasets_leaves_the_request_alone(self):
+        """Pinning returns a copy, so the diagnostic's own request is untouched."""
+        request = CMIP6Request(slug="test", facets={"source_id": "ACCESS-ESM1-5"})
+        pinned = request.pin_to_datasets([{"instance_id": "CMIP6.a.b.c.d.e.f.g.h.v1"}])
+
+        assert pinned is not request
+        assert request.pinned_instance_ids is None
+        assert pinned.pinned_instance_ids == ("CMIP6.a.b.c.d.e.f.g.h.v1",)
+
+    def test_pin_to_datasets_without_ids_is_not_applied(self):
+        """A catalog that records no id leaves the request resolving its declared facets."""
+        request = CMIP6Request(slug="test", facets={"source_id": "ACCESS-ESM1-5"})
+
+        assert request.pin_to_datasets([{"source_id": "ACCESS-ESM1-5"}]) is request
+        assert request.pin_to_datasets([]) is request
+
+    def test_fetch_datasets_pinned_keeps_the_project(self):
+        """obs4MIPs is only found when the search names its project."""
+        request = Obs4MIPsRequest(slug="test", facets={"source_id": "ERA-5"})
+        pinned = request.pin_to_datasets([{"instance_id": "obs4MIPs.ECMWF.ERA-5.mon.psl.gn.v1"}])
+
+        mock_cat = MagicMock()
+        mock_cat.df = pd.DataFrame({"key": ["ds1"], "source_id": ["ERA-5"]})
+        mock_cat.to_path_dict.return_value = {"ds1": ["/path/to/file.nc"]}
+
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
+            pinned.fetch_datasets()
+
+        assert mock_cat.search.call_args.kwargs["project"] == "obs4MIPs"
 
     def test_fetch_datasets_converts_tuples_to_lists(self):
         """Test that tuple facet values are converted to lists for intake-esgf compatibility."""

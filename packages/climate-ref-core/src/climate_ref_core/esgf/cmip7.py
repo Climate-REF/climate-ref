@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 import uuid
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, ClassVar, NamedTuple
 
@@ -53,32 +54,61 @@ _MANDATORY_CONVERTED_ATTRS = (
 _LOSSY_DECIMAL_DIGITS = 3
 
 
+def _write_encoding(ds: xr.Dataset) -> dict[str, dict[str, Any]]:
+    """
+    Per-variable NetCDF encoding for a converted dataset.
+
+    Everything is compressed. Values are also rounded to :data:`_LOSSY_DECIMAL_DIGITS`,
+    except where that would quantise the data away: gpp and o3 magnitudes sit below the
+    rounding floor, and ozone additionally needs lossless hybrid-coordinate coefficients.
+    """
+    lossless_dataset = ds.attrs.get("variable_id") == "o3"
+
+    encoding: dict[str, dict[str, Any]] = {}
+    for var in ds.data_vars:
+        var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
+        if not lossless_dataset and str(var) != "gpp":
+            var_encoding["least_significant_digit"] = _LOSSY_DECIMAL_DIGITS
+        encoding[str(var)] = var_encoding
+    return encoding
+
+
+def _quantised_variables(ds: xr.Dataset) -> list[str]:
+    """Name the variables stored with the lossy decimal quantisation the writer applies."""
+    return [
+        str(name)
+        for name in ds.data_vars
+        if ds[name].encoding.get("least_significant_digit") == _LOSSY_DECIMAL_DIGITS
+    ]
+
+
 def _invalid_conversion_reason(path: Path) -> str | None:
-    """Return why a cached conversion cannot satisfy the complete CMIP7 parser."""
+    """Return why a cached conversion cannot be reused, or ``None`` if it can."""
     try:
         with xr.open_dataset(path, decode_times=False) as ds:
-            missing = [name for name in _MANDATORY_CONVERTED_ATTRS if not ds.attrs.get(name)]
-            if missing:
-                return f"missing mandatory attributes: {', '.join(missing)}"
-            variable_id = str(ds.attrs["variable_id"])
-            if variable_id not in ds.variables:
-                return f"missing data variable: {variable_id}"
-            if variable_id == "o3":
-                quantised = [
-                    str(name)
-                    for name in ds.data_vars
-                    if ds[name].encoding.get("least_significant_digit") == _LOSSY_DECIMAL_DIGITS
-                ]
-                if quantised:
-                    return f"ozone dataset uses destructive decimal quantisation: {', '.join(quantised)}"
-            if "time" in ds.variables and ds.sizes.get("time", 0):
-                time = ds["time"]
-                if not time.attrs.get("units"):
-                    return "time coordinate has no units"
-                # Reading both endpoints catches a truncated file.
-                time.isel(time=[0, -1]).load()
+            return _conversion_defect(ds)
     except (OSError, ValueError) as e:
         return f"cannot read metadata: {e}"
+
+
+def _conversion_defect(ds: xr.Dataset) -> str | None:
+    """Return what is wrong with an opened cached conversion, or ``None`` if nothing is."""
+    missing = [name for name in _MANDATORY_CONVERTED_ATTRS if not ds.attrs.get(name)]
+    if missing:
+        return f"missing mandatory attributes: {', '.join(missing)}"
+
+    variable_id = str(ds.attrs["variable_id"])
+    if variable_id not in ds.variables:
+        return f"missing data variable: {variable_id}"
+    if variable_id == "o3" and (quantised := _quantised_variables(ds)):
+        return f"ozone dataset uses destructive decimal quantisation: {', '.join(quantised)}"
+
+    if "time" in ds.variables and ds.sizes.get("time", 0):
+        time = ds["time"]
+        if not time.attrs.get("units"):
+            return "time coordinate has no units"
+        # Reading both endpoints catches a truncated file.
+        time.isel(time=[0, -1]).load()
     return None
 
 
@@ -229,7 +259,7 @@ def _convert_file_to_cmip7(
                     return output_file
                 logger.info(f"Rebuilding invalid CMIP7 conversion ({invalid_reason}): {output_file}")
 
-            ds_cmip7 = convert_cmip6_dataset(source_ds)
+            ds_cmip7 = convert_cmip6_dataset(source_ds, file_id=str(output_file.relative_to(cache_dir)))
 
             # Ensure version and sanitized activity_id are in the file attributes
             # so that parse_cmip7_file can extract them for instance_id construction
@@ -246,17 +276,7 @@ def _convert_file_to_cmip7(
                 _load_time_coordinates(ds_cmip7)
                 suppress_bounds_coordinates(ds_cmip7)
 
-                # gpp and o3 magnitudes sit below the quantisation floor.
-                # Ozone also needs lossless hybrid-coordinate coefficients.
-                lossless_dataset = ds_cmip7.attrs.get("variable_id") == "o3"
-                encoding: dict[str, dict[str, Any]] = {}
-                for var in ds_cmip7.data_vars:
-                    var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
-                    if not lossless_dataset and str(var) != "gpp":
-                        var_encoding["least_significant_digit"] = _LOSSY_DECIMAL_DIGITS
-                    encoding[str(var)] = var_encoding
-
-                ds_cmip7.to_netcdf(temporary_file, encoding=encoding)
+                ds_cmip7.to_netcdf(temporary_file, encoding=_write_encoding(ds_cmip7))
                 temporary_file.replace(output_file)
             except PermissionError:
                 # If we can't write but file exists (race condition or permission issue), use it
@@ -347,6 +367,24 @@ class CMIP7Request:
 
         # Create corresponding CMIP6 facets
         self._cmip6_facets = self._convert_to_cmip6_facets(facets)
+
+    def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> CMIP7Request:
+        """
+        Return this request unchanged: CMIP7 requests are not pinned yet.
+
+        CMIP7 data cannot be fetched from ESGF at the moment.
+
+        Parameters
+        ----------
+        datasets
+            The catalog records of the datasets recorded for this request's source type.
+
+        Returns
+        -------
+        :
+            This request, unchanged.
+        """
+        return self
 
     def _convert_to_cmip6_facets(self, cmip7_facets: dict[str, Any]) -> dict[str, Any]:
         """Convert CMIP7 facets to CMIP6 facets for fetching."""
@@ -464,6 +502,15 @@ class CMIP7Request:
             if converted_files:
                 cmip7_row["files"] = converted_files
                 converted_rows.append(cmip7_row)
+            elif paths:
+                # Every file failed to convert above, so this dataset drops out of the
+                # result. Say so here, while the reason is still next to it in the log:
+                # downstream all that can be seen is a dataset that never arrived.
+                dataset = row_dict.get("key") or cmip7_row.get("variable_id", "<unknown dataset>")
+                logger.error(
+                    f"None of the {len(paths)} file(s) for {dataset} could be converted, "
+                    f"so it is missing from the data fetched for {self.slug}"
+                )
 
         if not converted_rows:
             logger.warning(f"No files converted for request: {self.slug}")

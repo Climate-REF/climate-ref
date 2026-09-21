@@ -259,7 +259,7 @@ def _convert_file_to_cmip7(
                     return output_file
                 logger.info(f"Rebuilding invalid CMIP7 conversion ({invalid_reason}): {output_file}")
 
-            ds_cmip7 = convert_cmip6_dataset(source_ds)
+            ds_cmip7 = convert_cmip6_dataset(source_ds, file_id=str(output_file.relative_to(cache_dir)))
 
             # Ensure version and sanitized activity_id are in the file attributes
             # so that parse_cmip7_file can extract them for instance_id construction
@@ -370,16 +370,9 @@ class CMIP7Request:
 
     def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> CMIP7Request:
         """
-        Return this request unchanged: CMIP7 requests are not pinned.
+        Return this request unchanged: CMIP7 requests are not pinned yet.
 
-        A recorded CMIP7 dataset names nothing that identifies what it was built from. It
-        is converted locally, so ESGF has no id for it, and the CMIP6 dataset underneath is
-        no longer recognisable in the result: the version is the conversion's own,
-        ``table_id`` has no CMIP7 counterpart, and the Data Request renames variables
-        (``Lmon.mrsos`` and ``Emon.mrsol`` both become ``mrsol``). Recording the source id
-        alongside would fix that, but the whole CMIP6-to-CMIP7 conversion only stands in
-        until CMIP7 data is published, so these requests re-resolve their declared facets
-        and the pinning stays where the data is real.
+        CMIP7 data cannot be fetched from ESGF at the moment.
 
         Parameters
         ----------

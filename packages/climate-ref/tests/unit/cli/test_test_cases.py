@@ -557,12 +557,28 @@ class TestFetchTestDataCommand:
         catalog.write_text(catalog.read_text().replace("hdl:21.14107/old", "hdl:21.14107/new"))
         assert _catalog_content(catalog) != expected
 
-    def test_catalog_content_ignores_tracking_id_change(self, tmp_path):
+    def test_catalog_content_reports_a_tracking_id_change(self, tmp_path):
+        """
+        A handle that moves is real drift, because it is no longer minted at random.
+
+        It is derived from the file being written, so a rebuilt conversion reproduces it;
+        a different handle means a different file stands behind the same catalog entry.
+        """
         catalog = tmp_path / "catalog.yaml"
         catalog.write_text("cmip7:\n  datasets:\n    - tracking_id: old\n      variable_id: tas\n")
         expected = _catalog_content(catalog)
 
         catalog.write_text("cmip7:\n  datasets:\n    - tracking_id: new\n      variable_id: tas\n")
+
+        assert _catalog_content(catalog) != expected
+
+    def test_catalog_content_ignores_dataset_order(self, tmp_path):
+        """Records are sorted, so a reordered catalog is not reported as changed."""
+        catalog = tmp_path / "catalog.yaml"
+        catalog.write_text("cmip7:\n  datasets:\n    - variable_id: tas\n    - variable_id: pr\n")
+        expected = _catalog_content(catalog)
+
+        catalog.write_text("cmip7:\n  datasets:\n    - variable_id: pr\n    - variable_id: tas\n")
 
         assert _catalog_content(catalog) == expected
 

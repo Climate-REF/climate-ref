@@ -25,19 +25,13 @@ if TYPE_CHECKING:
 
 
 def _catalog_content(path: Path) -> dict[str, Any]:
-    """Load the catalog content that a downstream checkout must reproduce.
-
-    ``tracking_id`` is regenerated whenever a CMIP7 conversion is rebuilt, so it is dropped.
-    """
+    """Load the catalog content that a downstream checkout must reproduce."""
     with open(path) as f:
         data = yaml.safe_load(f) or {}
     content = {key: value for key, value in data.items() if key != "_metadata"}
     for source_data in content.values():
         datasets = source_data.get("datasets", [])
-        stable_datasets = [
-            {key: value for key, value in row.items() if key != "tracking_id"} for row in datasets
-        ]
-        source_data["datasets"] = sorted(stable_datasets, key=lambda row: yaml.safe_dump(row, sort_keys=True))
+        source_data["datasets"] = sorted(datasets, key=lambda row: yaml.safe_dump(row, sort_keys=True))
     return content
 
 

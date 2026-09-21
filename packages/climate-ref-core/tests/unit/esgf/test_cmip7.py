@@ -398,6 +398,60 @@ class TestConvertFileToCmip7:
             np.testing.assert_array_equal(converted["time_bnds"].values, time_bounds)
             assert converted.attrs["mip_era"] == "CMIP7"
 
+    def _tas_source(self, path: Path) -> Path:
+        times = [cftime.DatetimeNoLeap(2000, 1, 16), cftime.DatetimeNoLeap(2000, 2, 16)]
+        xr.Dataset(
+            {"tas": (("time", "lat"), np.ones((2, 1), dtype=np.float32))},
+            coords={"time": times, "lat": [0.0]},
+            attrs={"table_id": "Amon", "variable_id": "tas"},
+        ).to_netcdf(path)
+        return path
+
+    _TAS_FACETS: ClassVar = {
+        "activity_id": "CMIP",
+        "institution_id": "CSIRO",
+        "source_id": "ACCESS-ESM1-5",
+        "experiment_id": "historical",
+        "variant_label": "r1i1p1f1",
+        "frequency": "mon",
+        "variable_id": "tas",
+        "table_id": "Amon",
+        "grid_label": "gn",
+        "branding_suffix": "tavg-h2m-hxy-u",
+        "region": "glb",
+    }
+
+    def _tracking_id(self, source: Path, cache: Path, **overrides: str) -> str:
+        with patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir", return_value=cache):
+            output = _convert_file_to_cmip7(source, {**self._TAS_FACETS, **overrides})
+        with xr.open_dataset(output, decode_times=False) as converted:
+            return str(converted.attrs["tracking_id"])
+
+    def test_tracking_id_is_reproducible(self, tmp_path):
+        """
+        Converting the same file again gives it the same handle.
+
+        The handle is derived from the file being written rather than minted at random, so
+        a rebuilt conversion cache does not rewrite every catalog it feeds. Two separate
+        cache directories stand in for two machines: the path below the cache is the same
+        on both, so the handle is too.
+        """
+        source = self._tas_source(tmp_path / "tas.nc")
+
+        first = self._tracking_id(source, tmp_path / "cache-a", version="v1")
+        second = self._tracking_id(source, tmp_path / "cache-b", version="v1")
+
+        assert first == second
+        assert first.startswith("hdl:21.14107/")
+
+    def test_a_new_version_gets_its_own_tracking_id(self, tmp_path):
+        """The handle identifies a file, and a new version of a dataset is a new file."""
+        source = self._tas_source(tmp_path / "tas.nc")
+
+        assert self._tracking_id(source, tmp_path / "cache-a", version="v1") != self._tracking_id(
+            source, tmp_path / "cache-b", version="v2"
+        )
+
     @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
@@ -484,7 +538,7 @@ class TestConvertFileToCmip7:
         mock_converted_ds.attrs = {}
         mock_converted_ds.to_netcdf.side_effect = lambda path, **kwargs: Path(path).touch()
 
-        def convert_with_bounded_scheduler(ds):
+        def convert_with_bounded_scheduler(ds, **kwargs):
             assert dask.config.get("array.chunk-size") == "64MiB"
             assert dask.config.get("scheduler") == "single-threaded"
             return mock_converted_ds
@@ -515,7 +569,13 @@ class TestConvertFileToCmip7:
         # Check that conversion happened
         mock_open.assert_called_once()
         assert mock_open.call_args.kwargs["chunks"] == "auto"
-        mock_convert.assert_called_once_with(mock_ds)
+        mock_convert.assert_called_once_with(
+            mock_ds,
+            file_id=(
+                "MIP-DRS7/CMIP7/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/glb/mon/tas/"
+                "tavg-h2m-hxy-u/gn/v1/tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
+            ),
+        )
         mock_converted_ds.to_netcdf.assert_called_once()
 
         # Check output path structure and filename includes DReq-derived branding
@@ -567,7 +627,7 @@ class TestConvertFileToCmip7:
         result = _convert_file_to_cmip7(tmp_path / "cli.nc", facets)
 
         assert result == expected
-        mock_convert.assert_called_once_with(source)
+        mock_convert.assert_called_once_with(source, file_id=str(expected.relative_to(cache_dir)))
 
     @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7._invalid_conversion_reason", return_value="truncated")

@@ -756,14 +756,14 @@ obs4mips:
     variable_id: so
     version: v20251024
   datasets:
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '1988-12-15 00:00:00'
     filename: so_monC_WOA-23_REF_gn_200501-202212.nc
     finalised: true
     frequency: monC
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI-OCL.WOA-23.monC.so.1x1degree.gn.v20251024
+    instance_id: obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.so.1x1degree.gn.v20251024
     institution_id: NOAA-NCEI-OCL
     long_name: Objectively analyzed mean fields for sea_water_practical_salinity at
       standard depth levels.

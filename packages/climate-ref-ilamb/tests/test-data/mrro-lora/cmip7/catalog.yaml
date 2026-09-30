@@ -134,7 +134,7 @@ obs4mips:
     frequency: mon
     grid: 0.5x0.5 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4REF.ARCCSS.LORA-1-0.mon.mrro.50km.gn.v20250902
+    instance_id: obs4REF.obs4REF.ARCCSS.LORA-1-0.mon.mrro.50km.gn.v20250902
     institution_id: ARCCSS
     long_name: Total Runoff
     nominal_resolution: 50 km

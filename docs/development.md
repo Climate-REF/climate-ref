@@ -62,7 +62,7 @@ For development, we use a consistent set of decimated sample data.
 ```bash
 make fetch-test-data
 uv run ref datasets ingest --source-type cmip6 $PWD/tests/test-data/sample-data/CMIP6/
-uv run ref datasets ingest --source-type obs4mips $PWD/tests/test-data/sample-data/obs4REF/
+uv run ref datasets ingest --source-type obs4ref $PWD/tests/test-data/sample-data/obs4REF/
 ```
 
 This is enough to run a `solve` against.

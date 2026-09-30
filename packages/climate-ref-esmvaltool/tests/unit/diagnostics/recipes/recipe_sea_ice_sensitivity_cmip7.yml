@@ -23,24 +23,7 @@ documentation:
   - blockley_ed
   maintainer:
   - parsons_naomi
-defaults:
-  ensemble: r1i1p1f1
-  exp: historical
-  grid: gn
-  project: CMIP6
-datasets: []
 preprocessors:
-  extract_test_period:
-    extract_time:
-      start_day: 1
-      start_month: 1
-      start_year: 1979
-      end_day: 31
-      end_month: 12
-      end_year: 2014
-  extract_sept:
-    extract_month:
-      month: 9
   nh_total_area:
     extract_region:
       start_longitude: 0
@@ -68,14 +51,10 @@ preprocessors:
     annual_statistics:
       operator: mean
       keep_group_coordinates: true
+  extract_sept:
+    extract_month:
+      month: 9
   pp_arctic_sept_sea_ice:
-    extract_time:
-      start_day: 1
-      start_month: 1
-      start_year: 1979
-      end_day: 31
-      end_month: 12
-      end_year: 2014
     extract_month:
       month: 9
     extract_region:
@@ -88,13 +67,6 @@ preprocessors:
     convert_units:
       units: 1e6 km2
   pp_antarctic_avg_ann_sea_ice:
-    extract_time:
-      start_day: 1
-      start_month: 1
-      start_year: 1979
-      end_day: 31
-      end_month: 12
-      end_year: 2014
     annual_statistics:
       operator: mean
       keep_group_coordinates: true
@@ -108,13 +80,6 @@ preprocessors:
     convert_units:
       units: 1e6 km2
   pp_avg_ann_global_temp:
-    extract_time:
-      start_day: 1
-      start_month: 1
-      start_year: 1979
-      end_day: 31
-      end_month: 12
-      end_year: 2014
     area_statistics:
       operator: mean
     annual_statistics:
@@ -128,7 +93,7 @@ diagnostics:
       siconc:
         preprocessor: pp_arctic_sept_sea_ice
         mip: seaIce
-        additional_datasets: &id001
+        additional_datasets:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
@@ -165,7 +130,7 @@ diagnostics:
       tas:
         preprocessor: pp_avg_ann_global_temp
         mip: atmos
-        additional_datasets: &id002
+        additional_datasets:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
@@ -203,27 +168,13 @@ diagnostics:
       sea_ice_sensitivity_script:
         script: seaice/seaice_sensitivity.py
         observations:
-          observation period: 1979-2014
-          sea ice sensitivity (Notz-style plot):
+          observation_period:
+            start_year: 1979
+            end_year: 2014
+          sea_ice_sensitivity:
             mean: -4.01
-            standard deviation: 0.32
-            plausible range: 1.28
-          annual trends (Roach-style plot):
-            first point:
-              GMST trend: null
-              SIA trend: null
-              Pearson CC of SIA over GMST: null
-              significance of SIA over GMST: null
-            second point:
-              GMST trend: null
-              SIA trend: null
-              Pearson CC of SIA over GMST: null
-              significance of SIA over GMST: null
-            third point:
-              GMST trend: null
-              SIA trend: null
-              Pearson CC of SIA over GMST: null
-              significance of SIA over GMST: null
+            standard_deviation: 0.32
+            plausible_range: 1.28
   antarctic:
     description: Plots annual mean sea ice sensitivity below 0 latitude in millions
       of square kilometres
@@ -231,33 +182,77 @@ diagnostics:
       siconc:
         preprocessor: pp_antarctic_avg_ann_sea_ice
         mip: seaIce
-        additional_datasets: *id001
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          region: glb
+          timerange: 1979/2014
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: MPI-ESM1-2-LR
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: MPI-M
+          region: glb
+          timerange: 1979/2014
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: CESM2
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: NCAR
+          region: glb
+          timerange: 1979/2014
       tas:
         preprocessor: pp_avg_ann_global_temp
         mip: atmos
-        additional_datasets: *id002
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          region: glb
+          timerange: 1979/2014
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: MPI-ESM1-2-LR
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: MPI-M
+          region: glb
+          timerange: 1979/2014
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: CESM2
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: NCAR
+          region: glb
+          timerange: 1979/2014
     scripts:
       sea_ice_sensitivity_script:
         script: seaice/seaice_sensitivity.py
-        observations:
-          observation period: null
-          sea ice sensitivity (Notz-style plot):
-            mean: null
-            standard deviation: null
-            plausible range: null
-          annual trends (Roach-style plot):
-            first point:
-              GMST trend: null
-              SIA trend: null
-              Pearson CC of SIA over GMST: null
-              significance of SIA over GMST: null
-            second point:
-              GMST trend: null
-              SIA trend: null
-              Pearson CC of SIA over GMST: null
-              significance of SIA over GMST: null
-            third point:
-              GMST trend: null
-              SIA trend: null
-              Pearson CC of SIA over GMST: null
-              significance of SIA over GMST: null

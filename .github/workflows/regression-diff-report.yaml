@@ -1,0 +1,95 @@
+# Build and host the HTML diff of the regression baselines changed on a branch.
+#
+# Called by the mint workflow after it pushes regenerated manifests, and dispatched by hand
+# after a manual mint. Reads native blobs from the public store and writes only to the
+# reports bucket, so it needs the reports token and nothing else.
+name: Regression baselines (diff report)
+
+on:
+  workflow_call:
+    inputs:
+      base:
+        description: "Branch to diff against"
+        type: string
+        default: "main"
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Branch to diff against"
+        required: false
+        default: "main"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  report:
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: ubuntu-latest
+    environment: baseline-reports
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the branch head
+        uses: actions/checkout@v7
+        with:
+          # A called workflow sees the dispatching commit, not the one the mint job pushed.
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+      - name: Fetch the base branch
+        env:
+          BASE: ${{ inputs.base }}
+        run: git fetch --no-tags origin "+refs/heads/${BASE}:refs/remotes/origin/${BASE}"
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Find the pull request
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr="$(gh pr list --head "${GITHUB_REF_NAME}" --state open --json number --jq '.[0].number')"
+          sha="$(git rev-parse --short=12 HEAD)"
+          if [ -n "${pr}" ]; then
+            echo "prefix=${pr}/${sha}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "No open pull request for ${GITHUB_REF_NAME}. Uploading under branch/ and skipping the comment."
+            echo "prefix=branch/${GITHUB_REF_NAME}/${sha}" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "number=${pr}" >> "${GITHUB_OUTPUT}"
+      - name: Build and upload the report
+        env:
+          REF_REPORT_STORE_ACCESS_KEY_ID: ${{ secrets.R2_REPORTS_ACCESS_KEY_ID }}
+          REF_REPORT_STORE_SECRET_ACCESS_KEY: ${{ secrets.R2_REPORTS_SECRET_ACCESS_KEY }}
+          BASE: ${{ inputs.base }}
+          PREFIX: ${{ steps.pr.outputs.prefix }}
+        run: |
+          uv run ref test-cases diff \
+            --base "origin/${BASE}" \
+            --html-dir report \
+            --upload "${PREFIX}" \
+            --comment-output comment.md
+          cat comment.md >> "${GITHUB_STEP_SUMMARY}"
+      - name: Post or update the sticky comment
+        # One comment per pull request: the marker identifies the one to edit on a later run.
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          marker='<!-- climate-ref-baseline-diff -->'
+          existing="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" --paginate \
+            --jq "map(select(.body | contains(\"${marker}\"))) | .[0].id // empty")"
+          if [ -n "${existing}" ]; then
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${existing}" \
+              -F body=@comment.md
+          else
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+              -F body=@comment.md
+          fi

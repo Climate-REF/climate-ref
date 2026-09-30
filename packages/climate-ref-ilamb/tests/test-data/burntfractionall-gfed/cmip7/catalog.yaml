@@ -128,14 +128,14 @@ obs4mips:
     variable_id: burntFractionAll
     version: v20260128
   datasets:
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2020-12-16 12:00:00'
     filename: burntFractionAll_mon_GFED-5-0_REF_gr_199701-202012.nc
     finalised: true
     frequency: mon
     grid: 0.25x0.25 degree latitude x longitude
     grid_label: gr
-    instance_id: obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+    instance_id: obs4REF.obs4REF.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
     institution_id: NASA-NOSR
     long_name: Percentage of Entire Grid Cell That Is Covered by Burnt Vegetation
       (All Classes)

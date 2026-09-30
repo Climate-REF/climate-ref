@@ -3,16 +3,16 @@ _metadata:
 obs4mips:
   slug_column: instance_id
   selector:
-    activity_id: obs4MIPs
+    activity_id: obs4REF
   datasets:
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2017-07-16 12:00:00'
     filename: hfls_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.hfls.250km.gn.v20250415
+    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.hfls.250km.gn.v20250415
     institution_id: ESSO
     long_name: Surface Upward Latent Heat Flux
     nominal_resolution: 250 km
@@ -28,14 +28,14 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2017-07-16 12:00:00'
     filename: hfss_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.hfss.250km.gn.v20250415
+    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.hfss.250km.gn.v20250415
     institution_id: ESSO
     long_name: Surface Upward Sensible Heat Flux
     nominal_resolution: 250 km
@@ -51,14 +51,14 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2017-07-16 12:00:00'
     filename: tauu_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.tauu.250km.gn.v20250415
+    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.tauu.250km.gn.v20250415
     institution_id: ESSO
     long_name: Surface Downward Eastward Wind Stress
     nominal_resolution: 250 km
@@ -74,14 +74,14 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2017-07-15 12:00:00'
     filename: ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
     frequency: mon
     grid: 1.0x1.0 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
+    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
     institution_id: ESSO
     long_name: Surface Temperature
     nominal_resolution: 250 km
@@ -97,14 +97,14 @@ obs4mips:
     variant_label: PCMDI
     version: v20210727
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2025-01-16 12:00:00'
     filename: ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    instance_id: obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
     institution_id: MOHC
     long_name: Surface Temperature
     nominal_resolution: 250 km
@@ -120,14 +120,14 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2023-09-16 00:00:00'
     filename: rlds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.100km.gn.v20230209
+    instance_id: obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.100km.gn.v20230209
     institution_id: NASA-LaRC
     long_name: Surface Downwelling Longwave Radiation
     nominal_resolution: 100 km
@@ -143,14 +143,14 @@ obs4mips:
     variant_label: RSS
     version: v20230209
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2023-09-16 00:00:00'
     filename: rlus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.100km.gn.v20230209
+    instance_id: obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.100km.gn.v20230209
     institution_id: NASA-LaRC
     long_name: Surface Upwelling Longwave Radiation
     nominal_resolution: 100 km
@@ -166,14 +166,14 @@ obs4mips:
     variant_label: RSS
     version: v20230209
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2023-09-16 00:00:00'
     filename: rsds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.100km.gn.v20230209
+    instance_id: obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.100km.gn.v20230209
     institution_id: NASA-LaRC
     long_name: Surface Downwelling Shortwave Radiation
     nominal_resolution: 100 km
@@ -189,14 +189,14 @@ obs4mips:
     variant_label: RSS
     version: v20230209
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2023-09-16 00:00:00'
     filename: rsus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.100km.gn.v20230209
+    instance_id: obs4REF.obs4REF.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.100km.gn.v20230209
     institution_id: NASA-LaRC
     long_name: Surface Upwelling Shortwave Radiation
     nominal_resolution: 100 km

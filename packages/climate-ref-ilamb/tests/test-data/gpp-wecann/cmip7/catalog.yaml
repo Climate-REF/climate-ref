@@ -209,7 +209,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4REF.ColumbiaU.WECANN-1-0.mon.gpp.100km.gn.v20250902
+    instance_id: obs4REF.obs4REF.ColumbiaU.WECANN-1-0.mon.gpp.100km.gn.v20250902
     institution_id: ColumbiaU
     long_name: Carbon Mass Flux out of Atmosphere due to Gross Primary Production
       on Land

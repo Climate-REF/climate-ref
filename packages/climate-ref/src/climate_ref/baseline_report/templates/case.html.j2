@@ -1,0 +1,67 @@
+{% extends "base.html.j2" %}
+{% import "macros.html.j2" as m %}
+{% block title %}{{ case.change.label }}{% endblock %}
+{% block content %}
+<p><a href="{{ case.back_link }}">Back to all cases</a></p>
+<h2><code>{{ case.change.label }}</code></h2>
+{% if case.change.metadata %}
+<ul class="metadata">
+{% for line in case.change.metadata %}
+<li>{{ line }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if case.change.committed %}
+<h3>Committed artefacts changed</h3>
+<ul class="committed">
+{% for name in case.change.committed %}
+<li><code>{{ name }}</code></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if case.images %}
+<details open>
+<summary>Images</summary>
+{% for file in case.images %}
+{{ m.image_pair(file) }}
+{% endfor %}
+</details>
+{% endif %}
+
+{% if case.texts %}
+<details open>
+<summary>Text</summary>
+{% for file in case.texts %}
+{{ m.text_block(file) }}
+{% endfor %}
+</details>
+{% endif %}
+
+{% if case.netcdfs %}
+<details open>
+<summary>NetCDF</summary>
+{% for file in case.netcdfs %}
+{{ m.netcdf_block(file) }}
+{% endfor %}
+</details>
+{% endif %}
+
+{% if case.others %}
+<details open>
+<summary>Other files</summary>
+<div class="scroll-x">
+<table class="binaries">
+<thead>
+<tr><th>file</th><th>status</th><th>size</th><th>blobs</th></tr>
+</thead>
+<tbody>
+{% for file in case.others %}
+{{ m.binary_row(file) }}
+{% endfor %}
+</tbody>
+</table>
+</div>
+</details>
+{% endif %}
+{% endblock %}

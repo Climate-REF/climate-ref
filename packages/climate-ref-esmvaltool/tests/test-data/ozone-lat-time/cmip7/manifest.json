@@ -1,11 +1,11 @@
 {
-  "catalog_hash": "d871cb5c53da24f777a1b4c4a5535ab8fb01de3f",
+  "catalog_hash": "83717573c122607da3b482f4f058d7f4d4e8301c",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "758c03396e0b6b00a89ace6651712a6f9dc268f5d207fe3bbb35365351b68205",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -16,24 +16,24 @@
       "size": 14596
     },
     "executions/recipe/plots/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map.png": {
-      "sha256": "0a94c85a94b0baf86a6c71ea499b711625e172ee50ddd13a38be84aafe465001",
-      "size": 168083
+      "sha256": "7363a99a3ec7d90815dcf47ef48dbd37a79d915f033e418fdfde2fe13dccc76c",
+      "size": 172062
     },
     "executions/recipe/run/lat_time_mapplot/plot/diagnostic_provenance.yml": {
-      "sha256": "e9a5b935d9649ae35e61c93ed9bc41b01bd047ad5152024ed1bddd3c443d3001",
+      "sha256": "35df23a4259288740aa14230e4b92da4ffb93c87b669d0286e8ba1f319af1b7e",
       "size": 2061
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
-      "sha256": "6426b5d58587d8b1b17a5ab466f7f6c371ef4e6e293b0f1767855df8393984b4",
-      "size": 64527
+      "sha256": "e19c4c128aa6e263dbc85755252f2474ca222489890114351c1aba13eec6b5ad",
+      "size": 76665
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
-      "sha256": "4729d352ad9ff1e8cd2e9923c6332602f0f71e7c3f29f819557d6ce53a6f0e83",
-      "size": 64718
+      "sha256": "0eddabb902a6ab67a3f51bffac83f17e781ab8fb82d1f043b3770c6bd2c4a057",
+      "size": 76536
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
-      "sha256": "9b1813a9d073d759187002b85bcce5311dcb19233ab010782d996f28e5f6ebd0",
-      "size": 63332
+      "sha256": "cf90311bf6635279da01c29cc96cf2efe03490668e42674cea5367a191825ce0",
+      "size": 75208
     },
     "output.json": {
       "sha256": "013dd551a76fc70a5d76833df9d75f53d3602f5d7f3b797f6c2367fa5a58e92c",
@@ -45,5 +45,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 4
 }

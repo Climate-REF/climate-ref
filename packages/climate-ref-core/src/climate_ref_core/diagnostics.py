@@ -443,6 +443,14 @@ class DataRequirement:
     This is effectively an AND operation.
     """
 
+    fallback_source_types: tuple[SourceDatasetType, ...] = field(factory=tuple)
+    """
+    Source types that may supply this requirement when ``source_type`` does not hold the dataset.
+
+    A dataset present under ``source_type`` always wins,
+    and the data is delivered under ``source_type`` whichever collection it came from.
+    """
+
     def apply_filters(self, data_catalog: pd.DataFrame) -> pd.DataFrame:
         """
         Apply filters to a DataFrame-based data catalog.

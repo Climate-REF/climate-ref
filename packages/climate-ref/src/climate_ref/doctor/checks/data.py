@@ -4,15 +4,34 @@ Checks over the data a deployment has ingested.
 These look for the conditions that make a solve quietly do the wrong thing rather than fail:
 reference data that no diagnostic can reach,
 reference data that is missing so its diagnostics never run,
-and datasets whose files cover the same period twice.
+obs4REF data ingested under the obs4MIPs source type,
+obs4REF data that obs4MIPs has since published,
+datasets whose files cover the same period twice,
+and diagnostics the ingested data cannot solve at all.
 """
 
 from collections import defaultdict
+from collections.abc import Iterable, Mapping
 
+import pandas as pd
+
+from climate_ref.data_catalog import DataCatalog
+from climate_ref.datasets.obs4mips import in_collection_directory
 from climate_ref.doctor.context import DoctorContext
 from climate_ref.doctor.findings import Finding, Severity
 from climate_ref.doctor.registry import check
+from climate_ref.solver import (
+    apply_obs4ref_fallback,
+    as_frame,
+    catalog_for_requirement,
+    extract_covered_datasets,
+    solve_executions,
+    union_with_fallbacks,
+)
 from climate_ref.text import pluralise
+from climate_ref_core.diagnostics import Diagnostic
+from climate_ref_core.exceptions import InvalidDiagnosticException
+from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.reference_data import (
     ESGF_OBS4MIPS,
     ReferenceDataset,
@@ -20,7 +39,7 @@ from climate_ref_core.reference_data import (
     source_ids_by_registry,
 )
 from climate_ref_core.source_types import SourceDatasetType
-from climate_ref_core.summary import summarize_provider
+from climate_ref_core.summary import normalize_requirement_sets, summarize_provider
 
 
 @check(
@@ -92,6 +111,29 @@ def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
     return findings
 
 
+def _declared_fallbacks(providers: Iterable[DiagnosticProvider]) -> dict[str, set[str]]:
+    """
+    Collect the fallback source types the providers' requirements declare.
+
+    Parameters
+    ----------
+    providers
+        The providers to inspect.
+
+    Returns
+    -------
+    :
+        Source type values mapped to the source type values that may stand in for them.
+    """
+    declared: dict[str, set[str]] = defaultdict(set)
+    for provider in providers:
+        for diagnostic in summarize_provider(provider).diagnostics:
+            for requirement_set in diagnostic.requirement_sets:
+                for requirement in requirement_set.requirements:
+                    declared[requirement.source_type].update(requirement.fallback_source_types)
+    return declared
+
+
 def _collection_root(path: str, depth: int = 4) -> str:
     """Shorten a file path to the directory that identifies which collection it came from."""
     parts = str(path).split("/")
@@ -128,6 +170,12 @@ def check_missing_reference_data(context: DoctorContext) -> list[Finding]:
         catalog = context.catalog(source_type)
         if len(catalog) and "source_id" in catalog:
             ingested[source_type.value].update(catalog["source_id"].unique())
+
+    # obs4REF fills in whatever obs4MIPs lacks, so either satisfies an obs4MIPs requirement.
+    ingested[SourceDatasetType.obs4MIPs.value] |= ingested[SourceDatasetType.obs4REF.value]
+    for requested_type, fallbacks in _declared_fallbacks(context.providers).items():
+        for fallback in fallbacks:
+            ingested[requested_type] |= ingested[fallback]
 
     findings = []
     for dataset in sorted(required, key=lambda d: (d.supplier, d.source_id)):
@@ -179,11 +227,9 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
     """
     Find data ingested under a source type that no enabled diagnostic asks for.
 
-    The clearest case is obs4REF.
-    The ``obs4ref`` source type exists and can be ingested,
-    but no diagnostic declares an obs4REF data requirement,
-    and the solver only matches a requirement against its own source type.
-    Data ingested that way is never selected.
+    The solver only matches a requirement against its own source type,
+    so data ingested under a type nothing asks for is never selected.
+    The one exception is obs4REF data, which fills in for obs4MIPs requirements.
 
     Parameters
     ----------
@@ -201,6 +247,9 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
             for requirement_set in diagnostic.requirement_sets:
                 for requirement in requirement_set.requirements:
                     requested.add(requirement.source_type)
+                    requested.update(requirement.fallback_source_types)
+    if SourceDatasetType.obs4MIPs.value in requested:
+        requested.add(SourceDatasetType.obs4REF.value)
 
     findings = []
     for source_type in SourceDatasetType:
@@ -222,12 +271,191 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
                     "so nothing will select these datasets."
                 ),
                 remedy=(
-                    "If this is obs4REF data, re-ingest it with "
-                    f"`--source-type {SourceDatasetType.obs4MIPs.value}`."
+                    "Re-ingest the data under the source type the diagnostics ask for, "
+                    "or enable a provider that uses it."
                 ),
             )
         )
     return findings
+
+
+@check(
+    "misfiled-obs4ref",
+    "obs4REF data ingested under the obs4MIPs source type",
+)
+def check_misfiled_obs4ref(context: DoctorContext) -> list[Finding]:
+    """
+    Find obs4REF data that was ingested as obs4MIPs.
+
+    Earlier releases ingested the obs4REF collection this way, and it still solves.
+    The cost is that the catalog no longer shows which datasets came from the registry
+    and which from the archive, and a later obs4MIPs publication cannot take over from it.
+
+    A dataset counts as obs4REF when its files sit under an ``obs4REF`` directory,
+    which is how the registry lays them out.
+    Carrying a ``source_id`` the registry also carries is not enough,
+    because the four datasets published to both archives are legitimately ingested as obs4MIPs.
+    The file's own ``activity_id`` is stamped from the source type at ingest,
+    so only the ingest-time warning can use it.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per misfiled dataset, all sharing the one remedy.
+    """
+    catalog = context.catalog(SourceDatasetType.obs4MIPs)
+    if not len(catalog) or not {"instance_id", "path"}.issubset(catalog.columns):
+        return []
+
+    misfiled = in_collection_directory(catalog["path"], "obs4REF")
+    if not misfiled.any():
+        return []
+
+    return [
+        Finding(
+            severity=Severity.WARNING,
+            summary=f"{instance_id} is obs4REF data ingested as obs4mips",
+            remedy=(
+                "Re-ingest the obs4REF collection under its own source type, "
+                "then retract each of the obs4mips rows above with `ref datasets retract <instance_id>`."
+            ),
+            command="ref datasets ingest --source-type obs4ref <dir>",
+        )
+        for instance_id in sorted(catalog.loc[misfiled, "instance_id"].unique())
+    ]
+
+
+@check(
+    "superseded-obs4ref",
+    "obs4REF datasets that the obs4MIPs archive has since published",
+)
+def check_superseded_obs4ref(context: DoctorContext) -> list[Finding]:
+    """
+    Find obs4REF datasets that lose to an ingested obs4MIPs copy.
+
+    The solver takes the newest version, and the obs4MIPs copy on a tie, so these rows are never used.
+    This is the signal that a dataset can be dropped from the obs4REF registry.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per superseded obs4REF dataset.
+    """
+    obs4mips = context.catalog(SourceDatasetType.obs4MIPs)
+    obs4ref = context.catalog(SourceDatasetType.obs4REF)
+    if not len(obs4mips) or not len(obs4ref) or "instance_id" not in obs4mips or "instance_id" not in obs4ref:
+        return []
+
+    genuine = obs4mips
+    if "path" in obs4mips.columns:
+        genuine = obs4mips[~in_collection_directory(obs4mips["path"], "obs4REF")]
+    if not len(genuine):
+        return []
+
+    used = set(as_frame(union_with_fallbacks(genuine, [obs4ref], SourceDatasetType.obs4MIPs))["instance_id"])
+    superseded = obs4ref[~obs4ref["instance_id"].isin(used)]
+    return [
+        Finding(
+            severity=Severity.INFO,
+            summary=f"{instance_id} is superseded by the obs4MIPs copy",
+            remedy=(
+                "The obs4MIPs copy is the same or a newer version, so it is used instead. "
+                "These can be retracted, and dropped from the obs4REF registry."
+            ),
+        )
+        for instance_id in sorted(superseded["instance_id"].unique())
+    ]
+
+
+@check(
+    "unsolvable-diagnostics",
+    "Enabled diagnostics for which the ingested data produces no executions",
+)
+def check_unsolvable_diagnostics(context: DoctorContext) -> list[Finding]:
+    """
+    Find enabled diagnostics that the ingested data cannot solve at all.
+
+    This runs the solver against the ingested catalogs, diagnostic by diagnostic,
+    so it catches everything the narrower checks do not:
+
+    - a filter no dataset matches
+    - a constraint no group satisfies
+    - a source type nothing was ingested under
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per diagnostic with no executions.
+    """
+    catalogs: dict[SourceDatasetType, DataCatalog] = {
+        source_type: context.data_catalog(source_type) for source_type in SourceDatasetType
+    }
+
+    available = apply_obs4ref_fallback(catalogs)
+
+    findings = []
+    for provider in context.providers:
+        for diagnostic in provider.diagnostics():
+            try:
+                solvable = any(True for _ in solve_executions(catalogs, diagnostic, provider))
+            except (InvalidDiagnosticException, ValueError):
+                # ValueError is a diagnostic declaring no data requirements at all.
+                solvable = False
+            if solvable:
+                continue
+            findings.append(
+                Finding(
+                    severity=Severity.WARNING,
+                    summary=f"{provider.slug}/{diagnostic.slug} has no executions",
+                    detail=_why_unsolvable(diagnostic, available),
+                    remedy="Ingest the data the unmet requirement names, then run the solver again.",
+                )
+            )
+    return findings
+
+
+def _why_unsolvable(
+    diagnostic: Diagnostic,
+    available: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
+) -> str:
+    """
+    Explain which requirement the ingested data fails to meet.
+
+    Each requirement is checked on its own, so the first one with no matching group names the data to fetch.
+    When every requirement matches something, the failure lies in how they combine, which is reported as such.
+    """
+    reasons = []
+    for requirements in normalize_requirement_sets(diagnostic.data_requirements):
+        for requirement in requirements:
+            catalog = catalog_for_requirement(available, requirement)
+            if catalog is None or not len(as_frame(catalog)):
+                reasons.append(f"nothing is ingested as {requirement.source_type.value}")
+                break
+            if not extract_covered_datasets(catalog, requirement):
+                facets = " and ".join(
+                    ", ".join(f"{k}={'|'.join(v)}" for k, v in sorted(f.facets.items()))
+                    for f in requirement.filters
+                )
+                reasons.append(f"no {requirement.source_type.value} datasets match {facets}")
+                break
+        else:
+            reasons.append("every requirement matches data, but no complete group satisfies the constraints")
+    return "Unmet: " + ". ".join(dict.fromkeys(reasons)) + "."
 
 
 @check(

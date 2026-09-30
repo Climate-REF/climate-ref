@@ -3,16 +3,16 @@ _metadata:
 obs4mips:
   slug_column: instance_id
   selector:
-    activity_id: obs4MIPs
+    activity_id: obs4REF
   datasets:
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2017-07-15 12:00:00'
     filename: ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
     finalised: true
     frequency: mon
     grid: 1.0x1.0 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
+    instance_id: obs4REF.obs4REF.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
     institution_id: ESSO
     long_name: Surface Temperature
     nominal_resolution: 250 km
@@ -28,14 +28,14 @@ obs4mips:
     variant_label: PCMDI
     version: v20210727
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2025-01-16 12:00:00'
     filename: ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    instance_id: obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
     institution_id: MOHC
     long_name: Surface Temperature
     nominal_resolution: 250 km
@@ -51,14 +51,14 @@ obs4mips:
     variant_label: PCMDI
     version: v20250415
     vertical_levels: 1
-  - activity_id: obs4MIPs
+  - activity_id: obs4REF
     end_time: '2023-03-16 12:00:00'
     filename: pr_mon_GPCP-Monthly-3-2_RSS_gn_198301-202303.nc
     finalised: true
     frequency: mon
     grid: 0.5x0.5 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20231205
+    instance_id: obs4REF.obs4REF.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20231205
     institution_id: NASA-GSFC
     long_name: Precipitation
     nominal_resolution: 50 km

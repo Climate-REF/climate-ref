@@ -78,8 +78,7 @@ class TestSourceIdsByRegistry:
 
         found = source_ids_by_registry(manager)
 
-        # An obs4REF registry answers for obs4MIPs requirements too, since that is the
-        # source type its data is ingested under.
+        # The obs4REF registry supplies obs4MIPs requirements too
         assert found[(SourceDatasetType.obs4REF.value, "WECANN-1-0")] == ["obs4ref"]
         assert found[(SourceDatasetType.obs4MIPs.value, "WECANN-1-0")] == ["obs4ref"]
 
@@ -163,6 +162,22 @@ class TestCollectRequiredReferenceData:
         provider = _provider([_requirement(SourceDatasetType.CMIP6, "ACCESS-ESM1-5", "tas")])
 
         assert collect_required_reference_data([provider], _FakeManager({})) == []
+
+    def test_declared_fallback_locates_the_registry(self):
+        manager = _FakeManager(
+            {"obs4ref": _FakeEntry([_obs4ref_key("WECANN-1-0", "gpp")], SourceDatasetType.obs4REF)}
+        )
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.PMPClimatology,
+            filters=(FacetFilter(facets={"source_id": "WECANN-1-0", "variable_id": "gpp"}),),
+            group_by=None,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
+        )
+
+        (dataset,) = collect_required_reference_data([_provider([requirement])], manager)
+
+        assert dataset.source_type == SourceDatasetType.PMPClimatology.value
+        assert dataset.registry_name == "obs4ref"
 
     def test_variables_are_unioned_across_diagnostics(self):
         manager = _FakeManager({})

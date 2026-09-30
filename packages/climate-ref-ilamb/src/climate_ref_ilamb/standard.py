@@ -690,7 +690,7 @@ def _build_test_data_spec(  # noqa: PLR0913
                     slug=slug,
                     registry_name="obs4ref",
                     facets=obs_filters,
-                    source_type="obs4MIPs",
+                    source_type="obs4REF",
                 ),
             )
         elif obs_source == "obs4mips":
@@ -947,12 +947,11 @@ class ILAMBStandard(Diagnostic):
             is_land=is_land,
         )
 
-        # obs4MIPs data requirement, normally ilamb3 expects the `sources` to
+        # Observational data requirement, normally ilamb3 expects the `sources` to
         # resolve to keys in one of its data registries. If instead we find a
         # dictionary, then assume that these keys are meant to be keywords in a
         # REF data requirement.
-        # obs_source key is used to determine whether to fetch from ESGF
-        # or use the pre-fetched obs4REF registry.
+        # obs_source names where the test data is fetched from, the registry or ESGF.
         filters: dict[str, tuple[str, ...]] = {}
         obs_source = None
         for _, source in sources.items():
@@ -1030,7 +1029,7 @@ class ILAMBStandard(Diagnostic):
         # data not yet available in obs4{MIPs,REF}. This logic allows for
         # DataRequirement filters to be added as a 'source' in the ilamb
         # configure file. If a dictionary instead of a string was found, we
-        # populate an obs4MIPs requirement.
+        # populate an observational requirement.
         if SourceDatasetType.obs4MIPs in definition.datasets:
             # ilamb3 will expect the reference dataset dataframe to have a `key`
             # column that uniquely describes each dataset. Create one using the

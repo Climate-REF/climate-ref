@@ -280,7 +280,6 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             paths=[str(file_or_directory)],
             parsing_func=parsing_function,
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=self.n_jobs,
         )
 
@@ -317,7 +316,6 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             paths=[str(file_or_directory)],
             parsing_func=parsing_function,
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=self.n_jobs,
             chunk_size=chunk_size,
         ):

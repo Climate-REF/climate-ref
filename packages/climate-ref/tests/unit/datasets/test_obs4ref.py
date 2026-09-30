@@ -1,10 +1,4 @@
-"""Tests for the obs4REF adapter (A3): warn-only cross-adapter enforcement.
-
-``Obs4REFDatasetAdapter`` and ``Obs4MIPsDatasetAdapter`` share the same
-:func:`~climate_ref.datasets.obs4mips.parse_obs4mips` parser, but each restricts its own
-``accepted_activity_ids``. A file whose ``activity_id`` doesn't match the adapter that
-parses it is still ingested (warn-only, not rejected) -- see ``obs4mips.py`` docstrings.
-"""
+"""Tests for the obs4REF adapter."""
 
 import netCDF4
 import numpy as np
@@ -45,43 +39,45 @@ def _write_obs4_style_file(path, *, activity_id: str) -> None:
 
 @pytest.fixture
 def obs4ref_style_dir(tmp_path):
-    """A single obs4REF-DRS-shaped file with ``activity_id="obs4REF"``."""
+    """An obs4REF-registry-shaped file that still claims ``activity_id="obs4MIPs"`` inside."""
     fixture_dir = tmp_path / "obs4ref_style"
     _write_obs4_style_file(
         fixture_dir / "obs4REF" / "TESTORG" / "TEST-SRC" / "mon" / "ts" / "gn" / "v1" / "ts_mon.nc",
-        activity_id="obs4REF",
+        activity_id="obs4MIPs",
     )
     return fixture_dir
 
 
 class TestObs4REFDatasetAdapter:
-    def test_instance_id_prefix(self):
-        assert Obs4REFDatasetAdapter.instance_id_prefix == "obs4REF"
-        assert Obs4REFDatasetAdapter.accepted_activity_ids == ("obs4REF",)
+    def test_activity_id(self):
+        assert Obs4REFDatasetAdapter.activity_id == "obs4REF"
+        assert Obs4MIPsDatasetAdapter.activity_id == "obs4MIPs"
 
-    def test_load_local_datasets_prefixes_instance_id(self, obs4ref_style_dir):
-        adapter = Obs4REFDatasetAdapter()
-        data_catalog = adapter.find_local_datasets(obs4ref_style_dir)
+    def test_stamps_collection_regardless_of_file(self, obs4ref_style_dir):
+        """The registry republishes obs4MIPs files unchanged, so the adapter decides the collection."""
+        data_catalog = Obs4REFDatasetAdapter().find_local_datasets(obs4ref_style_dir)
 
         assert len(data_catalog) == 1
-        assert data_catalog["instance_id"].iloc[0].startswith("obs4REF.")
+        assert data_catalog["activity_id"].iloc[0] == "obs4REF"
+        assert data_catalog["instance_id"].iloc[0] == "obs4REF.obs4REF.TESTORG.TEST-SRC.mon.ts.100km.gn.v1"
 
-    def test_cross_parsed_by_obs4mips_adapter_warns_and_ingests(self, obs4ref_style_dir, caplog):
-        """An obs4REF file parsed by the obs4MIPs adapter is still ingested, with a warning."""
-        obs4mips_adapter = Obs4MIPsDatasetAdapter()
-        ref_adapter = Obs4REFDatasetAdapter()
+    def test_same_file_gets_distinct_ids(self, obs4ref_style_dir):
+        obs4mips_catalog = Obs4MIPsDatasetAdapter().find_local_datasets(obs4ref_style_dir)
+        ref_catalog = Obs4REFDatasetAdapter().find_local_datasets(obs4ref_style_dir)
 
-        obs4mips_catalog = obs4mips_adapter.find_local_datasets(obs4ref_style_dir)
-        ref_catalog = ref_adapter.find_local_datasets(obs4ref_style_dir)
-
-        assert len(obs4mips_catalog) == 1
         obs4mips_instance_id = obs4mips_catalog["instance_id"].iloc[0]
         ref_instance_id = ref_catalog["instance_id"].iloc[0]
+        assert obs4mips_instance_id.startswith("obs4MIPs.obs4MIPs.")
+        assert ref_instance_id.startswith("obs4REF.obs4REF.")
+        assert obs4mips_instance_id.split(".", 2)[2] == ref_instance_id.split(".", 2)[2]
 
-        assert obs4mips_instance_id.startswith("obs4MIPs.")
-        assert ref_instance_id.startswith("obs4REF.")
-        # Non-colliding slugs -- the cross-parsed file never masquerades as the same dataset.
-        assert obs4mips_instance_id != ref_instance_id
+    def test_obs4mips_adapter_warns_on_obs4ref_layout(self, obs4ref_style_dir, caplog):
+        Obs4MIPsDatasetAdapter().find_local_datasets(obs4ref_style_dir)
 
-        warning_messages = [r.message for r in caplog.records if r.levelname == "WARNING"]
-        assert any("outside the expected" in msg for msg in warning_messages)
+        warnings = [r.message for r in caplog.records if r.levelname == "WARNING"]
+        assert any("look like obs4REF data" in msg and "--source-type obs4ref" in msg for msg in warnings)
+
+    def test_obs4ref_adapter_does_not_warn(self, obs4ref_style_dir, caplog):
+        Obs4REFDatasetAdapter().find_local_datasets(obs4ref_style_dir)
+
+        assert not [r for r in caplog.records if r.levelname == "WARNING"]

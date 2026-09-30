@@ -15,6 +15,9 @@ BUILT_IN_SLUGS = {
     "missing-reference-data",
     "unreachable-source-type",
     "overlapping-registries",
+    "misfiled-obs4ref",
+    "superseded-obs4ref",
+    "unsolvable-diagnostics",
 }
 
 

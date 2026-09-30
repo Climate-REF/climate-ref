@@ -95,7 +95,7 @@ class ENSO(CommandLineDiagnostic):
                         RegistryRequest(
                             slug=f"enso-{self.slug}-obs",
                             registry_name="obs4ref",
-                            source_type="obs4MIPs",
+                            source_type="obs4REF",
                             facets={
                                 "source_id": self.obs_sources,
                                 "variable_id": self.model_variables,
@@ -141,7 +141,7 @@ class ENSO(CommandLineDiagnostic):
                         RegistryRequest(
                             slug=f"enso-{self.slug}-obs-cmip7",
                             registry_name="obs4ref",
-                            source_type="obs4MIPs",
+                            source_type="obs4REF",
                             facets={
                                 "source_id": self.obs_sources,
                                 "variable_id": self.model_variables,

@@ -10,12 +10,12 @@ from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.summary import (
     DiagnosticReference,
     _extract_facet_values,
-    _normalize_requirement_sets,
     collect_by_source_type,
     collect_variables_by_experiment,
     format_diagnostic_markdown,
     format_overview_markdown,
     format_provider_markdown,
+    normalize_requirement_sets,
     summarize_data_requirement,
     summarize_diagnostic,
     summarize_provider,
@@ -206,7 +206,7 @@ class TestNormalizeRequirementSets:
                 group_by=None,
             ),
         )
-        result = _normalize_requirement_sets(reqs)
+        result = normalize_requirement_sets(reqs)
         assert len(result) == 1
         assert len(result[0]) == 1
         assert isinstance(result[0][0], DataRequirement)
@@ -229,18 +229,18 @@ class TestNormalizeRequirementSets:
                 ),
             ),
         )
-        result = _normalize_requirement_sets(reqs)
+        result = normalize_requirement_sets(reqs)
         assert len(result) == 2
         assert result[0][0].source_type == SourceDatasetType.CMIP6
         assert result[1][0].source_type == SourceDatasetType.CMIP7
 
     def test_empty_requirements(self):
-        result = _normalize_requirement_sets(())
+        result = normalize_requirement_sets(())
         assert result == []
 
     def test_invalid_type_raises(self):
         with pytest.raises(TypeError, match="Expected DataRequirement"):
-            _normalize_requirement_sets((42,))
+            normalize_requirement_sets((42,))
 
 
 class TestSummarizeDataRequirement:

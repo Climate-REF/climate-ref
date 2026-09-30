@@ -18,7 +18,7 @@ from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 from climate_ref.datasets.cmip7_parsers import parse_cmip7_complete, parse_cmip7_drs
-from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
+from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, Obs4REFDatasetAdapter
 from climate_ref.models.metric_value import MetricValue
 from climate_ref.provider_registry import _register_provider
 from climate_ref.solve_helpers import solve_to_results
@@ -120,11 +120,12 @@ def prepare_db(cmip7_aft_cv):
 
 
 @pytest.fixture(scope="session")
-def db_seeded_template(
+def db_seeded_template(  # noqa: PLR0913
     tmp_path_session: Path,
     migrated_db_template: Path,
     cmip6_data_catalog,
     obs4mips_data_catalog,
+    obs4ref_data_catalog,
     prepare_db,
 ) -> Path:
     template_db_path = tmp_path_session / "climate_ref_template_seeded.db"
@@ -140,12 +141,15 @@ def db_seeded_template(
         for instance_id, data_catalog_dataset in cmip6_validated.groupby(adapter.slug_column):
             adapter.register_dataset(database, data_catalog_dataset)
 
-    # Seed the obs4MIPs sample datasets
-    adapter_obs = Obs4MIPsDatasetAdapter()
-    obs4mips_validated = adapter_obs.validate_data_catalog(obs4mips_data_catalog)
-    with database.session.begin():
-        for instance_id, data_catalog_dataset in obs4mips_validated.groupby(adapter_obs.slug_column):
-            adapter_obs.register_dataset(database, data_catalog_dataset)
+    # Seed the obs4MIPs and obs4REF sample datasets
+    for adapter_obs, catalog in (
+        (Obs4MIPsDatasetAdapter(), obs4mips_data_catalog),
+        (Obs4REFDatasetAdapter(), obs4ref_data_catalog),
+    ):
+        validated = adapter_obs.validate_data_catalog(catalog)
+        with database.session.begin():
+            for instance_id, data_catalog_dataset in validated.groupby(adapter_obs.slug_column):
+                adapter_obs.register_dataset(database, data_catalog_dataset)
 
     with database.session.begin():
         _register_provider(database, example_provider)

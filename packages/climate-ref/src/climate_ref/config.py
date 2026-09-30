@@ -290,6 +290,54 @@ class NativeStoreConfig:
 
 
 @config(prefix=env_prefix)
+class ReportStoreConfig:
+    """
+    Configuration for the public store that hosts baseline diff reports.
+
+    A diff report is a small static site keyed by pull request and head sha,
+    so this store is addressed by path rather than by digest.
+    It is a different bucket to the native store because an R2 token cannot be scoped to a prefix,
+    so a token that can write reports must not also be able to overwrite baseline blobs.
+
+    Write credentials are **not** stored here: the access-key id and secret-access-key are read from
+    ``REF_REPORT_STORE_ACCESS_KEY_ID`` / ``REF_REPORT_STORE_SECRET_ACCESS_KEY``
+    (falling back to boto3's default credential chain) at upload time only,
+    so secrets never land in a serialised config.
+    """
+
+    url: str = env_field(name="REPORT_STORE_URL", default="https://reports.baselines.climate-ref.org")
+    """
+    Base URL the reports are served from.
+
+    Reports are served at ``{url}/{key}``.
+    Defaults to the production Climate-REF reports endpoint.
+
+    Set ``REF_REPORT_STORE_URL`` to a local ``file:///path/to/dir`` (or a plain filesystem path)
+    to render and inspect an upload offline.
+    """
+
+    s3_endpoint_url: str = env_field(
+        name="REPORT_STORE_S3_ENDPOINT_URL",
+        default="https://2aa5172b2bba093c516027d6fa13cdc8.r2.cloudflarestorage.com",
+    )
+    """
+    S3 API endpoint for the writable (Cloudflare R2) backend, without the bucket.
+
+    Non-secret routing config, consumed only when uploading a report.
+    Defaults to the production Climate-REF R2 account endpoint.
+    Set ``REF_REPORT_STORE_S3_ENDPOINT_URL`` to override (e.g. a staging account).
+    """
+
+    bucket: str = env_field(name="REPORT_STORE_BUCKET", default="ref-baselines-reports")
+    """
+    Name of the writable (Cloudflare R2) reports bucket.
+
+    Non-secret routing config, consumed only when uploading a report.
+    Set ``REF_REPORT_STORE_BUCKET`` to override.
+    """
+
+
+@config(prefix=env_prefix)
 class ExecutorConfig:
     """
     Configuration to define the executor to use for running diagnostics
@@ -752,6 +800,7 @@ class Config:
 
     paths: PathConfig = Factory(PathConfig)
     native_store: NativeStoreConfig = Factory(NativeStoreConfig)
+    report_store: ReportStoreConfig = Factory(ReportStoreConfig)
     db: DbConfig = Factory(DbConfig)
     executor: ExecutorConfig = Factory(ExecutorConfig)
     diagnostic_providers: list[DiagnosticProviderConfig] = Factory(default_providers)  # noqa: RUF009, RUF100

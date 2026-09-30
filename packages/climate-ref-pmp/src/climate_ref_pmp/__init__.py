@@ -30,6 +30,18 @@ __version__ = importlib.metadata.version("climate-ref-pmp")
 
 _REGISTRY_NAME = "pmp-climatology"
 
+_THREAD_LIMIT_VARS = (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+)
+
+# Conservative default for ~10% improvement over a single thread
+# Without a default BLAS will take as many CPUs as available
+_DEFAULT_THREAD_LIMIT = "2"
+
 
 # Create the PMP diagnostics provider
 # PMP uses a conda environment to run the diagnostics
@@ -48,6 +60,12 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
         if "FI_PROVIDER" not in os.environ:  # pragma: no branch
             logger.debug("Setting env variable 'FI_PROVIDER=tcp'")
             self.env_overrides["FI_PROVIDER"] = "tcp"
+
+        # If any budgets are set, don't set default values
+        if not any(name in os.environ for name in _THREAD_LIMIT_VARS):
+            logger.debug(f"Limiting threads to {_DEFAULT_THREAD_LIMIT}")
+            for name in _THREAD_LIMIT_VARS:
+                self.env_overrides[name] = _DEFAULT_THREAD_LIMIT
 
     def fetch_data(self, config: Config) -> None:
         """Fetch PMP climatology data."""

@@ -390,7 +390,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     RegistryRequest(
                         slug="surface-temperature-obs",
                         registry_name="obs4ref",
-                        source_type="obs4MIPs",
+                        source_type="obs4REF",
                         facets={"source_id": _REFERENCE_SOURCE_ID, "variable_id": _REFERENCE_VARIABLE},
                     ),
                     CMIP6Request(
@@ -423,7 +423,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     RegistryRequest(
                         slug="surface-temperature-obs-cmip7",
                         registry_name="obs4ref",
-                        source_type="obs4MIPs",
+                        source_type="obs4REF",
                         facets={"source_id": _REFERENCE_SOURCE_ID, "variable_id": _REFERENCE_VARIABLE},
                     ),
                     CMIP7Request(

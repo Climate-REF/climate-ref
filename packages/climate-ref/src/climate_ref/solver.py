@@ -40,6 +40,7 @@ from climate_ref_core.datasets import (
     ExecutionDatasetCollection,
     Selector,
     SourceDatasetType,
+    version_sort_key,
 )
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition
 from climate_ref_core.exceptions import InvalidDiagnosticException
@@ -248,6 +249,155 @@ def _process_group_constraints(
     return group
 
 
+def as_frame(catalog: pd.DataFrame | DataCatalog) -> pd.DataFrame:
+    """
+    Unwrap a catalog to the DataFrame behind it.
+
+    Parameters
+    ----------
+    catalog
+        Either a catalog wrapper or a plain frame.
+
+    Returns
+    -------
+    :
+        The catalog as a DataFrame.
+    """
+    return catalog.to_frame() if isinstance(catalog, DataCatalog) else catalog
+
+
+def union_with_fallbacks(
+    primary: pd.DataFrame | DataCatalog,
+    fallbacks: Sequence[pd.DataFrame | DataCatalog],
+    primary_type: SourceDatasetType,
+) -> pd.DataFrame | DataCatalog:
+    """
+    Fill a reference catalog from its fallback collections.
+
+    A dataset held by more than one collection is taken at its newest version,
+    and from the primary when the versions tie.
+    So publishing a dataset to obs4MIPs takes over from the obs4REF copy without any re-ingest,
+    but a newer registry version is not lost to a stale published one.
+
+    Parameters
+    ----------
+    primary
+        The catalog the requirement asks for, which wins a version tie.
+    fallbacks
+        Catalogs that may stand in for it, tried in order.
+    primary_type
+        Source type the merged rows are delivered under.
+
+    Returns
+    -------
+    :
+        The primary catalog, extended with the fallback rows that win.
+        The original catalog is returned untouched when nothing is added.
+        The added rows carry ``activity_id`` of the primary, because that is the collection they stand in for.
+        Their ``instance_id`` still names the collection they came from, so the provenance is not lost.
+    """
+    usable = [
+        frame
+        for frame in (as_frame(fallback) for fallback in fallbacks)
+        if not frame.empty and "instance_id" in frame.columns
+    ]
+    if not usable:
+        return primary
+
+    merged = as_frame(primary)
+    if len(merged) and "instance_id" not in merged.columns:
+        return primary
+    changed = False
+    for fallback_df in usable:
+        taken = newer_rows(fallback_df, merged)
+        if taken.empty:
+            continue
+        # The rows are served as the primary's data, so they must group as the primary's data too.
+        # A requirement grouping by activity_id would otherwise split its reference data in two.
+        if "activity_id" in taken.columns:
+            taken = taken.assign(activity_id=primary_type.name)
+        if len(merged):
+            beaten = _obs_dataset_key(merged["instance_id"]).isin(_obs_dataset_key(taken["instance_id"]))
+            merged = pd.concat([merged[~beaten], taken], ignore_index=True)
+        else:
+            merged = taken.reset_index(drop=True)
+        changed = True
+
+    if not changed:
+        return primary
+    if isinstance(primary, DataCatalog) or any(isinstance(f, DataCatalog) for f in fallbacks):
+        # No adapter can reload the merge, so the result carries none and never reloads.
+        return DataCatalog.from_frame(merged)
+    return merged
+
+
+def _obs_dataset_version(instance_id: pd.Series) -> pd.Series:
+    """Read the numeric version key off the end of an obs4MIPs or obs4REF ``instance_id``."""
+    return instance_id.astype(str).str.rsplit(".", n=1).str[1].map(version_sort_key)
+
+
+def _obs_dataset_key(instance_id: pd.Series) -> pd.Series:
+    """Strip the collection prefix to be common between obs4MIPs or obs4REF"""
+    return instance_id.astype(str).str.split(".", n=2).str[2].str.rsplit(".", n=1).str[0]
+
+
+def newer_rows(candidate: pd.DataFrame, held: pd.DataFrame) -> pd.DataFrame:
+    """
+    Select the rows of ``candidate`` that ``held`` lacks, or holds at an older version.
+
+    Parameters
+    ----------
+    candidate
+        Rows offered by a fallback collection.
+    held
+        Rows already taken, which win a version tie.
+
+    Returns
+    -------
+    :
+        The subset of ``candidate`` that should replace or extend ``held``.
+    """
+    if not len(held):
+        return candidate
+    held_version = pd.Series(
+        _obs_dataset_version(held["instance_id"]).to_numpy(),
+        index=_obs_dataset_key(held["instance_id"]).to_numpy(),
+    )
+    held_version = held_version.groupby(level=0).max()
+    current = _obs_dataset_key(candidate["instance_id"]).map(held_version)
+    wins = current.isna() | (_obs_dataset_version(candidate["instance_id"]) > current)
+    return candidate[wins]
+
+
+def apply_obs4ref_fallback(
+    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
+) -> Mapping[SourceDatasetType, pd.DataFrame | DataCatalog]:
+    """
+    Fold the obs4REF catalog into the obs4MIPs one so obs4MIPs requirements can reach it.
+
+    Parameters
+    ----------
+    data_catalog
+        Data catalogs for each source dataset type
+
+    Returns
+    -------
+    :
+        The catalogs with obs4MIPs extended by the obs4REF datasets it lacks
+        (see `union_with_fallbacks`).
+        The mapping is returned unchanged when nothing is ingested as obs4REF.
+    """
+    if SourceDatasetType.obs4REF not in data_catalog:
+        return data_catalog
+    obs4mips = data_catalog.get(SourceDatasetType.obs4MIPs, pd.DataFrame())
+    return {
+        **data_catalog,
+        SourceDatasetType.obs4MIPs: union_with_fallbacks(
+            obs4mips, [data_catalog[SourceDatasetType.obs4REF]], SourceDatasetType.obs4MIPs
+        ),
+    }
+
+
 def solve_executions(
     data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
@@ -275,11 +425,12 @@ def solve_executions(
         raise ValueError(f"Diagnostic {diagnostic.slug!r} has no data requirements")
 
     first_item = next(iter(diagnostic.data_requirements))
+    catalogs = apply_obs4ref_fallback(data_catalog)
 
     if isinstance(first_item, DataRequirement):
         # We have a single collection of data requirements
         yield from _solve_from_data_requirements(
-            data_catalog,
+            catalogs,
             diagnostic,
             typing.cast(Sequence[DataRequirement], diagnostic.data_requirements),
             provider,
@@ -294,7 +445,7 @@ def solve_executions(
             # Buffer executions to check if any were actually produced
             # _solve_from_data_requirements returns empty if source types are missing
             executions = list(
-                _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
+                _solve_from_data_requirements(catalogs, diagnostic, requirement_collection, provider)
             )
             if executions:
                 any_matched = True
@@ -310,6 +461,40 @@ def solve_executions(
         raise TypeError(f"Expected a DataRequirement, got {type(first_item)}")
 
 
+def catalog_for_requirement(
+    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
+    requirement: DataRequirement,
+) -> pd.DataFrame | DataCatalog | None:
+    """
+    Resolve the catalog a requirement is solved against, folding in its declared fallbacks.
+
+    Parameters
+    ----------
+    data_catalog
+        Data catalogs for each source dataset type.
+    requirement
+        The requirement to resolve a catalog for.
+
+    Returns
+    -------
+    :
+        The requirement's catalog, or ``None`` when neither it nor any of its fallbacks
+        has been ingested.
+    """
+    fallbacks = [
+        data_catalog[source_type]
+        for source_type in requirement.fallback_source_types
+        if source_type in data_catalog
+    ]
+    if requirement.source_type not in data_catalog and not fallbacks:
+        return None
+
+    primary = data_catalog.get(requirement.source_type, pd.DataFrame())
+    if not fallbacks:
+        return primary
+    return union_with_fallbacks(primary, fallbacks, requirement.source_type)
+
+
 def _solve_from_data_requirements(
     data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
@@ -322,16 +507,15 @@ def _solve_from_data_requirements(
     for requirement in data_requirements:
         if not isinstance(requirement, DataRequirement):
             raise TypeError(f"Expected a DataRequirement, got {type(requirement)}")
-        if requirement.source_type not in data_catalog:
+        catalog = catalog_for_requirement(data_catalog, requirement)
+        if catalog is None:
             logger.debug(
                 f"No data catalog for source type {requirement.source_type} of "
                 f"{provider.slug} diagnostic {diagnostic.slug}"
             )
             return
 
-        dataset_groups[requirement.source_type] = extract_covered_datasets(
-            data_catalog[requirement.source_type], requirement
-        )
+        dataset_groups[requirement.source_type] = extract_covered_datasets(catalog, requirement)
 
     # Calculate the product across each of the source types
     for items in itertools.product(*dataset_groups.values()):

@@ -13,7 +13,10 @@ from climate_ref_core.esgf.cmip7 import CMIP7Request
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
+from climate_ref_esmvaltool.diagnostics.base import (
+    ESMValToolDiagnostic,
+    get_cmip_source_type,
+)
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
@@ -81,7 +84,7 @@ toz_data_requirement = (
                 RequireTimerange(
                     group_by=("instance_id",),
                     start=PartialDateTime(1996, 1),
-                    end=PartialDateTime(2014, 12),
+                    end=PartialDateTime(2021, 12),
                 ),
                 RequireContiguousTimerange(group_by=("instance_id",)),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
@@ -92,10 +95,11 @@ toz_data_requirement = (
             filters=(ozone_obs_filter,),
             group_by=("source_id",),
             constraints=(
+                # The recipe plots the observations through 2021, so require that coverage.
                 RequireTimerange(
                     group_by=("instance_id",),
                     start=PartialDateTime(1996, 1),
-                    end=PartialDateTime(2014, 12),
+                    end=PartialDateTime(2021, 12),
                 ),
             ),
         ),
@@ -122,7 +126,7 @@ toz_test_spec = TestDataSpecification(
                     slug="obs4mips",
                     facets=ozone_obs_filter.facets,
                     remove_ensembles=False,
-                    time_span=("1980", "2009"),
+                    time_span=("1996", "2015"),
                 ),
             ),
         ),
@@ -144,18 +148,42 @@ toz_test_spec = TestDataSpecification(
                         "region": "glb",
                     },
                     remove_ensembles=True,
-                    time_span=("1980", "2009"),
+                    time_span=("1950", "2015"),
+                    extend_historical_to=(2021, 12),
                 ),
                 Obs4MIPsRequest(
                     slug="obs4mips",
                     facets=ozone_obs_filter.facets,
                     remove_ensembles=False,
-                    time_span=("1980", "2009"),
+                    time_span=("1996", "2021"),
                 ),
             ),
         ),
     ),
 )
+
+
+def _prepare_recipe(
+    recipe: Recipe,
+    input_files: dict[SourceDatasetType, pandas.DataFrame],
+    diagnostic: str,
+    variable: str,
+    cmip7_timerange: str | None = None,
+) -> None:
+    """
+    Prune the recipe to one diagnostic and insert the solved model dataset.
+    """
+    cmip_source = get_cmip_source_type(input_files)
+    recipe_variables = dataframe_to_recipe(input_files[cmip_source])
+
+    dataset = recipe_variables[variable]["additional_datasets"][0]
+    dataset.pop("timerange", None)
+    recipe["datasets"] = [dataset]
+    recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
+
+    # The recipe includes CMIP6 time ranges
+    if cmip_source == SourceDatasetType.CMIP7 and cmip7_timerange is not None:
+        recipe["diagnostics"][diagnostic]["variables"][variable]["timerange"] = cmip7_timerange
 
 
 class O3LatTimeMapplot(ESMValToolDiagnostic):
@@ -165,8 +193,8 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-lat-time"
-    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 2
+    base_recipe = "ref/recipe_ref_ozone.yml"
+    version = 3
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -184,14 +212,7 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
-        dataset = recipe_variables["toz"]["additional_datasets"][0]
-        # set time range of model (CMIP6) dataset (should match observational period)
-        dataset["timerange"] = "1996/2014"
-        recipe["datasets"] = [dataset]
-        diagnostic = "lat_time_mapplot"
-        recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
-        recipe["diagnostics"][diagnostic]["variables"]["toz"]["timerange"] = "1996/2014"
+        _prepare_recipe(recipe, input_files, "lat_time_mapplot", "toz", cmip7_timerange="1997/2021")
 
 
 class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
@@ -201,8 +222,8 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-sh-oct"
-    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 2
+    base_recipe = "ref/recipe_ref_ozone.yml"
+    version = 3
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -210,7 +231,10 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
     files = (
         FileDefinition(
             file_pattern="plots/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.png",
-            dimensions={"variable_id": "toz", "statistic": "Southern Hemisphere October polar mean"},
+            dimensions={
+                "variable_id": "toz",
+                "statistic": "Southern Hemisphere October polar mean",
+            },
         ),
     )
     # dim0=0 is the model, dim0=1 contains the observational reference data.
@@ -218,7 +242,10 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
         SeriesDefinition(
             file_pattern="work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc",
             sel={"dim0": 0},
-            dimensions={"variable_id": "toz", "statistic": "Southern Hemisphere October polar mean"},
+            dimensions={
+                "variable_id": "toz",
+                "statistic": "Southern Hemisphere October polar mean",
+            },
             values_name="toz",
             index_name="time",
             attributes=[],
@@ -231,24 +258,24 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
-        dataset = recipe_variables["toz"]["additional_datasets"][0]
-        # set model (CMIP6) time range to 1950...2014
-        dataset["timerange"] = "1950/2014"
-        recipe["datasets"] = [dataset]
-        diagnostic = "polar_cap_time_series_SH"
-        recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
+        _prepare_recipe(
+            recipe,
+            input_files,
+            "polar_cap_time_series_SH",
+            "toz",
+            cmip7_timerange="1950/2021",
+        )
 
 
 class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics - March NH polar mean (60N-80N) time series.
+    Calculate the ozone diagnostics - March NH polar mean (60N-85N) time series.
     """
 
     name = "Ozone Diagnostics"
     slug = "ozone-nh-mar"
-    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 2
+    base_recipe = "ref/recipe_ref_ozone.yml"
+    version = 3
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -256,7 +283,10 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
     files = (
         FileDefinition(
             file_pattern="plots/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.png",
-            dimensions={"variable_id": "toz", "statistic": "Northern Hemisphere March polar mean"},
+            dimensions={
+                "variable_id": "toz",
+                "statistic": "Northern Hemisphere March polar mean",
+            },
         ),
     )
     # dim0=0 is the model, dim0=1 contains the observational reference data.
@@ -264,7 +294,10 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
         SeriesDefinition(
             file_pattern="work/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.nc",
             sel={"dim0": 0},
-            dimensions={"variable_id": "toz", "statistic": "Northern Hemisphere March polar mean"},
+            dimensions={
+                "variable_id": "toz",
+                "statistic": "Northern Hemisphere March polar mean",
+            },
             values_name="toz",
             index_name="time",
             attributes=[],
@@ -277,17 +310,13 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
-        dataset = recipe_variables["toz"]["additional_datasets"][0]
-        # set model (CMIP6) time range to 1950...2014
-        dataset["timerange"] = "1950/2014"
-        recipe["datasets"] = [dataset]
-        diagnostic = "polar_cap_time_series_NH"
-        # adjust plot title to reflect bug fix regarding northern boundary (see above)
-        recipe["diagnostics"][diagnostic]["scripts"]["plot"]["plots"]["timeseries"]["pyplot_kwargs"][
-            "title"
-        ] = "Total Column Ozone, 60-80N, March"
-        recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
+        _prepare_recipe(
+            recipe,
+            input_files,
+            "polar_cap_time_series_NH",
+            "toz",
+            cmip7_timerange="1950/2021",
+        )
 
 
 class O3ZonalMeanProfiles(ESMValToolDiagnostic):
@@ -297,8 +326,8 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-zonal"
-    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 3
+    base_recipe = "ref/recipe_ref_ozone.yml"
+    version = 4
 
     data_requirements = (
         DataRequirement(
@@ -316,8 +345,8 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
             constraints=(
                 RequireTimerange(
                     group_by=("instance_id",),
-                    start=PartialDateTime(2005, 1),
-                    end=PartialDateTime(2014, 12),
+                    start=PartialDateTime(1990, 1),
+                    end=PartialDateTime(2000, 12),
                 ),
                 RequireContiguousTimerange(group_by=("instance_id",)),
             ),
@@ -340,7 +369,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                             "variable_id": "o3",
                         },
                         remove_ensembles=True,
-                        time_span=("1996", "2015"),
+                        time_span=("1990", "2001"),
                     ),
                 ),
             ),
@@ -362,7 +391,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1980", "2009"),
+                        time_span=("1990", "2001"),
                     ),
                 ),
             ),
@@ -375,18 +404,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
-        dataset = recipe_variables["o3"]["additional_datasets"][0]
-        # set model (CMIP6) time range to 2005...2014
-        dataset["timerange"] = "2005/2014"
-        recipe["datasets"] = [dataset]
-        diagnostic = "zonal_mean_profiles"
-        # adjust plot title to actual time range
-        recipe["diagnostics"][diagnostic]["scripts"]["plot"]["plots"]["zonal_mean_profile"]["pyplot_kwargs"][
-            "suptitle"
-        ] = "{long_name} (2005-2014 mean)"
-        recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
-        recipe["diagnostics"][diagnostic]["variables"]["o3"]["timerange"] = "2005/2014"
+        _prepare_recipe(recipe, input_files, "zonal_mean_profiles", "o3")
 
 
 class O3LatMonthMapplot(ESMValToolDiagnostic):
@@ -396,8 +414,8 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-annual-cycle"
-    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
-    version = 2
+    base_recipe = "ref/recipe_ref_ozone.yml"
+    version = 3
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -415,11 +433,4 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
-        dataset = recipe_variables["toz"]["additional_datasets"][0]
-        # set model (CMIP6) time range to 2005...2014
-        dataset["timerange"] = "2005/2014"
-        recipe["datasets"] = [dataset]
-        diagnostic = "lat_month_mapplot"
-        recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
-        recipe["diagnostics"][diagnostic]["variables"]["toz"]["timerange"] = "2005/2014"
+        _prepare_recipe(recipe, input_files, "lat_month_mapplot", "toz", cmip7_timerange="1997/2021")

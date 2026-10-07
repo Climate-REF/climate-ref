@@ -1,5 +1,5 @@
 _metadata:
-  hash: 6e80219d01556498a74ddaf4409fd314936d7b2c
+  hash: 2d3b1fe68708e424b62907aa838623c76a6b8d8b
 obs4mips:
   slug_column: instance_id
   selector:
@@ -13,7 +13,7 @@ obs4mips:
     frequency: mon
     grid: 2x2 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR-V2.mon.psl.250km.gn.v20250415
+    instance_id: obs4MIPs.NOAA-ESRL-PSD.20CR-V2.mon.psl.gn.v20250415
     institution_id: NOAA-ESRL-PSD
     long_name: Sea Level Pressure
     nominal_resolution: 250 km

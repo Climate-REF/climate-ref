@@ -251,7 +251,7 @@ def parse_drs_daterange(date_range: str) -> tuple[str | None, str | None]:
 def build_instance_id(
     datasets: pd.DataFrame,
     drs_items: list[str],
-    prefix: str,
+    prefix: str | None = None,
     transform: Callable[[str, Any], str] | None = None,
     *,
     copy: bool = True,
@@ -269,7 +269,8 @@ def build_instance_id(
     drs_items
         Column names that make up the instance id, in order.
     prefix
-        Prefix to use for the instance id (e.g. ``"CMIP6"``).
+        Prefix to use for the instance id (e.g. ``"CMIP6"``). Omit it where the first
+        DRS component already names the project, as obs4MIPs' ``activity_id`` does.
     transform
         Optional per-column value transform; defaults to ``str(value)``.
     copy
@@ -301,7 +302,10 @@ def build_instance_id(
                 valid = False
                 break
             parts.append(transform(item, val) if transform else str(val))
-        instance_ids.append(f"{prefix}." + ".".join(parts) if valid else None)
+        if not valid:
+            instance_ids.append(None)
+        else:
+            instance_ids.append(".".join([prefix, *parts] if prefix else parts))
 
     if copy:
         datasets = datasets.copy()

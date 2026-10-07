@@ -1,5 +1,5 @@
 _metadata:
-  hash: ee38a53200d5918181c4d08ecd0e705d07eee395
+  hash: bd917c04caafa885084f45d63bbf993e8a91fbba
 cmip6:
   slug_column: instance_id
   selector:
@@ -220,7 +220,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
+    instance_id: obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.gn.v20260220
     institution_id: NASA-LaRC
     long_name: TOA Outgoing Longwave Radiation
     nominal_resolution: 100 km
@@ -243,7 +243,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
+    instance_id: obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.gn.v20260220
     institution_id: NASA-LaRC
     long_name: TOA Outgoing Clear-Sky Longwave Radiation
     nominal_resolution: 100 km
@@ -266,7 +266,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.100km.gn.v20260220
+    instance_id: obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.gn.v20260220
     institution_id: NASA-LaRC
     long_name: TOA Outgoing Shortwave Radiation
     nominal_resolution: 100 km
@@ -289,7 +289,7 @@ obs4mips:
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220
+    instance_id: obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.gn.v20260220
     institution_id: NASA-LaRC
     long_name: TOA Outgoing Clear-Sky Shortwave Radiation
     nominal_resolution: 100 km

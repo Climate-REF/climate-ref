@@ -1,5 +1,5 @@
 _metadata:
-  hash: 7c0f423b556b302e110a519c997d8a3d0b9e3f59
+  hash: b6d375fb6ad0d5029f2c414aac7a1896d391b357
 pmp-climatology:
   slug_column: instance_id
   selector:
@@ -13,7 +13,7 @@ pmp-climatology:
     frequency: mon
     grid: 1.5x1.5 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
+    instance_id: obs4MIPs.ECMWF.ERA-5.mon.ts.gn.v20250224
     institution_id: ECMWF
     long_name: Surface Temperature
     nominal_resolution: 100 km
@@ -39,39 +39,39 @@ cmip7:
     variant_label: r1i1p1f1
   datasets:
   - activity_id: CMIP
-    branch_time_in_child: null
-    branch_time_in_parent: null
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
     branded_variable: ts_tavg-u-hxy-u
     branding_suffix: tavg-u-hxy-u
-    calendar: null
-    end_time: '2014-12-30 00:00:00'
+    calendar: proleptic_gregorian
+    end_time: '2014-12-16 12:00:00'
     experiment_id: historical
-    external_variables: null
+    external_variables: areacella
     filename: ts_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
-    finalised: false
+    finalised: true
     frequency: mon
     grid_label: gn
     instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.ts.tavg-u-hxy-u.gn.v0
     institution_id: CSIRO
-    license_id: null
-    long_name: null
+    license_id: CC-BY-4.0
+    long_name: Surface Temperature
     mip_era: CMIP7
-    nominal_resolution: null
-    parent_activity_id: null
-    parent_experiment_id: null
-    parent_mip_era: null
-    parent_source_id: null
-    parent_time_units: null
-    parent_variant_label: null
-    realm: null
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    realm: atmos
     region: glb
     source_id: ACCESS-ESM1-5
-    standard_name: null
-    start_time: '1850-01-01 00:00:00'
-    time_range: 185001-201412
-    time_units: null
-    tracking_id: null
-    units: null
+    standard_name: surface_temperature
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/870eb3d3-94b6-5ddf-85ff-810dee3df863
+    units: K
     variable_id: ts
     variant_label: r1i1p1f1
     version: v0

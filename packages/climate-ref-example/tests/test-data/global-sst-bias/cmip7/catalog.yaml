@@ -1,5 +1,5 @@
 _metadata:
-  hash: a16659110546b6f7fd904b0b26331bc14e6ffabd
+  hash: 31219e91a3b914cea8447ddba8706b2b2ab3397b
 cmip7:
   slug_column: instance_id
   selector:
@@ -40,7 +40,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/a241ae64-4a61-4c0a-b3b7-f78dbd4b0279
+    tracking_id: hdl:21.14107/3cb938d6-bcbc-5de4-bd72-e603bdc8dd84
     units: m2
     variable_id: areacello
     variant_label: r1i1p1f1
@@ -77,7 +77,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/1dd77a06-8cb6-4ef8-a9a0-987dc1dc0394
+    tracking_id: hdl:21.14107/01e92686-cd44-5e0f-b09c-71a39469cc0a
     units: degC
     variable_id: tos
     variant_label: r1i1p1f1
@@ -88,14 +88,14 @@ obs4mips:
     source_id: HadISST-1-1
     variable_id: ts
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2025-01-16 12:00:00'
     filename: ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc
     finalised: true
     frequency: mon
     grid: 1x1 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4REF.obs4REF.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    instance_id: obs4REF.MOHC.HadISST-1-1.mon.ts.gn.v20250415
     institution_id: MOHC
     long_name: Surface Temperature
     nominal_resolution: 250 km

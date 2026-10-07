@@ -16,6 +16,7 @@ import pandas as pd
 import pytest
 
 from climate_ref.database import Database
+from climate_ref.datasets.cmip6 import _primary_activity
 from climate_ref.datasets.utils import sort_data_catalog
 
 
@@ -96,7 +97,16 @@ class TestLocalDatasets:
         assert len(complete_ids) > 0
 
     def test_drs_then_complete_produces_same_core_metadata(self, adapter_config, adapter_local_catalogs):
-        """DRS and complete parsers produce the same values for core DRS fields."""
+        """
+        DRS and complete parsers produce the same values for core DRS fields.
+
+        ``activity_id`` is compared by its primary activity alone: a file that belongs to
+        several lists them all in its attribute (``"C4MIP CDRMIP"``), while a DRS path can
+        only name the one it is published under. Comparing them through
+        :func:`_primary_activity` -- the same rule the ``instance_id`` is built with --
+        keeps the field under test, and fails if a dataset ever turns up whose DRS activity
+        is not the first the attribute names, which is the assumption that rule rests on.
+        """
         adapter = adapter_config.adapter_cls()
         drs_catalog = adapter_local_catalogs["drs"]
         complete_catalog = adapter_local_catalogs["complete"]
@@ -113,7 +123,9 @@ class TestLocalDatasets:
             drs_row = drs_catalog[drs_catalog["instance_id"] == instance_id].iloc[0]
             complete_row = complete_catalog[complete_catalog["instance_id"] == instance_id].iloc[0]
             for field in drs_fields:
-                assert str(drs_row[field]) == str(complete_row[field]), (
+                drs_value = _primary_activity(field, drs_row[field])
+                complete_value = _primary_activity(field, complete_row[field])
+                assert drs_value == complete_value, (
                     f"Field '{field}' differs for {instance_id}: "
                     f"DRS={drs_row[field]!r} vs complete={complete_row[field]!r}"
                 )

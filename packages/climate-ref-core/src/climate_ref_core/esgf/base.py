@@ -5,12 +5,15 @@ This module provides the infrastructure for fetching datasets from ESGF
 using the intake-esgf package.
 """
 
-from typing import Any, Protocol, runtime_checkable
+import copy
+from collections.abc import Mapping, Sequence
+from typing import Any, Protocol, Self, cast, runtime_checkable
 
 import intake_esgf
 import pandas as pd
 from intake_esgf import ESGFCatalog
 from intake_esgf.exceptions import NoSearchResults
+from loguru import logger
 
 from climate_ref_core.exceptions import DatasetResolutionError
 
@@ -59,6 +62,69 @@ class ESGFRequest(Protocol):
         """
         ...
 
+    def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> "ESGFRequest":
+        """
+        Return a copy of this request that limits its resolution to the given datasets.
+
+        Parameters
+        ----------
+        datasets
+            The catalog records of the datasets recorded for this request's source type.
+
+        Returns
+        -------
+        :
+            The pinned request, or this request unchanged when the records do not carry
+            what the pin needs. Pinning is all-or-nothing, so a pinned request never
+            silently resolves a subset of what was recorded.
+        """
+        ...
+
+
+def facet_pins_from_datasets(
+    datasets: Sequence[Mapping[str, Any]],
+    fields: Mapping[str, str],
+    slug: str,
+) -> tuple[dict[str, str], ...] | None:
+    """
+    Read one facet set per recorded dataset, for pins that a search cannot ask for by id.
+
+    Parameters
+    ----------
+    datasets
+        The catalog records to pin to.
+    fields
+        The record field each search facet is spelled as, keyed by facet name.
+    slug
+        Slug of the request being pinned, for the warning when a record falls short.
+
+    Returns
+    -------
+    :
+        The facet sets, deduplicated because a dataset is recorded once per file it
+        holds, or ``None`` if any record is missing one of the facets.
+    """
+    pins = []
+    for dataset in datasets:
+        pin = {
+            facet: str(dataset[field])
+            for facet, field in fields.items()
+            if dataset.get(field) not in (None, "")
+        }
+        if len(pin) != len(fields):
+            logger.warning(
+                "Recorded datasets are missing facets needed to identify them; "
+                f"resolving request {slug} from its declared facets instead"
+            )
+            return None
+        pins.append(pin)
+
+    if not pins:
+        return None
+
+    unique = dict.fromkeys(tuple(sorted(pin.items())) for pin in pins)
+    return tuple(dict(facets) for facets in unique)
+
 
 def _deduplicate_datasets(datasets: pd.DataFrame) -> pd.DataFrame:
     """
@@ -102,15 +168,67 @@ class IntakeESGFMixin:
     - facets: dict[str, str | tuple[str, ...]]
     - remove_ensembles: bool
     - time_span: tuple[str, str] | None
+
+    A request can also be pinned to the datasets an existing test case catalog records,
+    see :meth:`pin_to_datasets`.
     """
 
+    slug: str
     facets: dict[str, str | tuple[str, ...]]
     remove_ensembles: bool
     time_span: tuple[str, str] | None
 
+    pinned_instance_ids: tuple[str, ...] | None = None
+    """Ids of the datasets this request is pinned to."""
+
+    def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> Self:
+        """
+        Return a copy of this request that only resolves the given datasets.
+
+        The ids a catalog records are the ones ESGF publishes the datasets under, so they
+        are used in the search instead of the facets if possible.
+
+        Parameters
+        ----------
+        datasets
+            The catalog records of the datasets recorded for this request's source type.
+
+        Returns
+        -------
+        :
+            The pinned request, or this request unchanged if any record has no id.
+            Pinning is all-or-nothing, so a pinned request never silently resolves a
+            subset of what was recorded.
+        """
+        instance_ids = [dataset.get("instance_id") for dataset in datasets]
+        if not instance_ids or None in instance_ids:
+            logger.warning(
+                f"Recorded datasets have no instance_id; "
+                f"resolving request {self.slug} from its declared facets instead"
+            )
+            return self
+
+        pinned = copy.copy(self)
+        # A dataset is recorded once per file it holds
+        pinned.pinned_instance_ids = tuple(dict.fromkeys(cast(list[str], instance_ids)))
+        return pinned
+
     def fetch_datasets(self) -> pd.DataFrame:
         """Fetch dataset metadata from ESGF."""
         facets: dict[str, Any] = dict(self.facets)
+
+        if self.pinned_instance_ids:
+            # Ask for the pinned datasets by id as the declared facets may now
+            # resolve to something else. The project is kept because it selects how the
+            # index is read rather than which datasets match.
+            logger.info(f"Resolving {len(self.pinned_instance_ids)} pinned datasets for {self.slug}")
+            facets = {
+                **({"project": facets["project"]} if "project" in facets else {}),
+                "instance_id": list(self.pinned_instance_ids),
+                # A pin holds even once a newer version of the dataset has been published
+                "latest": [True, False],
+            }
+
         if self.time_span:
             facets["file_start"] = self.time_span[0]
             facets["file_end"] = self.time_span[1]
@@ -133,7 +251,8 @@ class IntakeESGFMixin:
                 msg = f"ESGF search returned no results for facets: {facets}"
                 raise DatasetResolutionError(msg) from None
 
-            if self.remove_ensembles:
+            if self.remove_ensembles and not self.pinned_instance_ids:
+                # Pinned ids already name one ensemble member each
                 cat.remove_ensembles()
 
             path_dict = cat.to_path_dict(prefer_streaming=False, minimal_keys=False, quiet=True)

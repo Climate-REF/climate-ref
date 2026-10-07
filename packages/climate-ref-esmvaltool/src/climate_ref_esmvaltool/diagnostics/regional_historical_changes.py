@@ -296,7 +296,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     series = tuple(
         SeriesDefinition(
             file_pattern=f"work/{diag_name}/figures/annual_cycle_*_{_region_to_filename(region)}.nc",
-            sel={"dim0": 0},  # Select the model and not the observation.
+            sel={"dim0": 0},  # Each file holds a single dataset (its label is in the filename).
             dimensions={
                 "region": region,
                 "variable_id": var_name,

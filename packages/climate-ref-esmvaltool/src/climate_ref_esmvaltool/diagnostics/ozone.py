@@ -215,7 +215,8 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
             dimensions={"variable_id": "toz", "statistic": "Southern Hemisphere October polar mean"},
         ),
     )
-    # dim0=0 is the model, dim0=1 contains the observational reference data.
+    # NOTE: ESMValTool sorts the datasets in the file by label, so the selector `dim0: 0` might be
+    #       incorrect if models or observations with different names are used. (~fh)
     series = (
         SeriesDefinition(
             file_pattern="work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc",
@@ -261,7 +262,8 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
             dimensions={"variable_id": "toz", "statistic": "Northern Hemisphere March polar mean"},
         ),
     )
-    # dim0=0 is the model, dim0=1 contains the observational reference data.
+    # NOTE: ESMValTool sorts the datasets in the file by label, so the selector `dim0: 0` might be
+    #       incorrect if models or observations with different names are used. (~fh)
     series = (
         SeriesDefinition(
             file_pattern="work/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.nc",

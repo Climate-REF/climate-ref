@@ -62,7 +62,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     name = "Climatologies and zonal mean profiles of cloud radiative effects"
     slug = "cloud-radiative-effects"
     base_recipe = "ref/recipe_ref_cre_cmip7.yml"
-    version = 3
+    version = 4
 
     variables = (
         "rlut",
@@ -158,7 +158,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     series = tuple(
         SeriesDefinition(
             file_pattern=f"plot_profiles/plot/variable_vs_lat_{var_name}_*.nc",
-            sel={"dim0": 0},  # Select the model.
+            sel={"dataset": "{source_id}"},  # Select the model by its label.
             dimensions={"variable_id": var_name, "statistic": "zonal mean"},
             values_name=var_name,
             index_name="lat",
@@ -168,7 +168,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     ) + tuple(
         SeriesDefinition(
             file_pattern=f"plot_profiles/plot/variable_vs_lat_{var_name}_*.nc",
-            sel={"dim0": 1},  # Select the observation.
+            sel={"dataset": _REFERENCE_SOURCE_ID},  # Select the observation by its label.
             dimensions={
                 "variable_id": var_name,
                 "statistic": "zonal mean",

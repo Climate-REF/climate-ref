@@ -21,6 +21,35 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.18.3 (2026-10-12)
+
+### Improvements
+
+- Fetching test data for a test case that already has a catalog now resolves the datasets that catalog records,
+  rather than re-running the facet search each request declares.
+
+  obs4MIPs and obs4REF `instance_id`s are now the identifiers ESGF publishes the datasets under. ([#930](https://github.com/Climate-REF/climate-ref/pull/930))
+
+### Bug Fixes
+
+- CMIP6 `instance_id`s now only name the primary activity of a dataset that belongs to several, to match the
+  identifier ESGF publishes it under. The `activity_id` metadata still reports every activity the
+  dataset belongs to.
+
+  Fixed CMIP7 conversion of datasets extended past the end of their CMIP6 source (`extend_historical_to`).
+
+  A converted CMIP7 file's `tracking_id` is now derived from the file being written rather
+  than minted at random.
+
+  `ref test-cases fetch` now rewrites a test case's catalog whenever its content would change. ([#930](https://github.com/Climate-REF/climate-ref/pull/930))
+- Existing databases are migrated to the new ESGF-style `instance_id`s,
+  so the identifier format change no longer re-registers every dataset under a new id on the next ingestion.
+  Execution hashes are not rewritten, so affected execution groups re-run on the next solve. ([#933](https://github.com/Climate-REF/climate-ref/pull/933))
+- Fixed `ref solve` failing with `Invalid value ... for dtype float64` on CMIP6 or CMIP7 data ingested with the `drs` parser, when a file stores `branch_time_in_parent` or `branch_time_in_child` as a string. ([#949](https://github.com/Climate-REF/climate-ref/pull/949))
+- The ESMValTool `cloud-radiative-effects` and `sea-ice-area-basic` diagnostics no longer swap the model
+  and reference series for models whose name sorts after the observation. ([#950](https://github.com/Climate-REF/climate-ref/pull/950))
+
+
 ## climate-ref 0.18.2 (2026-09-09)
 
 ### Features

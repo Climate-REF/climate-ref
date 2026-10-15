@@ -506,13 +506,18 @@ class TestObs4MIPsSourceRewrite:
             analysis_variable="amoc",
         )
 
-    def _definition(self, tmp_path, instance_id: str):
+    def _definition(self, tmp_path, *refs: tuple[str, str, int]):
+        """Build a definition from `(instance_id, variable_id, n_files)` reference datasets."""
         obs = pd.DataFrame(
-            {
-                "instance_id": [instance_id],
-                "variable_id": ["msftmz"],
-                "path": [f"/data/{instance_id}.nc"],
-            }
+            [
+                {
+                    "instance_id": instance_id,
+                    "variable_id": variable_id,
+                    "path": f"/data/{instance_id}_{i}.nc",
+                }
+                for instance_id, variable_id, n_files in refs
+                for i in range(n_files)
+            ]
         ).set_index("instance_id")
         model = pd.DataFrame(
             {
@@ -534,7 +539,7 @@ class TestObs4MIPsSourceRewrite:
         captured: dict = {}
 
         def _capture(slug, ref_datasets, model_datasets, output_directory, **kwargs):
-            captured.update(kwargs)
+            captured.update(kwargs, ref_datasets=ref_datasets)
 
         monkeypatch.setattr(standard.run, "run_single_block", _capture)
         monkeypatch.setattr(standard.run, "set_model_colors", lambda _: None)
@@ -543,19 +548,50 @@ class TestObs4MIPsSourceRewrite:
 
     def test_derived_analysis_variable_keeps_the_configured_key(self, tmp_path, monkeypatch):
         diagnostic = self._diagnostic()
-        captured = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
+        captured = self._run_and_capture(
+            diagnostic, self._definition(tmp_path, ("obs4REF.first", "msftmz", 1)), monkeypatch
+        )
 
         # `amoc` is derived from the on-disk `msftmz`, so the configure key must survive.
-        assert captured["sources"] == {"amoc": "obs4REF.first*"}
+        assert captured["sources"] == {"amoc": r"^obs4REF\.first#\d+$"}
 
     def test_second_execution_is_unaffected_by_the_first(self, tmp_path, monkeypatch):
         diagnostic = self._diagnostic()
 
-        first = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
-        second = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.second"), monkeypatch)
+        first = self._run_and_capture(
+            diagnostic, self._definition(tmp_path, ("obs4REF.first", "msftmz", 1)), monkeypatch
+        )
+        second = self._run_and_capture(
+            diagnostic, self._definition(tmp_path, ("obs4REF.second", "msftmz", 1)), monkeypatch
+        )
 
-        assert first["sources"] == {"amoc": "obs4REF.first*"}
-        # Without the copy this is `{"amoc": "obs4REF.first*", "msftmz": "obs4REF.second*"}`.
-        assert second["sources"] == {"amoc": "obs4REF.second*"}
+        assert first["sources"] == {"amoc": r"^obs4REF\.first#\d+$"}
+        # Without the copy this is `{"amoc": ..first.., "msftmz": ..second..}`.
+        assert second["sources"] == {"amoc": r"^obs4REF\.second#\d+$"}
         # The diagnostic itself still holds the configured mapping.
         assert diagnostic.ilamb_kwargs["sources"]["amoc"]["source_id"] == "RAPID-2023-1a"
+
+    def test_source_matches_only_the_ingested_files(self, tmp_path, monkeypatch):
+        # The obs4ref registry also contains `obs4REF/IIASA-FAO/HWSD-2-0/fx/cSoil/gn/v20250903/...`,
+        # which an unescaped instance_id pattern would match too.
+        instance_id = "obs4REF.IIASA-FAO.HWSD-2-0.fx.cSoil.gn.v20250903"
+        definition = self._definition(tmp_path, (instance_id, "cSoil", 12))
+        captured = self._run_and_capture(self._diagnostic(), definition, monkeypatch)
+
+        found = ilamb3.load._lookup(captured["ref_datasets"].set_index("key"), captured["sources"]["cSoil"])
+
+        assert found == sorted(f"/data/{instance_id}_{i}.nc" for i in range(12))
+
+    def test_source_does_not_match_instance_ids_sharing_a_prefix(self, tmp_path, monkeypatch):
+        definition = self._definition(tmp_path, ("obs.v1", "pr", 2), ("obs.v10", "tas", 2))
+        captured = self._run_and_capture(self._diagnostic(), definition, monkeypatch)
+        ref_datasets = captured["ref_datasets"].set_index("key")
+
+        assert ilamb3.load._lookup(ref_datasets, captured["sources"]["pr"]) == [
+            "/data/obs.v1_0.nc",
+            "/data/obs.v1_1.nc",
+        ]
+        assert ilamb3.load._lookup(ref_datasets, captured["sources"]["tas"]) == [
+            "/data/obs.v10_0.nc",
+            "/data/obs.v10_1.nc",
+        ]

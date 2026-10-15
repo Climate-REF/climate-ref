@@ -589,30 +589,6 @@ def apply_dataset_filters(
     return filtered
 
 
-def matches_provider(provider_slug: str, filters: SolveFilterOptions | None) -> bool:
-    """
-    Check if a provider passes the provider filters
-
-    Parameters
-    ----------
-    provider_slug
-        Slug of the provider to check
-    filters
-        Collection of filters to apply, where only the provider filters are considered
-
-    Returns
-    -------
-        True if the provider matches the filters, False otherwise
-    """
-    if filters is None:
-        return True
-    if filters.provider and not any([f.lower() in provider_slug for f in filters.provider]):
-        return False
-    return not (
-        filters.exclude_provider and provider_slug.lower() in {f.lower() for f in filters.exclude_provider}
-    )
-
-
 def matches_filter(diagnostic: Diagnostic, filters: SolveFilterOptions | None) -> bool:
     """
     Check if a diagnostic matches the provided filters
@@ -639,7 +615,10 @@ def matches_filter(diagnostic: Diagnostic, filters: SolveFilterOptions | None) -
     diagnostic_slug = diagnostic.slug
     provider_slug = diagnostic.provider.slug
 
-    if not matches_provider(provider_slug, filters):
+    if filters.provider and not any([f.lower() in provider_slug for f in filters.provider]):
+        return False
+
+    if filters.exclude_provider and provider_slug.lower() in {f.lower() for f in filters.exclude_provider}:
         return False
 
     if filters.diagnostic and not any([f.lower() in diagnostic_slug for f in filters.diagnostic]):
@@ -824,7 +803,7 @@ def check_provider_health(
     config
         The application configuration
     filters
-        Solve filters, which limit the providers checked to those the solve would use
+        Solve filters, which limit the providers checked to those with a diagnostic the solve would use
 
     Returns
     -------
@@ -833,7 +812,7 @@ def check_provider_health(
     """
     results = {}
     for provider in providers:
-        if not matches_provider(provider.slug, filters):
+        if not any(matches_filter(diagnostic, filters) for diagnostic in provider.diagnostics()):
             continue
         results[provider.slug] = provider.check_health(config)
         for problem in results[provider.slug]:

@@ -832,4 +832,6 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             return [f"`{' '.join(cmd)}` failed with exit code {e.returncode}:\n{e.stdout}"]
         except subprocess.TimeoutExpired:
             return [f"`{' '.join(cmd)}` did not finish within {HEALTH_CHECK_TIMEOUT_SECONDS}s"]
+        except OSError as e:
+            return [f"`{' '.join(cmd)}` could not be launched: {e}"]
         return []

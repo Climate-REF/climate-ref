@@ -775,6 +775,17 @@ class TestLifecycleHooks:
         assert "/cache/mamba/proc" in problems[0]
         assert conda_provider.validate_setup(mocker.Mock()) is False
 
+    def test_conda_check_health_launcher_not_executable(self, conda_provider, mocker):
+        self._install_micromamba(conda_provider, "exit 0")
+        conda_provider.conda_exe_path.chmod(0o644)
+        conda_provider.env_path.mkdir(parents=True)
+
+        problems = conda_provider.check_health(mocker.Mock())
+
+        assert len(problems) == 1
+        assert "could not be launched" in problems[0]
+        assert conda_provider.validate_setup(mocker.Mock()) is False
+
     def test_conda_check_health_launches_through_micromamba_run(self, conda_provider, mocker, tmp_path):
         args_file = tmp_path / "args"
         self._install_micromamba(conda_provider, f'echo "$@" > {args_file}')

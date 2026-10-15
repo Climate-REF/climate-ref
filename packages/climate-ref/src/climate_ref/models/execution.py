@@ -390,6 +390,7 @@ class Execution(CreatedUpdatedMixin, Base):
         """
         # TODO: this needs to accept both a diagnostic and output bundle
         self.successful = True
+        self.failure_reason = None
         self.path = str(path)
 
     def apply_resource_usage(

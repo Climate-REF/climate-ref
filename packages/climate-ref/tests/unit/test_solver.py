@@ -2191,6 +2191,14 @@ class TestProviderHealth:
             provider.slug: ["broken"]
         }
 
+    def test_check_provider_health_skips_providers_without_selected_diagnostics(
+        self, mocker, provider, config
+    ):
+        check_health = mocker.patch.object(provider, "check_health", return_value=["broken"])
+
+        assert check_provider_health([provider], config, SolveFilterOptions(diagnostic=["nonexistent"])) == {}
+        check_health.assert_not_called()
+
     def test_solve_skips_unhealthy_provider(
         self, mocker, mock_metric_execution, mock_executor, db_seeded, solver, provider
     ):

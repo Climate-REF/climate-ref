@@ -1066,10 +1066,11 @@ class ILAMBStandard(Diagnostic):
             # ilamb3 will expect the reference dataset dataframe to have a `key`
             # column that uniquely describes each dataset. Create one using the
             # `instance_id` and an integer and then modify the ilamb3 configure
-            # so that it finds the proper data.
+            # so that it finds the proper data. The `#` separator keeps e.g. `obs.v1`
+            # from matching the keys of `obs.v10`.
             ref_datasets = definition.datasets[SourceDatasetType.obs4MIPs].datasets
             ref_datasets = ref_datasets.reset_index()
-            ref_datasets["key"] = ref_datasets["instance_id"] + ref_datasets.index.astype(str)
+            ref_datasets["key"] = ref_datasets["instance_id"] + "#" + ref_datasets.index.astype(str)
             source_keys = {
                 entry["variable_id"]: key
                 for key, entry in ilamb_kwargs["sources"].items()
@@ -1078,7 +1079,7 @@ class ILAMBStandard(Diagnostic):
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 source_key = source_keys.get(variable_id, variable_id)
-                ilamb_kwargs["sources"][source_key] = rf"^{re.escape(str(instance_id))}\d+$"
+                ilamb_kwargs["sources"][source_key] = rf"^{re.escape(str(instance_id))}#\d+$"
             # Relationship analyses (and any remaining legacy string-path sources)
             # still refer to keys in the ILAMB/obs4REF registries.
             # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so

@@ -134,7 +134,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                     RequireTimerange(
                         group_by=("instance_id",),
                         start=PartialDateTime(1979, 1),
-                        end=PartialDateTime(2014, 12),
+                        end=PartialDateTime(2021, 12),
                     ),
                     AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP7),
                     RequireFacets("variable_id", ("siconc", "areacello")),

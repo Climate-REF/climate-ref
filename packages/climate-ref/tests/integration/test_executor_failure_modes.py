@@ -489,3 +489,18 @@ class TestStaleExecutionSweep:
             queued = db_with_provider.session.get(Execution, queued_id)
         assert started.failure_reason == ExecutionFailureReason.Abandoned
         assert queued.failure_reason == ExecutionFailureReason.NotStarted
+
+    def test_adopts_partial_log_of_abandoned_execution(self, db_with_provider, provider, config):
+        execution_id, _, scratch_dir = _seed_execution(
+            db_with_provider, provider, "mock", config, key="stale-adopt"
+        )
+        (scratch_dir / EXECUTION_LOG_FILENAME).write_text("killed mid-run")
+        self._backdate(db_with_provider, execution_id, hours=12)
+
+        fail_stale_in_progress_executions(
+            db_with_provider, scratch_root=config.paths.scratch, results_root=config.paths.results
+        )
+
+        with db_with_provider.session.begin():
+            fragment = db_with_provider.session.get(Execution, execution_id).output_fragment
+        assert (config.paths.results / fragment / EXECUTION_LOG_FILENAME).read_text() == "killed mid-run"

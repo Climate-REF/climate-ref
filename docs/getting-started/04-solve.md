@@ -100,7 +100,8 @@ The `failure_reason` column of `ref executions list-groups` shows the latest exe
 - `not_started`: the execution was queued but the solve stopped before it started.
 - `cancelled`: the execution was marked failed with `ref executions fail-running`.
 
-`abandoned` and `not_started` executions have no log, so look at the solve that queued them instead.
+An `abandoned` execution keeps the partial log it wrote before it stopped.
+A `not_started` execution has no log, so look at the solve that queued it instead.
 
 ### Retrying failed diagnostics
 

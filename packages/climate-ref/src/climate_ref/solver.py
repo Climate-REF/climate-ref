@@ -44,6 +44,8 @@ from climate_ref_core.datasets import (
 )
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition
 from climate_ref_core.exceptions import InvalidDiagnosticException
+from climate_ref_core.logging import EXECUTION_LOG_FILENAME
+from climate_ref_core.output_files import copy_output_file
 from climate_ref_core.providers import DiagnosticProvider
 
 
@@ -733,6 +735,7 @@ def fail_stale_in_progress_executions(
     *,
     stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
     scratch_root: pathlib.Path | None = None,
+    results_root: pathlib.Path | None = None,
 ) -> int:
     """
     Mark abandoned in-progress executions as failed so the next solve can retry them.
@@ -757,6 +760,9 @@ def fail_stale_in_progress_executions(
         Scratch directory the executions wrote to.
         When given, an execution with no scratch output is recorded as never started
         rather than abandoned.
+    results_root
+        Results directory the API serves logs from.
+        When given with ``scratch_root``, the partial log of an abandoned execution is copied there.
 
     Returns
     -------
@@ -765,6 +771,7 @@ def fail_stale_in_progress_executions(
     """
     cutoff = _stale_execution_cutoff(stale_after_seconds)
 
+    adopt_logs: list[str] = []
     with db.session.begin():
         stale = (
             db.session.query(Execution)
@@ -779,9 +786,19 @@ def fail_stale_in_progress_executions(
                 f"{execution.execution_group_id}) as failed; created at {execution.created_at}"
             )
             execution.mark_failed(reason)
+            if scratch_root is not None and started:
+                adopt_logs.append(execution.output_fragment)
             # This reaper only runs from a real solve (never from reingest), so no
             # update_dirty guard is needed here.
             execution.execution_group.dirty = True
+
+    # Copied after the commit so file I/O does not hold the database write lock.
+    if scratch_root is not None and results_root is not None:
+        for fragment in adopt_logs:
+            try:
+                copy_output_file(scratch_root, results_root, fragment, EXECUTION_LOG_FILENAME)
+            except FileNotFoundError:
+                logger.debug(f"No partial log to adopt for abandoned execution at {fragment}")
 
     if stale:
         logger.info(f"Marked {len(stale)} stale in-progress executions as failed")
@@ -874,7 +891,9 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     else:
         # Reap any executions that were left in-progress by a previous run that crashed,
         # hit walltime, or otherwise lost its result-handling callback.
-        fail_stale_in_progress_executions(db, scratch_root=config.paths.scratch)
+        fail_stale_in_progress_executions(
+            db, scratch_root=config.paths.scratch, results_root=config.paths.results
+        )
 
     executor = None if dry_run else config.executor.build(config, db)
 

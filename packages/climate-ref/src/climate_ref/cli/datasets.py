@@ -397,10 +397,11 @@ def ingest(  # noqa
     if not dry_run:
         log_deferred_finalisation(db, source_type)
 
+    unhealthy: list[str] = []
     if solve:
         from climate_ref.solver import solve_required_executions
 
-        solve_required_executions(
+        unhealthy = solve_required_executions(
             config=config,
             db=db,
             dry_run=dry_run,
@@ -411,6 +412,8 @@ def ingest(  # noqa
             f"Ingestion failed for {len(failed_dirs)} of {len(file_or_directory)} input(s): "
             f"{', '.join(str(p) for p in failed_dirs)}"
         )
+        raise typer.Exit(code=1)
+    if unhealthy:
         raise typer.Exit(code=1)
 
 

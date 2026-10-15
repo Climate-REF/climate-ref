@@ -32,7 +32,7 @@ from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
 from climate_ref.models.diagnostic import recompute_promoted_version
-from climate_ref.models.execution import Execution
+from climate_ref.models.execution import Execution, ExecutionFailureReason
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.constraints import apply_constraint
 from climate_ref_core.datasets import (
@@ -526,6 +526,10 @@ class SolveFilterOptions:
     lists of allowed values.  Different facets are ANDed together; multiple
     values for the same facet are ORed.
     """
+    exclude_provider: list[str] | None = None
+    """
+    Exclude providers by exact, case-insensitive slug.
+    """
     exclude_diagnostic: list[str] | None = None
     """
     Exclude diagnostics by slug or ``provider/diagnostic`` pair.
@@ -585,6 +589,30 @@ def apply_dataset_filters(
     return filtered
 
 
+def matches_provider(provider_slug: str, filters: SolveFilterOptions | None) -> bool:
+    """
+    Check if a provider passes the provider filters
+
+    Parameters
+    ----------
+    provider_slug
+        Slug of the provider to check
+    filters
+        Collection of filters to apply, where only the provider filters are considered
+
+    Returns
+    -------
+        True if the provider matches the filters, False otherwise
+    """
+    if filters is None:
+        return True
+    if filters.provider and not any([f.lower() in provider_slug for f in filters.provider]):
+        return False
+    return not (
+        filters.exclude_provider and provider_slug.lower() in {f.lower() for f in filters.exclude_provider}
+    )
+
+
 def matches_filter(diagnostic: Diagnostic, filters: SolveFilterOptions | None) -> bool:
     """
     Check if a diagnostic matches the provided filters
@@ -611,7 +639,7 @@ def matches_filter(diagnostic: Diagnostic, filters: SolveFilterOptions | None) -
     diagnostic_slug = diagnostic.slug
     provider_slug = diagnostic.provider.slug
 
-    if filters.provider and not any([f.lower() in provider_slug for f in filters.provider]):
+    if not matches_provider(provider_slug, filters):
         return False
 
     if filters.diagnostic and not any([f.lower() in diagnostic_slug for f in filters.diagnostic]):
@@ -725,6 +753,7 @@ def fail_stale_in_progress_executions(
     db: Database,
     *,
     stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
+    scratch_root: pathlib.Path | None = None,
 ) -> int:
     """
     Mark abandoned in-progress executions as failed so the next solve can retry them.
@@ -745,6 +774,10 @@ def fail_stale_in_progress_executions(
         Minimum age in seconds before an in-progress execution is considered
         abandoned. Defaults to 6 hours, matching the Celery and LocalExecutor
         per-task time limits.
+    scratch_root
+        Scratch directory the executions wrote to.
+        When given, an execution with no scratch output is recorded as never started
+        rather than abandoned.
 
     Returns
     -------
@@ -760,11 +793,13 @@ def fail_stale_in_progress_executions(
             .all()
         )
         for execution in stale:
+            started = scratch_root is None or (scratch_root / execution.output_fragment).exists()
+            reason = ExecutionFailureReason.Abandoned if started else ExecutionFailureReason.NotStarted
             logger.warning(
-                f"Marking abandoned execution {execution.id} (group "
+                f"Marking {reason.value} execution {execution.id} (group "
                 f"{execution.execution_group_id}) as failed; created at {execution.created_at}"
             )
-            execution.mark_failed()
+            execution.mark_failed(reason)
             # This reaper only runs from a real solve (never from reingest), so no
             # update_dirty guard is needed here.
             execution.execution_group.dirty = True
@@ -772,6 +807,38 @@ def fail_stale_in_progress_executions(
     if stale:
         logger.info(f"Marked {len(stale)} stale in-progress executions as failed")
     return len(stale)
+
+
+def check_provider_health(
+    providers: Sequence[DiagnosticProvider],
+    config: Config,
+    filters: SolveFilterOptions | None = None,
+) -> dict[str, list[str]]:
+    """
+    Health check the providers a solve would use, logging each problem found.
+
+    Parameters
+    ----------
+    providers
+        Configured providers
+    config
+        The application configuration
+    filters
+        Solve filters, which limit the providers checked to those the solve would use
+
+    Returns
+    -------
+    :
+        The problems found for each provider checked, keyed by slug
+    """
+    results = {}
+    for provider in providers:
+        if not matches_provider(provider.slug, filters):
+            continue
+        results[provider.slug] = provider.check_health(config)
+        for problem in results[provider.slug]:
+            logger.error(f"Provider {provider.slug} failed its health check: {problem}")
+    return results
 
 
 def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
@@ -787,7 +854,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     filters: SolveFilterOptions | None = None,
     limit: int | None = None,
     rerun_failed: bool = False,
-) -> None:
+    check_health: bool = True,
+) -> list[str]:
     """
     Solve for executions that require recalculation
 
@@ -798,6 +866,14 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     copying their outputs to the results directory and ingesting them.
     ``timeout`` bounds that wait; a non-positive ``timeout`` (``<= 0``) waits with no time limit.
     ``wait=False`` queues the executions and returns immediately without collecting their results.
+
+    When ``check_health`` is True and the executor runs diagnostics on this host,
+    each provider in scope is health checked first and an unhealthy provider is left out of the solve.
+
+    Returns
+    -------
+    :
+        Slugs of the providers left out because they failed their health check
 
     Raises
     ------
@@ -819,7 +895,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     else:
         # Reap any executions that were left in-progress by a previous run that crashed,
         # hit walltime, or otherwise lost its result-handling callback.
-        fail_stale_in_progress_executions(db)
+        fail_stale_in_progress_executions(db, scratch_root=config.paths.scratch)
 
     executor = None if dry_run else config.executor.build(config, db)
 
@@ -832,6 +908,15 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             f"directory or ingested into the database. Re-run without --no-wait, or recover existing "
             f"scratch outputs with `ref executions reingest --include-failed`."
         )
+
+    unhealthy: list[str] = []
+    if check_health and execute and getattr(executor, "runs_on_solve_host", False):
+        health = check_provider_health(solver.provider_registry.providers, config, filters)
+        unhealthy = [slug for slug, problems in health.items() if problems]
+    if unhealthy:
+        logger.error(f"Skipping the diagnostics of unhealthy providers: {', '.join(unhealthy)}")
+        filters = filters or SolveFilterOptions()
+        filters = attrs.evolve(filters, exclude_provider=[*(filters.exclude_provider or []), *unhealthy])
 
     diagnostic_count: dict[str, int] = {}
     provider_count: dict[str, int] = {}
@@ -1011,3 +1096,5 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     if wait and executor is not None:
         executor.join(timeout=timeout)
         logger.info("All executions complete")
+
+    return unhealthy

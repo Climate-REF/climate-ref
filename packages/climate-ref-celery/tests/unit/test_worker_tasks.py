@@ -5,6 +5,7 @@ from climate_ref_example import provider as example_provider
 
 from climate_ref.database import Database
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.provider_registry import _register_provider
 
 
@@ -96,6 +97,7 @@ def test_handle_failure_marks_execution_failed(config):
 
     execution = db.session.get(Execution, execution.id)
     assert execution.successful is False
+    assert execution.failure_reason == ExecutionFailureReason.SystemError
 
     # System-level failures (worker crash, OOM, time limit) should leave
     # dirty=True so the execution is retried on the next solve

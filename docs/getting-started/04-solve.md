@@ -20,6 +20,15 @@ This will:
 Note: it is normal for some executions to fail (e.g., due to missing data or configuration).
 You can re-run or inspect failures as needed.
 
+Before solving, `ref solve` health checks each provider it will use.
+For a conda-based provider this launches a trivial command through `micromamba run`,
+which is how its diagnostics are launched.
+The diagnostics of an unhealthy provider are skipped, the rest are solved,
+and the command exits non-zero so a scheduled solve shows up as failed.
+Run the same check on its own with `ref providers check-health`.
+The check only runs for executors that run diagnostics on the solving host (`local` and `synchronous`),
+and `--no-check-health` turns it off.
+
 Because the local executor runs many diagnostics in parallel, it is worth
 tuning parallelism and thread limits (including the OpenMP/BLAS environment variables) before a large solve.
 See [How to control memory use and parallelism](../how-to-guides/control-memory-use.md).
@@ -79,6 +88,19 @@ When an execution fails, the system distinguishes between two types of failure:
   preventing the same failing diagnostic from being retried indefinitely with the same data.
 
 Successful executions also clear the dirty flag.
+
+A failed execution records why it failed.
+The `failure_reason` column of `ref executions list-groups` shows the latest execution's reason:
+
+- `diagnostic_error`: the diagnostic ran and reported an error.
+- `system_error`: the diagnostic could not run to completion for a reason outside it,
+  such as a broken environment.
+- `result_error`: the diagnostic succeeded but its outputs could not be copied or ingested.
+- `abandoned`: the execution started but no result was recorded, typically because its worker was killed.
+- `not_started`: the execution was queued but the solve stopped before it started.
+- `cancelled`: the execution was marked failed with `ref executions fail-running`.
+
+`abandoned` and `not_started` executions have no log, so look at the solve that queued them instead.
 
 ### Retrying failed diagnostics
 

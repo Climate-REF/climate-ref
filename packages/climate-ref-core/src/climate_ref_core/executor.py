@@ -135,6 +135,14 @@ class Executor(Protocol):
     so ``join`` only waits for completion.
     """
 
+    runs_on_solve_host: bool
+    """
+    Whether diagnostics run on the host that solves.
+
+    When ``True`` (the local and synchronous executors),
+    ``ref solve`` health checks each provider before submitting work.
+    """
+
     def __init__(self, **kwargs: Any) -> None: ...
 
     def run(

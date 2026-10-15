@@ -339,3 +339,36 @@ def setup(  # noqa: PLR0913
 
     if not validate_only:
         list_(ctx)
+
+
+@app.command()
+def check_health(
+    ctx: typer.Context,
+    provider: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Only check providers whose slug contains this value. Multiple values can be provided."
+        ),
+    ] = None,
+) -> None:
+    """
+    Check that each provider can launch a diagnostic on this host.
+
+    This is the check `ref solve` runs before solving.
+    It is cheaper than `ref providers setup --validate-only`, which also verifies reference data.
+    Exits non-zero when any provider is unhealthy.
+    """
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref.solver import SolveFilterOptions, check_provider_health
+
+    config = ctx.obj.config
+    console = ctx.obj.console
+    providers = ProviderRegistry.build_from_config(config, ctx.obj.database, register=False).providers
+
+    health = check_provider_health(providers, config, SolveFilterOptions(provider=provider))
+    for slug, problems in health.items():
+        status = "[red]unhealthy[/red]" if problems else "[green]healthy[/green]"
+        console.print(f"Provider {slug}: {status}")
+
+    if any(health.values()):
+        raise typer.Exit(code=1)

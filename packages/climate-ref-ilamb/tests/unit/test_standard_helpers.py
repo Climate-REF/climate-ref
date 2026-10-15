@@ -506,12 +506,12 @@ class TestObs4MIPsSourceRewrite:
             analysis_variable="amoc",
         )
 
-    def _definition(self, tmp_path, instance_id: str):
+    def _definition(self, tmp_path, instance_id: str, n_files: int = 1, variable_id: str = "msftmz"):
         obs = pd.DataFrame(
             {
-                "instance_id": [instance_id],
-                "variable_id": ["msftmz"],
-                "path": [f"/data/{instance_id}.nc"],
+                "instance_id": [instance_id] * n_files,
+                "variable_id": [variable_id] * n_files,
+                "path": [f"/data/{instance_id}_{i}.nc" for i in range(n_files)],
             }
         ).set_index("instance_id")
         model = pd.DataFrame(
@@ -534,7 +534,7 @@ class TestObs4MIPsSourceRewrite:
         captured: dict = {}
 
         def _capture(slug, ref_datasets, model_datasets, output_directory, **kwargs):
-            captured.update(kwargs)
+            captured.update(kwargs, ref_datasets=ref_datasets)
 
         monkeypatch.setattr(standard.run, "run_single_block", _capture)
         monkeypatch.setattr(standard.run, "set_model_colors", lambda _: None)
@@ -546,7 +546,7 @@ class TestObs4MIPsSourceRewrite:
         captured = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
 
         # `amoc` is derived from the on-disk `msftmz`, so the configure key must survive.
-        assert captured["sources"] == {"amoc": "obs4REF.first*"}
+        assert captured["sources"] == {"amoc": r"^obs4REF\.first\d+$"}
 
     def test_second_execution_is_unaffected_by_the_first(self, tmp_path, monkeypatch):
         diagnostic = self._diagnostic()
@@ -554,8 +554,19 @@ class TestObs4MIPsSourceRewrite:
         first = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
         second = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.second"), monkeypatch)
 
-        assert first["sources"] == {"amoc": "obs4REF.first*"}
-        # Without the copy this is `{"amoc": "obs4REF.first*", "msftmz": "obs4REF.second*"}`.
-        assert second["sources"] == {"amoc": "obs4REF.second*"}
+        assert first["sources"] == {"amoc": r"^obs4REF\.first\d+$"}
+        # Without the copy this is `{"amoc": ..first.., "msftmz": ..second..}`.
+        assert second["sources"] == {"amoc": r"^obs4REF\.second\d+$"}
         # The diagnostic itself still holds the configured mapping.
         assert diagnostic.ilamb_kwargs["sources"]["amoc"]["source_id"] == "RAPID-2023-1a"
+
+    def test_source_matches_only_the_ingested_files(self, tmp_path, monkeypatch):
+        # The obs4ref registry also contains `obs4REF/IIASA-FAO/HWSD-2-0/fx/cSoil/gn/v20250903/...`,
+        # which an unescaped instance_id pattern would match too.
+        instance_id = "obs4REF.IIASA-FAO.HWSD-2-0.fx.cSoil.gn.v20250903"
+        definition = self._definition(tmp_path, instance_id, n_files=12, variable_id="cSoil")
+        captured = self._run_and_capture(self._diagnostic(), definition, monkeypatch)
+
+        found = ilamb3.load._lookup(captured["ref_datasets"].set_index("key"), captured["sources"]["cSoil"])
+
+        assert found == sorted(f"/data/{instance_id}_{i}.nc" for i in range(12))

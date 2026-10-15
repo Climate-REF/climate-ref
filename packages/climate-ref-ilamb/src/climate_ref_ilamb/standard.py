@@ -1,5 +1,6 @@
 import hashlib
 import os
+import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -1077,7 +1078,7 @@ class ILAMBStandard(Diagnostic):
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 source_key = source_keys.get(variable_id, variable_id)
-                ilamb_kwargs["sources"][source_key] = f"{instance_id}*"
+                ilamb_kwargs["sources"][source_key] = rf"^{re.escape(str(instance_id))}\d+$"
             # Relationship analyses (and any remaining legacy string-path sources)
             # still refer to keys in the ILAMB/obs4REF registries.
             # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so

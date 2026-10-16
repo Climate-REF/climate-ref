@@ -7,6 +7,7 @@ from climate_ref.database import Database
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.provider_registry import _register_provider
+from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
 
 @pytest.fixture(autouse=True)
@@ -102,6 +103,27 @@ def test_handle_failure_marks_execution_failed(config):
     # System-level failures (worker crash, OOM, time limit) should leave
     # dirty=True so the execution is retried on the next solve
     assert execution.execution_group.dirty is True
+
+    log_text = (config.paths.results / "output_fragment" / EXECUTION_LOG_FILENAME).read_text()
+    assert "REF: execution failed (system_error): celery task fake-task-uuid-1234 failed" in log_text
+
+
+def test_handle_failure_keeps_partial_log(config):
+    db = Database.from_config(config, run_migrations=True)
+    with db.session.begin():
+        _register_provider(db, example_provider)
+        execution_group = ExecutionGroup(diagnostic_id=1, key="partial-log", dirty=True)
+        execution = Execution(output_fragment="partial", dataset_hash="hash", execution_group=execution_group)
+        db.session.add(execution)
+    scratch_log = config.paths.scratch / "partial" / EXECUTION_LOG_FILENAME
+    scratch_log.parent.mkdir(parents=True)
+    scratch_log.write_text("halfway through\n")
+
+    handle_failure("fake-task-uuid", execution_id=execution.id)
+
+    log_text = (config.paths.results / "partial" / EXECUTION_LOG_FILENAME).read_text()
+    assert log_text.startswith("halfway through")
+    assert "celery task fake-task-uuid failed" in log_text
 
 
 def test_handle_failure_missing_execution(config):

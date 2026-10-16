@@ -834,7 +834,7 @@ class SolveOutcome:
     Executions submitted by this solve that had failed when it finished.
 
     Always 0 unless the solve waited, because results are only known after waiting.
-    Executors that record results after ``join`` returns, such as Celery, can undercount.
+    Undercounts when a result is recorded after ``join`` returns, eg. a slow Celery result callback.
     """
 
     @property

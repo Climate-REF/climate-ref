@@ -502,7 +502,9 @@ def record_resource_usage(
         logger.opt(exception=True).warning("Could not record resource usage for this execution")
 
 
-def _fail(config: "Config", execution: Execution, reason: ExecutionFailureReason, detail: str) -> None:
+def record_failure(
+    config: "Config", execution: Execution, reason: ExecutionFailureReason, detail: str
+) -> None:
     """Mark the execution failed and append why to its results log, which is otherwise silent."""
     execution.mark_failed(reason)
     log_path = config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
@@ -512,6 +514,24 @@ def _fail(config: "Config", execution: Execution, reason: ExecutionFailureReason
             fh.write(f"\nREF: execution failed ({reason.value}): {detail}\n")
     except OSError:
         logger.warning(f"Could not write the failure reason to {log_path}", exc_info=True)
+
+
+def record_lost_execution(config: "Config", execution: Execution, detail: str) -> None:
+    """
+    Fail an execution whose worker died before it returned a result
+
+    The partial log is copied from scratch first, so the results log shows how far it got.
+    The group's dirty flag is left alone.
+    """
+    try:
+        copy_output_file(
+            config.paths.scratch, config.paths.results, execution.output_fragment, EXECUTION_LOG_FILENAME
+        )
+    except FileNotFoundError:
+        logger.debug(f"No partial log for lost execution {execution.id}")
+    except (OSError, ValueError) as e:
+        logger.warning(f"Could not copy the partial log of lost execution {execution.id}: {e}")
+    record_failure(config, execution, ExecutionFailureReason.SystemError, detail)
 
 
 def handle_execution_result(  # noqa: PLR0913
@@ -570,7 +590,7 @@ def handle_execution_result(  # noqa: PLR0913
             f"Could not find log file {EXECUTION_LOG_FILENAME} in scratch directory: {config.paths.scratch}. "
             f"This is likely a system error (will be retried on next solve)."
         )
-        _fail(
+        record_failure(
             config,
             execution,
             ExecutionFailureReason.SystemError if started else ExecutionFailureReason.NotStarted,
@@ -583,7 +603,7 @@ def handle_execution_result(  # noqa: PLR0913
         return
 
     if not result.successful or result.metric_bundle_filename is None:
-        _fail(
+        record_failure(
             config,
             execution,
             ExecutionFailureReason.SystemError
@@ -621,7 +641,9 @@ def handle_execution_result(  # noqa: PLR0913
         # missing or unreadable. Fail this execution rather than aborting the
         # whole result-collection loop.
         logger.exception(f"Could not copy outputs for {execution}")
-        _fail(config, execution, ExecutionFailureReason.ResultError, f"could not copy outputs: {exc!r}")
+        record_failure(
+            config, execution, ExecutionFailureReason.ResultError, f"could not copy outputs: {exc!r}"
+        )
         if update_dirty:
             execution.execution_group.dirty = True
         return
@@ -643,7 +665,9 @@ def handle_execution_result(  # noqa: PLR0913
         # The savepoint already rolled back the partial inserts.
         # Never report success with no metric values.
         logger.exception("Something went wrong when ingesting execution result")
-        _fail(config, execution, ExecutionFailureReason.ResultError, f"could not ingest results: {exc!r}")
+        record_failure(
+            config, execution, ExecutionFailureReason.ResultError, f"could not ingest results: {exc!r}"
+        )
         if update_dirty:
             execution.execution_group.dirty = True
         return

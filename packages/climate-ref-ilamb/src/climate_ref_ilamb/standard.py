@@ -162,8 +162,8 @@ class _CoarsenSpatial(ILAMBTransform):
         return coarse
 
     # Time steps coarsened per pass.
-    # A pass over the AVHRR LAI reference peaks around 3 GB, against ~7 GB for 12 steps.
-    _TIME_CHUNK = 3
+    # One pass of the ~0.05 degree AVHRR LAI reference is about 12 * 3600 * 7200 * 8 bytes ~= 2.5 GB.
+    _TIME_CHUNK = 12
 
     @staticmethod
     def _spacing(ds: xr.Dataset) -> float:

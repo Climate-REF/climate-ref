@@ -10,7 +10,9 @@ It provides a session object that can be used to interact with the database and 
 
 import enum
 import importlib.resources
+import os
 import sqlite3
+import tempfile
 from collections.abc import Iterator
 from contextlib import closing, contextmanager
 from datetime import datetime
@@ -139,14 +141,20 @@ def _create_backup(db_path: Path, max_backups: int) -> Path:
 
     logger.info(f"Creating backup of database at {backup_path}")
     # A partial file must never look like a backup to the rotation below.
-    partial_path = backup_path.with_suffix(backup_path.suffix + ".tmp")
-    with (
-        closing(sqlite3.connect(db_path, timeout=300)) as source,
-        closing(sqlite3.connect(partial_path)) as target,
-    ):
-        # The backup API copies a consistent snapshot while other processes write.
-        source.backup(target)
-    partial_path.replace(backup_path)
+    partial_fd, partial_name = tempfile.mkstemp(dir=backup_dir, prefix=f"{backup_path.name}.", suffix=".tmp")
+    os.close(partial_fd)
+    partial_path = Path(partial_name)
+    try:
+        with (
+            closing(sqlite3.connect(db_path, timeout=300)) as source,
+            closing(sqlite3.connect(partial_path)) as target,
+        ):
+            # The backup API copies a consistent snapshot while other processes write.
+            source.backup(target)
+        partial_path.replace(backup_path)
+    except BaseException:
+        partial_path.unlink(missing_ok=True)
+        raise
 
     # Clean up old backups
     backups = sorted(backup_dir.glob(f"{db_path.stem}_*{db_path.suffix}"), reverse=True)

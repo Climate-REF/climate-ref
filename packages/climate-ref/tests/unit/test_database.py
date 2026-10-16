@@ -283,6 +283,16 @@ def test_create_backup(tmp_path):
     datetime.strptime(timestamp, "%Y%m%d_%H%M%S")
 
 
+def test_create_backup_removes_partial_file_on_failure(tmp_path):
+    db_path = tmp_path / "test.db"
+    db_path.write_bytes(b"not a sqlite database")
+
+    with pytest.raises(sqlite3.DatabaseError):
+        _create_backup(db_path, max_backups=3)
+
+    assert not list((tmp_path / "backups").iterdir())
+
+
 def test_create_backup_includes_committed_wal_pages(tmp_path):
     db_path = tmp_path / "test.db"
     writer = sqlite3.connect(db_path)

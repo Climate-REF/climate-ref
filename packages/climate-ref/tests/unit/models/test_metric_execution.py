@@ -13,6 +13,11 @@ def test_reprs_name_the_execution():
     assert repr(execution) == "<Execution id=7 group_id=3 output_fragment=pmp/annual-cycle/abc>"
 
 
+def test_reprs_do_not_load_missing_attributes():
+    assert repr(ExecutionGroup()) == "<ExecutionGroup id=None diagnostic_id=None key=None>"
+    assert repr(Execution()) == "<Execution id=None group_id=None output_fragment=None>"
+
+
 class TestMetricExecution:
     def test_should_run_no_results(self, mocker):
         execution = mocker.Mock(spec=ExecutionGroup)

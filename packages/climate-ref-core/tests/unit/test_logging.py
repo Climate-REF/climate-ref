@@ -9,6 +9,7 @@ from climate_ref_core.logging import (
     EXECUTION_LOG_FILENAME,
     _retention_count_ignore_missing,
     capture_logging,
+    execution_log_only,
     redirect_logs,
 )
 
@@ -70,6 +71,32 @@ def test_redirect_logs_keeps_warnings_on_console(definition, caplog):
     # The executor logs the failure to the console, so the traceback is only written once
     assert "Execution failed" not in caplog.text
     assert "Execution failed" in output_file.read_text()
+
+
+def test_execution_log_only_skips_console(definition, caplog):
+    definition, output_file = definition
+
+    with caplog.at_level("DEBUG"):
+        with redirect_logs(definition, "WARNING"):
+            execution_log_only().error("bulky command output")
+
+    assert "bulky command output" not in caplog.text
+    assert "bulky command output" in output_file.read_text()
+
+
+def test_redirect_logs_restores_handler_if_setup_fails(definition, caplog, tmp_path):
+    definition, _ = definition
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_text("")
+    definition.output_directory = blocker / "output"
+
+    with pytest.raises(OSError):
+        with redirect_logs(definition, "INFO"):
+            pass
+
+    with caplog.at_level("INFO"):
+        logger.info("after failed setup")
+    assert "after failed setup" in caplog.text
 
 
 def test_default_format_names_execution():

@@ -20,6 +20,8 @@ from loguru import logger
 from rich.pretty import pretty_repr
 
 if TYPE_CHECKING:
+    from loguru import Logger
+
     from climate_ref_core.diagnostics import ExecutionDefinition
 
 EXECUTION_LOG_FILENAME = "out.log"
@@ -213,6 +215,25 @@ def _at_least_warning(level: int | str) -> int:
     return max(level_no, logger.level("WARNING").no)
 
 
+def execution_log_only() -> "Logger":
+    """
+    Get a logger whose records go to the execution log but not the console
+
+    Use this for detail that is too bulky for collected logs, such as a failed command's full output.
+    Outside [redirect_logs][climate_ref_core.logging.redirect_logs] the records are logged as usual.
+    """
+    return logger.bind(execution_log_only=True)
+
+
+def _skip_execution_log_only(inner: Any) -> Any:
+    def _filter(record: Any) -> bool:
+        if record["extra"].get("execution_log_only"):
+            return False
+        return inner is None or inner(record)
+
+    return _filter
+
+
 @contextlib.contextmanager
 def redirect_logs(definition: "ExecutionDefinition", log_level: str) -> Generator[None, None, None]:
     """
@@ -239,33 +260,34 @@ def redirect_logs(definition: "ExecutionDefinition", log_level: str) -> Generato
     # If the app logger hasn't been configured yet, we don't need to replace it,
     # as logs will also be written to the console as loguru adds a stderr handler by default
     console_handler_id = None
+    file_handler_id = None
     if app_logger_configured:
         remove_log_handler()
-        console_kwargs = dict(logger.default_handler_kwargs)  # type: ignore[attr-defined]
-        console_kwargs["level"] = _at_least_warning(console_kwargs.get("level", "DEBUG"))
-        console_handler_id = logger.add(**console_kwargs)
-
-    # Add a new log handler for the execution log
-    output_file = definition.output_directory / EXECUTION_LOG_FILENAME
-    file_handler_id = logger.add(output_file, level=log_level, colorize=False)
-    capture_logging()
-
-    logger.info(f"Running definition {pretty_repr(definition)}")
     try:
-        yield
-    except:
-        # The executor logs this failure to the console itself, so the traceback goes to the file only
-        if console_handler_id is not None:
-            logger.remove(console_handler_id)
-            console_handler_id = None
-        logger.exception("Execution failed")
-        raise
+        if app_logger_configured:
+            console_kwargs = dict(logger.default_handler_kwargs)  # type: ignore[attr-defined]
+            console_kwargs["level"] = _at_least_warning(console_kwargs.get("level", "DEBUG"))
+            console_kwargs["filter"] = _skip_execution_log_only(console_kwargs.get("filter"))
+            console_handler_id = logger.add(**console_kwargs)
+
+        # Add a new log handler for the execution log
+        output_file = definition.output_directory / EXECUTION_LOG_FILENAME
+        file_handler_id = logger.add(output_file, level=log_level, colorize=False)
+        capture_logging()
+
+        logger.info(f"Running definition {pretty_repr(definition)}")
+        try:
+            yield
+        except:
+            # The executor logs this failure to the console itself
+            execution_log_only().exception("Execution failed")
+            raise
+        finally:
+            logger.info(f"Diagnostic execution complete. Results available in {definition.output_fragment()}")
     finally:
-        logger.info(f"Diagnostic execution complete. Results available in {definition.output_fragment()}")
-
-        # Reset the logger to the default
-        logger.remove(file_handler_id)
-
+        # Reset the logger to the default, even if setting up the execution log failed
+        if file_handler_id is not None:
+            logger.remove(file_handler_id)
         if console_handler_id is not None:
             logger.remove(console_handler_id)
         # We only re-add the app handler if it was configured before
@@ -273,4 +295,10 @@ def redirect_logs(definition: "ExecutionDefinition", log_level: str) -> Generato
             add_log_handler(**logger.default_handler_kwargs)  # type: ignore[attr-defined]
 
 
-__all__ = ["EXECUTION_LOG_FILENAME", "capture_logging", "initialise_logging", "redirect_logs"]
+__all__ = [
+    "EXECUTION_LOG_FILENAME",
+    "capture_logging",
+    "execution_log_only",
+    "initialise_logging",
+    "redirect_logs",
+]

@@ -37,6 +37,7 @@ from climate_ref_core.exceptions import (
     InvalidDiagnosticException,
     InvalidProviderException,
 )
+from climate_ref_core.logging import execution_log_only
 
 
 def _slugify(value: str) -> str:
@@ -778,7 +779,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             output = e.stdout or ""
             message = f"Command exited with code {e.returncode}: {cmd}"
             # The full output goes to the execution log, the tail also to the console
-            logger.info("Command output: \n" + output)
+            execution_log_only().error("Command output: \n" + output)
             tail = "\n".join(output.splitlines()[-COMMAND_OUTPUT_TAIL_LINES:])
             logger.error(f"{message}\nLast lines of output:\n{tail}")
             raise CondaCommandError(

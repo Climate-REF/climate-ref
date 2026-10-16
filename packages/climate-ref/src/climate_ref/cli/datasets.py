@@ -401,16 +401,16 @@ def ingest(  # noqa
     if not dry_run:
         log_deferred_finalisation(db, source_type)
 
-    unhealthy: list[str] = []
+    solve_ok = True
     if solve:
         from climate_ref.solver import solve_required_executions
 
-        unhealthy = solve_required_executions(
+        solve_ok = solve_required_executions(
             config=config,
             db=db,
             dry_run=dry_run,
             check_health=check_health,
-        )
+        ).ok
 
     if failed_dirs:
         logger.error(
@@ -418,7 +418,7 @@ def ingest(  # noqa
             f"{', '.join(str(p) for p in failed_dirs)}"
         )
         raise typer.Exit(code=1)
-    if unhealthy:
+    if not solve_ok:
         raise typer.Exit(code=1)
 
 

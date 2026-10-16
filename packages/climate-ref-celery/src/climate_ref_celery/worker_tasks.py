@@ -10,9 +10,8 @@ from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.database import Database
-from climate_ref.executor import handle_execution_result
+from climate_ref.executor import handle_execution_result, record_lost_execution
 from climate_ref.models import Execution
-from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref_core.diagnostics import ExecutionResult
 
 
@@ -136,7 +135,8 @@ def handle_failure(task_id: str, execution_id: int) -> None:
             logger.error(f"Execution {execution_id} not found")
             return
 
-        execution.mark_failed(ExecutionFailureReason.SystemError)
-        # Deliberately not clearing dirty - this is a system-level failure
-        # (worker killed, OOM, time limit) so the execution should be retried
+        # Dirty is left alone, so a system-level failure is retried on the next solve
+        record_lost_execution(
+            config, execution, f"celery task {task_id} failed (worker lost, killed or out of time)"
+        )
         logger.info(f"Marked execution {execution_id} as failed (retryable)")

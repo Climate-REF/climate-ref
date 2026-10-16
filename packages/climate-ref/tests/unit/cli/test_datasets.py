@@ -8,6 +8,7 @@ from sqlalchemy import select
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.models import Dataset
 from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
+from climate_ref.solver import SolveOutcome
 
 
 def test_ingest_help(invoke_cli):
@@ -433,7 +434,10 @@ class TestIngest:
 
     @pytest.mark.parametrize("check_health", [True, False])
     def test_ingest_and_solve_unhealthy(self, sample_data_dir, db, invoke_cli, mocker, check_health):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=["example"])
+        mock_solve = mocker.patch(
+            "climate_ref.solver.solve_required_executions",
+            return_value=SolveOutcome(unhealthy_providers=["example"]),
+        )
         args = ["datasets", "ingest", str(sample_data_dir / self.data_dir / "Amon" / "tas")]
         args += ["--source-type", "cmip6", "--solve"]
         if not check_health:

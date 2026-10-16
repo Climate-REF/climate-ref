@@ -276,14 +276,19 @@ def redirect_logs(definition: "ExecutionDefinition", log_level: str) -> Generato
         capture_logging()
 
         logger.info(f"Running definition {pretty_repr(definition)}")
+        failed = False
         try:
             yield
         except:
+            failed = True
             # The executor logs this failure to the console itself
             execution_log_only().exception("Execution failed")
             raise
         finally:
-            logger.info(f"Diagnostic execution complete. Results available in {definition.output_fragment()}")
+            outcome = "failed" if failed else "finished"
+            logger.info(
+                f"Diagnostic execution {outcome}. Results available in {definition.output_fragment()}"
+            )
     finally:
         # Reset the logger to the default, even if setting up the execution log failed
         if file_handler_id is not None:

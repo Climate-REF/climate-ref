@@ -12,7 +12,7 @@ This is useful for local testing and debugging.
 import pathlib
 from collections.abc import Sequence
 from concurrent.futures import Future
-from typing import TYPE_CHECKING, get_args
+from typing import TYPE_CHECKING, Any, get_args
 
 from attrs import define
 from loguru import logger
@@ -140,18 +140,20 @@ class ExecutionFuture:
         self.started_at = max(self.submitted_at, observed_at - usage.wall_seconds)
 
 
-def process_result(
+def process_result(  # noqa: PLR0913
     config: "Config",
     database: Database,
     result: ExecutionResult,
     execution: Execution | None,
     *,
     queue_seconds: float | None = None,
+    detail: str | None = None,
 ) -> None:
     """Process the result of a diagnostic execution, persisting outcome to the DB.
 
     ``queue_seconds`` is supplied by the submitting executor,
     because only the parent knows when the task was submitted.
+    ``detail`` says why a failed execution failed and is written to its results log.
     """
     if not result.successful:
         if execution is not None:  # pragma: no branch
@@ -164,30 +166,71 @@ def process_result(
         logger.error(f"Error running {result.definition.execution_slug()}. {info_msg}")
 
     if execution:
-        handle_execution_result(config, database, execution, result, queue_seconds=queue_seconds)
+        handle_execution_result(
+            config, database, execution, result, queue_seconds=queue_seconds, detail=detail
+        )
 
 
-def mark_execution_failed(
+def mark_execution_failed(  # noqa: PLR0913
     database: Database,
     config: "Config",
     definition: ExecutionDefinition,
     execution_id: int | None,
     *,
     retryable: bool,
+    detail: str | None = None,
 ) -> None:
     """Persist a failed result for an outstanding execution.
 
     Used when an executor abandons a future (per-task timeout, overall timeout,
     worker crash) so the corresponding ``Execution`` row never stays stuck in
     ``successful=None`` state.
+    ``detail`` is written to the execution's results log.
     """
     try:
         failure_result = ExecutionResult.build_from_failure(definition, retryable=retryable)
         with database.session.begin():
             execution = database.session.get(Execution, execution_id) if execution_id else None
-            process_result(config, database, failure_result, execution)
+            process_result(config, database, failure_result, execution, detail=detail)
     except Exception:
         logger.exception(f"Failed to record failure for {definition.execution_slug()!r}")
+        _force_mark_failed(database, execution_id, retryable=retryable)
+
+
+def fail_future(database: Database, config: "Config", future: ExecutionFuture, *, detail: str) -> None:
+    """Mark the execution behind an abandoned future as failed-retryable."""
+    mark_execution_failed(
+        database, config, future.definition, future.execution_id, retryable=True, detail=detail
+    )
+
+
+def fail_outstanding(
+    database: Database, config: "Config", results: list[ExecutionFuture], progress: Any, *, detail: str
+) -> None:
+    """Mark every execution an executor is giving up on as failed-retryable and drop it from ``results``."""
+    for outstanding in list(results):
+        logger.warning(
+            f"Execution {outstanding.definition.execution_slug()!r} was not collected. "
+            "Marking it failed-retryable"
+        )
+        fail_future(database, config, outstanding, detail=detail)
+        progress.update(n=1)
+        results.remove(outstanding)
+
+
+def _force_mark_failed(database: Database, execution_id: int | None, *, retryable: bool) -> None:
+    """Mark the row failed without touching the filesystem, so a broken results path cannot block it."""
+    if execution_id is None:
+        return
+    try:
+        with database.session.begin():
+            execution = database.session.get(Execution, execution_id)
+            if execution is None:
+                return
+            execution.mark_failed(ExecutionFailureReason.SystemError)
+            execution.execution_group.dirty = retryable
+    except Exception:
+        logger.exception(f"Could not mark execution {execution_id} as failed")
 
 
 def ingest_scalar_values(
@@ -459,6 +502,38 @@ def record_resource_usage(
         logger.opt(exception=True).warning("Could not record resource usage for this execution")
 
 
+def record_failure(
+    config: "Config", execution: Execution, reason: ExecutionFailureReason, detail: str
+) -> None:
+    """Mark the execution failed and append why to its results log, which is otherwise silent."""
+    execution.mark_failed(reason)
+    log_path = config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with log_path.open("a") as fh:
+            fh.write(f"\nREF: execution failed ({reason.value}): {detail}\n")
+    except OSError:
+        logger.warning(f"Could not write the failure reason to {log_path}", exc_info=True)
+
+
+def record_lost_execution(config: "Config", execution: Execution, detail: str) -> None:
+    """
+    Fail an execution whose worker died before it returned a result
+
+    The partial log is copied from scratch first, so the results log shows how far it got.
+    The group's dirty flag is left alone.
+    """
+    try:
+        copy_output_file(
+            config.paths.scratch, config.paths.results, execution.output_fragment, EXECUTION_LOG_FILENAME
+        )
+    except FileNotFoundError:
+        logger.debug(f"No partial log for lost execution {execution.id}")
+    except (OSError, ValueError) as e:
+        logger.warning(f"Could not copy the partial log of lost execution {execution.id}: {e}")
+    record_failure(config, execution, ExecutionFailureReason.SystemError, detail)
+
+
 def handle_execution_result(  # noqa: PLR0913
     config: "Config",
     database: Database,
@@ -467,6 +542,7 @@ def handle_execution_result(  # noqa: PLR0913
     *,
     update_dirty: bool = True,
     queue_seconds: float | None = None,
+    detail: str | None = None,
 ) -> None:
     """
     Handle the result of a diagnostic execution
@@ -489,6 +565,9 @@ def handle_execution_result(  # noqa: PLR0913
         Set to False for reingest which should not alter pending-work state.
     queue_seconds
         Submit-to-start latency observed by the submitting executor, or None when it is unknown.
+    detail
+        Why the executor failed the execution, if it did.
+        A failed execution has this appended to its results log.
     """
     # Recorded before anything that can return early.
     # A run that ran out of memory or blew up during ingest is exactly the run whose numbers are wanted.
@@ -511,8 +590,11 @@ def handle_execution_result(  # noqa: PLR0913
             f"Could not find log file {EXECUTION_LOG_FILENAME} in scratch directory: {config.paths.scratch}. "
             f"This is likely a system error (will be retried on next solve)."
         )
-        execution.mark_failed(
-            ExecutionFailureReason.SystemError if started else ExecutionFailureReason.NotStarted
+        record_failure(
+            config,
+            execution,
+            ExecutionFailureReason.SystemError if started else ExecutionFailureReason.NotStarted,
+            detail or "no log file was written, the process was likely killed",
         )
         if update_dirty:
             # Missing log file suggests the process was killed before writing output,
@@ -521,8 +603,13 @@ def handle_execution_result(  # noqa: PLR0913
         return
 
     if not result.successful or result.metric_bundle_filename is None:
-        execution.mark_failed(
-            ExecutionFailureReason.SystemError if result.retryable else ExecutionFailureReason.DiagnosticError
+        record_failure(
+            config,
+            execution,
+            ExecutionFailureReason.SystemError
+            if result.retryable
+            else ExecutionFailureReason.DiagnosticError,
+            detail or "the diagnostic reported failure",
         )
         if result.retryable:
             logger.error(f"{execution} failed due to a system error (will be retried on next solve)")
@@ -549,12 +636,16 @@ def handle_execution_result(  # noqa: PLR0913
             execution.output_fragment,
             result,
         )
-    except (FileNotFoundError, OSError):
+    except (FileNotFoundError, OSError) as exc:
         # The diagnostic reported success but a file its bundle references is
         # missing or unreadable. Fail this execution rather than aborting the
         # whole result-collection loop.
         logger.exception(f"Could not copy outputs for {execution}")
-        execution.mark_failed(ExecutionFailureReason.ResultError)
+        record_failure(
+            config, execution, ExecutionFailureReason.ResultError, f"could not copy outputs: {exc!r}"
+        )
+        if update_dirty:
+            execution.execution_group.dirty = True
         return
 
     # Ingest outputs and metrics into the database via the shared ingestion path
@@ -568,14 +659,17 @@ def handle_execution_result(  # noqa: PLR0913
                 cv,
                 output_base_path=config.paths.scratch / execution.output_fragment,
             )
-    except Exception:
+    except Exception as exc:
         # The diagnostic ran, but persisting its results failed
         # (malformed bundle, CV/schema mismatch, DB error).
         # The savepoint already rolled back the partial inserts.
-        # Record this as a failed execution and leave the group dirty
-        # so the next solve retries it — never report success with no metric values.
+        # Never report success with no metric values.
         logger.exception("Something went wrong when ingesting execution result")
-        execution.mark_failed(ExecutionFailureReason.ResultError)
+        record_failure(
+            config, execution, ExecutionFailureReason.ResultError, f"could not ingest results: {exc!r}"
+        )
+        if update_dirty:
+            execution.execution_group.dirty = True
         return
 
     # TODO: This should check if the result is the most recent for the execution,

@@ -100,6 +100,8 @@ def _execute_locally(
 
             with redirect_logs(definition, log_level):
                 result = definition.diagnostic.run(definition=definition)
+                if not result.successful:
+                    logger.error("Diagnostic reported failure")
 
         except CondaCommandError as e:
             # The command output was already logged, so neither it nor the stacktrace is repeated

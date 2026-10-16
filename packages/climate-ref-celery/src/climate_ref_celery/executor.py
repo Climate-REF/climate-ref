@@ -10,8 +10,10 @@ from typing import Any
 import celery.exceptions
 import celery.result
 from loguru import logger
+from sqlalchemy import func
 
 from climate_ref.config import Config
+from climate_ref.database import Database
 from climate_ref.models import Execution
 from climate_ref.progress import LoggedProgress
 from climate_ref_celery.app import app
@@ -43,6 +45,10 @@ def _configured_provider_slugs(config: Config) -> list[str] | None:
     return slugs
 
 
+# Bounds the wait for result callbacks, so a stalled callback queue cannot hang a solve.
+RECORDING_GRACE_SECONDS = 120.0
+
+
 class CeleryExecutor(Executor):
     """
     Run a diagnostic asynchronously
@@ -68,8 +74,10 @@ class CeleryExecutor(Executor):
 
     def __init__(self, *, config: Config, **kwargs: Any) -> None:
         self.config = config
+        self._database: Database | None = kwargs.get("database")
         super().__init__(**kwargs)  # type: ignore
         self._results: list[celery.result.AsyncResult[ExecutionResult]] = []
+        self._execution_ids: list[int] = []
         self._queue_counts: Counter[str] = Counter()
         # Resolving provider slugs imports the provider packages, so only do it when a table is set
         known_providers = _configured_provider_slugs(config) if os.environ.get(ROUTES_ENV_VAR) else None
@@ -126,6 +134,8 @@ class CeleryExecutor(Executor):
         logger.debug(f"Celery task {async_result.id} for {diagnostic.slug} submitted to queue {queue}")
         self._queue_counts[queue] += 1
         self._results.append(async_result)
+        if execution is not None:
+            self._execution_ids.append(execution.id)
 
     def log_submission_summary(self) -> None:
         """
@@ -179,3 +189,31 @@ class CeleryExecutor(Executor):
                         results.remove(result)
         finally:
             t.close()
+
+        deadline = start_time + timeout if timeout > 0 else None
+        self._wait_for_recording(deadline)
+
+    def _wait_for_recording(self, deadline: float | None) -> None:
+        """
+        Wait for the worker callbacks to record the outcome of each submitted execution
+
+        A task is ready before its ``handle_result`` or ``handle_failure`` callback has run,
+        so the database can still show it in progress.
+        """
+        ids, self._execution_ids = self._execution_ids, []
+        if self._database is None or not ids:
+            return
+
+        end = time.time() + RECORDING_GRACE_SECONDS
+        if deadline is not None:
+            end = min(end, deadline)
+        while True:
+            with self._database.session_scope() as session:
+                pending = (
+                    session.query(func.count(Execution.id))
+                    .filter(Execution.id.in_(ids), Execution.successful.is_(None))
+                    .scalar()
+                )
+            if not pending or time.time() >= end:
+                return
+            time.sleep(0.5)

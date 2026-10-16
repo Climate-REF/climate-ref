@@ -1,3 +1,4 @@
+import contextlib
 import logging as std_logging
 
 import pytest
@@ -165,3 +166,17 @@ def test_redirect_logs_exception(definition, caplog):
     assert orig_handler != logger.default_handler_id, (  # type: ignore
         "The default handler should have changed during the redirect and cleanup."
     )
+
+
+@pytest.mark.parametrize("fails", [False, True])
+def test_redirect_logs_completion_message(definition, fails):
+    definition, output_file = definition
+
+    with contextlib.suppress(ValueError):
+        with redirect_logs(definition, "INFO"):
+            if fails:
+                raise ValueError("boom")
+
+    text = output_file.read_text()
+    assert ("Diagnostic execution failed" in text) is fails
+    assert ("Diagnostic execution finished" in text) is not fails

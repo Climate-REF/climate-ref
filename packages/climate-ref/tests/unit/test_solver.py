@@ -2293,3 +2293,17 @@ def test_solve_without_wait_reports_no_failures(db_seeded, mock_metric_execution
 
     assert outcome.failed_executions == 0
     assert "still in progress" not in caplog.text
+
+
+def test_solve_warns_when_outcomes_are_still_being_recorded(
+    db_seeded, mock_metric_execution, mock_executor, caplog
+):
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+
+    with caplog.at_level("INFO"):
+        outcome = solve_required_executions(db_seeded, solver=solver)
+
+    assert outcome.failed_executions == 0
+    assert "1 still in progress" in caplog.text
+    assert "not reflected in the exit code" in caplog.text

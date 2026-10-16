@@ -285,8 +285,10 @@ def redirect_logs(definition: "ExecutionDefinition", log_level: str) -> Generato
             execution_log_only().exception("Execution failed")
             raise
         finally:
-            outcome = "failed" if failed else "complete"
-            logger.info(f"Diagnostic execution {outcome}. Results available in {definition.output_fragment()}")
+            outcome = "failed" if failed else "finished"
+            logger.info(
+                f"Diagnostic execution {outcome}. Results available in {definition.output_fragment()}"
+            )
     finally:
         # Reset the logger to the default, even if setting up the execution log failed
         if file_handler_id is not None:

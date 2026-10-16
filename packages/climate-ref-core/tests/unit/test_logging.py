@@ -179,4 +179,4 @@ def test_redirect_logs_completion_message(definition, fails):
 
     text = output_file.read_text()
     assert ("Diagnostic execution failed" in text) is fails
-    assert ("Diagnostic execution complete" in text) is not fails
+    assert ("Diagnostic execution finished" in text) is not fails

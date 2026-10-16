@@ -6,6 +6,7 @@ from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import CondaCommandError, DiagnosticError, InvalidExecutorException
 from climate_ref_core.executor import Executor, _is_system_error, execute_locally, import_executor_cls
+from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.resources import ResourceUsage
 
 
@@ -87,6 +88,18 @@ class TestExecuteLocally:
 
         assert result.successful is False
         assert result.retryable is False
+
+    def test_reported_failure_is_logged(self, make_definition, mocker):
+        diagnostic = mocker.Mock()
+        definition = make_definition(diagnostic)
+        diagnostic.run.return_value = ExecutionResult.build_from_failure(definition)
+
+        result = execute_locally(definition, log_level="INFO")
+
+        assert result.successful is False
+        log_text = (definition.output_directory / EXECUTION_LOG_FILENAME).read_text()
+        assert "Diagnostic reported failure" in log_text
+        assert "Diagnostic execution complete" not in log_text
 
     def test_system_error_retryable(self, make_definition, mocker):
         """A MemoryError from the diagnostic should produce a retryable failure"""

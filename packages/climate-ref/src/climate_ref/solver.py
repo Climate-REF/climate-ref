@@ -831,9 +831,10 @@ class SolveOutcome:
 
     failed_executions: int = 0
     """
-    Executions submitted by this solve that failed.
+    Executions submitted by this solve that had failed when it finished.
 
     Always 0 unless the solve waited, because results are only known after waiting.
+    Executors that record results after ``join`` returns, such as Celery, can undercount.
     """
 
     @property
@@ -891,6 +892,11 @@ def _log_submitted_outcomes(db: Database, execution_ids: list[int]) -> int:
         f"Executions submitted in this solve: {outcomes.get(True, 0)} succeeded, {failed} failed, "
         f"{outcomes.get(None, 0)} still in progress"
     )
+    if outcomes.get(None, 0):
+        logger.warning(
+            "Some executions were still being recorded when the solve finished, "
+            "so a failure among them is not reflected in the exit code"
+        )
     return failed
 
 

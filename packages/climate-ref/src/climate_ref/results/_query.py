@@ -19,6 +19,7 @@ from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.dataset import Dataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.metric_value import (
     MetricValue,
@@ -203,3 +204,8 @@ def latest_execution_for_group(session: Session, execution_group_id: int) -> Exe
         .order_by(Execution.created_at.desc(), Execution.id.desc())
         .limit(1)
     ).scalar_one_or_none()
+
+
+def dataset_subtypes() -> list[type[Dataset]]:
+    """Every concrete ``Dataset`` subclass, for polymorphic eager-loading."""
+    return [m.class_ for m in Dataset.__mapper__.polymorphic_map.values()]

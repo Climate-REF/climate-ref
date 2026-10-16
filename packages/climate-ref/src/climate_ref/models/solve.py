@@ -39,7 +39,7 @@ class SolveStage(enum.Enum):
     """Finding the executions to run and recording them"""
 
     Queuing = "queuing"
-    """Submitting an execution to the executor"""
+    """Finished submitting executions to the executor"""
 
     Waiting = "waiting"
     """Waiting for the submitted executions to finish"""

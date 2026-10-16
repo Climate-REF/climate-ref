@@ -21,10 +21,10 @@ from sqlalchemy.orm import InstrumentedAttribute, Session, selectin_polymorphic
 
 from climate_ref.database import Database
 from climate_ref.models.dataset import Dataset
-from climate_ref.models.execution import Execution, ExecutionGroup
+from climate_ref.models.execution import Execution, ExecutionGroup, get_execution_group_and_latest
 from climate_ref.models.solve import Solve, SolveStage, SolveStatus
-from climate_ref.results._query import latest_execution_for_group
-from climate_ref.results.datasets import DatasetCollection, DatasetView, _dataset_subtypes
+from climate_ref.results._query import count_values, dataset_subtypes
+from climate_ref.results.datasets import DatasetCollection, DatasetView
 from climate_ref.results.executions import ExecutionGroupView, ExecutionView
 
 
@@ -61,6 +61,22 @@ class SolveView:
 
     hostname: str
     """Host that ran the solve."""
+
+    @classmethod
+    def from_model(cls, solve: Solve) -> "SolveView":
+        """Build a view of a ``Solve`` row."""
+        return cls(
+            id=solve.id,
+            status=solve.status,
+            stage=solve.stage,
+            started_at=solve.started_at,
+            finished_at=solve.finished_at,
+            error=solve.error,
+            options=dict(solve.options),
+            skipped_providers=tuple(solve.skipped_providers),
+            ref_version=solve.ref_version,
+            hostname=solve.hostname,
+        )
 
 
 @attrs.frozen(kw_only=True)
@@ -162,34 +178,20 @@ class SolvesReader:
         """The underlying database session."""
         return self._session if self._session is not None else self._db.session
 
-    @staticmethod
-    def _to_view(solve: Solve) -> SolveView:
-        return SolveView(
-            id=solve.id,
-            status=solve.status,
-            stage=solve.stage,
-            started_at=solve.started_at,
-            finished_at=solve.finished_at,
-            error=solve.error,
-            options=dict(solve.options),
-            skipped_providers=tuple(solve.skipped_providers),
-            ref_version=solve.ref_version,
-            hostname=solve.hostname,
-        )
-
     def list(self, *, limit: int | None = None) -> SolveCollection:
         """List solves, most recent first."""
-        total_count = self.session.execute(select(func.count()).select_from(Solve)).scalar_one()
-        stmt = select(Solve).order_by(Solve.started_at.desc(), Solve.id.desc())
+        stmt = select(Solve)
+        total_count = count_values(self.session, stmt)
+        stmt = stmt.order_by(Solve.started_at.desc(), Solve.id.desc())
         if limit is not None:
             stmt = stmt.limit(limit)
-        items = tuple(self._to_view(s) for s in self.session.execute(stmt).scalars())
+        items = tuple(SolveView.from_model(s) for s in self.session.execute(stmt).scalars())
         return SolveCollection(items=items, total_count=total_count, limit=limit)
 
     def get(self, solve_id: int) -> SolveView | None:
         """Fetch one solve by id, or ``None`` when no solve has that id."""
         solve = self.session.get(Solve, solve_id)
-        return self._to_view(solve) if solve is not None else None
+        return SolveView.from_model(solve) if solve is not None else None
 
     def outcomes(self, solve_id: int) -> SolveOutcomes:
         """Count the outcomes of the executions a solve created."""
@@ -226,15 +228,12 @@ class SolvesReader:
 
     def groups(self, solve_id: int) -> tuple[ExecutionGroupView, ...]:
         """List the execution groups the solve created, with their latest execution."""
-        stmt = (
-            select(ExecutionGroup)
-            .where(ExecutionGroup.created_by_solve_id == solve_id)
+        rows = (
+            get_execution_group_and_latest(self.session)
+            .filter(ExecutionGroup.created_by_solve_id == solve_id)
             .order_by(ExecutionGroup.id)
         )
-        return tuple(
-            ExecutionGroupView.from_model(eg, latest_execution_for_group(self.session, eg.id))
-            for eg in self.session.execute(stmt).scalars()
-        )
+        return tuple(ExecutionGroupView.from_model(eg, latest) for eg, latest in rows)
 
     def window(self, solve_id: int) -> SolveWindow | None:
         """Find the window of a solve, or ``None`` when no solve has that id."""
@@ -246,22 +245,25 @@ class SolvesReader:
         ).scalar_one()
         return SolveWindow(start=start, end=end)
 
-    def new_datasets(self, solve_id: int, *, limit: int | None = None) -> DatasetCollection:
+    def new_datasets(
+        self, solve_id: int, *, limit: int | None = None, window: SolveWindow | None = None
+    ) -> DatasetCollection:
         """List the datasets created in the solve's window, ordered by slug."""
-        return self._window_datasets(solve_id, Dataset.created_at, limit=limit)
+        return self._window_datasets(window or self.window(solve_id), Dataset.created_at, limit=limit)
 
-    def retracted_datasets(self, solve_id: int, *, limit: int | None = None) -> DatasetCollection:
+    def retracted_datasets(
+        self, solve_id: int, *, limit: int | None = None, window: SolveWindow | None = None
+    ) -> DatasetCollection:
         """List the datasets retracted in the solve's window, ordered by slug."""
-        return self._window_datasets(solve_id, Dataset.retracted_at, limit=limit)
+        return self._window_datasets(window or self.window(solve_id), Dataset.retracted_at, limit=limit)
 
     def _window_datasets(
         self,
-        solve_id: int,
+        window: SolveWindow | None,
         column: InstrumentedAttribute[Any],
         *,
         limit: int | None,
     ) -> DatasetCollection:
-        window = self.window(solve_id)
         if window is None:
             return DatasetCollection(items=(), total_count=0, offset=0, limit=limit)
 
@@ -269,9 +271,9 @@ class SolvesReader:
         if window.start is not None:
             stmt = stmt.where(column >= window.start)
 
-        total_count = self.session.execute(select(func.count()).select_from(stmt.subquery())).scalar_one()
+        total_count = count_values(self.session, stmt)
         stmt = stmt.order_by(Dataset.slug, Dataset.id).options(
-            selectin_polymorphic(Dataset, _dataset_subtypes())
+            selectin_polymorphic(Dataset, dataset_subtypes())
         )
         if limit is not None:
             stmt = stmt.limit(limit)

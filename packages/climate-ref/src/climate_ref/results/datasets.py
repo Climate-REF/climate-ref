@@ -23,6 +23,7 @@ from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models.dataset import Dataset
 from climate_ref.models.dataset_query import DatasetFilter, select_datasets
+from climate_ref.results._query import dataset_subtypes
 from climate_ref_core.source_types import SourceDatasetType
 
 __all__ = ["DatasetFilter", "select_datasets"]
@@ -160,11 +161,6 @@ class DatasetCollection:
         return pd.DataFrame.from_records(records, columns=base_columns if not records else None)
 
 
-def _dataset_subtypes() -> list[type[Dataset]]:
-    """Every concrete ``Dataset`` subclass, for polymorphic eager-loading."""
-    return [m.class_ for m in Dataset.__mapper__.polymorphic_map.values()]
-
-
 class DatasetsReader:
     """
     Dataset read domain.
@@ -247,7 +243,7 @@ class DatasetsReader:
             select(Dataset)
             .where(Dataset.slug == slug)
             .order_by(Dataset.version_key.desc(), Dataset.id.desc())
-            .options(selectin_polymorphic(Dataset, _dataset_subtypes()))
+            .options(selectin_polymorphic(Dataset, dataset_subtypes()))
         )
         dataset = self.session.execute(stmt).scalars().first()
         return DatasetView.from_model(dataset, include_files=False) if dataset is not None else None

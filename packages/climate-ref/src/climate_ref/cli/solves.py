@@ -76,16 +76,10 @@ def _outcomes_panel(outcomes: SolveOutcomes) -> Panel:
 
 
 def _datasets_panel(datasets: DatasetCollection, title: str) -> Panel:
-    import pandas as pd
-
     if not datasets.items:
         return Panel(Text("None."), title=f"{title} (0)")
 
-    table = df_to_table(
-        pd.DataFrame(
-            [{"id": d.id, "slug": d.slug, "dataset_type": d.dataset_type.value} for d in datasets.items]
-        )
-    )
+    table = df_to_table(datasets.to_pandas()[["id", "slug", "dataset_type"]])
     if datasets.total_count > len(datasets):
         table.caption = f"Showing {len(datasets)} of {datasets.total_count}"
     return Panel(table, title=f"{title} ({datasets.total_count})")
@@ -111,7 +105,10 @@ def inspect(
         logger.error(f"Solve not found: {solve_id}")
         raise typer.Exit(code=1)
 
-    console.print(_solve_panel(solve, solves.window(solve_id)))
+    window = solves.window(solve_id)
+    console.print(_solve_panel(solve, window))
     console.print(_outcomes_panel(solves.outcomes(solve_id)))
-    console.print(_datasets_panel(solves.new_datasets(solve_id, limit=limit), "New datasets"))
-    console.print(_datasets_panel(solves.retracted_datasets(solve_id, limit=limit), "Retracted datasets"))
+    console.print(_datasets_panel(solves.new_datasets(solve_id, limit=limit, window=window), "New datasets"))
+    console.print(
+        _datasets_panel(solves.retracted_datasets(solve_id, limit=limit, window=window), "Retracted datasets")
+    )

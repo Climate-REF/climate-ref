@@ -1255,7 +1255,6 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             if pending is not None and executor is not None:
                 pending_definition, pending_execution = pending
                 submitted_ids.append(pending_execution.id)
-                stage = SolveStage.Queuing
                 try:
                     executor.run(
                         definition=pending_definition,
@@ -1271,7 +1270,6 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                         retryable=True,
                         detail=f"submit to the executor failed: {exc!r}",
                     )
-                stage = SolveStage.Solving
 
             if limit_reached:
                 logger.info(f"Reached execution limit of {limit}")

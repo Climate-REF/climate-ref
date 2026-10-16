@@ -394,3 +394,17 @@ class TestProvidersShow:
             ],
             expected_exit_code=1,
         )
+
+
+class TestProvidersCheckHealth:
+    def test_healthy(self, config, invoke_cli):
+        result = invoke_cli(["providers", "check-health", "--provider", "example"])
+        assert "Provider example: healthy" in result.stdout
+
+    def test_unhealthy_exits_non_zero(self, config, invoke_cli, mocker):
+        from climate_ref_example import provider as example_provider
+
+        mocker.patch.object(example_provider, "check_health", return_value=["micromamba run failed"])
+
+        result = invoke_cli(["providers", "check-health", "--provider", "example"], expected_exit_code=1)
+        assert "Provider example: unhealthy" in result.stdout

@@ -310,7 +310,7 @@ class DiagnosticProvider:
         Validate that the provider is ready for offline execution.
 
         Returns True if setup is complete and valid, False otherwise.
-        Default implementation returns True.
+        The default implementation logs and fails on any `check_health` problem.
 
         Parameters
         ----------
@@ -322,7 +322,29 @@ class DiagnosticProvider:
         bool
             True if setup is valid and complete
         """
-        return True
+        problems = self.check_health(config)
+        for problem in problems:
+            logger.error(problem)
+        return not problems
+
+    def check_health(self, config: Any) -> list[str]:
+        """
+        Check that the provider can launch a diagnostic on this host right now.
+
+        Unlike `validate_setup`, this must be cheap enough to run before every solve.
+        The default implementation reports no problems.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+
+        Returns
+        -------
+        :
+            A description of each problem found, empty when the provider is healthy
+        """
+        return []
 
     def get_data_path(self) -> Path | None:
         """
@@ -484,6 +506,10 @@ COMMAND_OUTPUT_TAIL_LINES = 50
 
 MICROMAMBA_FAILURE_PREFIX = "critical libmamba"
 """Output line prefix written when micromamba itself fails, before the wrapped command runs."""
+
+
+HEALTH_CHECK_TIMEOUT_SECONDS = 300
+"""Upper bound on a provider health check, which can be slow on a cold network filesystem."""
 
 
 def _get_micromamba_url() -> str:
@@ -746,33 +772,21 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             If the command fails
 
         """
-        if not self.env_path.exists():
+        env_path = self.env_path
+        if not env_path.exists():
             msg = (
                 f"Conda environment for provider `{self.slug}` not available at "
-                f"{self.env_path}. Please install it by running the command "
+                f"{env_path}. Please install it by running the command "
                 f"`ref providers create-env --provider {self.slug}`"
             )
             raise RuntimeError(msg)
 
-        cmd = [
-            f"{self.get_conda_exe(update=False)}",
-            "run",
-            "--prefix",
-            f"{self.env_path}",
-            *cmd,
-        ]
+        cmd = self._run_command(self.get_conda_exe(update=False), env_path, cmd)
         logger.info(f"Running '{' '.join(cmd)}'")
         try:
             # This captures the log output until the execution is complete
             # We could poll using `subprocess.Popen` if we want something more responsive
-            res = subprocess.run(  # noqa: S603
-                cmd,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                env=self._launch_env(use_lockfiles=False),
-            )
+            res = self._launch(cmd)
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")
         except subprocess.CalledProcessError as e:
@@ -789,19 +803,48 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 launch_failed=any(line.startswith(MICROMAMBA_FAILURE_PREFIX) for line in output.splitlines()),
             ) from e
 
+    @staticmethod
+    def _run_command(conda_exe: Path, env_path: Path, cmd: Iterable[str]) -> list[str]:
+        return [str(conda_exe), "run", "--prefix", str(env_path), *cmd]
+
+    def _launch(self, cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(  # noqa: S603
+            cmd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=self._launch_env(use_lockfiles=False),
+            **kwargs,
+        )
+
     def setup_environment(self, config: Any) -> None:
         """Set up the conda environment."""
         self.create_env()
 
-    def validate_setup(self, config: Any) -> bool:
-        """Validate conda environment exists."""
-        env_exists = self.env_path.exists()
-        if not env_exists:
-            logger.error(
-                f"Conda environment for {self.slug} is not available at {self.env_path}. "
-                f"Please run `ref providers setup --provider {self.slug}` to install it."
-            )
+    def check_health(self, config: Any) -> list[str]:
+        """
+        Check that a command can be launched inside the conda environment.
 
-        # TODO: Could add more validation here (e.g., check packages installed)
+        This runs a trivial command through `micromamba run`,
+        the same way `run` launches a diagnostic,
+        so it catches a missing environment or a launcher that fails before the diagnostic starts.
+        """
+        remedy = f"Run `ref providers setup --provider {self.slug}` to install it."
+        conda_exe = self.conda_exe_path
+        env_path = self.env_path
+        if not conda_exe.exists():
+            return [f"micromamba is not available at {conda_exe}. {remedy}"]
+        if not env_path.exists():
+            return [f"Conda environment for {self.slug} is not available at {env_path}. {remedy}"]
 
-        return env_exists
+        cmd = self._run_command(conda_exe, env_path, ["python", "-c", "pass"])
+        try:
+            self._launch(cmd, timeout=HEALTH_CHECK_TIMEOUT_SECONDS)
+        except subprocess.CalledProcessError as e:
+            return [f"`{' '.join(cmd)}` failed with exit code {e.returncode}:\n{e.stdout}"]
+        except subprocess.TimeoutExpired:
+            return [f"`{' '.join(cmd)}` did not finish within {HEALTH_CHECK_TIMEOUT_SECONDS}s"]
+        except OSError as e:
+            return [f"`{' '.join(cmd)}` could not be launched: {e}"]
+        return []

@@ -431,6 +431,18 @@ class TestIngest:
         )
         assert "Solving for diagnostics that require recalculation." in result.stderr
 
+    @pytest.mark.parametrize("check_health", [True, False])
+    def test_ingest_and_solve_unhealthy(self, sample_data_dir, db, invoke_cli, mocker, check_health):
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=["example"])
+        args = ["datasets", "ingest", str(sample_data_dir / self.data_dir / "Amon" / "tas")]
+        args += ["--source-type", "cmip6", "--solve"]
+        if not check_health:
+            args.append("--no-check-health")
+
+        invoke_cli(args, expected_exit_code=1)
+
+        assert mock_solve.call_args.kwargs["check_health"] is check_health
+
     def test_ingest_multiple_times(self, sample_data_dir, db, invoke_cli):
         invoke_cli(
             [

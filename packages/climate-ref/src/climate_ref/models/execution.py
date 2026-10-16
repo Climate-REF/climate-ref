@@ -5,7 +5,18 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from loguru import logger
-from sqlalchemy import BigInteger, Column, Float, ForeignKey, Table, UniqueConstraint, func, inspect, or_
+from sqlalchemy import (
+    BigInteger,
+    Column,
+    Float,
+    ForeignKey,
+    String,
+    Table,
+    UniqueConstraint,
+    func,
+    inspect,
+    or_,
+)
 from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
 from sqlalchemy.orm.query import RowReturningQuery
 
@@ -185,6 +196,33 @@ execution_datasets = Table(
 )
 
 
+class ExecutionFailureReason(enum.Enum):
+    """
+    Why an execution failed
+    """
+
+    DiagnosticError = "diagnostic_error"
+    """The diagnostic ran and reported an error that a retry with the same inputs would repeat"""
+
+    SystemError = "system_error"
+    """The diagnostic could not run to completion for a reason outside it, e.g. a broken environment"""
+
+    ResultError = "result_error"
+    """The diagnostic succeeded but its outputs could not be copied or ingested"""
+
+    Abandoned = "abandoned"
+    """The execution started but no result was recorded, e.g. its worker was killed"""
+
+    NotStarted = "not_started"
+    """The execution was queued but never started, e.g. the solve was killed first"""
+
+    Cancelled = "cancelled"
+    """The execution was marked failed by hand"""
+
+    Unknown = "unknown"
+    """The caller did not say why the execution failed"""
+
+
 class Execution(CreatedUpdatedMixin, Base):
     """
     Represents a single execution of a diagnostic
@@ -279,6 +317,15 @@ class Execution(CreatedUpdatedMixin, Base):
     and executions routinely peak well above that.
     """
 
+    # Plain text rather than an enum, so a release still reads reasons added after it.
+    failure_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    """
+    Why the execution failed, as an `ExecutionFailureReason` value.
+
+    NULL for successful or in-progress executions.
+    Failures recorded before the column existed are ``unknown``.
+    """
+
     memory_source: Mapped[str | None] = mapped_column(nullable=True)
     """
     Provenance of ``peak_memory_bytes``.
@@ -365,6 +412,7 @@ class Execution(CreatedUpdatedMixin, Base):
         """
         # TODO: this needs to accept both a diagnostic and output bundle
         self.successful = True
+        self.failure_reason = None
         self.path = str(path)
 
     def apply_resource_usage(
@@ -409,11 +457,17 @@ class Execution(CreatedUpdatedMixin, Base):
         self.resources_exclusive = exclusive
         self.resource_context = context
 
-    def mark_failed(self) -> None:
+    def mark_failed(self, reason: ExecutionFailureReason = ExecutionFailureReason.Unknown) -> None:
         """
         Mark the diagnostic execution as unsuccessful
+
+        Parameters
+        ----------
+        reason
+            Why the execution failed
         """
         self.successful = False
+        self.failure_reason = reason.value
 
 
 class ResultOutputType(enum.Enum):

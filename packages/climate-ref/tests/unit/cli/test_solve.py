@@ -5,8 +5,22 @@ def test_solve_help(invoke_cli):
 
 
 class TestSolve:
+    def test_solve_exits_non_zero_for_unhealthy_providers(self, sample_data_dir, db, invoke_cli, mocker):
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=["example"])
+
+        invoke_cli(["solve"], expected_exit_code=1)
+
+        assert mock_solve.call_args.kwargs["check_health"] is True
+
+    def test_solve_no_check_health(self, sample_data_dir, db, invoke_cli, mocker):
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
+
+        invoke_cli(["solve", "--no-check-health"])
+
+        assert mock_solve.call_args.kwargs["check_health"] is False
+
     def test_solve(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve"])
 
         assert mock_solve.call_count == 1
@@ -20,14 +34,14 @@ class TestSolve:
         assert kwargs["filters"].provider is None
 
     def test_solve_with_timeout(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve", "--timeout", "10"])
 
         _args, kwargs = mock_solve.call_args
         assert kwargs["timeout"] == 10
 
     def test_solve_with_zero_timeout_still_waits(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve", "--timeout", "0"])
 
         _args, kwargs = mock_solve.call_args
@@ -35,7 +49,7 @@ class TestSolve:
         assert kwargs["wait"] is True
 
     def test_solve_with_dryrun(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve", "--dry-run"])
 
         _args, kwargs = mock_solve.call_args
@@ -52,7 +66,7 @@ class TestSolve:
         ]
         config.save()
 
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(
             [
                 "solve",
@@ -70,7 +84,7 @@ class TestSolve:
         assert kwargs["filters"].provider == ["esmvaltool", "ilamb"]
 
     def test_solve_with_exclude_diagnostic(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(
             [
                 "solve",
@@ -94,7 +108,7 @@ class TestSolve:
         ]
         config.save()
 
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve", "--provider", "ESMval"])
 
         _args, kwargs = mock_solve.call_args
@@ -103,7 +117,7 @@ class TestSolve:
     def test_solve_provider_filter_no_match_fails(self, sample_data_dir, db, invoke_cli, mocker):
         # A --provider filter that matches no configured provider must fail loudly
         # rather than exiting 0 having done nothing.
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         result = invoke_cli(["solve", "--provider", "does-not-exist"], expected_exit_code=1)
 
         assert "No configured providers match" in result.stderr
@@ -113,14 +127,14 @@ class TestSolve:
         config.diagnostic_providers = []
         config.save()
 
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         result = invoke_cli(["solve"], expected_exit_code=1)
 
         assert "No diagnostic providers are configured" in result.stderr
         mock_solve.assert_not_called()
 
     def test_solve_with_dataset_filter(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(
             [
                 "solve",
@@ -140,7 +154,7 @@ class TestSolve:
     def test_solve_with_dataset_filter_multiple_values_same_key(
         self, sample_data_dir, db, invoke_cli, mocker
     ):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(
             [
                 "solve",
@@ -157,7 +171,7 @@ class TestSolve:
         }
 
     def test_solve_with_invalid_dataset_filter(self, sample_data_dir, db, invoke_cli, mocker):
-        mocker.patch("climate_ref.solver.solve_required_executions")
+        mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         result = invoke_cli(
             ["solve", "--dataset-filter", "missing_equals"],
             expected_exit_code=2,
@@ -167,28 +181,28 @@ class TestSolve:
         assert "Expected format: 'key=value'" in result.stderr
 
     def test_solve_with_limit(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve", "--limit", "5"])
 
         _args, kwargs = mock_solve.call_args
         assert kwargs["limit"] == 5
 
     def test_solve_without_limit(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve"])
 
         _args, kwargs = mock_solve.call_args
         assert kwargs["limit"] is None
 
     def test_solve_with_rerun_failed(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve", "--rerun-failed"])
 
         _args, kwargs = mock_solve.call_args
         assert kwargs["rerun_failed"] is True
 
     def test_solve_with_no_wait(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions", return_value=[])
         invoke_cli(["solve", "--no-wait", "--timeout", "30"])
 
         # --no-wait is now passed through explicitly rather than being collapsed

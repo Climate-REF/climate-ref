@@ -20,7 +20,12 @@ from sqlalchemy import insert
 
 from climate_ref.database import Database
 from climate_ref.models import ScalarMetricValue, SeriesIndex, SeriesMetricValue
-from climate_ref.models.execution import Execution, ExecutionOutput, ResultOutputType
+from climate_ref.models.execution import (
+    Execution,
+    ExecutionFailureReason,
+    ExecutionOutput,
+    ResultOutputType,
+)
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, ensure_relative_path
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
@@ -506,7 +511,9 @@ def handle_execution_result(  # noqa: PLR0913
             f"Could not find log file {EXECUTION_LOG_FILENAME} in scratch directory: {config.paths.scratch}. "
             f"This is likely a system error (will be retried on next solve)."
         )
-        execution.mark_failed()
+        execution.mark_failed(
+            ExecutionFailureReason.SystemError if started else ExecutionFailureReason.NotStarted
+        )
         if update_dirty:
             # Missing log file suggests the process was killed before writing output,
             # so set dirty=True for retry rather than assuming it was already set.
@@ -514,7 +521,9 @@ def handle_execution_result(  # noqa: PLR0913
         return
 
     if not result.successful or result.metric_bundle_filename is None:
-        execution.mark_failed()
+        execution.mark_failed(
+            ExecutionFailureReason.SystemError if result.retryable else ExecutionFailureReason.DiagnosticError
+        )
         if result.retryable:
             logger.error(f"{execution} failed due to a system error (will be retried on next solve)")
             if update_dirty:
@@ -545,7 +554,7 @@ def handle_execution_result(  # noqa: PLR0913
         # missing or unreadable. Fail this execution rather than aborting the
         # whole result-collection loop.
         logger.exception(f"Could not copy outputs for {execution}")
-        execution.mark_failed()
+        execution.mark_failed(ExecutionFailureReason.ResultError)
         return
 
     # Ingest outputs and metrics into the database via the shared ingestion path
@@ -566,7 +575,7 @@ def handle_execution_result(  # noqa: PLR0913
         # Record this as a failed execution and leave the group dirty
         # so the next solve retries it — never report success with no metric values.
         logger.exception("Something went wrong when ingesting execution result")
-        execution.mark_failed()
+        execution.mark_failed(ExecutionFailureReason.ResultError)
         return
 
     # TODO: This should check if the result is the most recent for the execution,

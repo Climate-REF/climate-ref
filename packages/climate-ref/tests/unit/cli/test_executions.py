@@ -13,7 +13,12 @@ from climate_ref.cli.executions import _outputs_panel, _results_directory_panel
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import ExecutionOutput, ResultOutputType, execution_datasets
+from climate_ref.models.execution import (
+    ExecutionFailureReason,
+    ExecutionOutput,
+    ResultOutputType,
+    execution_datasets,
+)
 from climate_ref.models.metric_value import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
 from climate_ref.results import Reader
@@ -1174,6 +1179,10 @@ class TestFailRunning:
         session = db_with_running.session
         running = session.query(Execution).filter(Execution.successful.is_(None)).count()
         assert running == 0
+        cancelled = session.query(Execution).filter(
+            Execution.failure_reason == ExecutionFailureReason.Cancelled.value
+        )
+        assert cancelled.count() == 2
 
         # Verify completed execution is untouched
         completed = session.query(Execution).filter(Execution.successful.is_(True)).count()

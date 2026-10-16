@@ -6,11 +6,11 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import Any
 
 from loguru import logger
-from tqdm import tqdm
 
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.models import Execution
+from climate_ref.progress import LoggedProgress
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import ExecutionError
 from climate_ref_core.executor import execute_locally
@@ -89,6 +89,9 @@ class LocalExecutor:
     # Results are copied to the results directory and ingested only during ``join``,
     # so skipping ``join`` (queue-and-exit) would orphan completed work in scratch.
     collects_results_on_join = True
+
+    # Diagnostics run on the solving host, so a health check there reflects where they run.
+    runs_on_solve_host = True
 
     def __init__(
         self,
@@ -203,7 +206,7 @@ class LocalExecutor:
         refresh_time = 0.5  # Time to wait between checking for completed tasks in seconds
 
         results = self._results
-        t = tqdm(
+        t = LoggedProgress(
             total=len(results),
             desc="Waiting for executions to complete",
             unit="execution",

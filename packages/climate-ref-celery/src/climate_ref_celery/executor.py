@@ -65,7 +65,6 @@ class CeleryExecutor(Executor):
     # Skipping it (queue-and-exit) does not lose work.
     # The workers keep processing and ingesting results in the background.
     collects_results_on_join = False
-    runs_on_solve_host = False
 
     def __init__(self, *, config: Config, **kwargs: Any) -> None:
         self.config = config

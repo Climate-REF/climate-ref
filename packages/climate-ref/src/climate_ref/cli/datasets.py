@@ -270,6 +270,10 @@ def ingest(  # noqa
             )
         ),
     ] = None,
+    check_health: Annotated[
+        bool,
+        typer.Option(help="Health check providers before solving, as `ref solve --check-health` does"),
+    ] = True,
 ) -> None:
     """
     Ingest a directory of datasets into the database
@@ -405,6 +409,7 @@ def ingest(  # noqa
             config=config,
             db=db,
             dry_run=dry_run,
+            check_health=check_health,
         )
 
     if failed_dirs:

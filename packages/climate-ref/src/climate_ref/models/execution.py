@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from loguru import logger
-from sqlalchemy import BigInteger, Column, Enum, Float, ForeignKey, Table, UniqueConstraint, func, or_
+from sqlalchemy import BigInteger, Column, Float, ForeignKey, String, Table, UniqueConstraint, func, or_
 from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
 from sqlalchemy.orm.query import RowReturningQuery
 
@@ -295,19 +295,10 @@ class Execution(CreatedUpdatedMixin, Base):
     and executions routinely peak well above that.
     """
 
-    failure_reason: Mapped[ExecutionFailureReason | None] = mapped_column(
-        # Stored as plain text, so adding a reason needs no migration.
-        Enum(
-            ExecutionFailureReason,
-            native_enum=False,
-            create_constraint=False,
-            length=32,
-            values_callable=lambda reasons: [reason.value for reason in reasons],
-        ),
-        nullable=True,
-    )
+    # Plain text rather than an enum, so a release still reads reasons added after it.
+    failure_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
     """
-    Why the execution failed.
+    Why the execution failed, as an `ExecutionFailureReason` value.
 
     NULL for successful or in-progress executions, and for failures recorded before the column existed.
     """
@@ -445,7 +436,7 @@ class Execution(CreatedUpdatedMixin, Base):
             Why the execution failed
         """
         self.successful = False
-        self.failure_reason = reason
+        self.failure_reason = reason.value
 
 
 class ResultOutputType(enum.Enum):

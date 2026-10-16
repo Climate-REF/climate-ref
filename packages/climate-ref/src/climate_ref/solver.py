@@ -799,6 +799,8 @@ def fail_stale_in_progress_executions(
                 copy_output_file(scratch_root, results_root, fragment, EXECUTION_LOG_FILENAME)
             except FileNotFoundError:
                 logger.debug(f"No partial log to adopt for abandoned execution at {fragment}")
+            except (OSError, ValueError) as e:
+                logger.warning(f"Could not adopt the partial log of abandoned execution at {fragment}: {e}")
 
     if stale:
         logger.info(f"Marked {len(stale)} stale in-progress executions as failed")
@@ -908,6 +910,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         )
 
     unhealthy: list[str] = []
+    # Optional executor attribute, so executors from other packages need not define it.
     if check_health and execute and getattr(executor, "runs_on_solve_host", False):
         health = check_provider_health(solver.provider_registry.providers, config, filters)
         unhealthy = [slug for slug, problems in health.items() if problems]

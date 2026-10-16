@@ -424,7 +424,7 @@ class ExecutionsReader:
             id=execution.id,
             execution_group_id=execution.execution_group_id,
             successful=execution.successful,
-            failure_reason=execution.failure_reason.value if execution.failure_reason else None,
+            failure_reason=execution.failure_reason,
             dataset_hash=execution.dataset_hash,
             retracted=execution.retracted,
             output_fragment=execution.output_fragment,

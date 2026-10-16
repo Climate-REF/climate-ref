@@ -45,6 +45,9 @@ class ILAMBProvider(DiagnosticProvider):
 
     def validate_setup(self, config: Config) -> bool:
         """Validate that all ILAMB data is cached with correct checksums."""
+        if not super().validate_setup(config):
+            return False
+
         all_errors: list[str] = []
         for name in _REGISTRY_NAMES:
             registry = dataset_registry_manager[name]

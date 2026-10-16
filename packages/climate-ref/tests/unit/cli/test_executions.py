@@ -1180,7 +1180,7 @@ class TestFailRunning:
         running = session.query(Execution).filter(Execution.successful.is_(None)).count()
         assert running == 0
         cancelled = session.query(Execution).filter(
-            Execution.failure_reason == ExecutionFailureReason.Cancelled
+            Execution.failure_reason == ExecutionFailureReason.Cancelled.value
         )
         assert cancelled.count() == 2
 

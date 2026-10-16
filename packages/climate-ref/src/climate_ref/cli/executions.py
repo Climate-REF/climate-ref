@@ -433,7 +433,7 @@ def _execution_panel(execution_group: ExecutionGroup) -> Panel:
     else:
         result = execution_group.executions[-1]
 
-    failure_reason = result.failure_reason.value if result and result.failure_reason else "-"
+    failure_reason = (result.failure_reason if result else None) or "-"
     panel = Panel(
         f"Key: [bold]{execution_group.key}[/]\n"
         f"Diagnostic: [bold]{execution_group.diagnostic.slug}[/]\n"

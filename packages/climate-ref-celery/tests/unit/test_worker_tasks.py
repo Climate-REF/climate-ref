@@ -97,7 +97,7 @@ def test_handle_failure_marks_execution_failed(config):
 
     execution = db.session.get(Execution, execution.id)
     assert execution.successful is False
-    assert execution.failure_reason == ExecutionFailureReason.SystemError
+    assert execution.failure_reason == ExecutionFailureReason.SystemError.value
 
     # System-level failures (worker crash, OOM, time limit) should leave
     # dirty=True so the execution is retried on the next solve

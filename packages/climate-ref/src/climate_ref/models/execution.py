@@ -303,7 +303,8 @@ class Execution(CreatedUpdatedMixin, Base):
     """
     Why the execution failed, as an `ExecutionFailureReason` value.
 
-    NULL for successful or in-progress executions, and for failures recorded before the column existed.
+    NULL for successful or in-progress executions.
+    Failures recorded before the column existed are ``unknown``.
     """
 
     memory_source: Mapped[str | None] = mapped_column(nullable=True)

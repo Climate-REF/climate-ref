@@ -134,7 +134,7 @@ class _CoarsenSpatial(ILAMBTransform):
     """
 
     # Bump when the coarsening algorithm changes so stale cache entries are ignored.
-    _CACHE_VERSION = 1
+    _CACHE_VERSION = 2
     _CACHE_NAME = "ilamb-coarsened"
 
     def __init__(self, variable_id: str, resolution: float = 0.5):
@@ -147,12 +147,7 @@ class _CoarsenSpatial(ILAMBTransform):
     def __call__(self, ds: xr.Dataset) -> xr.Dataset:
         if self.variable_id not in ds:
             return ds
-        lat = ds[get_dim_name(ds, "lat")]
-        lon = ds[get_dim_name(ds, "lon")]
-        current = float(
-            np.sqrt(lat.diff(lat.name).mean().values ** 2 + lon.diff(lon.name).mean().values ** 2)
-        )
-        if current >= self.resolution:
+        if self._spacing(ds) >= self.resolution:
             # Already at or coarser than the target (e.g. model data); leave it lazy.
             return ds
 
@@ -167,8 +162,16 @@ class _CoarsenSpatial(ILAMBTransform):
         return coarse
 
     # Time steps coarsened per pass.
-    # One pass of the ~0.05 degree AVHRR LAI reference is about 12 * 3600 * 7200 * 8 bytes ~= 2.5 GB.
-    _TIME_CHUNK = 12
+    # A pass over the AVHRR LAI reference peaks around 3 GB, against ~7 GB for 12 steps.
+    _TIME_CHUNK = 3
+
+    @staticmethod
+    def _spacing(ds: xr.Dataset) -> float:
+        """Mean grid spacing in degrees, taking the coarser of the lat and lon axes."""
+        return max(
+            float(np.abs(ds[name].diff(name)).mean())
+            for name in (get_dim_name(ds, "lat"), get_dim_name(ds, "lon"))
+        )
 
     def _coarsen(self, ds: xr.Dataset) -> xr.Dataset:
         """
@@ -181,24 +184,44 @@ class _CoarsenSpatial(ILAMBTransform):
         So the field is coarsened one time block at a time,
         materialising only that block, and the small coarse blocks are concatenated.
         """
+        factor = round(self.resolution / self._spacing(ds))
+        # ``coarsen_dataset`` measures resolution along the cell diagonal, not the cell side.
+        lat = ds[get_dim_name(ds, "lat")]
+        lon = ds[get_dim_name(ds, "lon")]
+        res = factor * float(np.sqrt(lat.diff(lat.name).mean() ** 2 + lon.diff(lon.name).mean() ** 2))
+
         if "time" not in ds.dims:
             # A single 2D slice is small enough to coarsen in one pass.
-            return coarsen_dataset(ds.compute(), self.variable_id, res=self.resolution)
+            coarse = coarsen_dataset(ds.compute(), self.variable_id, res=res)
+        else:
+            blocks = [
+                coarsen_dataset(
+                    ds.isel(time=slice(start, start + self._TIME_CHUNK)).compute(),
+                    self.variable_id,
+                    res=res,
+                )
+                for start in range(0, ds.sizes["time"], self._TIME_CHUNK)
+            ]
+            # ``data_vars="minimal"`` concatenates only the time-varying field, so the time-invariant
+            # ``cell_measures`` is kept once rather than broadcast across every block.
+            coarse = xr.concat(blocks, dim="time", data_vars="minimal", coords="minimal", compat="override")
+        return self._coarsen_bounds(coarse, ds, factor)
 
-        ntime = ds.sizes["time"]
-        blocks = [
-            coarsen_dataset(
-                ds.isel(time=slice(start, start + self._TIME_CHUNK)).compute(),
-                self.variable_id,
-                res=self.resolution,
-            )
-            for start in range(0, ntime, self._TIME_CHUNK)
-        ]
-        if len(blocks) == 1:
-            return blocks[0]
-        # ``data_vars="minimal"`` concatenates only the time-varying field, so the time-invariant
-        # ``cell_measures`` is kept once rather than broadcast across every block.
-        return xr.concat(blocks, dim="time", data_vars="minimal", coords="minimal", compat="override")
+    @staticmethod
+    def _coarsen_bounds(coarse: xr.Dataset, fine: xr.Dataset, factor: int) -> xr.Dataset:
+        """Replace the lat/lon bounds, which ``coarsen_dataset`` sums like data, with the window extents."""
+        for dim in (get_dim_name(fine, "lat"), get_dim_name(fine, "lon")):
+            name = fine[dim].attrs.get("bounds")
+            if name not in fine or name not in coarse:
+                continue
+            bounds = fine[name].transpose(dim, ...)
+            values = np.asarray(bounds.values, dtype=float)
+            # Pad like ``coarsen(boundary="pad")`` so the last partial window lines up.
+            values = np.pad(values, ((0, -len(values) % factor), (0, 0)), constant_values=np.nan)
+            windows = values.reshape(-1, factor * values.shape[1])
+            extents = np.stack([np.nanmin(windows, axis=1), np.nanmax(windows, axis=1)], axis=1)
+            coarse[name] = (bounds.dims, extents)
+        return coarse
 
     def _cache_path(self, ds: xr.Dataset) -> Path | None:
         if os.environ.get("REF_ILAMB_COARSEN_NO_CACHE"):

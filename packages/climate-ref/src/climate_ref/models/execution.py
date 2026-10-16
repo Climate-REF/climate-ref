@@ -107,6 +107,11 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
     These are also used to define the dataset key.
     """
 
+    created_by_solve_id: Mapped[int | None] = mapped_column(ForeignKey("solve.id"), nullable=True, index=True)
+    """
+    The solve that created this group, or ``None`` for groups created before solves were recorded
+    """
+
     def __repr__(self) -> str:
         # Read loaded state only, so a detached or expired instance cannot raise while being logged
         values = inspect(self).dict
@@ -412,6 +417,16 @@ class Execution(CreatedUpdatedMixin, Base):
     so which one to trust stays a read-time decision.
     A large gap between the two says the cgroup was shared.
     Purely informational, so nothing here is a query predicate.
+    """
+
+    solve_id: Mapped[int | None] = mapped_column(ForeignKey("solve.id"), nullable=True, index=True)
+    """
+    The solve that created this execution, or ``None`` for executions created before solves were recorded
+    """
+
+    reaped_by_solve_id: Mapped[int | None] = mapped_column(ForeignKey("solve.id"), nullable=True, index=True)
+    """
+    The solve whose preflight marked this execution as abandoned or never started
     """
 
     execution_group: Mapped["ExecutionGroup"] = relationship(back_populates="executions")

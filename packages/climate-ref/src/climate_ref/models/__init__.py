@@ -19,6 +19,7 @@ from climate_ref.models.metric_value import (
     SeriesMetricValue,
 )
 from climate_ref.models.provider import Provider
+from climate_ref.models.solve import Solve, SolveStage, SolveStatus
 
 __all__ = [
     "Base",
@@ -32,5 +33,8 @@ __all__ = [
     "ScalarMetricValue",
     "SeriesIndex",
     "SeriesMetricValue",
+    "Solve",
+    "SolveStage",
+    "SolveStatus",
     "Table",
 ]

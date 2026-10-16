@@ -22,6 +22,8 @@ Layers:
 * [resources][climate_ref.results.resources] -- ``ResourceFilter`` + resource DTOs +
   the ``ResourcesReader`` facade, aggregating the per-execution resource columns into a
   worker-sizing profile.
+* [solves][climate_ref.results.solves]: solve DTOs + the ``SolvesReader`` facade,
+  joining each solve's execution outcomes and the datasets new in its window.
 * [artifacts][climate_ref.results.artifacts] -- the ``ArtifactsReader`` facade,
   resolving execution output fragments into filesystem paths under a results root.
 

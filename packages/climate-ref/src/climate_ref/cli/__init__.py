@@ -39,6 +39,8 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("executions", "stats"),
     ("providers", "list"),
     ("providers", "show"),
+    ("solves", "list"),
+    ("solves", "inspect"),
     # test-cases commands operate on test artifacts (filesystem, native store, manifests).
     # None persist diagnostic executions to the database, so they never need a pre-migration backup.
     ("test-cases", "fetch"),
@@ -256,6 +258,7 @@ def build_app() -> typer.Typer:
         executions,
         providers,
         solve,
+        solves,
         test_cases,
     )
 
@@ -269,6 +272,7 @@ def build_app() -> typer.Typer:
     app.add_typer(diagnostics.app, name="diagnostics")
     app.add_typer(executions.app, name="executions")
     app.add_typer(providers.app, name="providers")
+    app.add_typer(solves.app, name="solves")
     app.add_typer(test_cases.app, name="test-cases")
 
     try:

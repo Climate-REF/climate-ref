@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from climate_ref.results.datasets import DatasetsReader
     from climate_ref.results.diagnostics import DiagnosticsReader
     from climate_ref.results.resources import ResourcesReader
+    from climate_ref.results.solves import SolvesReader
 
 
 def _kind_of(dimensions: Mapping[str, str]) -> str:
@@ -455,7 +456,8 @@ class Reader:
     [datasets][climate_ref.results.values.Reader.datasets] for dataset reads,
     [diagnostics][climate_ref.results.values.Reader.diagnostics] for diagnostic reads,
     [resources][climate_ref.results.values.Reader.resources] for per-execution resource
-    measurements, and
+    measurements,
+    [solves][climate_ref.results.values.Reader.solves] for solve reads, and
     [artifacts][climate_ref.results.values.Reader.artifacts] for output path resolution
     (only available when a ``results`` root is supplied).
 
@@ -507,6 +509,13 @@ class Reader:
         from climate_ref.results.resources import ResourcesReader  # noqa: PLC0415
 
         return ResourcesReader(self._db, session=self._session)
+
+    @functools.cached_property
+    def solves(self) -> "SolvesReader":
+        """Solve reads."""
+        from climate_ref.results.solves import SolvesReader  # noqa: PLC0415
+
+        return SolvesReader(self._db, session=self._session)
 
     @functools.cached_property
     def artifacts(self) -> "ArtifactsReader":

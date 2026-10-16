@@ -23,6 +23,7 @@ from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models.dataset import Dataset
 from climate_ref.models.dataset_query import DatasetFilter, select_datasets
+from climate_ref.results._query import dataset_subtypes
 from climate_ref_core.source_types import SourceDatasetType
 
 __all__ = ["DatasetFilter", "select_datasets"]
@@ -75,6 +76,33 @@ class DatasetView:
 
     files: tuple[DatasetFileView, ...]
     """The dataset's files; empty unless requested with ``include_files=True``."""
+
+    @classmethod
+    def from_model(cls, dataset: Dataset, *, include_files: bool) -> "DatasetView":
+        """Build a view of a ``Dataset`` row."""
+        adapter = get_dataset_adapter(dataset.dataset_type.value)
+        facets = {k: getattr(dataset, k) for k in adapter.dataset_specific_metadata if hasattr(dataset, k)}
+        files = (
+            tuple(
+                DatasetFileView(
+                    path=f.path, start_time=f.start_time, end_time=f.end_time, tracking_id=f.tracking_id
+                )
+                for f in dataset.files  # type: ignore[attr-defined]
+            )
+            if include_files
+            else ()
+        )
+        return cls(
+            id=dataset.id,
+            slug=dataset.slug,
+            dataset_type=dataset.dataset_type,
+            finalised=dataset.finalised,
+            retracted_at=dataset.retracted_at,
+            created_at=dataset.created_at,
+            updated_at=dataset.updated_at,
+            facets=facets,
+            files=files,
+        )
 
 
 @attrs.frozen(kw_only=True)
@@ -133,11 +161,6 @@ class DatasetCollection:
         return pd.DataFrame.from_records(records, columns=base_columns if not records else None)
 
 
-def _dataset_subtypes() -> list[type[Dataset]]:
-    """Every concrete ``Dataset`` subclass, for polymorphic eager-loading."""
-    return [m.class_ for m in Dataset.__mapper__.polymorphic_map.values()]
-
-
 class DatasetsReader:
     """
     Dataset read domain.
@@ -161,31 +184,6 @@ class DatasetsReader:
     def session(self) -> Session:
         """The underlying database session."""
         return self._session if self._session is not None else self._db.session
-
-    def _to_view(self, dataset: Dataset, *, include_files: bool) -> DatasetView:
-        adapter = get_dataset_adapter(dataset.dataset_type.value)
-        facets = {k: getattr(dataset, k) for k in adapter.dataset_specific_metadata if hasattr(dataset, k)}
-        files = (
-            tuple(
-                DatasetFileView(
-                    path=f.path, start_time=f.start_time, end_time=f.end_time, tracking_id=f.tracking_id
-                )
-                for f in dataset.files  # type: ignore[attr-defined]
-            )
-            if include_files
-            else ()
-        )
-        return DatasetView(
-            id=dataset.id,
-            slug=dataset.slug,
-            dataset_type=dataset.dataset_type,
-            finalised=dataset.finalised,
-            retracted_at=dataset.retracted_at,
-            created_at=dataset.created_at,
-            updated_at=dataset.updated_at,
-            facets=facets,
-            files=files,
-        )
 
     def _base_statement(self, filter: DatasetFilter) -> Select[Any]:  # noqa: A002
         """
@@ -230,7 +228,7 @@ class DatasetsReader:
             stmt = stmt.offset(offset)
 
         rows = list(self.session.execute(stmt).scalars().unique().all())
-        items = tuple(self._to_view(r, include_files=include_files) for r in rows)
+        items = tuple(DatasetView.from_model(r, include_files=include_files) for r in rows)
 
         return DatasetCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
@@ -245,7 +243,7 @@ class DatasetsReader:
             select(Dataset)
             .where(Dataset.slug == slug)
             .order_by(Dataset.version_key.desc(), Dataset.id.desc())
-            .options(selectin_polymorphic(Dataset, _dataset_subtypes()))
+            .options(selectin_polymorphic(Dataset, dataset_subtypes()))
         )
         dataset = self.session.execute(stmt).scalars().first()
-        return self._to_view(dataset, include_files=False) if dataset is not None else None
+        return DatasetView.from_model(dataset, include_files=False) if dataset is not None else None

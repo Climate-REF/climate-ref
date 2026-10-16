@@ -10,6 +10,7 @@ state for each failure mode.
 from __future__ import annotations
 
 import datetime
+import shutil
 import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -22,6 +23,7 @@ from climate_ref.executor.local import ExecutionFuture, LocalExecutor
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
+from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.provider_registry import _register_provider
 from climate_ref.solver import fail_stale_in_progress_executions
 from climate_ref_core.diagnostics import ExecutionResult
@@ -144,6 +146,7 @@ class TestLocalExecutorFailureModes:
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
+        assert execution.failure_reason == ExecutionFailureReason.DiagnosticError.value
         # Logic errors are not retried automatically; group is marked clean.
         assert execution_group.dirty is False
 
@@ -165,6 +168,7 @@ class TestLocalExecutorFailureModes:
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
+        assert execution.failure_reason == ExecutionFailureReason.SystemError.value
         # System-level failure: leave dirty=True so the next solve picks it up.
         assert execution_group.dirty is True
 
@@ -193,6 +197,7 @@ class TestLocalExecutorFailureModes:
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
+        assert execution.failure_reason == ExecutionFailureReason.SystemError.value
         # A hash-change rerun starts from dirty=False; the retryable failure must set it.
         assert execution_group.dirty is True
 
@@ -215,6 +220,7 @@ class TestLocalExecutorFailureModes:
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
+        assert execution.failure_reason == ExecutionFailureReason.DiagnosticError.value
         assert execution_group.dirty is False
 
     def test_per_task_timeout_marks_failed_retryable(
@@ -247,6 +253,7 @@ class TestLocalExecutorFailureModes:
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
+        assert execution.failure_reason == ExecutionFailureReason.SystemError.value
         assert execution_group.dirty is True
 
     def test_queued_task_not_culled_by_per_task_timeout(
@@ -348,6 +355,7 @@ class TestLocalExecutorFailureModes:
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
+        assert execution.failure_reason == ExecutionFailureReason.SystemError.value
         # Overall timeout is treated as a system-level failure -> retryable.
         assert execution_group.dirty is True
 
@@ -396,6 +404,7 @@ class TestLocalExecutorFailureModes:
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
+        assert execution.failure_reason == ExecutionFailureReason.SystemError.value
         # Even though the result claimed retryable=False, the missing-log path
         # treats this as a system failure so the row is retried next solve.
         assert execution_group.dirty is True
@@ -421,6 +430,7 @@ class TestStaleExecutionSweep:
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
+        assert execution.failure_reason == ExecutionFailureReason.Abandoned.value
         # Sweep deliberately does not flip dirty; ExecutionGroup.should_run uses
         # the existing dirty=True flag (set during seeding) to retry.
         assert execution_group.dirty is True
@@ -461,3 +471,65 @@ class TestStaleExecutionSweep:
         with db_with_provider.session.begin():
             execution = db_with_provider.session.get(Execution, execution_id)
         assert execution.successful is True
+
+    def test_records_whether_reaped_execution_started(self, db_with_provider, provider, config):
+        started_id, _, _ = _seed_execution(db_with_provider, provider, "mock", config, key="stale-started")
+        queued_id, _, queued_scratch = _seed_execution(
+            db_with_provider, provider, "mock", config, key="stale-queued"
+        )
+        shutil.rmtree(queued_scratch)
+        self._backdate(db_with_provider, started_id, hours=12)
+        self._backdate(db_with_provider, queued_id, hours=12)
+
+        marked = fail_stale_in_progress_executions(db_with_provider, scratch_root=config.paths.scratch)
+
+        assert marked == 2
+        with db_with_provider.session.begin():
+            started = db_with_provider.session.get(Execution, started_id)
+            queued = db_with_provider.session.get(Execution, queued_id)
+        assert started.failure_reason == ExecutionFailureReason.Abandoned.value
+        assert queued.failure_reason == ExecutionFailureReason.NotStarted.value
+
+    def test_adopts_partial_log_of_abandoned_execution(self, db_with_provider, provider, config):
+        execution_id, _, scratch_dir = _seed_execution(
+            db_with_provider, provider, "mock", config, key="stale-adopt"
+        )
+        (scratch_dir / EXECUTION_LOG_FILENAME).write_text("killed mid-run")
+        self._backdate(db_with_provider, execution_id, hours=12)
+
+        fail_stale_in_progress_executions(
+            db_with_provider, scratch_root=config.paths.scratch, results_root=config.paths.results
+        )
+
+        with db_with_provider.session.begin():
+            fragment = db_with_provider.session.get(Execution, execution_id).output_fragment
+        assert (config.paths.results / fragment / EXECUTION_LOG_FILENAME).read_text() == "killed mid-run"
+
+    def test_log_adoption_failure_does_not_abort_reaping(self, db_with_provider, provider, config):
+        execution_id, _, _ = _seed_execution(
+            db_with_provider, provider, "mock", config, key="stale-unwritable"
+        )
+        self._backdate(db_with_provider, execution_id, hours=12)
+
+        # Scratch doubling as results makes the copy fail, like an unwritable results directory.
+        marked = fail_stale_in_progress_executions(
+            db_with_provider, scratch_root=config.paths.scratch, results_root=config.paths.scratch
+        )
+
+        assert marked == 1
+
+    def test_unwritable_results_does_not_abort_reaping(self, db_with_provider, provider, config, tmp_path):
+        execution_id, _, _ = _seed_execution(db_with_provider, provider, "mock", config, key="stale-readonly")
+        self._backdate(db_with_provider, execution_id, hours=12)
+        results_root = tmp_path / "readonly-results"
+        results_root.mkdir()
+        results_root.chmod(0o555)
+
+        try:
+            marked = fail_stale_in_progress_executions(
+                db_with_provider, scratch_root=config.paths.scratch, results_root=results_root
+            )
+        finally:
+            results_root.chmod(0o755)
+
+        assert marked == 1

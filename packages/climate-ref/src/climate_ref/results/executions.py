@@ -111,6 +111,9 @@ class ExecutionView:
     successful: bool | None
     """``True``/``False`` once the execution has finished, ``None`` while still running."""
 
+    failure_reason: str | None = None
+    """Why a failed execution failed, as an ``ExecutionFailureReason`` value, or ``None``."""
+
     dataset_hash: str
     """Hash of the input datasets used for this execution."""
 
@@ -176,6 +179,11 @@ class ExecutionGroupView:
     def successful(self) -> bool | None:
         """Convenience mirror of ``latest.successful`` (matches the CLI's ``successful`` column)."""
         return self.latest.successful if self.latest else None
+
+    @property
+    def failure_reason(self) -> str | None:
+        """Convenience mirror of ``latest.failure_reason``."""
+        return self.latest.failure_reason if self.latest else None
 
 
 @attrs.frozen(kw_only=True)
@@ -260,7 +268,7 @@ class ExecutionGroupCollection:
         DataFrame mirroring the ``list-groups`` CLI columns.
 
         Columns are emitted explicitly (``id, key, provider, diagnostic, dirty, successful,
-        created_at, updated_at, selectors``) even when the collection is empty, so callers can
+        failure_reason, created_at, updated_at, selectors``) even when the collection is empty, so callers can
         select columns / build an empty table without special-casing.
         """
         columns = [
@@ -270,6 +278,7 @@ class ExecutionGroupCollection:
             "diagnostic",
             "dirty",
             "successful",
+            "failure_reason",
             "created_at",
             "updated_at",
             "selectors",
@@ -282,6 +291,7 @@ class ExecutionGroupCollection:
                 "diagnostic": eg.diagnostic_slug,
                 "dirty": eg.dirty,
                 "successful": eg.successful,
+                "failure_reason": eg.failure_reason,
                 "created_at": eg.created_at,
                 "updated_at": eg.updated_at,
                 "selectors": dict(eg.selectors),
@@ -414,6 +424,7 @@ class ExecutionsReader:
             id=execution.id,
             execution_group_id=execution.execution_group_id,
             successful=execution.successful,
+            failure_reason=execution.failure_reason,
             dataset_hash=execution.dataset_hash,
             retracted=execution.retracted,
             output_fragment=execution.output_fragment,

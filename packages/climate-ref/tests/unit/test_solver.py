@@ -23,6 +23,7 @@ from climate_ref.solver import (
     _solve_from_data_requirements,
     apply_dataset_filters,
     catalog_for_requirement,
+    check_provider_health,
     extract_covered_datasets,
     matches_filter,
     solve_executions,
@@ -1528,6 +1529,12 @@ class TestMatchesFilter:
         # "mock" is contained in "mock_provider"
         assert matches_filter(mock_diagnostic, SolveFilterOptions(provider=["mock"])) is True
 
+    def test_exclude_provider_is_exact(self, mock_diagnostic):
+        assert (
+            matches_filter(mock_diagnostic, SolveFilterOptions(exclude_provider=["Mock_Provider"])) is False
+        )
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(exclude_provider=["mock"])) is True
+
     def test_partial_match_diagnostic(self, mock_diagnostic):
         # "ock" is contained in "mock"
         assert matches_filter(mock_diagnostic, SolveFilterOptions(diagnostic=["ock"])) is True
@@ -2165,3 +2172,62 @@ class TestDeclaredFallbacks:
         pd.testing.assert_frame_equal(once, twice)
         assert once["source_id"].tolist() == ["A", "B"]
         assert once.index.tolist() == [0, 1]
+
+
+class TestProviderHealth:
+    @pytest.fixture
+    def solver(self, provider):
+        solver = mock.MagicMock(spec=ExecutionSolver)
+        solver.provider_registry = ProviderRegistry(providers=[provider])
+        return solver
+
+    def test_check_provider_health_only_checks_providers_in_scope(self, mocker, provider, config):
+        check_health = mocker.patch.object(provider, "check_health", return_value=["broken"])
+
+        assert check_provider_health([provider], config, SolveFilterOptions(provider=["other"])) == {}
+        check_health.assert_not_called()
+
+        assert check_provider_health([provider], config, SolveFilterOptions(provider=["mock"])) == {
+            provider.slug: ["broken"]
+        }
+
+    def test_check_provider_health_skips_providers_without_selected_diagnostics(
+        self, mocker, provider, config
+    ):
+        check_health = mocker.patch.object(provider, "check_health", return_value=["broken"])
+
+        assert check_provider_health([provider], config, SolveFilterOptions(diagnostic=["nonexistent"])) == {}
+        check_health.assert_not_called()
+
+    def test_solve_skips_unhealthy_provider(
+        self, mocker, mock_metric_execution, mock_executor, db_seeded, solver, provider
+    ):
+        mock_executor.return_value.runs_on_solve_host = True
+        mocker.patch.object(provider, "check_health", return_value=["micromamba run failed"])
+        solver.solve.return_value = []
+
+        unhealthy = solve_required_executions(db_seeded, solver=solver)
+
+        assert unhealthy == [provider.slug]
+        assert solver.solve.call_args.args[0].exclude_provider == [provider.slug]
+
+    def test_solve_runs_healthy_provider(
+        self, mocker, mock_metric_execution, mock_executor, db_seeded, solver, provider
+    ):
+        mock_executor.return_value.runs_on_solve_host = True
+        mocker.patch.object(provider, "check_health", return_value=[])
+        solver.solve.return_value = [mock_metric_execution]
+
+        assert solve_required_executions(db_seeded, solver=solver) == []
+        assert mock_executor.return_value.run.call_count == 1
+
+    @pytest.mark.parametrize("runs_on_solve_host, check_health", [(False, True), (True, False)])
+    def test_solve_skips_health_check(
+        self, mocker, mock_executor, db_seeded, solver, provider, runs_on_solve_host, check_health
+    ):
+        mock_executor.return_value.runs_on_solve_host = runs_on_solve_host
+        provider_check = mocker.patch.object(provider, "check_health", return_value=["broken"])
+        solver.solve.return_value = []
+
+        assert solve_required_executions(db_seeded, solver=solver, check_health=check_health) == []
+        provider_check.assert_not_called()

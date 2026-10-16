@@ -21,6 +21,7 @@ from climate_ref.models import ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.diagnostic import Diagnostic as DiagnosticModel
 from climate_ref.models.execution import (
     Execution,
+    ExecutionFailureReason,
     ExecutionGroup,
     ExecutionOutput,
     ResultOutputType,
@@ -240,7 +241,7 @@ def test_handle_execution_result_diagnostic_failure(config, db, mock_execution_r
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.DiagnosticError)
     assert not mock_execution_result.execution_group.dirty
 
 
@@ -253,7 +254,7 @@ def test_handle_execution_result_system_failure(config, db, mock_execution_resul
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
     assert mock_execution_result.execution_group.dirty
 
 
@@ -281,7 +282,7 @@ def test_handle_execution_result_ingestion_failure_leaves_dirty(
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.ResultError)
     mock_execution_result.mark_successful.assert_not_called()
     assert mock_execution_result.execution_group.dirty
 
@@ -297,7 +298,7 @@ def test_handle_execution_result_system_failure_respects_update_dirty_false(
 
     handle_execution_result(config, db, mock_execution_result, result, update_dirty=False)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
     assert mock_execution_result.execution_group.dirty is False
 
 
@@ -316,7 +317,7 @@ def test_handle_execution_result_missing_log_file_leaves_dirty(
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
     assert mock_execution_result.execution_group.dirty
 
 
@@ -337,7 +338,7 @@ def test_handle_execution_result_missing_output_marks_failed(
     # raises FileNotFoundError (not mocked).
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.ResultError)
     mock_execution_result.mark_successful.assert_not_called()
 
 

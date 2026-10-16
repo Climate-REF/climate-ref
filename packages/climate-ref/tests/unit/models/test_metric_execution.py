@@ -2,7 +2,13 @@ import datetime
 
 import pytest
 
-from climate_ref.models.execution import Execution, ExecutionGroup, ExecutionOutput, ResultOutputType
+from climate_ref.models.execution import (
+    Execution,
+    ExecutionFailureReason,
+    ExecutionGroup,
+    ExecutionOutput,
+    ResultOutputType,
+)
 
 
 class TestMetricExecution:
@@ -226,3 +232,22 @@ class TestExecutionOutput:
 
         ExecutionOutput.register_cv_dimensions(cmip7_aft_cv)
         assert ExecutionOutput._cv_dimensions == [d.name for d in cmip7_aft_cv.dimensions]
+
+
+def test_mark_successful_clears_failure_reason():
+    execution = Execution(output_fragment="fragment", dataset_hash="hash")
+    execution.mark_failed(ExecutionFailureReason.Abandoned)
+
+    execution.mark_successful("bundle.json")
+
+    assert execution.successful is True
+    assert execution.failure_reason is None
+
+
+def test_mark_failed_defaults_to_unknown_reason():
+    execution = Execution(output_fragment="fragment", dataset_hash="hash")
+
+    execution.mark_failed()
+
+    assert execution.successful is False
+    assert execution.failure_reason == "unknown"

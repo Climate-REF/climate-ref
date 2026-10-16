@@ -34,6 +34,7 @@ from climate_ref.config import Config
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
+    ExecutionFailureReason,
     execution_datasets,
     get_execution_group_and_latest_filtered,
 )
@@ -89,6 +90,7 @@ _DEFAULT_LIST_GROUPS_COLUMNS = [
     "diagnostic",
     "dirty",
     "successful",
+    "failure_reason",
     "created_at",
 ]
 
@@ -431,12 +433,14 @@ def _execution_panel(execution_group: ExecutionGroup) -> Panel:
     else:
         result = execution_group.executions[-1]
 
+    failure_reason = (result.failure_reason if result else None) or "-"
     panel = Panel(
         f"Key: [bold]{execution_group.key}[/]\n"
         f"Diagnostic: [bold]{execution_group.diagnostic.slug}[/]\n"
         f"Provider: [bold]{execution_group.diagnostic.provider.slug}[/]\n"
         f"Dirty: [bold]{execution_group.dirty}[/]\n"
         f"Successful: [bold]{result.successful if result else 'not-started'}[/]\n"
+        f"Failure reason: [bold]{failure_reason}[/]\n"
         f"Created At: [bold]{execution_group.created_at}[/]\n"
         f"Updated At: [bold]{execution_group.updated_at}[/]\n"
         f"Number of attempted executions: [bold]{len(execution_group.executions)}[/]",
@@ -888,7 +892,7 @@ def fail_running(
 
     with session.begin_nested() if session.in_transaction() else session.begin():
         for execution in running_executions:
-            execution.mark_failed()
+            execution.mark_failed(ExecutionFailureReason.Cancelled)
             execution.execution_group.dirty = True
             logger.info(
                 f"Marked execution {execution.id} as failed "

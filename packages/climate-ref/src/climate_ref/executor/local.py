@@ -89,6 +89,9 @@ class LocalExecutor:
     # so skipping ``join`` (queue-and-exit) would orphan completed work in scratch.
     collects_results_on_join = True
 
+    # Diagnostics run on the solving host, so a health check there reflects where they run.
+    runs_on_solve_host = True
+
     def __init__(
         self,
         *,

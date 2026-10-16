@@ -10,10 +10,10 @@ from typing import Any
 import celery.exceptions
 import celery.result
 from loguru import logger
-from tqdm import tqdm
 
 from climate_ref.config import Config
 from climate_ref.models import Execution
+from climate_ref.progress import LoggedProgress
 from climate_ref_celery.app import app
 from climate_ref_celery.routing import ROUTES_ENV_VAR, load_routing_table
 from climate_ref_celery.tasks import generate_task_name
@@ -159,7 +159,7 @@ class CeleryExecutor(Executor):
         refresh_time = 0.5  # Time to wait between checking for completed tasks in seconds
 
         results = self._results
-        t = tqdm(total=len(results), desc="Waiting for executions to complete", unit="execution")
+        t = LoggedProgress(total=len(results), desc="Waiting for executions to complete", unit="execution")
 
         try:
             while results:

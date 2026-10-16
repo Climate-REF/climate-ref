@@ -81,6 +81,9 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
     These are also used to define the dataset key.
     """
 
+    def __repr__(self) -> str:
+        return f"<ExecutionGroup id={self.id} diagnostic_id={self.diagnostic_id} key={self.key}>"
+
     diagnostic: Mapped["Diagnostic"] = relationship(back_populates="execution_groups")
     executions: Mapped[list["Execution"]] = relationship(
         back_populates="execution_group", order_by="Execution.created_at, Execution.id"
@@ -332,6 +335,12 @@ class Execution(CreatedUpdatedMixin, Base):
     """
     The datasets used in this execution
     """
+
+    def __repr__(self) -> str:
+        return (
+            f"<Execution id={self.id} group_id={self.execution_group_id} "
+            f"output_fragment={self.output_fragment}>"
+        )
 
     def register_datasets(self, db: "Database", execution_dataset: "ExecutionDatasetCollection") -> None:
         """

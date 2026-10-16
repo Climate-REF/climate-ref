@@ -316,7 +316,12 @@ def main(  # noqa: PLR0913
         config.log_level = log_level.value
 
     log_format = config.log_format
-    initialise_logging(level=config.log_level, format=log_format, log_directory=config.paths.log)
+    initialise_logging(
+        level=config.log_level,
+        format=log_format,
+        log_directory=config.paths.log,
+        serialize=config.log_json,
+    )
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
 

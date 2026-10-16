@@ -5,6 +5,14 @@ import pytest
 from climate_ref.models.execution import Execution, ExecutionGroup, ExecutionOutput, ResultOutputType
 
 
+def test_reprs_name_the_execution():
+    group = ExecutionGroup(id=3, diagnostic_id=5, key="cmip6_tas")
+    execution = Execution(id=7, execution_group_id=3, output_fragment="pmp/annual-cycle/abc")
+
+    assert repr(group) == "<ExecutionGroup id=3 diagnostic_id=5 key=cmip6_tas>"
+    assert repr(execution) == "<Execution id=7 group_id=3 output_fragment=pmp/annual-cycle/abc>"
+
+
 class TestMetricExecution:
     def test_should_run_no_results(self, mocker):
         execution = mocker.Mock(spec=ExecutionGroup)

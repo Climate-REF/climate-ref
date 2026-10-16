@@ -40,11 +40,12 @@ def _process_initialiser() -> None:  # pragma: no cover
             level=config.log_level,
             format=config.log_format,
             log_directory=config.paths.log,
+            serialize=config.log_json,
         )
-    except Exception as e:
+    except Exception:
         # Don't raise an exception here as that would kill the process pool
         # We want to log the error and continue
-        logger.error(f"Failed to add log handler: {e}")
+        logger.opt(exception=True).error("Failed to add log handler")
 
 
 def _pool_is_serial(pool: concurrent.futures.Executor) -> bool:

@@ -478,6 +478,12 @@ MICROMAMBA_EXE_URL = (
 MICROMAMBA_MAX_AGE = datetime.timedelta(days=7)
 """Do not update if the micromamba executable is younger than this age."""
 
+COMMAND_OUTPUT_TAIL_LINES = 50
+"""Lines of a failed command's output that are logged to the console."""
+
+MICROMAMBA_FAILURE_PREFIX = "critical libmamba"
+"""Output line prefix written when micromamba itself fails, before the wrapped command runs."""
+
 
 def _get_micromamba_url() -> str:
     """
@@ -769,12 +775,18 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")
         except subprocess.CalledProcessError as e:
-            # These are logged to the execution log
-            logger.error(f"Failed to run {cmd}")
-            logger.error(f"stdout: {e.stdout}")
-            logger.error(f"stderr: {e.stderr}")
-            # This will be shown in the solve log
-            raise CondaCommandError(f"Failed to run {cmd}", stdout=e.stdout, stderr=e.stderr) from e
+            output = e.stdout or ""
+            message = f"Command exited with code {e.returncode}: {cmd}"
+            # The full output goes to the execution log, the tail also to the console
+            logger.info("Command output: \n" + output)
+            tail = "\n".join(output.splitlines()[-COMMAND_OUTPUT_TAIL_LINES:])
+            logger.error(f"{message}\nLast lines of output:\n{tail}")
+            raise CondaCommandError(
+                message,
+                stdout=e.stdout,
+                stderr=e.stderr,
+                launch_failed=any(line.startswith(MICROMAMBA_FAILURE_PREFIX) for line in output.splitlines()),
+            ) from e
 
     def setup_environment(self, config: Any) -> None:
         """Set up the conda environment."""

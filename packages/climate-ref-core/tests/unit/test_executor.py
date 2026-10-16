@@ -1,4 +1,5 @@
 import pytest
+from loguru import logger
 
 from climate_ref.executor import LocalExecutor
 from climate_ref_core.datasets import ExecutionDatasetCollection
@@ -130,6 +131,43 @@ class TestExecuteLocally:
             execute_locally(definition, log_level="WARNING", raise_error=True)
 
         assert exc_info.value.result.retryable is False
+
+    def test_conda_failure_not_retryable(self, make_definition, mocker):
+        """The wrapped command failing is a diagnostic error"""
+        diagnostic = mocker.Mock()
+        diagnostic.run.side_effect = CondaCommandError("conda failed", stdout="Traceback ...\nValueError")
+        definition = make_definition(diagnostic)
+
+        result = execute_locally(definition, log_level="WARNING")
+
+        assert result.successful is False
+        assert result.retryable is False
+
+    def test_micromamba_launch_failure_retryable(self, make_definition, mocker):
+        """micromamba failing before the command runs is a system error"""
+        diagnostic = mocker.Mock()
+        diagnostic.run.side_effect = CondaCommandError("conda failed", launch_failed=True)
+        definition = make_definition(diagnostic)
+
+        result = execute_locally(definition, log_level="WARNING")
+
+        assert result.successful is False
+        assert result.retryable is True
+
+    def test_records_carry_execution_slug(self, make_definition, mocker, caplog):
+        def run(definition):
+            logger.warning("from the diagnostic")
+            raise ValueError("bad diagnostic logic")
+
+        diagnostic = mocker.Mock()
+        diagnostic.run.side_effect = run
+        definition = make_definition(diagnostic)
+
+        execute_locally(definition, log_level="WARNING")
+
+        inner = [r for r in caplog.records if r.getMessage() == "from the diagnostic"]
+        assert inner
+        assert inner[0].extra["execution"] == definition.execution_slug()
 
 
 class TestExecuteLocallyResourceUsage:

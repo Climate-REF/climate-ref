@@ -587,7 +587,7 @@ class TestCondaDiagnosticProvider:
             assert env["HOME"] == str(provider.prefix)
             assert env["MAMBA_USE_LOCKFILES"] == "false"
 
-    def test_run_command_fails(self, mocker: pytest_mock.MockerFixture, tmp_path, provider):
+    def test_run_command_fails(self, mocker: pytest_mock.MockerFixture, tmp_path, provider, caplog):
         """Test that run() re-raises CalledProcessError when command fails."""
         conda_exe = tmp_path / "conda" / "micromamba"
         mock_env_path = mocker.Mock(
@@ -623,6 +623,28 @@ class TestCondaDiagnosticProvider:
         with pytest.raises(CondaCommandError) as exc_info:
             provider.run(["mock-command"])
         assert "error output" in exc_info.value.stdout
+        assert "exited with code 1" in exc_info.value.short_message
+        assert "Last lines of output:\nerror output" in caplog.text
+        assert not exc_info.value.launch_failed
+
+    def test_run_micromamba_fails_to_start(self, mocker: pytest_mock.MockerFixture, provider):
+        mocker.patch.object(CondaDiagnosticProvider, "get_conda_exe", return_value=Path("micromamba"))
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "env_path",
+            new_callable=mocker.PropertyMock,
+            return_value=mocker.Mock(spec=Path, exists=lambda: True),
+        )
+        output = (
+            'warning  libmamba Could not create proc dir: "/tmp/cache/mamba/proc" (Permission denied)\n'
+            "critical libmamba filesystem error: directory iterator cannot open directory\n"
+        )
+        error = subprocess.CalledProcessError(1, "mock-command", output=output)
+        mocker.patch.object(climate_ref_core.providers.subprocess, "run", side_effect=error)
+
+        with pytest.raises(CondaCommandError) as exc_info:
+            provider.run(["mock-command"])
+        assert exc_info.value.launch_failed
 
 
 class TestLifecycleHooks:

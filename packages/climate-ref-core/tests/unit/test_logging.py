@@ -56,6 +56,21 @@ def test_redirect_logs(definition, caplog):
     assert text_inner in output_file.read_text()
 
 
+def test_redirect_logs_keeps_warnings_on_console(definition, caplog):
+    definition, output_file = definition
+
+    with caplog.at_level("DEBUG"):
+        with pytest.raises(ValueError):
+            with redirect_logs(definition, "DEBUG"):
+                logger.warning("Inner warning")
+                raise ValueError("boom")
+
+    assert "Inner warning" in caplog.text
+    # The executor logs the failure to the console, so the traceback is only written once
+    assert "Execution failed" not in caplog.text
+    assert "Execution failed" in output_file.read_text()
+
+
 def test_redirect_logs_without_handler(definition):
     definition, output_file = definition
 

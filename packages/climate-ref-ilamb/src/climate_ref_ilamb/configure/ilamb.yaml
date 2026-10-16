@@ -57,7 +57,7 @@ cSoil-HWSD2:
   variable_cmap: viridis
 
 lai-AVH15C1:
-  # ILAMB's RMSE regrids the full monthly record onto a nested grid, which peaks around 12 GB per execution.
+  # Peaks around 7 GB per execution, or 17 GB for the first one, which also coarsens the ~0.05 degree source.
   version: 5
   sources:
     lai:

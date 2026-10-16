@@ -242,3 +242,12 @@ def test_mark_successful_clears_failure_reason():
 
     assert execution.successful is True
     assert execution.failure_reason is None
+
+
+def test_mark_failed_defaults_to_unknown_reason():
+    execution = Execution(output_fragment="fragment", dataset_hash="hash")
+
+    execution.mark_failed()
+
+    assert execution.successful is False
+    assert execution.failure_reason == "unknown"

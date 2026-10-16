@@ -200,6 +200,9 @@ class ExecutionFailureReason(enum.Enum):
     Cancelled = "cancelled"
     """The execution was marked failed by hand"""
 
+    Unknown = "unknown"
+    """The caller did not say why the execution failed"""
+
 
 class Execution(CreatedUpdatedMixin, Base):
     """
@@ -426,7 +429,7 @@ class Execution(CreatedUpdatedMixin, Base):
         self.resources_exclusive = exclusive
         self.resource_context = context
 
-    def mark_failed(self, reason: ExecutionFailureReason) -> None:
+    def mark_failed(self, reason: ExecutionFailureReason = ExecutionFailureReason.Unknown) -> None:
         """
         Mark the diagnostic execution as unsuccessful
 

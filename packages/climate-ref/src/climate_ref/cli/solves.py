@@ -7,6 +7,7 @@ from typing import Annotated
 
 import typer
 from loguru import logger
+from rich.console import Group
 from rich.markup import escape
 from rich.panel import Panel
 from rich.text import Text
@@ -14,7 +15,8 @@ from rich.text import Text
 from climate_ref.cli._utils import OutputFormat, df_to_table, render_dataframe
 from climate_ref.results import Reader
 from climate_ref.results.datasets import DatasetCollection
-from climate_ref.results.solves import SolveOutcomes, SolveView, SolveWindow
+from climate_ref.results.executions import ExecutionView
+from climate_ref.results.solves import SolveExecutionView, SolveOutcomes, SolveView, SolveWindow
 
 app = typer.Typer(help=__doc__)
 
@@ -64,15 +66,43 @@ def _solve_panel(solve: SolveView, window: SolveWindow | None) -> Panel:
     )
 
 
-def _outcomes_panel(outcomes: SolveOutcomes) -> Panel:
+def _status(execution: ExecutionView) -> str:
+    if execution.successful is None:
+        return "pending"
+    if execution.successful:
+        return "succeeded"
+    return f"failed ({execution.failure_reason or 'unknown'})"
+
+
+def _executions_panel(outcomes: SolveOutcomes, executions: tuple[SolveExecutionView, ...]) -> Panel:
+    import pandas as pd
+
     reasons = ", ".join(f"{reason}: {count}" for reason, count in sorted(outcomes.failure_reasons.items()))
-    return Panel(
-        f"Succeeded: [bold]{outcomes.succeeded}[/]\n"
-        f"Failed: [bold]{outcomes.failed}[/]" + (f" ({reasons})" if reasons else "") + "\n"
-        f"Pending: [bold]{outcomes.pending}[/]\n"
-        f"Total: [bold]{outcomes.total}[/]",
-        title="Executions",
+    summary = Text.from_markup(
+        f"Succeeded: [bold]{outcomes.succeeded}[/]  "
+        f"Failed: [bold]{outcomes.failed}[/]" + (f" ({escape(reasons)})" if reasons else "") + "  "
+        f"Pending: [bold]{outcomes.pending}[/]"
     )
+    if not executions:
+        return Panel(summary, title="Executions (0)")
+
+    table = df_to_table(
+        pd.DataFrame(
+            [
+                {
+                    "id": e.execution.id,
+                    "group_id": e.execution.execution_group_id,
+                    "diagnostic": f"{e.provider_slug}/{e.diagnostic_slug}",
+                    "key": e.group_key,
+                    "status": _status(e.execution),
+                }
+                for e in executions
+            ]
+        )
+    )
+    if outcomes.total > len(executions):
+        table.caption = f"Showing {len(executions)} of {outcomes.total}"
+    return Panel(Group(summary, table), title=f"Executions ({outcomes.total})")
 
 
 def _datasets_panel(datasets: DatasetCollection, title: str) -> Panel:
@@ -89,7 +119,7 @@ def _datasets_panel(datasets: DatasetCollection, title: str) -> Panel:
 def inspect(
     ctx: typer.Context,
     solve_id: int,
-    limit: int = typer.Option(20, help="Maximum number of datasets to list in each section"),
+    limit: int = typer.Option(20, help="Maximum number of executions or datasets to list in each section"),
 ) -> None:
     """
     Inspect a solve by its ID
@@ -107,7 +137,7 @@ def inspect(
 
     window = solves.window(solve_id)
     console.print(_solve_panel(solve, window))
-    console.print(_outcomes_panel(solves.outcomes(solve_id)))
+    console.print(_executions_panel(solves.outcomes(solve_id), solves.executions(solve_id, limit=limit)))
     console.print(_datasets_panel(solves.new_datasets(solve_id, limit=limit, window=window), "New datasets"))
     console.print(
         _datasets_panel(solves.retracted_datasets(solve_id, limit=limit, window=window), "Retracted datasets")

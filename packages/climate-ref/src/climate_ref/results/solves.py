@@ -21,7 +21,9 @@ from sqlalchemy.orm import InstrumentedAttribute, Session, selectin_polymorphic
 
 from climate_ref.database import Database
 from climate_ref.models.dataset import Dataset
+from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup, get_execution_group_and_latest
+from climate_ref.models.provider import Provider
 from climate_ref.models.solve import Solve, SolveStage, SolveStatus
 from climate_ref.results._query import count_values, dataset_subtypes
 from climate_ref.results.datasets import DatasetCollection, DatasetView
@@ -151,6 +153,23 @@ class SolveOutcomes:
 
 
 @attrs.frozen(kw_only=True)
+class SolveExecutionView:
+    """An execution with the diagnostic and group it ran for."""
+
+    execution: ExecutionView
+    """The execution itself."""
+
+    provider_slug: str
+    """Slug of the provider the diagnostic belongs to."""
+
+    diagnostic_slug: str
+    """Slug of the diagnostic that was executed."""
+
+    group_key: str
+    """Key of the execution group, which identifies the datasets selected."""
+
+
+@attrs.frozen(kw_only=True)
 class SolveWindow:
     """The span of dataset changes a solve saw first."""
 
@@ -214,17 +233,36 @@ class SolvesReader:
             failure_reasons=failure_reasons,
         )
 
-    def executions(self, solve_id: int) -> tuple[ExecutionView, ...]:
+    def executions(self, solve_id: int, *, limit: int | None = None) -> tuple[SolveExecutionView, ...]:
         """List the executions the solve created, oldest first."""
-        return self._execution_views(Execution.solve_id == solve_id)
+        return self._execution_views(Execution.solve_id == solve_id, limit=limit)
 
-    def reaped_executions(self, solve_id: int) -> tuple[ExecutionView, ...]:
+    def reaped_executions(self, solve_id: int, *, limit: int | None = None) -> tuple[SolveExecutionView, ...]:
         """List the executions the solve's preflight marked as abandoned or never started, oldest first."""
-        return self._execution_views(Execution.reaped_by_solve_id == solve_id)
+        return self._execution_views(Execution.reaped_by_solve_id == solve_id, limit=limit)
 
-    def _execution_views(self, condition: ColumnElement[bool]) -> tuple[ExecutionView, ...]:
-        stmt = select(Execution).where(condition).order_by(Execution.created_at, Execution.id)
-        return tuple(ExecutionView.from_model(e) for e in self.session.execute(stmt).scalars())
+    def _execution_views(
+        self, condition: ColumnElement[bool], *, limit: int | None
+    ) -> tuple[SolveExecutionView, ...]:
+        stmt = (
+            select(Execution, ExecutionGroup.key, Diagnostic.slug, Provider.slug)
+            .join(Execution.execution_group)
+            .join(ExecutionGroup.diagnostic)
+            .join(Diagnostic.provider)
+            .where(condition)
+            .order_by(Execution.created_at, Execution.id)
+        )
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        return tuple(
+            SolveExecutionView(
+                execution=ExecutionView.from_model(execution),
+                provider_slug=provider_slug,
+                diagnostic_slug=diagnostic_slug,
+                group_key=group_key,
+            )
+            for execution, group_key, diagnostic_slug, provider_slug in self.session.execute(stmt)
+        )
 
     def groups(self, solve_id: int) -> tuple[ExecutionGroupView, ...]:
         """List the execution groups the solve created, with their latest execution."""

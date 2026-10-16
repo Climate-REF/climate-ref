@@ -96,9 +96,20 @@ def test_inspect(db_with_solve, invoke_cli):
     assert "Succeeded: 1" in stdout
     assert "Failed: 1 (not_started: 1)" in stdout
     assert "Pending: 0" in stdout
+    assert "Executions (2)" in stdout
+    assert "succeeded" in stdout
+    assert "failed (not_started)" in stdout
     assert f"New datasets ({dataset_count})" in stdout
     assert f"Showing 2 of {dataset_count}" in stdout
     assert "Retracted datasets" in stdout
+
+
+def test_inspect_limits_executions(db_with_solve, invoke_cli):
+    _, solve_id = db_with_solve
+
+    result = invoke_cli(["solves", "inspect", str(solve_id), "--limit", "1"])
+
+    assert "Showing 1 of 2" in result.stdout
 
 
 def test_inspect_missing(db_seeded, invoke_cli):

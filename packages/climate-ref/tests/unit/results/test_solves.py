@@ -138,13 +138,17 @@ def test_executions_groups_and_reaped(db_with_solves):
     db, first_id, second_id, _ = db_with_solves
     reader = Reader(db).solves
 
-    assert len(reader.executions(second_id)) == 5
+    executions = reader.executions(second_id)
+    assert len(executions) == 5
+    assert {e.group_key for e in executions} == {"key"}
+    assert all(e.diagnostic_slug and e.provider_slug for e in executions)
+    assert len(reader.executions(second_id, limit=2)) == 2
     assert reader.executions(first_id) == ()
     groups = reader.groups(second_id)
     assert [g.key for g in groups] == ["key"]
     assert groups[0].latest is not None
     reaped = reader.reaped_executions(second_id)
-    assert [e.dataset_hash for e in reaped] == ["reaped"]
+    assert [e.execution.dataset_hash for e in reaped] == ["reaped"]
 
 
 def test_window(db_with_solves):

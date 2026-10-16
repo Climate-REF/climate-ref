@@ -2377,6 +2377,19 @@ class TestSolveRecording:
         assert execution.successful is False
         assert execution.solve_id == solve.id
 
+    def test_interrupt_while_submitting_fails_at_queuing(
+        self, mock_metric_execution, mock_executor, db_seeded, solver
+    ):
+        solver.solve.return_value = [mock_metric_execution]
+        mock_executor.return_value.run.side_effect = KeyboardInterrupt
+
+        with pytest.raises(KeyboardInterrupt):
+            solve_required_executions(db_seeded, solver=solver)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Failed
+        assert solve.stage == SolveStage.Queuing
+
     def test_failed_at_waiting(self, mock_metric_execution, mock_executor, db_seeded, solver):
         solver.solve.return_value = [mock_metric_execution]
         mock_executor.return_value.join.side_effect = TimeoutError("took too long")

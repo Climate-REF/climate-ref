@@ -935,22 +935,25 @@ def fail_stale_solves(
         The number of solves that were marked failed.
     """
     cutoff = _stale_execution_cutoff(stale_after_seconds)
+    # A single conditional UPDATE, so a solve that finishes concurrently keeps its outcome.
     with db.session.begin():
-        stale = (
-            db.session.query(Solve)
-            .filter(
-                Solve.status == SolveStatus.Running,
-                Solve.started_at < cutoff,
-                Solve.id != exclude_solve_id,
+        stale_ids = (
+            db.session.execute(
+                update(Solve)
+                .where(
+                    Solve.status == SolveStatus.Running,
+                    Solve.started_at < cutoff,
+                    Solve.id != exclude_solve_id,
+                )
+                .values(status=SolveStatus.Failed, error="abandoned", finished_at=_utcnow())
+                .returning(Solve.id)
             )
+            .scalars()
             .all()
         )
-        for solve in stale:
-            logger.warning(f"Marking abandoned solve {solve.id}, started at {solve.started_at}, as failed")
-            solve.status = SolveStatus.Failed
-            solve.error = "abandoned"
-            solve.finished_at = _utcnow()
-    return len(stale)
+    for solve_id in stale_ids:
+        logger.warning(f"Marked abandoned solve {solve_id} as failed")
+    return len(stale_ids)
 
 
 def _start_solve(db: Database, options: dict[str, typing.Any]) -> int:
@@ -1255,6 +1258,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             if pending is not None and executor is not None:
                 pending_definition, pending_execution = pending
                 submitted_ids.append(pending_execution.id)
+                stage = SolveStage.Queuing
                 try:
                     executor.run(
                         definition=pending_definition,
@@ -1270,6 +1274,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                         retryable=True,
                         detail=f"submit to the executor failed: {exc!r}",
                     )
+                stage = SolveStage.Solving
 
             if limit_reached:
                 logger.info(f"Reached execution limit of {limit}")

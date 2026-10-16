@@ -57,9 +57,8 @@ cSoil-HWSD2:
   variable_cmap: viridis
 
 lai-AVH15C1:
-  # This case needs a lot of memory.
-  # ILAMB scores the coarsened 0.5 degree reference over its full monthly record, which peaks around 30 GB per execution.
-  version: 4
+  # The first execution needs the most memory, because it also coarsens the ~0.05 degree source.
+  version: 5
   sources:
     lai:
       obs_source: obs4mips

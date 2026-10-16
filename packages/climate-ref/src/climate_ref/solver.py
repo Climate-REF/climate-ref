@@ -8,12 +8,14 @@ import datetime
 import itertools
 import pathlib
 import typing
+from collections import Counter
 from collections.abc import Mapping, Sequence
 
 import attrs
 import pandas as pd
 from attrs import define, frozen
 from loguru import logger
+from sqlalchemy import func
 
 from climate_ref.config import Config, refresh_ignore_datasets_file
 from climate_ref.data_catalog import DataCatalog
@@ -28,6 +30,7 @@ from climate_ref.datasets import (
     get_slug_column,
 )
 from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
+from climate_ref.executor.result_handling import mark_execution_failed
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
@@ -703,19 +706,31 @@ class ExecutionSolver:
         if filters and filters.dataset:
             data_catalog = apply_dataset_filters(data_catalog, filters.dataset)
 
-        for provider in self.provider_registry.providers:
-            for diagnostic in provider.diagnostics():
-                # Filter the diagnostic based on the provided filters
-                if not matches_filter(diagnostic, filters):
-                    logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
-                    continue
-                logger.info(f"Solving {diagnostic.full_slug()}")
-                try:
-                    yield from solve_executions(data_catalog, diagnostic, provider)
-                except InvalidDiagnosticException as e:
-                    # Skip diagnostics that don't have matching data
-                    logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")
-                    continue
+        no_data = errored = 0
+        try:
+            for provider in self.provider_registry.providers:
+                for diagnostic in provider.diagnostics():
+                    # Filter the diagnostic based on the provided filters
+                    if not matches_filter(diagnostic, filters):
+                        logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
+                        continue
+                    logger.info(f"Solving {diagnostic.full_slug()}")
+                    try:
+                        yield from solve_executions(data_catalog, diagnostic, provider)
+                    except InvalidDiagnosticException as e:
+                        # Skip diagnostics that don't have matching data
+                        logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")
+                        no_data += 1
+                    except Exception:
+                        # One broken diagnostic must not abort the solve and orphan work already submitted
+                        logger.exception(f"Failed to solve {diagnostic.full_slug()}, skipping it")
+                        errored += 1
+        finally:
+            if no_data or errored:
+                logger.info(
+                    f"Skipped {no_data + errored} diagnostics: "
+                    f"{no_data} with no matching data, {errored} errored"
+                )
 
 
 DEFAULT_STALE_EXECUTION_AGE_SECONDS = 6 * 60 * 60
@@ -807,6 +822,26 @@ def fail_stale_in_progress_executions(
     return len(stale)
 
 
+@frozen
+class SolveOutcome:
+    """What went wrong in a solve, so the caller can exit non-zero."""
+
+    unhealthy_providers: list[str] = attrs.field(factory=list)
+    """Slugs of the providers left out because they failed their health check"""
+
+    failed_executions: int = 0
+    """
+    Executions submitted by this solve that failed.
+
+    Always 0 unless the solve waited, because results are only known after waiting.
+    """
+
+    @property
+    def ok(self) -> bool:
+        """Whether every provider was healthy and no submitted execution failed"""
+        return not self.unhealthy_providers and not self.failed_executions
+
+
 def check_provider_health(
     providers: Sequence[DiagnosticProvider],
     config: Config,
@@ -839,6 +874,26 @@ def check_provider_health(
     return results
 
 
+def _log_submitted_outcomes(db: Database, execution_ids: list[int]) -> int:
+    """Log how the executions submitted by a solve ended and return how many failed."""
+    if not execution_ids:
+        return 0
+    with db.session.begin():
+        rows = (
+            db.session.query(Execution.successful, func.count())
+            .filter(Execution.id.in_(execution_ids))
+            .group_by(Execution.successful)
+            .all()
+        )
+    outcomes: dict[bool | None, int] = {successful: count for successful, count in rows}
+    failed = outcomes.get(False, 0)
+    logger.info(
+        f"Executions submitted in this solve: {outcomes.get(True, 0)} succeeded, {failed} failed, "
+        f"{outcomes.get(None, 0)} still in progress"
+    )
+    return failed
+
+
 def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     db: Database,
     dry_run: bool = False,
@@ -853,7 +908,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     limit: int | None = None,
     rerun_failed: bool = False,
     check_health: bool = True,
-) -> list[str]:
+) -> SolveOutcome:
     """
     Solve for executions that require recalculation
 
@@ -871,7 +926,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     Returns
     -------
     :
-        Slugs of the providers left out because they failed their health check
+        The providers left out as unhealthy and how many submitted executions failed
 
     Raises
     ------
@@ -922,6 +977,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     diagnostic_count: dict[str, int] = {}
     provider_count: dict[str, int] = {}
     total_count = 0
+    skipped: Counter[str] = Counter()
+    submitted_ids: list[int] = []
 
     # Prefetch all (provider_slug, diagnostic_slug) -> diagnostic_id mappings
     # so the per-iteration loop body avoids an N+1 SELECT against the
@@ -1003,12 +1060,19 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
 
             # A not-yet-created group (dry-run only) would always run;
             # an existing group defers to its should_run logic.
-            if execution_group is not None and not execution_group.should_run(
-                definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
-            ):
+            skip_reason = (
+                execution_group.skip_reason(
+                    definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
+                )
+                if execution_group is not None
+                else None
+            )
+            if skip_reason is not None:
+                skipped[skip_reason.value] += 1
                 continue
 
             if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
+                skipped["one-of check"] += 1
                 logger.info(
                     f"Skipping execution due to one-of check: {potential_execution.execution_slug()!r}"
                 )
@@ -1073,10 +1137,22 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         # ``pending`` is only set on the non-dry-run path, where the executor exists.
         if pending is not None and executor is not None:
             pending_definition, pending_execution = pending
-            executor.run(
-                definition=pending_definition,
-                execution=pending_execution,
-            )
+            submitted_ids.append(pending_execution.id)
+            try:
+                executor.run(
+                    definition=pending_definition,
+                    execution=pending_execution,
+                )
+            except Exception as exc:
+                logger.exception(f"Failed to submit {pending_definition.execution_slug()!r}")
+                mark_execution_failed(
+                    db,
+                    config,
+                    pending_definition,
+                    pending_execution.id,
+                    retryable=True,
+                    detail=f"submit to the executor failed: {exc!r}",
+                )
 
         if limit_reached:
             logger.info(f"Reached execution limit of {limit}")
@@ -1089,13 +1165,21 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     for prov, count in provider_count.items():
         logger.info(f"  {prov}: {count} new executions")
 
+    if skipped:
+        logger.info(
+            f"Skipped {skipped.total()} executions: "
+            + ", ".join(f"{count} {reason}" for reason, count in skipped.items())
+        )
+
     # Executors may expose extra end-of-solve reporting, such as per-queue submission counts
     log_submission_summary = getattr(executor, "log_submission_summary", None)
     if log_submission_summary is not None:
         log_submission_summary()
 
-    if wait and executor is not None:
-        executor.join(timeout=timeout)
-        logger.info("All executions complete")
+    if not (wait and executor is not None):
+        return SolveOutcome(unhealthy_providers=unhealthy)
 
-    return unhealthy
+    executor.join(timeout=timeout)
+    return SolveOutcome(
+        unhealthy_providers=unhealthy, failed_executions=_log_submitted_outcomes(db, submitted_ids)
+    )

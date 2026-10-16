@@ -33,6 +33,21 @@ if TYPE_CHECKING:
     from climate_ref_core.resources import ResourceUsage
 
 
+class SkipReason(enum.Enum):
+    """
+    Why a solve does not run an execution group
+    """
+
+    InProgress = "in progress"
+    """The latest execution has not finished"""
+
+    FailedNotDirty = "failed and not dirty (use --rerun-failed)"
+    """The latest execution failed and no new data has arrived since"""
+
+    UpToDate = "up to date"
+    """The latest execution succeeded and no new data has arrived since"""
+
+
 class ExecutionGroup(CreatedUpdatedMixin, Base):
     """
     Represents a group of executions with a shared set of input datasets.
@@ -105,14 +120,14 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
         back_populates="execution_group", order_by="Execution.created_at, Execution.id"
     )
 
-    def should_run(
+    def skip_reason(  # noqa: PLR0911
         self,
         dataset_hash: str,
         rerun_failed: bool = False,
         stale_cutoff: "datetime.datetime | None" = None,
-    ) -> bool:
+    ) -> SkipReason | None:
         """
-        Check if the diagnostic execution group needs to be executed.
+        Explain why the diagnostic execution group does not need to be executed.
 
         The dirty flag is the primary signal for whether an execution group needs to be rerun.
         It is set when the group is created or when new data is available,
@@ -143,10 +158,15 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
             an in-progress execution created before this timestamp is treated as already failed.
             A real solve reaps such abandoned executions (via ``fail_stale_in_progress_executions``)
             before evaluating this method.
+
+        Returns
+        -------
+        :
+            ``None`` if the group should run, otherwise the reason it should not
         """
         if not self.executions:
             logger.debug(f"Execution group {self.diagnostic.slug}/{self.key} was never executed")
-            return True
+            return None
 
         last_execution = self.executions[-1]
 
@@ -155,7 +175,7 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
                 f"Execution group {self.diagnostic.slug}/{self.key} hash mismatch:"
                 f" {last_execution.dataset_hash} != {dataset_hash}"
             )
-            return True
+            return None
 
         treat_as_failed = (
             last_execution.successful is None
@@ -170,22 +190,37 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
                 f"Execution group {self.diagnostic.slug}/{self.key} "
                 f"already has an in-progress execution with hash {dataset_hash}"
             )
-            return False
+            return SkipReason.InProgress
 
         # Dirty flag is the primary signal for rerunning existing jobs
         if self.dirty:
             logger.debug(f"Execution group {self.diagnostic.slug}/{self.key} is dirty")
-            return True
+            return None
+
+        if last_execution.successful is not False and not treat_as_failed:
+            return SkipReason.UpToDate
 
         # Re-run all failed executions if explicitly requested
-        if (last_execution.successful is False or treat_as_failed) and rerun_failed:
+        if rerun_failed:
             logger.debug(
                 f"Execution group {self.diagnostic.slug}/{self.key} "
                 f"last execution failed, rerunning (rerun_failed=True)"
             )
-            return True
+            return None
+        return SkipReason.FailedNotDirty
 
-        return False
+    def should_run(
+        self,
+        dataset_hash: str,
+        rerun_failed: bool = False,
+        stale_cutoff: "datetime.datetime | None" = None,
+    ) -> bool:
+        """
+        Check if the diagnostic execution group needs to be executed.
+
+        See [skip_reason][climate_ref.models.execution.ExecutionGroup.skip_reason] for the rules.
+        """
+        return ExecutionGroup.skip_reason(self, dataset_hash, rerun_failed, stale_cutoff) is None
 
 
 execution_datasets = Table(

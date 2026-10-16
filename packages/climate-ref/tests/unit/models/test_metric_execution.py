@@ -8,6 +8,7 @@ from climate_ref.models.execution import (
     ExecutionGroup,
     ExecutionOutput,
     ResultOutputType,
+    SkipReason,
 )
 
 
@@ -264,3 +265,31 @@ def test_mark_failed_defaults_to_unknown_reason():
 
     assert execution.successful is False
     assert execution.failure_reason == "unknown"
+
+
+class TestSkipReason:
+    @pytest.mark.parametrize(
+        ("successful", "dirty", "expected"),
+        [
+            (None, True, SkipReason.InProgress),
+            (False, False, SkipReason.FailedNotDirty),
+            (True, False, SkipReason.UpToDate),
+            (True, True, None),
+            (False, True, None),
+        ],
+    )
+    def test_skip_reason(self, mocker, successful, dirty, expected):
+        group = mocker.Mock(spec=ExecutionGroup)
+        last = mocker.Mock(spec=Execution)
+        last.dataset_hash = "dataset_hash"
+        last.successful = successful
+        group.executions = [last]
+        group.dirty = dirty
+
+        assert ExecutionGroup.skip_reason(group, "dataset_hash") == expected
+
+    def test_never_executed_is_not_skipped(self, mocker):
+        group = mocker.Mock(spec=ExecutionGroup)
+        group.executions = []
+
+        assert ExecutionGroup.skip_reason(group, "dataset_hash") is None

@@ -46,7 +46,7 @@ from climate_ref_core.exceptions import DiagnosticError
 from climate_ref_core.executor import execute_locally
 
 from .pbs_scheduler import SmartPBSProvider
-from .result_handling import ExecutionFuture, mark_execution_failed, process_result
+from .result_handling import ExecutionFuture, fail_outstanding, process_result
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -520,7 +520,7 @@ class HPCExecutor:
             )
         )
 
-    def join(self, timeout: float) -> None:  # noqa: PLR0912
+    def join(self, timeout: float) -> None:
         """
         Wait for all diagnostics to finish
 
@@ -566,35 +566,7 @@ class HPCExecutor:
                     if not result.future.done():
                         continue
 
-                    err = result.future.exception()
-                    execution_result: ExecutionResult | None
-                    if err is None:
-                        try:
-                            execution_result = result.future.result(timeout=0)
-                        except Exception:
-                            # Result retrieval failed even though the future
-                            # reported done; treat as retryable system failure.
-                            logger.exception(
-                                f"Failed to retrieve result for {result.definition.execution_slug()!r}"
-                            )
-                            execution_result = ExecutionResult.build_from_failure(
-                                result.definition, retryable=True
-                            )
-                    elif isinstance(err, DiagnosticError):
-                        execution_result = err.result
-                    else:
-                        # Walltime kill, ExecutionLost, OOM, segfault, etc.
-                        # Mark retryable so the next solve picks it up.
-                        logger.error(
-                            f"System-level failure for {result.definition.execution_slug()!r}: {err!r}"
-                        )
-                        execution_result = ExecutionResult.build_from_failure(
-                            result.definition, retryable=True
-                        )
-
-                    assert isinstance(execution_result, ExecutionResult), (
-                        "Execution result should be of type ExecutionResult"
-                    )
+                    execution_result, detail = self._collect(result)
 
                     result.infer_started_at(execution_result, time.time())
 
@@ -612,6 +584,7 @@ class HPCExecutor:
                             execution_result,
                             execution,
                             queue_seconds=result.queue_seconds,
+                            detail=detail,
                         )
                     logger.debug(f"Execution completed: {result}")
                     t.update(n=1)
@@ -624,28 +597,60 @@ class HPCExecutor:
                 elapsed_time = time.time() - start_time
 
                 if effective_timeout and elapsed_time > effective_timeout:
-                    self._fail_outstanding(results, t)
+                    fail_outstanding(
+                        self.database,
+                        self.config,
+                        results,
+                        t,
+                        detail=f"overall timeout of {effective_timeout}s reached",
+                    )
                     raise TimeoutError(f"Not all HPC executions completed within {effective_timeout}s")
 
                 # Wait for a short time before checking for completed executions
                 time.sleep(refresh_time)
+        except BaseException:
+            # Ctrl-C or a failure while collecting must not leave rows stuck in progress
+            fail_outstanding(
+                self.database,
+                self.config,
+                results,
+                t,
+                detail="execution was not collected (interrupted or crashed)",
+            )
+            raise
         finally:
             t.close()
             if parsl.dfk():
                 parsl.dfk().cleanup()
 
-    def _fail_outstanding(self, results: list[ExecutionFuture], progress: Any) -> None:
-        """Mark every outstanding execution as failed-retryable before raising."""
-        for outstanding in list(results):
-            logger.warning(
-                f"HPC execution {outstanding.definition.execution_slug()!r} did not complete in time"
-            )
-            mark_execution_failed(
-                self.database,
-                self.config,
-                outstanding.definition,
-                outstanding.execution_id,
-                retryable=True,
-            )
-            progress.update(n=1)
-            results.remove(outstanding)
+    def _collect(self, result: ExecutionFuture) -> tuple[ExecutionResult, str | None]:
+        """
+        Turn a finished parsl future into an ``ExecutionResult``, classifying system failures.
+
+        The second item is why the execution failed at the system level, or ``None`` otherwise.
+        """
+        err = result.future.exception()
+        execution_result: ExecutionResult | None
+        detail = None
+        if err is None:
+            try:
+                execution_result = result.future.result(timeout=0)
+            except Exception as exc:
+                # Result retrieval failed even though the future
+                # reported done; treat as retryable system failure.
+                logger.exception(f"Failed to retrieve result for {result.definition.execution_slug()!r}")
+                detail = f"result retrieval failed: {exc!r}"
+                execution_result = ExecutionResult.build_from_failure(result.definition, retryable=True)
+        elif isinstance(err, DiagnosticError):
+            execution_result = err.result
+        else:
+            # Walltime kill, ExecutionLost, OOM, segfault, etc.
+            # Mark retryable so the next solve picks it up.
+            logger.error(f"System-level failure for {result.definition.execution_slug()!r}: {err!r}")
+            detail = f"system-level failure: {err!r}"
+            execution_result = ExecutionResult.build_from_failure(result.definition, retryable=True)
+
+        assert isinstance(execution_result, ExecutionResult), (
+            "Execution result should be of type ExecutionResult"
+        )
+        return execution_result, detail

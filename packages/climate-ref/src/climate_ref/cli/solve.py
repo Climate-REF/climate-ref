@@ -160,7 +160,7 @@ def solve(  # noqa: PLR0913
         exclude_diagnostic=exclude_diagnostic,
     )
 
-    unhealthy = solve_required_executions(
+    outcome = solve_required_executions(
         config=config,
         db=db,
         dry_run=dry_run,
@@ -174,5 +174,5 @@ def solve(  # noqa: PLR0913
         rerun_failed=rerun_failed,
         check_health=check_health,
     )
-    if unhealthy:
+    if not outcome.ok:
         raise typer.Exit(code=1)

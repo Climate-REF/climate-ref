@@ -13,7 +13,7 @@ import datetime
 import shutil
 import threading
 import time
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import Future
 from pathlib import Path
 
 import pytest
@@ -24,26 +24,10 @@ from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
 from climate_ref.models.execution import ExecutionFailureReason
-from climate_ref.provider_registry import _register_provider
 from climate_ref.solver import fail_stale_in_progress_executions
 from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.exceptions import ExecutionError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
-
-
-@pytest.fixture
-def db_with_provider(db, provider):
-    """A database with the mock provider and its diagnostics persisted."""
-    with db.session.begin():
-        _register_provider(db, provider)
-    return db
-
-
-@pytest.fixture
-def thread_pool():
-    pool = ThreadPoolExecutor(max_workers=1)
-    yield pool
-    pool.shutdown(wait=False)
 
 
 def _seed_execution(

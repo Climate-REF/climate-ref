@@ -21,6 +21,45 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.19.0 (2026-10-16)
+
+### Breaking Changes
+
+- `ref solve` and `ref datasets ingest --solve` now exit non-zero when any execution submitted by the solve fails while waiting for results.
+  Scripts that ignored failed executions will now see a failing exit code. ([#961](https://github.com/Climate-REF/climate-ref/pull/961))
+
+### Features
+
+- `ref solve` now health checks each provider before solving when diagnostics run on the solving host.
+  The diagnostics of an unhealthy provider are skipped and the command exits non-zero.
+  `ref providers check-health` runs the same check on its own. ([#955](https://github.com/Climate-REF/climate-ref/pull/955))
+- Long-running solves and ingests now log their progress every five minutes, including when stuck.
+  Set `REF_LOG_PROGRESS_INTERVAL` to change the interval in seconds, or 0 to turn it off. ([#959](https://github.com/Climate-REF/climate-ref/pull/959))
+
+### Improvements
+
+- Failed executions now record a `failure_reason`, shown by `ref executions list-groups` and `ref executions inspect`.
+  This tells an execution killed mid-run or never started apart from a diagnostic error.
+  The partial log of an abandoned execution is now kept, so the API can serve it. ([#955](https://github.com/Climate-REF/climate-ref/pull/955))
+- Execution warnings and errors now reach the console while a diagnostic runs, instead of only its `out.log`, prefixed with the execution they came from.
+  Set `REF_LOG_JSON=true` to write console logs as JSON, one record per line, tagged with the execution.
+  Console logs are only coloured on a terminal, and a failed conda command now logs its exit code and the end of its output. ([#958](https://github.com/Climate-REF/climate-ref/pull/958))
+- A failed execution's log now ends with a line saying why it failed, such as a timeout or an output that could not be copied.
+  `ref solve` now logs why execution groups were skipped and how many of its submitted executions succeeded or failed. ([#961](https://github.com/Climate-REF/climate-ref/pull/961))
+
+### Bug Fixes
+
+- Database backups taken before migrations and by `ref db backup` are now consistent while another process writes to the database.
+  Previously a plain file copy could produce a corrupt backup. ([#953](https://github.com/Climate-REF/climate-ref/pull/953))
+- An execution is now retried when micromamba fails to start, rather than being recorded as a diagnostic error. ([#958](https://github.com/Climate-REF/climate-ref/pull/958))
+- Halved the peak memory of the ILAMB `lai-avh15c1` diagnostic, from around 14 GB to around 7 GB per execution.
+  The AVHRR LAI reference is now coarsened to a true 0.5 degree grid with correct cell bounds,
+  where before it was coarsened to ~0.35 degrees with invalid bounds.
+  Its scores change slightly as a result. ([#960](https://github.com/Climate-REF/climate-ref/pull/960))
+- Executions interrupted by Ctrl-C during an HPC solve, rejected on submit, or failing while their failure was recorded are now marked failed and retried, instead of being left in progress.
+  A diagnostic that raises while being solved is now skipped rather than aborting the whole solve. ([#961](https://github.com/Climate-REF/climate-ref/pull/961))
+
+
 ## climate-ref 0.18.3 (2026-10-12)
 
 ### Improvements

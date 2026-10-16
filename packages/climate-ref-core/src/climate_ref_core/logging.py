@@ -31,10 +31,13 @@ This file is written via [climate_ref_core.logging.redirect_logs][].
 
 DEFAULT_LOG_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS Z}</green> | <level>{level: <8}</level> | "
-    "<cyan>{name}</cyan> - <level>{message}</level>"
+    "<cyan>{name}</cyan> - {extra[execution_prefix]}<level>{message}</level>"
 )
 """
 Default log format used by the REF
+
+`{extra[execution_prefix]}` is `[<execution slug>] ` for records logged during an execution,
+and empty otherwise.
 """
 
 VERBOSE_LOG_FORMAT = (
@@ -42,7 +45,7 @@ VERBOSE_LOG_FORMAT = (
     "<level>{level: <8}</level> | "
     "{process.name}:{process.id} | "
     "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-    "<level>{message}</level>"
+    "{extra[execution_prefix]}<level>{message}</level>"
 )
 """
 The verbose log format is used for debugging and development.
@@ -134,12 +137,20 @@ def initialise_logging(
     )
 
 
+def _add_execution_prefix(record: Any) -> None:
+    execution = record["extra"].get("execution")
+    record["extra"]["execution_prefix"] = f"[{execution}] " if execution else ""
+
+
 def capture_logging() -> None:
     """
     Capture logging from the standard library and redirect it to Loguru
 
+    This also sets the `execution_prefix` extra field used by the REF log formats.
+
     Note that this replaces the root logger, so any other handlers attached to it will be removed.
     """
+    logger.configure(patcher=_add_execution_prefix)
     # Pooch adds a handler to its own logger which circumvents the REF logger
     pooch.get_logger().handlers.clear()
     pooch.get_logger().addHandler(_InterceptHandler())

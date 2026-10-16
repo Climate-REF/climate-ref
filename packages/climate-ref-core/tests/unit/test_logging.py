@@ -5,6 +5,7 @@ from loguru import logger
 
 from climate_ref_core.diagnostics import ExecutionDefinition
 from climate_ref_core.logging import (
+    DEFAULT_LOG_FORMAT,
     EXECUTION_LOG_FILENAME,
     _retention_count_ignore_missing,
     capture_logging,
@@ -69,6 +70,21 @@ def test_redirect_logs_keeps_warnings_on_console(definition, caplog):
     # The executor logs the failure to the console, so the traceback is only written once
     assert "Execution failed" not in caplog.text
     assert "Execution failed" in output_file.read_text()
+
+
+def test_default_format_names_execution():
+    capture_logging()
+    lines = []
+    handler_id = logger.add(lines.append, format=DEFAULT_LOG_FORMAT, colorize=False)
+    try:
+        with logger.contextualize(execution="pmp/annual-cycle/cmip6_tas"):
+            logger.warning("inside")
+        logger.warning("outside")
+    finally:
+        logger.remove(handler_id)
+
+    assert lines[0].endswith(" - [pmp/annual-cycle/cmip6_tas] inside\n")
+    assert lines[1].endswith(" - outside\n")
 
 
 def test_redirect_logs_without_handler(definition):

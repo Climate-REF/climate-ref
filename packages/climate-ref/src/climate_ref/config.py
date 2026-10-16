@@ -726,6 +726,7 @@ class Config:
 
     Examples of the formatting options are available in the
     [loguru documentation](https://loguru.readthedocs.io/en/stable/api/logger.html#module-loguru._logger).
+    `{extra[execution_prefix]}` names the execution a record was logged during, if any.
     """
     log_json: bool = env_field("LOG_JSON", default=False, converter=_bool)
     """

@@ -15,9 +15,9 @@ from typing import Any
 
 import pandas as pd
 from loguru import logger
-from tqdm import tqdm
 
 from climate_ref.datasets.base import DatasetParsingFunction
+from climate_ref.progress import LoggedProgress
 
 INVALID_ASSET = "INVALID_ASSET"
 TRACEBACK = "TRACEBACK"
@@ -141,7 +141,7 @@ def parse_files(
     max_workers = _resolve_worker_count(n_jobs, len(assets)) if n_jobs != 1 else 1
 
     if max_workers == 1:
-        return [parsing_func(asset) for asset in tqdm(assets, desc="Parsing files", unit="file")]
+        return [parsing_func(asset) for asset in LoggedProgress(assets, desc="Parsing files", unit="file")]
 
     # Batch assets per task to amortise inter-process dispatch and result pickling.
     chunksize = max(1, len(assets) // (max_workers * 4))
@@ -152,7 +152,7 @@ def parse_files(
         mp_context=mp.get_context("spawn"),
     ) as executor:
         return list(
-            tqdm(
+            LoggedProgress(
                 executor.map(parsing_func, assets, chunksize=chunksize),
                 total=len(assets),
                 desc="Parsing files",

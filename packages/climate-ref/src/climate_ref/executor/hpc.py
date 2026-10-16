@@ -35,11 +35,11 @@ from parsl.executors import HighThroughputExecutor
 from parsl.launchers import SimpleLauncher, SrunLauncher
 from parsl.providers import SlurmProvider
 from pydantic import BaseModel, Field, StrictBool, field_validator, model_validator
-from tqdm import tqdm
 
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.models import Execution
+from climate_ref.progress import LoggedProgress
 from climate_ref.slurm import HAS_REAL_SLURM, SlurmChecker
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import DiagnosticError
@@ -554,7 +554,7 @@ class HPCExecutor:
             effective_timeout = walltime_seconds
 
         results = self.parsl_results
-        t = tqdm(total=len(results), desc="Waiting for executions to complete", unit="execution")
+        t = LoggedProgress(total=len(results), desc="Waiting for executions to complete", unit="execution")
 
         try:
             while results:

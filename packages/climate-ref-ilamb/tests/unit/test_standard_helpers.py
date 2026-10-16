@@ -136,6 +136,23 @@ class TestCoarsenSpatial:
             np.testing.assert_allclose(bounds[:, 0], np.arange(0, 10, 0.5) - 0.05)
             np.testing.assert_allclose(bounds[:, 1], np.arange(0.5, 10.5, 0.5) - 0.05)
 
+    def test_time_varying_bounds_span_the_coarse_cells(self, monkeypatch):
+        monkeypatch.setenv("REF_ILAMB_COARSEN_NO_CACHE", "1")
+        ds = self._timed_dataset(extent=10.0, ntime=14)
+        for dim in ("lat", "lon"):
+            edges = np.stack([ds[dim] - 0.05, ds[dim] + 0.05], axis=1)
+            ds[f"{dim}_bnds"] = (
+                ("time", dim, "bnds"),
+                np.broadcast_to(edges, (ds.sizes["time"], *edges.shape)),
+            )
+            ds[dim].attrs["bounds"] = f"{dim}_bnds"
+
+        result = _CoarsenSpatial("tas", resolution=0.5)(ds)
+
+        for dim in ("lat", "lon"):
+            assert result[f"{dim}_bnds"].dims == (dim, "bnds")
+            np.testing.assert_allclose(result[f"{dim}_bnds"].values[:, 0], np.arange(0, 10, 0.5) - 0.05)
+
     def _timed_dataset(self, spacing: float = 0.1, extent: float = 2.0, ntime: int = 4) -> xr.Dataset:
         lat = np.arange(0, extent, spacing)
         lon = np.arange(0, extent, spacing)

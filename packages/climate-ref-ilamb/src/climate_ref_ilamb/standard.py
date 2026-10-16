@@ -214,7 +214,11 @@ class _CoarsenSpatial(ILAMBTransform):
             name = fine[dim].attrs.get("bounds")
             if name not in fine or name not in coarse:
                 continue
-            bounds = fine[name].transpose(dim, ...)
+            bounds = fine[name]
+            if "time" in bounds.dims:
+                # ``open_mfdataset`` concatenates the bounds along time with the data.
+                bounds = bounds.isel(time=0, drop=True)
+            bounds = bounds.transpose(dim, ...)
             values = np.asarray(bounds.values, dtype=float)
             # Pad like ``coarsen(boundary="pad")`` so the last partial window lines up.
             values = np.pad(values, ((0, -len(values) % factor), (0, 0)), constant_values=np.nan)

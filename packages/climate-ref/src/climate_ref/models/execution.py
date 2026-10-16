@@ -5,7 +5,18 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from loguru import logger
-from sqlalchemy import BigInteger, Column, Float, ForeignKey, String, Table, UniqueConstraint, func, or_
+from sqlalchemy import (
+    BigInteger,
+    Column,
+    Float,
+    ForeignKey,
+    String,
+    Table,
+    UniqueConstraint,
+    func,
+    inspect,
+    or_,
+)
 from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
 from sqlalchemy.orm.query import RowReturningQuery
 
@@ -80,6 +91,14 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
     operation.
     These are also used to define the dataset key.
     """
+
+    def __repr__(self) -> str:
+        # Read loaded state only, so a detached or expired instance cannot raise while being logged
+        values = inspect(self).dict
+        return (
+            f"<ExecutionGroup id={values.get('id')} diagnostic_id={values.get('diagnostic_id')} "
+            f"key={values.get('key')}>"
+        )
 
     diagnostic: Mapped["Diagnostic"] = relationship(back_populates="execution_groups")
     executions: Mapped[list["Execution"]] = relationship(
@@ -368,6 +387,14 @@ class Execution(CreatedUpdatedMixin, Base):
     """
     The datasets used in this execution
     """
+
+    def __repr__(self) -> str:
+        # Read loaded state only, so a detached or expired instance cannot raise while being logged
+        values = inspect(self).dict
+        return (
+            f"<Execution id={values.get('id')} group_id={values.get('execution_group_id')} "
+            f"output_fragment={values.get('output_fragment')}>"
+        )
 
     def register_datasets(self, db: "Database", execution_dataset: "ExecutionDatasetCollection") -> None:
         """

@@ -20,6 +20,8 @@ from loguru import logger
 from rich.pretty import pretty_repr
 
 if TYPE_CHECKING:
+    from loguru import Logger
+
     from climate_ref_core.diagnostics import ExecutionDefinition
 
 EXECUTION_LOG_FILENAME = "out.log"
@@ -31,10 +33,13 @@ This file is written via [climate_ref_core.logging.redirect_logs][].
 
 DEFAULT_LOG_FORMAT = (
     "<green>{time:YYYY-MM-DD HH:mm:ss.SSS Z}</green> | <level>{level: <8}</level> | "
-    "<cyan>{name}</cyan> - <level>{message}</level>"
+    "<cyan>{name}</cyan> - {extra[execution_prefix]}<level>{message}</level>"
 )
 """
 Default log format used by the REF
+
+`{extra[execution_prefix]}` is `[<execution slug>] ` for records logged during an execution,
+and empty otherwise.
 """
 
 VERBOSE_LOG_FORMAT = (
@@ -42,7 +47,7 @@ VERBOSE_LOG_FORMAT = (
     "<level>{level: <8}</level> | "
     "{process.name}:{process.id} | "
     "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-    "<level>{message}</level>"
+    "{extra[execution_prefix]}<level>{message}</level>"
 )
 """
 The verbose log format is used for debugging and development.
@@ -87,11 +92,19 @@ def _retention_count_ignore_missing(logs: list[str]) -> None:  # pragma: no cove
             path.unlink()
 
 
-def initialise_logging(level: int | str, format: str, log_directory: str | Path) -> None:  # noqa: A002 # pragma: no cover
+def initialise_logging(
+    level: int | str,
+    format: str,  # noqa: A002
+    log_directory: str | Path,
+    serialize: bool = False,
+) -> None:  # pragma: no cover
     """
     Initialise the logging for the REF
 
     This sets up the default log handler and configures the REF logger.
+
+    When ``serialize`` is True the console handler writes one JSON object per record,
+    so a multi-line traceback stays a single entry for log aggregators.
     """
     capture_logging()
     log_directory = Path(log_directory)
@@ -113,18 +126,33 @@ def initialise_logging(level: int | str, format: str, log_directory: str | Path)
     logger.info("Starting REF logging")
     logger.info(f"arguments: {sys.argv}")
 
-    # LOGURU_COLORIZE is the default env var used by loguru to determine if color should be used
-    # We override this to use NO_COLOR which is more widely supported
+    # NO_COLOR is honoured instead of LOGURU_COLORIZE because it is more widely supported.
+    # Otherwise loguru colours only a TTY, so container logs stay free of ANSI codes.
     no_color = os.environ.get("NO_COLOR") is not None
-    add_log_handler(level=level, format=format, colorize=not no_color)
+    add_log_handler(
+        level=level,
+        format=format,
+        colorize=False if no_color else None,
+        serialize=serialize,
+        # Variable values in tracebacks are bulky and can leak secrets, so they stay in the debug file
+        diagnose=False,
+    )
+
+
+def _add_execution_prefix(record: Any) -> None:
+    execution = record["extra"].get("execution")
+    record["extra"]["execution_prefix"] = f"[{execution}] " if execution else ""
 
 
 def capture_logging() -> None:
     """
     Capture logging from the standard library and redirect it to Loguru
 
+    This also sets the `execution_prefix` extra field used by the REF log formats.
+
     Note that this replaces the root logger, so any other handlers attached to it will be removed.
     """
+    logger.configure(patcher=_add_execution_prefix)
     # Pooch adds a handler to its own logger which circumvents the REF logger
     pooch.get_logger().handlers.clear()
     pooch.get_logger().addHandler(_InterceptHandler())
@@ -182,10 +210,37 @@ def remove_log_handler() -> None:
         raise AssertionError("No default log handler to remove.")
 
 
+def _at_least_warning(level: int | str) -> int:
+    level_no = level if isinstance(level, int) else logger.level(level).no
+    return max(level_no, logger.level("WARNING").no)
+
+
+def execution_log_only() -> "Logger":
+    """
+    Get a logger whose records go to the execution log but not the console
+
+    Use this for detail that is too bulky for collected logs, such as a failed command's full output.
+    Outside [redirect_logs][climate_ref_core.logging.redirect_logs] the records are logged as usual.
+    """
+    return logger.bind(execution_log_only=True)
+
+
+def _skip_execution_log_only(inner: Any) -> Any:
+    def _filter(record: Any) -> bool:
+        if record["extra"].get("execution_log_only"):
+            return False
+        return inner is None or inner(record)
+
+    return _filter
+
+
 @contextlib.contextmanager
 def redirect_logs(definition: "ExecutionDefinition", log_level: str) -> Generator[None, None, None]:
     """
     Temporarily redirect log output to a file.
+
+    The console handler, if configured, only shows warnings and errors while redirected,
+    so failures still reach stdout-based log collection without the diagnostic's full output.
 
     This also writes some common log messages
 
@@ -202,33 +257,48 @@ def redirect_logs(definition: "ExecutionDefinition", log_level: str) -> Generato
     """
     app_logger_configured = hasattr(logger, "default_handler_id")
 
-    # Remove existing default log handler
-    # This swallows the logs from the app logger
-    # If the app logger hasn't been configured yet, we don't need to remove it,
+    # If the app logger hasn't been configured yet, we don't need to replace it,
     # as logs will also be written to the console as loguru adds a stderr handler by default
+    console_handler_id = None
+    file_handler_id = None
     if app_logger_configured:
         remove_log_handler()
-
-    # Add a new log handler for the execution log
-    output_file = definition.output_directory / EXECUTION_LOG_FILENAME
-    file_handler_id = logger.add(output_file, level=log_level, colorize=False)
-    capture_logging()
-
-    logger.info(f"Running definition {pretty_repr(definition)}")
     try:
-        yield
-    except:
-        logger.exception("Execution failed")
-        raise
+        if app_logger_configured:
+            console_kwargs = dict(logger.default_handler_kwargs)  # type: ignore[attr-defined]
+            console_kwargs["level"] = _at_least_warning(console_kwargs.get("level", "DEBUG"))
+            console_kwargs["filter"] = _skip_execution_log_only(console_kwargs.get("filter"))
+            console_handler_id = logger.add(**console_kwargs)
+
+        # Add a new log handler for the execution log
+        output_file = definition.output_directory / EXECUTION_LOG_FILENAME
+        file_handler_id = logger.add(output_file, level=log_level, colorize=False)
+        capture_logging()
+
+        logger.info(f"Running definition {pretty_repr(definition)}")
+        try:
+            yield
+        except:
+            # The executor logs this failure to the console itself
+            execution_log_only().exception("Execution failed")
+            raise
+        finally:
+            logger.info(f"Diagnostic execution complete. Results available in {definition.output_fragment()}")
     finally:
-        logger.info(f"Diagnostic execution complete. Results available in {definition.output_fragment()}")
-
-        # Reset the logger to the default
-        logger.remove(file_handler_id)
-
+        # Reset the logger to the default, even if setting up the execution log failed
+        if file_handler_id is not None:
+            logger.remove(file_handler_id)
+        if console_handler_id is not None:
+            logger.remove(console_handler_id)
         # We only re-add the app handler if it was configured before
         if app_logger_configured:
             add_log_handler(**logger.default_handler_kwargs)  # type: ignore[attr-defined]
 
 
-__all__ = ["EXECUTION_LOG_FILENAME", "capture_logging", "initialise_logging", "redirect_logs"]
+__all__ = [
+    "EXECUTION_LOG_FILENAME",
+    "capture_logging",
+    "execution_log_only",
+    "initialise_logging",
+    "redirect_logs",
+]

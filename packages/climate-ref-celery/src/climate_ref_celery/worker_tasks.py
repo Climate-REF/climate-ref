@@ -85,8 +85,6 @@ def handle_result(result: ExecutionResult, execution_id: int) -> None:
     execution_id
         The unique identifier for the diagnostic execution
     """
-    logger.info(f"Handling result for execution {execution_id} + {result}")
-
     config = Config.default()
     db = _worker_database.get(config)
 
@@ -97,6 +95,7 @@ def handle_result(result: ExecutionResult, execution_id: int) -> None:
             logger.error(f"Execution {execution_id} not found")
             return
 
+        logger.info(f"Handling {result} for {execution}")
         handle_execution_result(config, db, execution, result)
 
 

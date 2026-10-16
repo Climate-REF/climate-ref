@@ -101,6 +101,9 @@ class ExecutionFuture:
     so that time spent waiting in the pool queue is not counted as execution time.
     """
 
+    def __repr__(self) -> str:
+        return f"<ExecutionFuture {self.definition.execution_slug()} execution_id={self.execution_id}>"
+
     @property
     def queue_seconds(self) -> float | None:
         """
@@ -218,8 +221,8 @@ def ingest_scalar_values(
         cv.validate_metrics(cmec_metric_bundle)
     except (ResultValidationError, AssertionError):
         # TODO: Remove once we have settled on a controlled vocabulary
-        logger.warning(
-            "Diagnostic scalar values do not conform with the controlled vocabulary", exc_info=True
+        logger.opt(exception=True).warning(
+            "Diagnostic scalar values do not conform with the controlled vocabulary"
         )
 
     new_values = []
@@ -275,8 +278,8 @@ def ingest_series_values(
         cv.validate_metrics(series_values)
     except (ResultValidationError, AssertionError):
         # TODO: Remove once we have settled on a controlled vocabulary
-        logger.warning(
-            "Diagnostic series values do not conform with the controlled vocabulary", exc_info=True
+        logger.opt(exception=True).warning(
+            "Diagnostic series values do not conform with the controlled vocabulary"
         )
 
     # Resolve (deduplicate) the shared index axes for this batch up front,
@@ -453,7 +456,7 @@ def record_resource_usage(
     try:
         execution.apply_resource_usage(usage, queue_seconds=queue_seconds)
     except Exception:
-        logger.warning("Could not record resource usage for this execution", exc_info=True)
+        logger.opt(exception=True).warning("Could not record resource usage for this execution")
 
 
 def handle_execution_result(  # noqa: PLR0913

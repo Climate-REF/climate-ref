@@ -96,6 +96,9 @@ class ExecutionFuture:
     so that time spent waiting in the pool queue is not counted as execution time.
     """
 
+    def __repr__(self) -> str:
+        return f"<ExecutionFuture {self.definition.execution_slug()} execution_id={self.execution_id}>"
+
     @property
     def queue_seconds(self) -> float | None:
         """

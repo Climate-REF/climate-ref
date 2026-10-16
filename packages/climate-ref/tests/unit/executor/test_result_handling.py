@@ -39,6 +39,12 @@ from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.resources import ResourceUsage
 
 
+def test_execution_future_repr(mocker, mock_definition):
+    future = ExecutionFuture(mocker.Mock(), definition=mock_definition, execution_id=7032)
+
+    assert repr(future) == f"<ExecutionFuture {mock_definition.execution_slug()} execution_id=7032>"
+
+
 @pytest.fixture
 def mock_execution_result(mocker):
     mock_result = mocker.Mock(spec=Execution)

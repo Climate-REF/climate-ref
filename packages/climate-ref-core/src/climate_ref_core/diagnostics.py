@@ -270,6 +270,13 @@ class ExecutionResult:
     or when the result predates this field.
     """
 
+    def __repr__(self) -> str:
+        # The default repr includes the definition's dataset tables, which run to many lines
+        return (
+            f"<ExecutionResult {self.definition.execution_slug()} "
+            f"successful={self.successful} retryable={self.retryable}>"
+        )
+
     @staticmethod
     def build_from_output_bundle(
         definition: ExecutionDefinition,

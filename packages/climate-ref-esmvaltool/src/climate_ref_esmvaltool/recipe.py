@@ -308,9 +308,15 @@ def get_child_and_parent_dataset(
     # This ensures that the datasets are aligned correctly in time.
     parent_attrs = parent_df.iloc[0]
     child_attrs = child_df.iloc[0]
+    # branch_time_in_parent is expressed in the child's parent_time_units, which
+    # can use a different reference date than the parent's own time axis
+    # (e.g. AWI-CM-1-1-MR). Fall back to the parent's units if it is missing.
+    parent_time_units = child_attrs.get("parent_time_units")
+    if not isinstance(parent_time_units, str) or not parent_time_units.strip():
+        parent_time_units = parent_attrs["time_units"]
     branch_time_in_parent = cftime.num2date(
         child_attrs["branch_time_in_parent"],
-        units=parent_attrs["time_units"],
+        units=parent_time_units,
         calendar=parent_attrs["calendar"],
     )
     branch_time_in_child = cftime.num2date(

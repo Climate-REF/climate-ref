@@ -2390,6 +2390,25 @@ class TestSolveRecording:
         assert solve.status == SolveStatus.Failed
         assert solve.stage == SolveStage.Queuing
 
+    def test_finishing_overrides_abandoned_verdict(
+        self, mock_metric_execution, mock_executor, db_seeded, solver
+    ):
+        solver.solve.return_value = [mock_metric_execution]
+
+        def reaped_by_another_solve(timeout):
+            with db_seeded.session.begin():
+                solve = db_seeded.session.query(Solve).one()
+                solve.status = SolveStatus.Failed
+                solve.error = "abandoned"
+
+        mock_executor.return_value.join.side_effect = reaped_by_another_solve
+
+        solve_required_executions(db_seeded, solver=solver)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Succeeded
+        assert solve.error is None
+
     def test_failed_at_waiting(self, mock_metric_execution, mock_executor, db_seeded, solver):
         solver.solve.return_value = [mock_metric_execution]
         mock_executor.return_value.join.side_effect = TimeoutError("took too long")

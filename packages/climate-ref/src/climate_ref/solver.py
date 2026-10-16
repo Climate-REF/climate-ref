@@ -1327,6 +1327,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         solve_id,
         status=SolveStatus.Degraded if unhealthy else SolveStatus.Succeeded,
         stage=stage,
+        # Clears an "abandoned" verdict from a concurrent solve, because this one did finish.
+        error=None,
         finished_at=_utcnow(),
     )
     return outcome

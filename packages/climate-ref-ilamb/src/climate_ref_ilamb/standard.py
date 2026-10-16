@@ -161,8 +161,7 @@ class _CoarsenSpatial(ILAMBTransform):
             self._write_cache(coarse, cache_path)
         return coarse
 
-    # Time steps coarsened per pass.
-    # One pass of the ~0.05 degree AVHRR LAI reference is about 12 * 3600 * 7200 * 8 bytes ~= 2.5 GB.
+    # Time steps coarsened per pass, which bounds the memory of a cold coarsen.
     _TIME_CHUNK = 12
 
     @staticmethod

@@ -55,14 +55,12 @@ class LoggedProgress(tqdm):  # type: ignore[type-arg]
     def __init__(self, *args: Any, log_interval: float | None = None, **kwargs: Any) -> None:
         kwargs.setdefault("disable", None)
         # A hidden bar stops counting and drops its labels, so they are tracked here
-        self._hidden_count = kwargs.get("initial", 0)
+        self._done = kwargs.get("initial", 0)
         self._label = kwargs.get("desc") or "Progress"
         self._unit = kwargs.get("unit", "it")
         self._started = time.monotonic()
         self._stop = threading.Event()
         super().__init__(*args, **kwargs)
-        # tqdm sets ``disable`` on close too, so whether the bar is shown is captured now
-        self._hidden = bool(self.disable)
 
         interval = progress_log_interval() if log_interval is None else log_interval
         if interval > 0:
@@ -72,18 +70,15 @@ class LoggedProgress(tqdm):  # type: ignore[type-arg]
 
     def update(self, n: float | None = 1) -> bool | None:
         """Record ``n`` more completed items"""
-        if self._hidden:
-            self._hidden_count += n or 0
+        self._done += n or 0
         return super().update(n)
 
     def __iter__(self) -> Iterator[Any]:
-        if not self._hidden:
-            yield from super().__iter__()
-            return
+        # tqdm batches its own count, so each item is counted once the caller has finished with it
         try:
             for obj in self.iterable:
-                self._hidden_count += 1
                 yield obj
+                self.update()
         finally:
             self.close()
 
@@ -96,7 +91,7 @@ class LoggedProgress(tqdm):  # type: ignore[type-arg]
         """Describe the progress so far"""
         elapsed = time.monotonic() - self._started
         took = datetime.timedelta(seconds=int(elapsed))
-        done = int(self._hidden_count if self._hidden else self.n)
+        done = int(self._done)
         if not self.total:
             return f"{self._label}: {done} {self._unit}s done after {took}"
 

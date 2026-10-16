@@ -36,6 +36,17 @@ def test_counts_iteration_when_hidden():
     assert bar.progress_message().startswith("Parsing files: 2/2 files done (100%)")
 
 
+def test_counts_item_after_caller_finishes_it():
+    bar = LoggedProgress(["a", "b"], desc="Parsing files", unit="file", disable=True, log_interval=0)
+    items = iter(bar)
+
+    next(items)
+    assert bar.progress_message().startswith("Parsing files: 0/2 files done")
+    next(items)
+    assert bar.progress_message().startswith("Parsing files: 1/2 files done")
+    bar.close()
+
+
 def test_counts_iteration_when_shown():
     bar = LoggedProgress(
         ["a", "b", "c"], desc="Parsing files", unit="file", disable=False, file=io.StringIO(), log_interval=0

@@ -21,6 +21,17 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.19.1 (2026-10-19)
+
+### Bug Fixes
+
+- Fixed `ILAMBStandard.execute` passing a glob string to ILAMB where it would have expected a regular expression. ([#952](https://github.com/Climate-REF/climate-ref/pull/952))
+- The ECS, TCR, TCRE and ZEC diagnostics now decode `branch_time_in_parent` with the child's `parent_time_units`,
+  as the CMIP6 conventions specify, instead of the parent's own time units. ([#964](https://github.com/Climate-REF/climate-ref/pull/964))
+- Fixed fetching CMIP6 test data with intake-esgf 2026.9 and later, which searches CMIP7 unless a project is given.
+  ESGF requests now always name their project. ([#966](https://github.com/Climate-REF/climate-ref/pull/966))
+
+
 ## climate-ref 0.19.0 (2026-10-16)
 
 ### Breaking Changes

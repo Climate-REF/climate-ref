@@ -16,7 +16,7 @@ from typing import Any
 import pandas as pd
 from loguru import logger
 
-from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.base import DatasetAdapter, SkipFunction
 from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.utils import (
     build_instance_id,
@@ -92,19 +92,23 @@ class ESMValToolReferenceDatasetAdapter(DatasetAdapter):
     def __init__(self, n_jobs: int = 1):
         self.n_jobs = n_jobs
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip: SkipFunction | None = None) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory.
 
         Each dataset may contain multiple files (rows). The unique dataset identifier is
         the ``instance_id`` slug in :attr:`slug_column`.
+        Files selected by ``skip`` are left out of the catalog.
         """
         datasets = build_catalog(
             paths=[str(file_or_directory)],
             parsing_func=parse_esmvaltool_reference,
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
+            skip=skip,
         )
+        if datasets.empty and skip is not None:
+            return datasets
         if datasets.empty:
             logger.error("No datasets found")
             raise ValueError("No ESMValTool reference datasets found")

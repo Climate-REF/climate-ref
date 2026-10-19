@@ -8,7 +8,7 @@ import netCDF4
 import pandas as pd
 from loguru import logger
 
-from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.base import DatasetAdapter, SkipFunction
 from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.netcdf_utils import (
     read_global_attrs,
@@ -180,7 +180,7 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
     def __init__(self, n_jobs: int = 1):
         self.n_jobs = n_jobs
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip: SkipFunction | None = None) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
 
@@ -191,6 +191,8 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         ----------
         file_or_directory
             File or directory containing the datasets
+        skip
+            Selects files to leave out of the catalog, such as files already in the database
 
         Returns
         -------
@@ -202,7 +204,10 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             parsing_func=parse_obs4mips,
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
+            skip=skip,
         )
+        if datasets.empty and skip is not None:
+            return datasets
         if datasets.empty:
             logger.error("No datasets found")
             raise ValueError("No obs4MIPs-compliant datasets found")

@@ -8,7 +8,7 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref.config import Config
-from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
+from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction, SkipFunction
 from climate_ref.datasets.catalog_builder import build_catalog, iter_built_catalogs
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
@@ -232,7 +232,7 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
         return _apply_fixes(datasets)
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip: SkipFunction | None = None) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
 
@@ -243,6 +243,8 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         ----------
         file_or_directory
             File or directory containing the datasets
+        skip
+            Selects files to leave out of the catalog, such as files already in the database
 
         Returns
         -------
@@ -256,12 +258,18 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             parsing_func=parsing_function,
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
+            skip=skip,
         )
+        if datasets.empty:
+            return datasets
 
         return self._enrich_parsed_catalog(datasets)
 
     def iter_local_datasets(
-        self, file_or_directory: Path, chunk_size: int = 10_000
+        self,
+        file_or_directory: Path,
+        chunk_size: int = 10_000,
+        skip: SkipFunction | None = None,
     ) -> Iterator[pd.DataFrame]:
         """
         Stream the data catalog in chunks to bound peak memory.
@@ -278,6 +286,8 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         chunk_size
             Soft target for the number of files per chunk. Increasing this
             trades higher peak memory for fewer per-chunk overheads.
+        skip
+            Selects files to leave out of the catalog, such as files already in the database.
 
         Yields
         ------
@@ -293,6 +303,7 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
             chunk_size=chunk_size,
+            skip=skip,
         ):
             enriched = self._enrich_parsed_catalog(raw_chunk)
             if enriched.empty:

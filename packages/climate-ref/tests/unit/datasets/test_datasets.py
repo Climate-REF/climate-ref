@@ -24,7 +24,7 @@ class MockDatasetAdapter(DatasetAdapter):
         # Return a subset with the most important columns for display
         return data_catalog[["variable_id", "source_id", "grid_label"]]
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip=None) -> pd.DataFrame:
         # Mock implementation with more realistic CMIP6-like data
         data = {
             "variable_id": ["tas", "tas"],  # Temperature at surface

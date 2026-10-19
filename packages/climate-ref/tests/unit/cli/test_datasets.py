@@ -9,6 +9,7 @@ from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.models import Dataset
 from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
 from climate_ref.solver import SolveOutcome
+from climate_ref_core.source_types import SourceDatasetType
 
 
 def test_ingest_help(invoke_cli):
@@ -484,6 +485,52 @@ class TestIngest:
         )
 
         assert db.session.query(Dataset).count() == 2
+
+    @pytest.mark.parametrize("extra_args", [[], ["--chunk-size", "2"]])
+    def test_ingest_skip_existing(self, sample_data_dir, db, invoke_cli, extra_args):
+        base_args = ["datasets", "ingest", "--source-type", "cmip6", *extra_args]
+        invoke_cli([*base_args, str(sample_data_dir / self.data_dir / "Amon" / "tas")])
+        assert db.session.query(DatasetFile).count() == 1
+
+        result = invoke_cli([*base_args, "--skip-existing", str(sample_data_dir / self.data_dir)])
+
+        assert "Skipping 1 of" in result.stderr
+        expected_dataset_count = 6
+        assert db.session.query(Dataset).count() == expected_dataset_count
+        assert db.session.query(DatasetFile).count() == expected_dataset_count
+
+    @pytest.mark.parametrize("extra_args", [[], ["--chunk-size", "2"]])
+    def test_ingest_skip_existing_nothing_new(self, sample_data_dir, db, invoke_cli, extra_args):
+        base_args = ["datasets", "ingest", "--source-type", "cmip6", *extra_args]
+        invoke_cli([*base_args, str(sample_data_dir / self.data_dir)])
+
+        result = invoke_cli([*base_args, "--skip-existing", str(sample_data_dir / self.data_dir)])
+
+        assert "No new valid datasets found" in result.stderr
+        assert db.session.query(DatasetFile).count() == 6
+
+    def test_get_ingested_paths_batches(self, sample_data_dir, db, invoke_cli):
+        from climate_ref.datasets import get_ingested_paths
+
+        invoke_cli(["datasets", "ingest", "--source-type", "cmip6", str(sample_data_dir / self.data_dir)])
+        with db.session.begin():
+            known = [f.path for f in db.session.query(DatasetFile)]
+            unknown = ["/not/ingested.nc"]
+            found = get_ingested_paths(db, SourceDatasetType.CMIP6, [*known, *unknown], batch_size=4)
+            found_other_type = get_ingested_paths(db, SourceDatasetType.obs4MIPs, known)
+
+        assert found == set(known)
+        assert found_other_type == set()
+
+    def test_ingest_skip_existing_obs4mips_nothing_new(self, sample_data_dir, db, invoke_cli):
+        args = ["datasets", "ingest", "--source-type", "obs4mips", str(sample_data_dir / "obs4MIPs")]
+        invoke_cli(args)
+        n_files = db.session.query(DatasetFile).count()
+
+        result = invoke_cli([*args, "--skip-existing"])
+
+        assert "No new valid datasets found" in result.stderr
+        assert db.session.query(DatasetFile).count() == n_files
 
     def test_ingest_missing(self, sample_data_dir, db, invoke_cli):
         result = invoke_cli(

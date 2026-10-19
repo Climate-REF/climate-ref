@@ -17,7 +17,9 @@ import typer
 from loguru import logger
 
 from climate_ref.cli._utils import OutputFormat, parse_facet_filters, pretty_print_df, render_dataframe
-from climate_ref.datasets import get_dataset_adapter
+from climate_ref.database import Database
+from climate_ref.datasets import get_dataset_adapter, get_ingested_paths
+from climate_ref.datasets.base import SkipFunction
 from climate_ref.models import Dataset
 from climate_ref.results import DatasetFilter, Reader
 from climate_ref.results.datasets import DatasetCollection
@@ -246,6 +248,21 @@ def unretract(ctx: typer.Context, slug: str) -> None:
     console.print(f"Unretracted dataset {slug!r}.")
 
 
+def _skip_ingested(db: Database, source_type: SourceDatasetType) -> SkipFunction:
+    def skip(paths: list[str]) -> set[str]:
+        with db.session.begin():
+            return get_ingested_paths(db, source_type, paths)
+
+    return skip
+
+
+def _log_nothing_to_ingest(directory: Path, skip_existing: bool) -> None:
+    if skip_existing:
+        logger.info(f"No new valid datasets found in {directory}")
+    else:
+        logger.warning(f"No valid datasets found in {directory}")
+
+
 @app.command()
 def ingest(  # noqa
     ctx: typer.Context,
@@ -274,6 +291,15 @@ def ingest(  # noqa
         bool,
         typer.Option(help="Health check providers before solving, as `ref solve --check-health` does"),
     ] = True,
+    skip_existing: Annotated[
+        bool,
+        typer.Option(
+            help=(
+                "Skip files that are already in the database without parsing them. "
+                "Assumes files are immutable, so run a full ingest periodically to pick up changes."
+            )
+        ),
+    ] = False,
 ) -> None:
     """
     Ingest a directory of datasets into the database
@@ -304,6 +330,8 @@ def ingest(  # noqa
             "falling back to whole-catalog mode."
         )
 
+    skip = _skip_ingested(db, source_type) if skip_existing else None
+
     for _dir in file_or_directory:
         _dir = Path(_dir).expanduser()
         logger.info(f"Ingesting {_dir}")
@@ -326,7 +354,9 @@ def ingest(  # noqa
             total_files = 0
             total_datasets = 0
             try:
-                for raw_chunk in adapter.iter_local_datasets(_dir, chunk_size=chunk_size):  # type: ignore[attr-defined]
+                for raw_chunk in adapter.iter_local_datasets(  # type: ignore[attr-defined]
+                    _dir, chunk_size=chunk_size, skip=skip
+                ):
                     validated_chunk = adapter.validate_data_catalog(raw_chunk, skip_invalid=skip_invalid)
                     if validated_chunk.empty:
                         continue
@@ -355,7 +385,7 @@ def ingest(  # noqa
                 continue
 
             if total_files == 0:
-                logger.warning(f"No valid datasets found in {_dir}")
+                _log_nothing_to_ingest(_dir, skip_existing)
                 continue
 
             logger.info(
@@ -366,15 +396,16 @@ def ingest(  # noqa
             continue
 
         try:
-            data_catalog = adapter.find_local_datasets(_dir)
-            data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
+            data_catalog = adapter.find_local_datasets(_dir, skip=skip)
+            if not data_catalog.empty:
+                data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
         except Exception as e:
             logger.exception(f"Error ingesting datasets from {_dir}: {e}")
             failed_dirs.append(_dir)
             continue
 
         if data_catalog.empty:
-            logger.warning(f"No valid datasets found in {_dir}")
+            _log_nothing_to_ingest(_dir, skip_existing)
             continue
 
         logger.info(

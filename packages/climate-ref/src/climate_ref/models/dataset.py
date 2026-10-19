@@ -136,7 +136,7 @@ class DatasetFile(Base):
     End time of a given file (ISO string, supports cftime calendars)
     """
 
-    path: Mapped[str] = mapped_column()
+    path: Mapped[str] = mapped_column(index=True)
     """
     Prefix that describes where the dataset is stored relative to the data directory
     """

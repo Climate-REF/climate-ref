@@ -16,7 +16,7 @@ from typing import Any
 import pandas as pd
 from loguru import logger
 
-from climate_ref.datasets.base import DatasetParsingFunction
+from climate_ref.datasets.base import DatasetParsingFunction, SkipFunction
 from climate_ref.progress import LoggedProgress
 
 INVALID_ASSET = "INVALID_ASSET"
@@ -166,6 +166,7 @@ def build_catalog(
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
     n_jobs: int = 1,
+    skip: SkipFunction | None = None,
 ) -> pd.DataFrame:
     """
     Build a catalog DataFrame by discovering and parsing dataset files
@@ -185,11 +186,14 @@ def build_catalog(
     n_jobs
         Number of parallel workers for parsing.
         ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many worker processes.
+    skip
+        Selects discovered files to leave unparsed, such as files already in the database.
 
     Returns
     -------
     :
-        DataFrame containing parsed metadata for all valid files
+        DataFrame containing parsed metadata for all valid files.
+        Empty if ``skip`` selects every discovered file.
 
     Raises
     ------
@@ -202,6 +206,10 @@ def build_catalog(
         raise ValueError(f"No files matching {include_patterns} found in {paths}")
 
     logger.info(f"Discovered {len(assets)} files matching {include_patterns} in {paths}")
+
+    assets = _without_skipped(assets, skip)
+    if not assets:
+        return pd.DataFrame()
 
     entries = parse_files(assets, parsing_func, n_jobs=n_jobs)
     df = pd.DataFrame(entries)
@@ -277,6 +285,19 @@ def iter_discovered_chunks(
     yield from _flush()
 
 
+def _without_skipped(assets: list[str], skip: SkipFunction | None) -> list[str]:
+    """
+    Drop the paths selected by ``skip`` from ``assets``, logging how many were dropped.
+    """
+    if skip is None:
+        return assets
+    skipped = skip(assets)
+    remaining = [asset for asset in assets if asset not in skipped]
+    if len(remaining) < len(assets):
+        logger.info(f"Skipping {len(assets) - len(remaining)} of {len(assets)} files")
+    return remaining
+
+
 def _filter_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
     """
     Drop INVALID_ASSET rows from a parsed catalog DataFrame.
@@ -295,12 +316,13 @@ def _filter_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
     return df[df[INVALID_ASSET].isnull()].drop(columns=[INVALID_ASSET, TRACEBACK])
 
 
-def iter_built_catalogs(
+def iter_built_catalogs(  # noqa: PLR0913
     paths: list[str],
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
     n_jobs: int = 1,
     chunk_size: int = 10_000,
+    skip: SkipFunction | None = None,
 ) -> Iterator[pd.DataFrame]:
     """
     Yield catalog DataFrames in chunks, parsing files chunk by chunk.
@@ -321,6 +343,9 @@ def iter_built_catalogs(
         Number of parallel workers per chunk for parsing.
     chunk_size
         Soft target for the number of files per chunk.
+    skip
+        Selects discovered files to leave unparsed, such as files already in the database.
+        It is called once per chunk, so it only ever sees ``chunk_size`` paths at a time.
 
     Yields
     ------
@@ -329,9 +354,10 @@ def iter_built_catalogs(
         (all invalid) are skipped.
     """
     any_emitted = False
-    for chunk_paths in iter_discovered_chunks(
-        paths, include_patterns=include_patterns, chunk_size=chunk_size
-    ):
+    for discovered in iter_discovered_chunks(paths, include_patterns=include_patterns, chunk_size=chunk_size):
+        chunk_paths = _without_skipped(discovered, skip)
+        if not chunk_paths:
+            continue
         logger.info(f"Parsing chunk of {len(chunk_paths)} files")
         entries = parse_files(chunk_paths, parsing_func, n_jobs=n_jobs)
         df = pd.DataFrame(entries)
@@ -344,5 +370,5 @@ def iter_built_catalogs(
         any_emitted = True
         yield df
 
-    if not any_emitted:
+    if not any_emitted and skip is None:
         logger.warning(f"No valid files found in {paths} matching {include_patterns}")

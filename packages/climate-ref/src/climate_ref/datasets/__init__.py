@@ -2,13 +2,14 @@
 Dataset handling utilities
 """
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 from attrs import define
 from loguru import logger
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.base import DatasetAdapter
@@ -228,6 +229,43 @@ def ingest_datasets(  # noqa: PLR0913
     )
 
     return _ingest_catalog(adapter, db, data_catalog)
+
+
+def get_ingested_paths(
+    db: Database, source_type: SourceDatasetType, paths: Sequence[str], batch_size: int = 1000
+) -> set[str]:
+    """
+    Get the subset of ``paths`` that are already ingested as ``source_type``.
+
+    Paths are looked up ``batch_size`` at a time
+    so the query stays under the database's bound parameter limit.
+
+    Parameters
+    ----------
+    db
+        Database instance
+    source_type
+        Type of dataset the files were ingested as
+    paths
+        File paths to look up
+    batch_size
+        Number of paths per query
+
+    Returns
+    -------
+    :
+        Paths from ``paths`` that are in the database
+    """
+    ingested: set[str] = set()
+    for start in range(0, len(paths), batch_size):
+        query = (
+            select(DatasetFile.path)
+            .join(Dataset, DatasetFile.dataset_id == Dataset.id)
+            .where(Dataset.dataset_type == source_type)
+            .where(DatasetFile.path.in_(paths[start : start + batch_size]))
+        )
+        ingested.update(db.session.scalars(query))
+    return ingested
 
 
 def log_deferred_finalisation(db: Database, source_type: SourceDatasetType) -> None:

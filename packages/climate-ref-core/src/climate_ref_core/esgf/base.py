@@ -176,7 +176,7 @@ class IntakeESGFMixin:
 
     slug: str
     project: str
-    """ESGF project searched, as intake-esgf's own default changes between releases."""
+    """ESGF project to search, always sent because intake-esgf's default varies by release."""
     facets: dict[str, str | tuple[str, ...]]
     remove_ensembles: bool
     time_span: tuple[str, str] | None

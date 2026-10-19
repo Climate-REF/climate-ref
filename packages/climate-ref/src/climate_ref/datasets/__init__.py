@@ -233,13 +233,13 @@ def ingest_datasets(  # noqa: PLR0913
 
 
 def get_ingested_paths(
-    db: Database, source_type: SourceDatasetType, paths: Iterable[str], batch_size: int = 10_000
+    db: Database, source_type: SourceDatasetType, paths: Iterable[str], batch_size: int = 900
 ) -> set[str]:
     """
     Get the subset of ``paths`` that are already ingested as ``source_type``.
 
     Paths are looked up ``batch_size`` at a time
-    so the query stays under the database's bound parameter limit.
+    so the query stays under the bound parameter limit of SQLite before 3.32 (999).
 
     Parameters
     ----------

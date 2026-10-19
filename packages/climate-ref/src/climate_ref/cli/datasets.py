@@ -18,6 +18,7 @@ from loguru import logger
 
 from climate_ref.cli._utils import OutputFormat, parse_facet_filters, pretty_print_df, render_dataframe
 from climate_ref.datasets import get_dataset_adapter, skip_ingested
+from climate_ref.datasets.base import SkipFunction
 from climate_ref.models import Dataset
 from climate_ref.results import DatasetFilter, Reader
 from climate_ref.results.datasets import DatasetCollection
@@ -320,7 +321,8 @@ def ingest(  # noqa
             "falling back to whole-catalog mode."
         )
 
-    skip = skip_ingested(db, source_type) if skip_existing else None
+    # Only pass `skip` when asked, so adapters without the parameter keep working.
+    skip_kwargs: dict[str, SkipFunction] = {"skip": skip_ingested(db, source_type)} if skip_existing else {}
 
     for _dir in file_or_directory:
         _dir = Path(_dir).expanduser()
@@ -345,7 +347,7 @@ def ingest(  # noqa
             total_datasets = 0
             try:
                 for raw_chunk in adapter.iter_local_datasets(  # type: ignore[attr-defined]
-                    _dir, chunk_size=chunk_size, skip=skip
+                    _dir, chunk_size=chunk_size, **skip_kwargs
                 ):
                     validated_chunk = adapter.validate_data_catalog(raw_chunk, skip_invalid=skip_invalid)
                     if validated_chunk.empty:
@@ -386,7 +388,7 @@ def ingest(  # noqa
             continue
 
         try:
-            data_catalog = adapter.find_local_datasets(_dir, skip=skip)
+            data_catalog = adapter.find_local_datasets(_dir, **skip_kwargs)
             if data_catalog.empty:
                 _log_nothing_to_ingest(_dir, skip_existing)
                 continue

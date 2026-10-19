@@ -534,6 +534,19 @@ class TestIngest:
         assert "does not support streaming ingest" not in result.stderr
         assert db.session.query(DatasetFile).count() == n_files
 
+    def test_ingest_supports_adapters_without_skip(self, sample_data_dir, db, invoke_cli, monkeypatch):
+        from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
+
+        original = Obs4MIPsDatasetAdapter.find_local_datasets
+
+        def find_local_datasets(self, file_or_directory):
+            return original(self, file_or_directory)
+
+        monkeypatch.setattr(Obs4MIPsDatasetAdapter, "find_local_datasets", find_local_datasets)
+        invoke_cli(["datasets", "ingest", "--source-type", "obs4mips", str(sample_data_dir / "obs4MIPs")])
+
+        assert db.session.query(DatasetFile).count() > 0
+
     def test_ingest_missing(self, sample_data_dir, db, invoke_cli):
         result = invoke_cli(
             [

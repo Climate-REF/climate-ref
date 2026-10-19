@@ -522,14 +522,16 @@ class TestIngest:
         assert found == set(known)
         assert found_other_type == set()
 
-    def test_ingest_skip_existing_obs4mips_nothing_new(self, sample_data_dir, db, invoke_cli):
+    @pytest.mark.parametrize("extra_args", [[], ["--chunk-size", "2"]])
+    def test_ingest_skip_existing_obs4mips_nothing_new(self, sample_data_dir, db, invoke_cli, extra_args):
         args = ["datasets", "ingest", "--source-type", "obs4mips", str(sample_data_dir / "obs4MIPs")]
         invoke_cli(args)
         n_files = db.session.query(DatasetFile).count()
 
-        result = invoke_cli([*args, "--skip-existing"])
+        result = invoke_cli([*args, *extra_args, "--skip-existing"])
 
         assert "No new valid datasets found" in result.stderr
+        assert "does not support streaming ingest" not in result.stderr
         assert db.session.query(DatasetFile).count() == n_files
 
     def test_ingest_missing(self, sample_data_dir, db, invoke_cli):
@@ -631,8 +633,13 @@ class TestIngest:
         )
         assert "chunk_size must be >= 1" in result.stderr
 
-    def test_ingest_chunk_size_unsupported_adapter_falls_back(self, sample_data_dir, db, invoke_cli):
+    def test_ingest_chunk_size_unsupported_adapter_falls_back(
+        self, sample_data_dir, db, invoke_cli, monkeypatch
+    ):
         """``--chunk-size`` on an adapter without ``iter_local_datasets`` warns and falls back."""
+        from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
+
+        monkeypatch.delattr(Obs4MIPsDatasetAdapter, "iter_local_datasets")
         obs_dir = sample_data_dir / "obs4MIPs"
         result = invoke_cli(
             [

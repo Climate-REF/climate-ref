@@ -10,6 +10,7 @@ parsed from the ESMValCore DRS path and filename templates by
 from __future__ import annotations
 
 import traceback
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,7 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref.datasets.base import DatasetAdapter, SkipFunction
-from climate_ref.datasets.catalog_builder import build_catalog
+from climate_ref.datasets.catalog_builder import build_catalog, iter_built_catalogs
 from climate_ref.datasets.utils import (
     build_instance_id,
     parse_cftime_dates,
@@ -113,6 +114,50 @@ class ESMValToolReferenceDatasetAdapter(DatasetAdapter):
             logger.error("No datasets found")
             raise ValueError("No ESMValTool reference datasets found")
 
+        return self._enrich_parsed_catalog(datasets)
+
+    def iter_local_datasets(
+        self,
+        file_or_directory: Path,
+        chunk_size: int = 10_000,
+        skip: SkipFunction | None = None,
+    ) -> Iterator[pd.DataFrame]:
+        """
+        Stream the data catalog in chunks to bound peak memory.
+
+        Discovery walks the tree once, but parsing and DataFrame construction
+        happen ``chunk_size`` files at a time.
+        Chunks flush at directory boundaries so files belonging to the same dataset stay together.
+
+        Parameters
+        ----------
+        file_or_directory
+            Root of the archive (or a single file) to ingest.
+        chunk_size
+            Soft target for the number of files per chunk.
+        skip
+            Selects files to leave out of the catalog, such as files already in the database.
+
+        Yields
+        ------
+        :
+            Catalog DataFrames, each containing metadata for one chunk of files.
+            Empty chunks are skipped.
+        """
+        for raw_chunk in iter_built_catalogs(
+            paths=[str(file_or_directory)],
+            parsing_func=parse_esmvaltool_reference,
+            include_patterns=["*.nc"],
+            n_jobs=self.n_jobs,
+            chunk_size=chunk_size,
+            skip=skip,
+        ):
+            yield self._enrich_parsed_catalog(raw_chunk)
+
+    def _enrich_parsed_catalog(self, datasets: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply post-parse enrichment to a non-empty raw catalog DataFrame.
+        """
         datasets["start_time"] = parse_cftime_dates(datasets["start_time"])
         datasets["end_time"] = parse_cftime_dates(datasets["end_time"])
         datasets["finalised"] = True

@@ -230,7 +230,7 @@ def iter_discovered_chunks(
 
     Walks the directory tree once and yields batches of up to ``chunk_size`` paths.
     Batches only flush at directory boundaries, so files within a single directory are kept together.
-    This assumption holds for the current directory structures used by CMIP6 and CMIP7.
+    This assumption holds for the directory structures used by the built-in adapters.
 
     Parameters
     ----------

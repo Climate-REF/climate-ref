@@ -171,6 +171,21 @@ def test_ingest_is_idempotent(reference_tree, db):
     assert stats.files_added == 0
 
 
+def test_ingest_streamed_matches_whole_catalog(reference_tree, db):
+    adapter = ESMValToolReferenceDatasetAdapter()
+
+    stats = ingest_datasets(adapter, reference_tree, db, skip_invalid=True, chunk_size=2)
+
+    assert stats.datasets_created == 4
+    assert stats.files_added == 6
+
+
+def test_iter_local_datasets_skips_everything(reference_tree):
+    adapter = ESMValToolReferenceDatasetAdapter()
+
+    assert list(adapter.iter_local_datasets(reference_tree, chunk_size=2, skip=set)) == []
+
+
 def test_bundled_data_registry_fully_parses():
     """Every path in the ESMValTool ``data.txt`` registry parses with no ``INVALID_ASSET`` drops.
 

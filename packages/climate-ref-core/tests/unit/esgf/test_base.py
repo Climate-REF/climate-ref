@@ -142,7 +142,7 @@ class TestIntakeESGFMixin:
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
             result = request.fetch_datasets()
 
-        mock_cat.search.assert_called_once_with(source_id="ACCESS-ESM1-5", variable_id="tas")
+        mock_cat.search.assert_called_once_with(project="CMIP6", source_id="ACCESS-ESM1-5", variable_id="tas")
         assert "key" in result.columns
         assert "files" in result.columns
 
@@ -324,6 +324,7 @@ class TestIntakeESGFMixin:
             pinned.fetch_datasets()
 
         mock_cat.search.assert_called_once_with(
+            project="CMIP6",
             instance_id=["CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v1"],
             # A pin holds even once a newer version has been published
             latest=[True, False],

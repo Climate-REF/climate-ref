@@ -165,6 +165,7 @@ class IntakeESGFMixin:
     Mixin that fetches datasets from ESGF using intake-esgf.
 
     Subclasses must define:
+    - project: str
     - facets: dict[str, str | tuple[str, ...]]
     - remove_ensembles: bool
     - time_span: tuple[str, str] | None
@@ -174,6 +175,8 @@ class IntakeESGFMixin:
     """
 
     slug: str
+    project: str
+    """ESGF project searched, as intake-esgf's own default changes between releases."""
     facets: dict[str, str | tuple[str, ...]]
     remove_ensembles: bool
     time_span: tuple[str, str] | None
@@ -215,7 +218,7 @@ class IntakeESGFMixin:
 
     def fetch_datasets(self) -> pd.DataFrame:
         """Fetch dataset metadata from ESGF."""
-        facets: dict[str, Any] = dict(self.facets)
+        facets: dict[str, Any] = {"project": self.project, **self.facets}
 
         if self.pinned_instance_ids:
             # Ask for the pinned datasets by id as the declared facets may now
@@ -223,7 +226,7 @@ class IntakeESGFMixin:
             # index is read rather than which datasets match.
             logger.info(f"Resolving {len(self.pinned_instance_ids)} pinned datasets for {self.slug}")
             facets = {
-                **({"project": facets["project"]} if "project" in facets else {}),
+                "project": facets["project"],
                 "instance_id": list(self.pinned_instance_ids),
                 # A pin holds even once a newer version of the dataset has been published
                 "latest": [True, False],

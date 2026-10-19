@@ -2,7 +2,8 @@
 Dataset handling utilities
 """
 
-from collections.abc import Sequence
+import itertools
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -12,7 +13,7 @@ from loguru import logger
 from sqlalchemy import func, select
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.base import DatasetAdapter, SkipFunction
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 from climate_ref.datasets.esmvaltool_reference import ESMValToolReferenceDatasetAdapter
@@ -232,7 +233,7 @@ def ingest_datasets(  # noqa: PLR0913
 
 
 def get_ingested_paths(
-    db: Database, source_type: SourceDatasetType, paths: Sequence[str], batch_size: int = 1000
+    db: Database, source_type: SourceDatasetType, paths: Iterable[str], batch_size: int = 10_000
 ) -> set[str]:
     """
     Get the subset of ``paths`` that are already ingested as ``source_type``.
@@ -257,15 +258,30 @@ def get_ingested_paths(
         Paths from ``paths`` that are in the database
     """
     ingested: set[str] = set()
-    for start in range(0, len(paths), batch_size):
+    for batch in itertools.batched(paths, batch_size):
         query = (
             select(DatasetFile.path)
             .join(Dataset, DatasetFile.dataset_id == Dataset.id)
             .where(Dataset.dataset_type == source_type)
-            .where(DatasetFile.path.in_(paths[start : start + batch_size]))
+            .where(DatasetFile.path.in_(batch))
         )
         ingested.update(db.session.scalars(query))
     return ingested
+
+
+def skip_ingested(db: Database, source_type: SourceDatasetType) -> SkipFunction:
+    """
+    Build a skip function that selects files already ingested as ``source_type``.
+
+    Each call runs its lookup in its own transaction,
+    so it must not be called while ``db.session`` has one open.
+    """
+
+    def skip(paths: list[str]) -> set[str]:
+        with db.session.begin():
+            return get_ingested_paths(db, source_type, paths)
+
+    return skip
 
 
 def log_deferred_finalisation(db: Database, source_type: SourceDatasetType) -> None:

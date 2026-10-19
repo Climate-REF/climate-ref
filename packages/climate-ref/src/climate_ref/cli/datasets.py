@@ -17,9 +17,7 @@ import typer
 from loguru import logger
 
 from climate_ref.cli._utils import OutputFormat, parse_facet_filters, pretty_print_df, render_dataframe
-from climate_ref.database import Database
-from climate_ref.datasets import get_dataset_adapter, get_ingested_paths
-from climate_ref.datasets.base import SkipFunction
+from climate_ref.datasets import get_dataset_adapter, skip_ingested
 from climate_ref.models import Dataset
 from climate_ref.results import DatasetFilter, Reader
 from climate_ref.results.datasets import DatasetCollection
@@ -248,14 +246,6 @@ def unretract(ctx: typer.Context, slug: str) -> None:
     console.print(f"Unretracted dataset {slug!r}.")
 
 
-def _skip_ingested(db: Database, source_type: SourceDatasetType) -> SkipFunction:
-    def skip(paths: list[str]) -> set[str]:
-        with db.session.begin():
-            return get_ingested_paths(db, source_type, paths)
-
-    return skip
-
-
 def _log_nothing_to_ingest(directory: Path, skip_existing: bool) -> None:
     if skip_existing:
         logger.info(f"No new valid datasets found in {directory}")
@@ -330,7 +320,7 @@ def ingest(  # noqa
             "falling back to whole-catalog mode."
         )
 
-    skip = _skip_ingested(db, source_type) if skip_existing else None
+    skip = skip_ingested(db, source_type) if skip_existing else None
 
     for _dir in file_or_directory:
         _dir = Path(_dir).expanduser()
@@ -397,8 +387,10 @@ def ingest(  # noqa
 
         try:
             data_catalog = adapter.find_local_datasets(_dir, skip=skip)
-            if not data_catalog.empty:
-                data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
+            if data_catalog.empty:
+                _log_nothing_to_ingest(_dir, skip_existing)
+                continue
+            data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
         except Exception as e:
             logger.exception(f"Error ingesting datasets from {_dir}: {e}")
             failed_dirs.append(_dir)

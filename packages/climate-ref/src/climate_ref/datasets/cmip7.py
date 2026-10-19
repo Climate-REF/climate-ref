@@ -189,6 +189,9 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         :meth:`iter_local_datasets` (streaming) so per-chunk processing is
         identical to a single-pass build.
         """
+        if datasets.empty:
+            return datasets
+
         # Convert the start_time and end_time columns to cftime objects
         cal = datasets["calendar"] if "calendar" in datasets.columns else "standard"
         if "start_time" in datasets.columns:
@@ -285,8 +288,6 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             n_jobs=self.n_jobs,
             skip=skip,
         )
-        if datasets.empty:
-            return datasets
 
         return self._enrich_parsed_catalog(datasets)
 

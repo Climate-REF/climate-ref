@@ -209,6 +209,9 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         The caller owns ``datasets`` and the result,
         so we mutate in place to avoid an extra full-table copy in :func:`build_instance_id`.
         """
+        if datasets.empty:
+            return datasets
+
         if "init_year" in datasets.columns:
             datasets = datasets.drop(["init_year"], axis=1)
 
@@ -260,8 +263,6 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             n_jobs=self.n_jobs,
             skip=skip,
         )
-        if datasets.empty:
-            return datasets
 
         return self._enrich_parsed_catalog(datasets)
 

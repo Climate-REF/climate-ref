@@ -285,6 +285,29 @@ def iter_discovered_chunks(
     yield from _flush()
 
 
+def _iter_unskipped_chunks(
+    paths: list[str],
+    include_patterns: list[str] | None,
+    chunk_size: int,
+    skip: SkipFunction | None,
+) -> Iterator[list[str]]:
+    """
+    Yield discovered paths not selected by ``skip``, regrouped into chunks of up to ``chunk_size``.
+
+    Regrouping keeps a mostly skipped walk from parsing (and starting workers for) many tiny chunks.
+    Each discovered chunk is kept whole, so files from one directory stay together.
+    """
+    buffer: list[str] = []
+    for discovered in iter_discovered_chunks(paths, include_patterns=include_patterns, chunk_size=chunk_size):
+        remaining = _without_skipped(discovered, skip)
+        if buffer and len(buffer) + len(remaining) > chunk_size:
+            yield buffer
+            buffer = []
+        buffer.extend(remaining)
+    if buffer:
+        yield buffer
+
+
 def _without_skipped(assets: list[str], skip: SkipFunction | None) -> list[str]:
     """
     Drop the paths selected by ``skip`` from ``assets``, logging how many were dropped.
@@ -345,7 +368,8 @@ def iter_built_catalogs(  # noqa: PLR0913
         Soft target for the number of files per chunk.
     skip
         Selects discovered files to leave unparsed, such as files already in the database.
-        It is called once per chunk, so it only ever sees ``chunk_size`` paths at a time.
+        It is called once per discovered chunk, so it only ever sees about ``chunk_size`` paths at a time.
+        The files that remain are batched back up to ``chunk_size`` before parsing.
 
     Yields
     ------
@@ -353,11 +377,10 @@ def iter_built_catalogs(  # noqa: PLR0913
         DataFrames with parsed metadata for each chunk. Empty chunks
         (all invalid) are skipped.
     """
+    any_parsed = False
     any_emitted = False
-    for discovered in iter_discovered_chunks(paths, include_patterns=include_patterns, chunk_size=chunk_size):
-        chunk_paths = _without_skipped(discovered, skip)
-        if not chunk_paths:
-            continue
+    for chunk_paths in _iter_unskipped_chunks(paths, include_patterns, chunk_size, skip):
+        any_parsed = True
         logger.info(f"Parsing chunk of {len(chunk_paths)} files")
         entries = parse_files(chunk_paths, parsing_func, n_jobs=n_jobs)
         df = pd.DataFrame(entries)
@@ -370,5 +393,5 @@ def iter_built_catalogs(  # noqa: PLR0913
         any_emitted = True
         yield df
 
-    if not any_emitted and skip is None:
+    if not any_emitted and (skip is None or any_parsed):
         logger.warning(f"No valid files found in {paths} matching {include_patterns}")

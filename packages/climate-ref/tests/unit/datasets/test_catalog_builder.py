@@ -373,6 +373,21 @@ class TestIterBuiltCatalogs:
         assert len(parsed) == 9
         assert not any(Path(p).parent.name == "ds_000" for p in parsed)
 
+    def test_unskipped_files_are_regrouped(self, tmp_path):
+        root = _wide_tree(tmp_path, num_dirs=4, files_per_dir=3)
+
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                chunk_size=5,
+                skip=lambda paths: {p for p in paths if not p.endswith("_000.nc")},
+            )
+        )
+
+        assert [len(df) for df in chunks] == [4]
+
     def test_all_skipped_yields_nothing(self, tmp_path):
         root = _wide_tree(tmp_path, num_dirs=2, files_per_dir=3)
         chunks = list(

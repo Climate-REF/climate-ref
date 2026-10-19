@@ -107,9 +107,9 @@ class ESMValToolReferenceDatasetAdapter(DatasetAdapter):
             n_jobs=self.n_jobs,
             skip=skip,
         )
-        if datasets.empty and skip is not None:
-            return datasets
         if datasets.empty:
+            if skip is not None:
+                return datasets
             logger.error("No datasets found")
             raise ValueError("No ESMValTool reference datasets found")
 

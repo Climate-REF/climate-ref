@@ -265,7 +265,6 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",
@@ -554,7 +553,6 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",
@@ -811,7 +809,6 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",

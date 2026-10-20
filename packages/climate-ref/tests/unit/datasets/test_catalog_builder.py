@@ -217,6 +217,31 @@ class TestBuildCatalog:
         )
         assert df.empty
 
+    def test_all_invalid_after_skip_raises_when_requested(self, tmp_tree):
+        def _all_invalid(file: str, **kwargs: Any) -> dict[str, Any]:
+            return {"INVALID_ASSET": file, "TRACEBACK": "always fails"}
+
+        skipped = str(tmp_tree / "sub" / "a.nc")
+        with pytest.warns(UserWarning, match="Unable to parse"):
+            with pytest.raises(ValueError, match="nothing valid"):
+                build_catalog(
+                    paths=[str(tmp_tree)],
+                    parsing_func=_all_invalid,
+                    include_patterns=["*.nc"],
+                    skip=lambda paths: {skipped},
+                    error_if_none_valid="nothing valid",
+                )
+
+    def test_all_skipped_does_not_raise_when_requested(self, tmp_tree):
+        df = build_catalog(
+            paths=[str(tmp_tree)],
+            parsing_func=_good_parser,
+            include_patterns=["*.nc"],
+            skip=set,
+            error_if_none_valid="nothing valid",
+        )
+        assert df.empty
+
 
 class TestParallelParsingSafety:
     """Guards for the process-based parallel parsing model.

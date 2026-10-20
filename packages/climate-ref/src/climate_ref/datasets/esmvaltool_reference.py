@@ -107,12 +107,10 @@ class ESMValToolReferenceDatasetAdapter(DatasetAdapter):
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
             skip=skip,
+            error_if_none_valid="No ESMValTool reference datasets found",
         )
         if datasets.empty:
-            if skip is not None:
-                return datasets
-            logger.error("No datasets found")
-            raise ValueError("No ESMValTool reference datasets found")
+            return datasets
 
         return self._enrich_parsed_catalog(datasets)
 

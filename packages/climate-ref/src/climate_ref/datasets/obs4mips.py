@@ -206,12 +206,10 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
             skip=skip,
+            error_if_none_valid="No obs4MIPs-compliant datasets found",
         )
         if datasets.empty:
-            if skip is not None:
-                return datasets
-            logger.error("No datasets found")
-            raise ValueError("No obs4MIPs-compliant datasets found")
+            return datasets
 
         return self._enrich_parsed_catalog(datasets)
 

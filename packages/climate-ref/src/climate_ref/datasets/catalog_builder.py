@@ -161,12 +161,13 @@ def parse_files(
         )
 
 
-def build_catalog(
+def build_catalog(  # noqa: PLR0913
     paths: list[str],
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
     n_jobs: int = 1,
     skip: SkipFunction | None = None,
+    error_if_none_valid: str | None = None,
 ) -> pd.DataFrame:
     """
     Build a catalog DataFrame by discovering and parsing dataset files
@@ -188,6 +189,9 @@ def build_catalog(
         ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many worker processes.
     skip
         Selects discovered files to leave unparsed, such as files already in the database.
+    error_if_none_valid
+        Message for the ``ValueError`` raised when files were parsed but none were valid.
+        If not set, an empty DataFrame is returned instead.
 
     Returns
     -------
@@ -198,7 +202,8 @@ def build_catalog(
     Raises
     ------
     ValueError
-        If no files matching the include patterns are found in the specified paths
+        If no files matching the include patterns are found in the specified paths,
+        or if ``error_if_none_valid`` is set and no parsed file is valid
     """
     assets = discover_files(paths, include_patterns=include_patterns)
 
@@ -216,6 +221,10 @@ def build_catalog(
     df = _filter_invalid_rows(df)
 
     logger.info(f"Built catalog with {len(df)} valid entries ({len(assets) - len(df)} invalid)")
+
+    if df.empty and error_if_none_valid is not None:
+        logger.error("No datasets found")
+        raise ValueError(error_if_none_valid)
 
     return df
 

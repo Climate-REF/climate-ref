@@ -1475,7 +1475,10 @@ def requeue(  # noqa: PLR0913
             console.print("Requeue cancelled.")
             return
 
-    with session.begin_nested() if session.in_transaction() else session.begin():
+    # Close the selection query's autobegun transaction, so this write is a top-level commit
+    if session.in_transaction():
+        session.commit()
+    with session.begin():
         for eg, _ in results:
             eg.dirty = True
 

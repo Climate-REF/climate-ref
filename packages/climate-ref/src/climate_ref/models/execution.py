@@ -816,6 +816,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     successful: bool | None = None,
     latest_successful: bool | None = None,
     include_superseded: bool = False,
+    failure_reasons: Sequence[ExecutionFailureReason] | None = None,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
     Query execution groups with filtering capabilities.
@@ -863,6 +864,10 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         == Diagnostic.promoted_version``.
         Set this for recovery / audit callers that need the full version history
         (e.g. ``executor/reingest.py``).
+    failure_reasons
+        Post-rank filter on the *winning* execution.
+        If provided, only return execution groups whose latest execution failed for one of these reasons.
+        If None, do not filter by failure reason.
 
     Returns
     -------
@@ -916,6 +921,9 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
 
     if successful is not None:
         query = query.filter(_successful_predicate(successful))
+
+    if failure_reasons:
+        query = query.filter(Execution.failure_reason.in_([reason.value for reason in failure_reasons]))
 
     if dirty is not None:
         if dirty:

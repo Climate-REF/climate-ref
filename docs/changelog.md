@@ -21,6 +21,25 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.19.2 (2026-10-20)
+
+### Features
+
+- Added a `--skip-existing` option to `ref datasets ingest`.
+  Files that are already in the database are skipped without being parsed,
+  which speeds up repeated ingests of a large archive.
+  Files are assumed to be immutable, so run a full ingest periodically to pick up changed files.
+  Combine it with `--chunk-size` to keep memory bounded on archives with millions of files. ([#968](https://github.com/Climate-REF/climate-ref/pull/968))
+- Added `--failure-reason` to `ref executions list-groups` and a new `ref executions requeue` command.
+  `requeue` flags failed execution groups as dirty so the next `ref solve` reruns them,
+  optionally narrowed to one kind of failure, eg. `ref executions requeue --failure-reason system_error`. ([#969](https://github.com/Climate-REF/climate-ref/pull/969))
+
+### Improvements
+
+- `ref datasets ingest --chunk-size` now streams obs4MIPs, obs4REF, PMP climatology and ESMValTool reference datasets
+  instead of falling back to loading the whole catalog. ([#968](https://github.com/Climate-REF/climate-ref/pull/968))
+
+
 ## climate-ref 0.19.1 (2026-10-19)
 
 ### Bug Fixes

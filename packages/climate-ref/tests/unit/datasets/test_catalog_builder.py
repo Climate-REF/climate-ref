@@ -197,6 +197,51 @@ class TestBuildCatalog:
             )
         assert df.empty
 
+    def test_skip_paths_are_not_parsed(self, tmp_tree):
+        skipped = str(tmp_tree / "sub" / "a.nc")
+        df = build_catalog(
+            paths=[str(tmp_tree)],
+            parsing_func=_good_parser,
+            include_patterns=["*.nc"],
+            skip=lambda paths: {skipped},
+        )
+        assert len(df) == 3
+        assert skipped not in set(df["path"])
+
+    def test_all_skipped_returns_empty(self, tmp_tree):
+        df = build_catalog(
+            paths=[str(tmp_tree)],
+            parsing_func=_good_parser,
+            include_patterns=["*.nc"],
+            skip=set,
+        )
+        assert df.empty
+
+    def test_all_invalid_after_skip_raises_when_requested(self, tmp_tree):
+        def _all_invalid(file: str, **kwargs: Any) -> dict[str, Any]:
+            return {"INVALID_ASSET": file, "TRACEBACK": "always fails"}
+
+        skipped = str(tmp_tree / "sub" / "a.nc")
+        with pytest.warns(UserWarning, match="Unable to parse"):
+            with pytest.raises(ValueError, match="nothing valid"):
+                build_catalog(
+                    paths=[str(tmp_tree)],
+                    parsing_func=_all_invalid,
+                    include_patterns=["*.nc"],
+                    skip=lambda paths: {skipped},
+                    error_if_none_valid="nothing valid",
+                )
+
+    def test_all_skipped_does_not_raise_when_requested(self, tmp_tree):
+        df = build_catalog(
+            paths=[str(tmp_tree)],
+            parsing_func=_good_parser,
+            include_patterns=["*.nc"],
+            skip=set,
+            error_if_none_valid="nothing valid",
+        )
+        assert df.empty
+
 
 class TestParallelParsingSafety:
     """Guards for the process-based parallel parsing model.
@@ -329,6 +374,58 @@ class TestIterDiscoveredChunks:
 
 
 class TestIterBuiltCatalogs:
+    def test_skip_is_called_per_chunk(self, tmp_path):
+        root = _wide_tree(tmp_path, num_dirs=4, files_per_dir=3)
+        seen: list[list[str]] = []
+
+        def skip_first_dir(paths: list[str]) -> set[str]:
+            seen.append(paths)
+            return {p for p in paths if Path(p).parent.name == "ds_000"}
+
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                chunk_size=5,
+                skip=skip_first_dir,
+            )
+        )
+
+        assert len(seen) >= 2
+        assert all(len(batch) <= 5 for batch in seen)
+        parsed = {p for df in chunks for p in df["path"]}
+        assert len(parsed) == 9
+        assert not any(Path(p).parent.name == "ds_000" for p in parsed)
+
+    def test_unskipped_files_are_regrouped(self, tmp_path):
+        root = _wide_tree(tmp_path, num_dirs=4, files_per_dir=3)
+
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                chunk_size=5,
+                skip=lambda paths: {p for p in paths if not p.endswith("_000.nc")},
+            )
+        )
+
+        assert [len(df) for df in chunks] == [4]
+
+    def test_all_skipped_yields_nothing(self, tmp_path):
+        root = _wide_tree(tmp_path, num_dirs=2, files_per_dir=3)
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                chunk_size=5,
+                skip=set,
+            )
+        )
+        assert chunks == []
+
     def test_streams_chunks(self, tmp_path):
         root = _wide_tree(tmp_path, num_dirs=4, files_per_dir=3)
         chunks = list(

@@ -1,3 +1,4 @@
+from collections.abc import Callable, Container
 from pathlib import Path
 from typing import Any, Protocol, cast
 
@@ -83,6 +84,12 @@ class DatasetParsingFunction(Protocol):
         ...
 
 
+SkipFunction = Callable[[list[str]], Container[str]]
+"""
+Takes a batch of discovered file paths and returns the ones to leave unparsed.
+"""
+
+
 class DatasetAdapter(Protocol):
     """
     An adapter to provide a common interface for different dataset types
@@ -154,12 +161,13 @@ class DatasetAdapter(Protocol):
             ]
         ]
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip: SkipFunction | None = None) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
 
         This data catalog should contain all the metadata needed by the database.
         The index of the data catalog should be the dataset slug.
+        Files selected by ``skip`` are left out, so the catalog may be empty.
         """
         ...
 

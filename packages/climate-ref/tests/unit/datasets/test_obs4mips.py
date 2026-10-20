@@ -152,6 +152,13 @@ class Testobs4MIPsAdapter:
                 adapter.find_local_datasets(str(sample_data_dir) + "/CMIP6")
             assert str(excinfo.value) == "No obs4MIPs-compliant datasets found"
 
+    def test_load_local_CMIP6_datasets_with_skip(self, sample_data_dir):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+
+            with pytest.raises(ValueError, match="No obs4MIPs-compliant datasets found"):
+                Obs4MIPsDatasetAdapter().find_local_datasets(sample_data_dir / "CMIP6", skip=lambda _: set())
+
     def test_empty_directory_exception(self, test_empty_dir):
         with pytest.raises(ValueError, match="No files matching"):
             adapter = Obs4MIPsDatasetAdapter()

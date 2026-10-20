@@ -33,12 +33,13 @@ from climate_ref.models.dataset_query import _as_facets
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
     Execution,
+    ExecutionFailureReason,
     ExecutionGroup,
     ExecutionOutput,
     get_execution_group_and_latest_filtered,
 )
 from climate_ref.models.provider import Provider
-from climate_ref.results._converters import _as_str_tuple
+from climate_ref.results._converters import _as_failure_reasons, _as_str_tuple
 from climate_ref.results._query import latest_execution_for_group
 from climate_ref.results._stats import rows_to_execution_stats
 
@@ -96,6 +97,11 @@ class ExecutionGroupFilter:
 
     include_superseded: bool = False
     """Include execution groups whose ``diagnostic_version`` is not the diagnostic's promoted version."""
+
+    failure_reasons: tuple[ExecutionFailureReason, ...] | None = attrs.field(
+        default=None, converter=_as_failure_reasons
+    )
+    """Keep a group only if its latest execution failed for one of these reasons."""
 
 
 @attrs.frozen(kw_only=True)
@@ -482,6 +488,7 @@ class ExecutionsReader:
             successful=filters.successful,
             latest_successful=filters.latest_successful,
             include_superseded=filters.include_superseded,
+            failure_reasons=filters.failure_reasons,
         )
         all_results = sorted(all_results, key=lambda pair: pair[0].id)
 

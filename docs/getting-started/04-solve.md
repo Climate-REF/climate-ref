@@ -121,6 +121,22 @@ ref executions flag-dirty <group_id>
 ref solve
 ```
 
+**Retry by failure type** using `requeue`:
+
+```bash
+# Find groups that failed because of a broken environment
+ref executions list-groups --failure-reason system_error
+
+# Flag them all for retry, optionally narrowed by --diagnostic, --provider or --filter
+ref executions requeue --failure-reason system_error
+
+# Re-solve to pick up the flagged groups
+ref solve
+```
+
+The failure types are
+`diagnostic_error`, `system_error`, `result_error`, `abandoned`, `not_started`, `cancelled` and `unknown`.
+
 **Retry all failed executions** using `--rerun-failed`:
 
 ```bash

@@ -139,6 +139,13 @@ def list_groups(  # noqa: PLR0913
             "These execution groups will be re-computed on the next run.",
         ),
     ] = None,
+    failure_reason: Annotated[
+        list[ExecutionFailureReason] | None,
+        typer.Option(
+            help="Filter to groups whose latest execution failed for this reason. "
+            "Multiple values can be provided."
+        ),
+    ] = None,
     output_format: Annotated[
         OutputFormat,
         typer.Option(
@@ -190,6 +197,7 @@ def list_groups(  # noqa: PLR0913
             facets=facet_filters or None,
             successful=successful,
             dirty=dirty,
+            failure_reasons=failure_reason,
         ),
         limit=limit,
     )
@@ -1359,3 +1367,119 @@ def flag_dirty(ctx: typer.Context, execution_id: int) -> None:
         execution_group.dirty = True
 
         console.print(_execution_panel(execution_group))
+
+
+# Stays on `get_execution_group_and_latest_filtered` because it mutates the returned groups.
+@app.command()
+def requeue(  # noqa: PLR0913
+    ctx: typer.Context,
+    failure_reason: Annotated[
+        list[ExecutionFailureReason] | None,
+        typer.Option(
+            help="Only requeue groups whose latest execution failed for this reason. "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    diagnostic: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by diagnostic slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    provider: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by provider slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    filter: Annotated[  # noqa: A002
+        list[str] | None,
+        typer.Option(
+            "--filter",
+            help="Filter by facet key=value pairs (exact match). Multiple filters can be provided.",
+        ),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="Show what would be requeued without making changes."),
+    ] = False,
+    force: bool = typer.Option(False, help="Skip confirmation prompt"),
+) -> None:
+    """
+    Flag failed execution groups as dirty so the next solve reruns them.
+
+    Only groups whose latest execution failed and that are not already dirty are selected.
+    Use ``--failure-reason`` to requeue only one kind of failure,
+    e.g. ``--failure-reason system_error`` after fixing a broken environment.
+    """
+    import pandas as pd
+
+    session = ctx.obj.database.session
+    console = ctx.obj.console
+
+    try:
+        facet_filters = parse_facet_filters(filter)
+    except ValueError as e:
+        logger.error(str(e))
+        raise typer.Exit(code=1)
+
+    if not any([failure_reason, diagnostic, provider, facet_filters]):
+        logger.error(
+            "At least one filter is required (--failure-reason, --diagnostic, --provider or --filter). "
+            "This prevents accidentally requeuing every failed execution."
+        )
+        raise typer.Exit(code=1)
+
+    results = [
+        (eg, execution)
+        for eg, execution in get_execution_group_and_latest_filtered(
+            session,
+            diagnostic_filters=diagnostic,
+            provider_filters=provider,
+            facet_filters=facet_filters or None,
+            dirty=False,
+            successful=False,
+            failure_reasons=failure_reason,
+        )
+        # Drops in-progress and never-run groups, which `successful=False` also matches
+        if execution is not None and execution.successful is False
+    ]
+
+    if not results:
+        console.print("No failed execution groups match the specified filters.")
+        return
+
+    preview_df = pd.DataFrame(
+        [
+            {
+                "id": eg.id,
+                "key": eg.key,
+                "provider": eg.diagnostic.provider.slug,
+                "diagnostic": eg.diagnostic.slug,
+                "failure_reason": execution.failure_reason,
+            }
+            for eg, execution in results
+        ]
+    )
+
+    prefix = "[bold]Dry run:[/] would requeue" if dry_run else "Will requeue"
+    console.print(f"{prefix} {len(results)} execution group(s):")
+    pretty_print_df(preview_df, console=console)
+    if dry_run:
+        return
+
+    if not force:
+        if not typer.confirm("\nProceed with requeue?"):
+            console.print("Requeue cancelled.")
+            return
+
+    with session.begin_nested() if session.in_transaction() else session.begin():
+        for eg, _ in results:
+            eg.dirty = True
+
+    console.print(
+        f"[green]Flagged {len(results)} execution group(s) as dirty.[/] "
+        "They will be rerun on the next `ref solve`."
+    )

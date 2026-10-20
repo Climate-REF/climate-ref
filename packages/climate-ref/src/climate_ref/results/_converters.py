@@ -2,6 +2,15 @@
 
 from collections.abc import Sequence
 
+from climate_ref.models.execution import ExecutionFailureReason
+
+
+def _as_failure_reasons(
+    value: Sequence[ExecutionFailureReason] | None,
+) -> tuple[ExecutionFailureReason, ...] | None:
+    """Coerce a multi-value failure reason filter to a tuple, leaving ``None`` as is."""
+    return None if value is None else tuple(value)
+
 
 def _as_str_tuple(value: Sequence[str] | None) -> tuple[str, ...] | None:
     """

@@ -1095,6 +1095,86 @@ class TestExecutionInspect:
         invoke_cli(["executions", "flag-dirty", "123"], expected_exit_code=1)
 
 
+class TestFailureReason:
+    @pytest.fixture
+    def db_with_failures(self, db_seeded):
+        """Groups keyed by the state of their latest execution."""
+        with db_seeded.session.begin():
+            _register_provider(db_seeded, pmp_provider)
+            diag = db_seeded.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            states = {
+                "sys-fail": (False, ExecutionFailureReason.SystemError),
+                "diag-fail": (False, ExecutionFailureReason.DiagnosticError),
+                "abandoned": (False, ExecutionFailureReason.Abandoned),
+                "ok": (True, None),
+                "running": (None, None),
+            }
+            for key, (successful, reason) in states.items():
+                eg = ExecutionGroup(key=key, diagnostic_id=diag.id, selectors={})
+                db_seeded.session.add(eg)
+                db_seeded.session.flush()
+                db_seeded.session.add(
+                    Execution(
+                        execution_group_id=eg.id,
+                        successful=successful,
+                        failure_reason=reason.value if reason else None,
+                        output_fragment=key,
+                        dataset_hash=key,
+                    )
+                )
+        return db_seeded
+
+    def _dirty_keys(self, db):
+        db.session.expire_all()
+        return {eg.key for eg in db.session.query(ExecutionGroup).filter(ExecutionGroup.dirty.is_(True))}
+
+    def test_list_groups_filter(self, db_with_failures, invoke_cli):
+        result = invoke_cli(
+            [
+                "executions",
+                "list-groups",
+                "--failure-reason",
+                "system_error",
+                "--failure-reason",
+                "abandoned",
+            ]
+        )
+        assert "sys-fail" in result.stdout
+        assert "abandoned" in result.stdout
+        assert "diag-fail" not in result.stdout
+        assert "running" not in result.stdout
+
+    def test_list_groups_invalid_reason(self, db_with_failures, invoke_cli):
+        invoke_cli(["executions", "list-groups", "--failure-reason", "bogus"], expected_exit_code=2)
+
+    def test_requeue_by_reason(self, db_with_failures, invoke_cli):
+        invoke_cli(["executions", "requeue", "--failure-reason", "system_error", "--force"])
+        assert self._dirty_keys(db_with_failures) == {"sys-fail"}
+
+    def test_requeue_all_failed_for_diagnostic(self, db_with_failures, invoke_cli):
+        invoke_cli(["executions", "requeue", "--diagnostic", "enso_tel", "--force"])
+        assert self._dirty_keys(db_with_failures) == {"sys-fail", "diag-fail", "abandoned"}
+
+    def test_requeue_dry_run(self, db_with_failures, invoke_cli):
+        result = invoke_cli(["executions", "requeue", "--failure-reason", "system_error", "--dry-run"])
+        assert "sys-fail" in result.stdout
+        assert self._dirty_keys(db_with_failures) == set()
+
+    def test_requeue_cancelled(self, db_with_failures, invoke_cli):
+        with patch("typer.confirm", return_value=False):
+            result = invoke_cli(["executions", "requeue", "--failure-reason", "system_error"])
+        assert "Requeue cancelled" in result.stdout
+        assert self._dirty_keys(db_with_failures) == set()
+
+    def test_requeue_requires_filter(self, db_with_failures, invoke_cli):
+        invoke_cli(["executions", "requeue", "--force"], expected_exit_code=1)
+        assert self._dirty_keys(db_with_failures) == set()
+
+    def test_requeue_no_matches(self, db_with_failures, invoke_cli):
+        result = invoke_cli(["executions", "requeue", "--failure-reason", "cancelled", "--force"])
+        assert "No failed execution groups" in result.stdout
+
+
 class TestFailRunning:
     @pytest.fixture
     def db_with_running(self, db_seeded):

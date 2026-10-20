@@ -1144,6 +1144,10 @@ class TestFailureReason:
         assert "diag-fail" not in result.stdout
         assert "running" not in result.stdout
 
+    def test_list_groups_no_match_warning(self, db_with_failures, invoke_cli):
+        result = invoke_cli(["executions", "list-groups", "--failure-reason", "cancelled"])
+        assert "Applied filters: failure reasons: ['cancelled']" in result.stderr
+
     def test_list_groups_invalid_reason(self, db_with_failures, invoke_cli):
         invoke_cli(["executions", "list-groups", "--failure-reason", "bogus"], expected_exit_code=2)
 
@@ -1169,6 +1173,9 @@ class TestFailureReason:
     def test_requeue_requires_filter(self, db_with_failures, invoke_cli):
         invoke_cli(["executions", "requeue", "--force"], expected_exit_code=1)
         assert self._dirty_keys(db_with_failures) == set()
+
+    def test_requeue_invalid_facet_filter(self, db_with_failures, invoke_cli):
+        invoke_cli(["executions", "requeue", "--filter", "no-equals-sign"], expected_exit_code=1)
 
     def test_requeue_no_matches(self, db_with_failures, invoke_cli):
         result = invoke_cli(["executions", "requeue", "--failure-reason", "cancelled", "--force"])

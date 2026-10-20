@@ -67,6 +67,9 @@ class ListGroupsFilterOptions:
     facets: dict[str, list[str]] | None = None
     """Filter by facet key-value pairs (AND across keys, OR within key)"""
 
+    failure_reasons: list[ExecutionFailureReason] | None = None
+    """Filter by the latest execution's failure reason"""
+
 
 class ValueKind(StrEnum):
     """Which kind of metric value the ``values`` command should show."""
@@ -183,6 +186,7 @@ def list_groups(  # noqa: PLR0913
         diagnostic=diagnostic,
         provider=provider,
         facets=facet_filters if facet_filters else None,
+        failure_reasons=failure_reason,
     )
     logger.debug(f"Applying filters: {filters}")
 
@@ -562,6 +566,8 @@ def emit_no_results_warning(
             for k, values in filters.facets.items()
         ]
         filter_parts.append(f"facet filters: {facet_strs}")
+    if filters.failure_reasons:
+        filter_parts.append(f"failure reasons: {[reason.value for reason in filters.failure_reasons]}")
 
     logger.warning(
         f"No execution groups match the specified filters. "

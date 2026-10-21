@@ -15,7 +15,7 @@ import datetime
 import json
 import random
 import sqlite3
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -24,8 +24,8 @@ import attrs
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.models.dataset import Dataset
+from climate_ref_core.source_types import SourceDatasetType
 
-_BATCH = 20_000
 _EPOCH = datetime.datetime(2025, 6, 1)
 _SPAN_SECONDS = 400 * 24 * 3600
 _PROMOTED_VERSION = 2
@@ -97,27 +97,12 @@ def _timestamp(fraction: float) -> str:
     return str(_EPOCH + datetime.timedelta(seconds=fraction * _SPAN_SECONDS))
 
 
-def _batched(rows: Iterator[tuple[Any, ...]]) -> Iterator[list[tuple[Any, ...]]]:
-    batch: list[tuple[Any, ...]] = []
-    for row in rows:
-        batch.append(row)
-        if len(batch) >= _BATCH:
-            yield batch
-            batch = []
-    if batch:
-        yield batch
-
-
 def _insert(
-    con: sqlite3.Connection, table: str, columns: Sequence[str], rows: Iterator[tuple[Any, ...]]
-) -> int:
+    con: sqlite3.Connection, table: str, columns: Sequence[str], rows: Iterable[tuple[Any, ...]]
+) -> None:
     quoted = ", ".join(f'"{c}"' for c in columns)
     sql = f'INSERT INTO "{table}" ({quoted}) VALUES ({", ".join("?" * len(columns))})'  # noqa: S608
-    count = 0
-    for batch in _batched(rows):
-        con.executemany(sql, batch)
-        count += len(batch)
-    return count
+    con.executemany(sql, rows)
 
 
 def _migrated_schema(path: Path) -> None:
@@ -150,19 +135,16 @@ def build_synthetic_database(path: Path, shape: Shape, *, scale: float = 1.0, se
     con.execute("PRAGMA journal_mode=OFF")
     con.execute("PRAGMA synchronous=OFF")
     # Index maintenance during bulk insert is several times slower than rebuilding afterwards.
-    index_sql = [
-        sql for (sql,) in con.execute("SELECT sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL")
-    ]
-    for (name,) in con.execute(
-        "SELECT name FROM sqlite_master WHERE type='index' AND sql IS NOT NULL"
-    ).fetchall():
+    indexes = con.execute(
+        "SELECT name, sql FROM sqlite_master WHERE type='index' AND sql IS NOT NULL"
+    ).fetchall()
+    for name, _ in indexes:
         con.execute(f'DROP INDEX "{name}"')
 
     with con:
         _Writer(con, shape, scale, rng).write()
-    for sql in index_sql:
-        con.execute(sql)
-    con.commit()
+        for _, sql in indexes:
+            con.execute(sql)
     con.close()
 
 
@@ -208,7 +190,6 @@ class _Writer:
 
         groups: list[tuple[Any, ...]] = []
         executions: list[tuple[Any, ...]] = []
-        self.group_diagnostic: list[int] = [0]
         self.successful_executions: dict[int, list[int]] = {}
         for gid in range(1, self.n_groups + 1):
             diagnostic_id = 1 + (gid - 1) % s.diagnostics
@@ -228,7 +209,6 @@ class _Writer:
                     version,
                 )
             )
-            self.group_diagnostic.append(diagnostic_id)
             for n in range(rng.choices(counts, weights)[0]):
                 eid = len(executions) + 1
                 roll = rng.random()
@@ -274,7 +254,7 @@ class _Writer:
                 "updated_at",
                 "diagnostic_version",
             ],
-            iter(groups),
+            groups,
         )
         _insert(
             self.con,
@@ -294,7 +274,7 @@ class _Writer:
                 "memory_source",
                 "failure_reason",
             ],
-            iter(executions),
+            executions,
         )
 
     def _datasets(self) -> None:
@@ -302,7 +282,7 @@ class _Writer:
         dataset_id = 0
         self.dataset_ids: list[int] = []
         for dataset_type, count in self.datasets.items():
-            table = Dataset.__mapper__.polymorphic_map[_source_type(dataset_type)].class_.__tablename__
+            table = Dataset.__mapper__.polymorphic_map[SourceDatasetType[dataset_type]].class_.__tablename__
             first = dataset_id + 1
             dataset_id += count
             ids = range(first, dataset_id + 1)
@@ -368,13 +348,12 @@ class _Writer:
                 for k in range(quota):
                     yield pool[k * len(pool) // max(quota, 1)]
 
+        labels = [
+            (s.dimension_fill[d], [f"{d}-{k}" for k in range(s.dimension_cardinality[d])]) for d in dims
+        ]
+
         def dimension_values() -> list[str | None]:
-            return [
-                f"{d}-{rng.randrange(s.dimension_cardinality[d])}"
-                if rng.random() < s.dimension_fill[d]
-                else None
-                for d in dims
-            ]
+            return [pool[rng.randrange(len(pool))] if rng.random() < fill else None for fill, pool in labels]
 
         created = _timestamp(0.5)
         scalar_rows = (
@@ -425,12 +404,6 @@ class _Writer:
             *dims,
         ]
         _insert(self.con, "metric_value", columns, series_rows)
-
-
-def _source_type(name: str) -> Any:
-    from climate_ref_core.source_types import SourceDatasetType  # noqa: PLC0415
-
-    return SourceDatasetType[name]
 
 
 def _facet(column: str, i: int) -> Any:

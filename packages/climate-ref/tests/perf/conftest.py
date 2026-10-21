@@ -23,6 +23,7 @@ from sqlalchemy import event
 import climate_ref
 from climate_ref import synthetic
 from climate_ref.config import Config
+from climate_ref.conftest_plugin import _build_cached_file
 from climate_ref.database import Database
 from climate_ref.results import Reader
 from climate_ref.synthetic import Shape, build_synthetic_database
@@ -50,16 +51,6 @@ _SCAN = re.compile(r"^SCAN (\w+)")
 _results: list[dict[str, Any]] = []
 
 
-def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Skip the suite unless ``REF_PERF_SCALE`` opts in, because building the database is slow."""
-    if os.environ.get("REF_PERF_SCALE"):
-        return
-    skip = pytest.mark.skip(reason="set REF_PERF_SCALE to run the reader performance tests")
-    for item in items:
-        if Path(item.path).is_relative_to(Path(__file__).parent):
-            item.add_marker(skip)
-
-
 def pytest_terminal_summary(terminalreporter: Any) -> None:
     """Print the timings and table scans of every scenario that ran."""
     if not _results:
@@ -83,23 +74,23 @@ def _cache_key(shape_text: str, scale: float) -> str:
     digest.update(str(scale).encode())
     digest.update(Path(synthetic.__file__).read_bytes())
     for p in sorted(migrations.glob("*.py")):
-        digest.update(p.name.encode())
+        digest.update(p.read_bytes())
     return digest.hexdigest()[:12]
 
 
 @pytest.fixture(scope="session")
 def perf_database_path() -> Path:
     """The synthetic database for this shape and scale, built on first use."""
+    if not os.environ.get("REF_PERF_SCALE"):
+        pytest.skip("set REF_PERF_SCALE to run the reader performance tests")
     scale = float(os.environ["REF_PERF_SCALE"])
     shape_text = SHAPE_PATH.read_text()
     cache = Path(os.environ.get("REF_PERF_CACHE", Path.home() / ".cache" / "climate-ref" / "perf"))
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / f"reader-perf-{scale:g}-{_cache_key(shape_text, scale)}.db"
-    if not path.exists():
-        partial = path.with_suffix(".partial")
-        partial.unlink(missing_ok=True)
-        build_synthetic_database(partial, Shape.from_json(SHAPE_PATH), scale=scale)
-        partial.rename(path)
+    _build_cached_file(
+        path, lambda tmp: build_synthetic_database(tmp, Shape.from_json(SHAPE_PATH), scale=scale)
+    )
     return path
 
 
@@ -162,7 +153,6 @@ class Measurement:
     """What one scenario cost."""
 
     seconds: tuple[float, ...]
-    statements: tuple[str, ...]
     plans: tuple[tuple[str, ...], ...]
 
     @property
@@ -170,20 +160,24 @@ class Measurement:
         return statistics.median(self.seconds)
 
     @property
+    def scanned(self) -> frozenset[str]:
+        """Everything read in full by any statement, including full scans of one of a table's indexes."""
+        # SQLAlchemy aliases a repeated table as ``<table>_<n>``.
+        return frozenset(
+            re.sub(r"_\d+$", "", match.group(1))
+            for plan in self.plans
+            for match in map(_SCAN.match, plan)
+            if match
+        )
+
+    @property
     def large_table_scans(self) -> frozenset[str]:
-        """Large tables read in full by any statement, including full scans of one of their indexes."""
-        scanned = set()
-        for plan in self.plans:
-            for detail in plan:
-                match = _SCAN.match(detail)
-                if match:
-                    # SQLAlchemy aliases a repeated table as ``<table>_<n>``.
-                    scanned.add(re.sub(r"_\d+$", "", match.group(1)))
-        return frozenset(scanned & LARGE_TABLES)
+        """Large tables read in full by any statement."""
+        return self.scanned & LARGE_TABLES
 
 
 @pytest.fixture(scope="session")
-def measure(perf_database: Database, perf_database_path: Path) -> Callable[..., Measurement]:
+def measure(perf_database: Database, perf_database_path: Path) -> Iterator[Callable[..., Measurement]]:
     """
     Run a reader call several times through fresh sessions and collect its timings and query plans.
 
@@ -191,6 +185,7 @@ def measure(perf_database: Database, perf_database_path: Path) -> Callable[..., 
     """
     repeat = int(os.environ.get("REF_PERF_REPEAT", "3"))
     explain = sqlite3.connect(f"file:{perf_database_path}?mode=ro", uri=True)
+    tables = {name for (name,) in explain.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
 
     def _measure(scenario: str, call: Callable[[Reader], object]) -> Measurement:
         captured: list[tuple[str, Any]] = []
@@ -215,9 +210,13 @@ def measure(perf_database: Database, perf_database_path: Path) -> Callable[..., 
             tuple(row[3] for row in explain.execute(f"EXPLAIN QUERY PLAN {statement}", parameters or ()))
             for statement, parameters in captured
         )
-        measurement = Measurement(
-            seconds=tuple(seconds), statements=tuple(s for s, _ in captured), plans=plans
-        )
+        measurement = Measurement(seconds=tuple(seconds), plans=plans)
+        # A named alias would hide a scan from the large-table check, so refuse names it cannot map.
+        unknown = {
+            n for n in measurement.scanned if n not in tables and n != "CONSTANT" and not n.startswith("anon")
+        }
+        if unknown:
+            raise ValueError(f"cannot map scanned names {sorted(unknown)} to tables")
         _results.append(
             {
                 "scenario": scenario,
@@ -229,4 +228,5 @@ def measure(perf_database: Database, perf_database_path: Path) -> Callable[..., 
         )
         return measurement
 
-    return _measure
+    yield _measure
+    explain.close()

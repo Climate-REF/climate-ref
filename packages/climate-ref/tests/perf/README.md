@@ -26,7 +26,7 @@ Other settings:
 ## The shape
 
 `shape.json` holds row counts and distributions, never row contents.
-`climate_ref.synthetic` builds a database from it using the real migrations, so the indexes match production.
+`synthetic.py` builds a database from it using the real migrations, so the indexes match production.
 `ANALYZE` is not run, because the deployed database has no table statistics.
 
 Refresh it from the deployed database with:

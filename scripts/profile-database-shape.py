@@ -1,7 +1,7 @@
 """
 Measure the shape of a REF SQLite database for the synthetic reader performance databases.
 
-Prints JSON that `climate_ref.synthetic.Shape.from_json` loads.
+Prints JSON that `Shape.from_json` in `packages/climate-ref/tests/perf/synthetic.py` loads.
 The output holds only counts and distributions, never row contents, so it is safe to commit.
 
 This uses only the standard library so it runs inside any deployed image, e.g.

@@ -1,7 +1,7 @@
 """
 Build large synthetic REF databases for performance testing the read layer.
 
-The row counts and distributions come from a [Shape][climate_ref.synthetic.Shape],
+The row counts and distributions come from a `Shape`,
 which `scripts/profile-database-shape.py` measures from a real database,
 so a synthetic database can match production without copying any of its data.
 
@@ -38,7 +38,7 @@ class Shape:
     Row counts and distributions describing a REF database.
 
     Counts are for the full-size database and are multiplied by the ``scale`` passed to
-    [build_synthetic_database][climate_ref.synthetic.build_synthetic_database].
+    `build_synthetic_database`.
     Cardinalities (providers, diagnostics, dimension values) do not scale.
     """
 

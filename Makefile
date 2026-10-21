@@ -79,7 +79,6 @@ test-ref-unit:  ## run the climate-ref unit tests (+ src doctests)
 		coverage run --source=packages/climate-ref/src \
 		-m pytest packages/climate-ref \
 		--ignore=packages/climate-ref/tests/integration \
-		--ignore=packages/climate-ref/tests/perf \
 		-r a -v --doctest-modules --durations=0 --durations-min=1
 
 # Fraction of the production database size to synthesise. 1 is about 8 GB and takes a few minutes to build.

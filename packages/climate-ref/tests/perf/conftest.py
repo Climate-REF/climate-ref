@@ -6,11 +6,13 @@ The database is built once per shape, scale and schema, and cached under ``REF_P
 """
 
 import hashlib
+import importlib.util
 import json
 import os
 import re
 import sqlite3
 import statistics
+import sys
 import time
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -21,14 +23,26 @@ import pytest
 from sqlalchemy import event
 
 import climate_ref
-from climate_ref import synthetic
 from climate_ref.config import Config
 from climate_ref.conftest_plugin import _build_cached_file
 from climate_ref.database import Database
 from climate_ref.results import Reader
-from climate_ref.synthetic import Shape, build_synthetic_database
 
 SHAPE_PATH = Path(__file__).parent / "shape.json"
+SYNTHETIC_PATH = Path(__file__).parent / "synthetic.py"
+
+
+def _load_synthetic() -> Any:
+    # Kept out of the package so it is not a supported testing surface, and conftests cannot import siblings.
+    spec = importlib.util.spec_from_file_location("reader_perf_synthetic", SYNTHETIC_PATH)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+synthetic = _load_synthetic()
 
 # Tables large enough in production that reading every row is too slow for an interactive read.
 LARGE_TABLES = frozenset(
@@ -72,10 +86,16 @@ def _cache_key(shape_text: str, scale: float) -> str:
     digest = hashlib.sha256()
     digest.update(shape_text.encode())
     digest.update(str(scale).encode())
-    digest.update(Path(synthetic.__file__).read_bytes())
+    digest.update(SYNTHETIC_PATH.read_bytes())
     for p in sorted(migrations.glob("*.py")):
         digest.update(p.read_bytes())
     return digest.hexdigest()[:12]
+
+
+@pytest.fixture(scope="session")
+def synthetic_module() -> Any:
+    """The synthetic database generator, for tests of the generator itself."""
+    return synthetic
 
 
 @pytest.fixture(scope="session")
@@ -89,7 +109,10 @@ def perf_database_path() -> Path:
     cache.mkdir(parents=True, exist_ok=True)
     path = cache / f"reader-perf-{scale:g}-{_cache_key(shape_text, scale)}.db"
     _build_cached_file(
-        path, lambda tmp: build_synthetic_database(tmp, Shape.from_json(SHAPE_PATH), scale=scale)
+        path,
+        lambda tmp: synthetic.build_synthetic_database(
+            tmp, synthetic.Shape.from_json(SHAPE_PATH), scale=scale
+        ),
     )
     return path
 

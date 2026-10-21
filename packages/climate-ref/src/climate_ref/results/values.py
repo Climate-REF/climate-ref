@@ -50,8 +50,8 @@ if TYPE_CHECKING:
     from climate_ref.results.resources import ResourcesReader
 
 
-_ID_CHUNK = 10_000
-"""Ids per ``IN`` lookup, below SQLite's bound-parameter limit."""
+_ID_CHUNK = 900
+"""Ids per ``IN`` lookup, below the 999 bound parameters SQLite allowed before 3.32."""
 
 
 def _kind_of(dimensions: Mapping[str, str]) -> str:

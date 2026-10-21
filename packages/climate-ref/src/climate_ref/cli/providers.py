@@ -14,6 +14,9 @@ from climate_ref.cli._utils import OutputFormat, pretty_print_df, render_datafra
 if TYPE_CHECKING:
     from rich.console import Console
 
+    from climate_ref.config import Config
+    from climate_ref.database import Database
+    from climate_ref_core.providers import DiagnosticProvider
     from climate_ref_core.summary import ProviderSummary
 
 app = typer.Typer(help=__doc__)
@@ -252,6 +255,36 @@ def create_env(
     list_(ctx)
 
 
+def _setup_provider(  # noqa: PLR0913
+    provider: "DiagnosticProvider",
+    config: "Config",
+    db: "Database",
+    *,
+    skip_env: bool,
+    skip_data: bool,
+    skip_validate: bool,
+) -> bool:
+    """Set up one provider and ingest its data, returning whether it succeeded."""
+    from climate_ref.datasets import ingest_provider_data
+
+    logger.info(f"Setting up provider {provider.slug}")
+    try:
+        provider.setup(config, skip_env=skip_env, skip_data=skip_data)
+        if not skip_data:
+            ingest_provider_data(provider, config, db)
+        if skip_validate:
+            logger.info(f"Skipped validation for provider {provider.slug}")
+            return True
+        if not provider.validate_setup(config):
+            logger.error(f"Provider {provider.slug} setup completed but validation failed")
+            return False
+        logger.info(f"Finished setting up provider {provider.slug}")
+        return True
+    except Exception as e:
+        logger.opt(exception=True).error(f"Failed to setup provider {provider.slug}: {e}")
+        return False
+
+
 @app.command()
 def setup(  # noqa: PLR0913
     ctx: typer.Context,
@@ -316,20 +349,9 @@ def setup(  # noqa: PLR0913
                 failed_providers.append(provider_.slug)
             continue
 
-        logger.info(f"Setting up provider {provider_.slug}")
-        try:
-            provider_.setup(config, db=db, skip_env=skip_env, skip_data=skip_data)
-            if not skip_validate:
-                is_valid = provider_.validate_setup(config)
-                if not is_valid:
-                    logger.error(f"Provider {provider_.slug} setup completed but validation failed")
-                    failed_providers.append(provider_.slug)
-                else:
-                    logger.info(f"Finished setting up provider {provider_.slug}")
-            else:
-                logger.info(f"Skipped validation for provider {provider_.slug}")
-        except Exception as e:
-            logger.opt(exception=True).error(f"Failed to setup provider {provider_.slug}: {e}")
+        if not _setup_provider(
+            provider_, config, db, skip_env=skip_env, skip_data=skip_data, skip_validate=skip_validate
+        ):
             failed_providers.append(provider_.slug)
 
     if failed_providers:

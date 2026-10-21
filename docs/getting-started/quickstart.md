@@ -188,6 +188,7 @@ config = Config.default()   # reads $REF_CONFIGURATION
 with Database.from_config(config, read_only=True) as db:
     bias = Reader(db).values.scalar_values(
         filters=MetricValueFilter(diagnostic_slug="global-sst-bias", provider_slug="example"),
+        with_facets=False,
     ).to_pandas()
 
 print(bias[["source_id", "reference_source_id", "statistic", "value"]])

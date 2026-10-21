@@ -33,7 +33,7 @@ config = Config.default()
 
 with Database.from_config(config, read_only=True) as db:
     reader = Reader(db)
-    df = reader.values.scalar_values().to_pandas()
+    df = reader.values.scalar_values(with_facets=False).to_pandas()
 
 # `df` is a plain DataFrame and remains valid out here, after the session has closed.
 ```
@@ -83,13 +83,26 @@ from climate_ref.results import MetricValueFilter
 
 with Database.from_config(config, read_only=True) as db:
     reader = Reader(db)
-    collection = reader.values.scalar_values()
+    collection = reader.values.scalar_values(with_facets=False)
 
     print(collection.total_count)      # values matching the filter, before pagination
-    print(collection.facets_dict())    # {dimension: [distinct values]} over the full set
 
     df = collection.to_pandas()
 ```
+
+Facets are the distinct values of each CV dimension over the full filtered set, before pagination.
+They are a separate call, so a page of values does not pay for them unless you ask:
+
+```python
+with Database.from_config(config, read_only=True) as db:
+    facets = Reader(db).values.facets(MetricValueFilter(diagnostic_slug="global-mean-timeseries"))
+    # (Facet(key="source_id", values=("ACCESS-ESM1-5", ...)), ...)
+```
+
+Pass `value_type=MetricValueType.SERIES` to read the facets of series values instead.
+Passing `with_facets=True` to `scalar_values()` or `series_values()` attaches them to the collection.
+Leaving `with_facets` unset still does that for now, but emits a `FutureWarning`
+because facets will default to off in a future release.
 
 Pass a `MetricValueFilter` to narrow the query.
 Every field is optional; `None`/empty means "do not constrain on this axis".
@@ -108,7 +121,7 @@ filters = MetricValueFilter(
 )
 
 with Database.from_config(config, read_only=True) as db:
-    df = Reader(db).values.scalar_values(filters=filters).to_pandas()
+    df = Reader(db).values.scalar_values(filters=filters, with_facets=False).to_pandas()
 ```
 
 An unknown dimension key raises `KeyError` rather than silently returning the wrong data.
@@ -127,6 +140,7 @@ from climate_ref.results import OutlierPolicy
 with Database.from_config(config, read_only=True) as db:
     collection = Reader(db).values.scalar_values(
         outliers=OutlierPolicy(method="iqr", factor=10.0),
+        with_facets=False,
         include_unverified=True,   # keep flagged rows in the result (default drops them)
     )
     print(collection.had_outliers, collection.outlier_count)
@@ -145,7 +159,8 @@ each carrying its `values`, the shared `index`, and the `index_name`:
 ```python
 with Database.from_config(config, read_only=True) as db:
     collection = Reader(db).values.series_values(
-        MetricValueFilter(reference_only=False)   # model series only; True for reference/observations
+        MetricValueFilter(reference_only=False),   # model series only; True for reference/observations
+        with_facets=False,
     )
 
     long_df = collection.to_pandas()                 # one row per (series, index point)
@@ -163,7 +178,7 @@ Ordering is deterministic (id-tie-broken), so paging is stable across calls:
 
 ```python
 with Database.from_config(config, read_only=True) as db:
-    page = Reader(db).values.scalar_values(offset=0, limit=100)
+    page = Reader(db).values.scalar_values(offset=0, limit=100, with_facets=False)
 ```
 
 ## Executions

@@ -503,7 +503,8 @@ class TestPromotedOnly:
 
 class TestPromotedOnlyAlias:
     def test_default_excludes_superseded(self):
-        assert MetricValueFilter().include_superseded is False
+        assert not MetricValueFilter().include_superseded
+        assert MetricValueFilter() == MetricValueFilter(include_superseded=False)
 
     @pytest.mark.parametrize(("promoted_only", "include_superseded"), [(True, False), (False, True)])
     def test_maps_onto_include_superseded(self, promoted_only, include_superseded):
@@ -512,9 +513,19 @@ class TestPromotedOnlyAlias:
         assert f.include_superseded is include_superseded
         assert f == MetricValueFilter(include_superseded=include_superseded)
 
-    def test_both_raises(self):
-        with pytest.raises(ValueError, match="not both"):
-            MetricValueFilter(promoted_only=True, include_superseded=False)
+    def test_disagreeing_values_raise(self):
+        with pytest.raises(ValueError, match="disagree"):
+            MetricValueFilter(promoted_only=True, include_superseded=True)
+
+    def test_agreeing_values_are_accepted(self):
+        with pytest.warns(DeprecationWarning):
+            assert MetricValueFilter(promoted_only=False, include_superseded=True).include_superseded
+
+    @pytest.mark.parametrize(("promoted_only", "include_superseded"), [(True, False), (False, True)])
+    def test_evolve_applies_alias(self, promoted_only, include_superseded):
+        with pytest.warns(DeprecationWarning):
+            f = attrs.evolve(MetricValueFilter(), promoted_only=promoted_only)
+        assert bool(f.include_superseded) is include_superseded
 
     def test_evolve_keeps_resolved_value(self):
         f = attrs.evolve(MetricValueFilter(include_superseded=True), latest_only=True)

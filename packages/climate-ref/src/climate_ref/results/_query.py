@@ -165,11 +165,11 @@ class MetricValueFilter(ExecutionScope):
     reference_only: bool | None = None
     """Series-only: ``True`` for observation/reference series, ``False`` for model series."""
 
-    include_superseded: bool | None = None
+    include_superseded: bool | None = attrs.field(default=None, eq=bool)
     """
     Include execution groups at superseded diagnostic versions, matching ``ExecutionGroupFilter``.
 
-    Unset or ``False`` keeps only groups at the diagnostic's currently promoted version.
+    ``None`` (unset) or ``False`` keeps only groups at the diagnostic's currently promoted version.
     """
 
     promoted_only: bool | None = attrs.field(default=None, repr=False, eq=False)
@@ -179,18 +179,18 @@ class MetricValueFilter(ExecutionScope):
     """Restrict to values produced by executions that ran against matching datasets."""
 
     def __attrs_post_init__(self) -> None:
-        if self.promoted_only is not None:
-            if self.include_superseded is not None:
-                raise ValueError("Pass include_superseded or the deprecated promoted_only, not both")
-            warnings.warn(
-                "MetricValueFilter(promoted_only=...) is deprecated. Use include_superseded instead.",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-            object.__setattr__(self, "include_superseded", not self.promoted_only)
-            object.__setattr__(self, "promoted_only", None)
-        elif self.include_superseded is None:
-            object.__setattr__(self, "include_superseded", False)
+        if self.promoted_only is None:
+            return
+        # Unset stays None so attrs.evolve can still apply the alias to an existing filter.
+        if self.include_superseded is not None and self.include_superseded == self.promoted_only:
+            raise ValueError("include_superseded and the deprecated promoted_only disagree")
+        warnings.warn(
+            "MetricValueFilter(promoted_only=...) is deprecated. Use include_superseded instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        object.__setattr__(self, "include_superseded", not self.promoted_only)
+        object.__setattr__(self, "promoted_only", None)
 
     def dimension_clauses(self, entity: type[MetricValue]) -> list[Any]:
         """

@@ -28,7 +28,7 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
-from climate_ref.results._query import ExecutionScope, apply_execution_scope, count_values
+from climate_ref.results._query import ExecutionScope, InputDatasetFilter, apply_execution_scope, count_values
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -86,7 +86,8 @@ class ResourceFilter(ExecutionScope):
     Declarative filter over the executions considered for a resource profile.
 
     Every field is optional, and ``None`` means "do not constrain on this axis".
-    Every diagnostic version is counted, because there is no promoted-version scoping here.
+    Every diagnostic version is counted by default, so ``profiles()`` sees the full history.
+    This differs from ``MetricValueFilter``, which keeps only the promoted version unless told otherwise.
     ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches
     (OR-combined within each field),
     matching the semantics used by
@@ -107,6 +108,12 @@ class ResourceFilter(ExecutionScope):
 
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
+
+    include_superseded: bool = True
+    """Include groups at superseded diagnostic versions. ``False`` keeps the promoted version only."""
+
+    input_datasets: InputDatasetFilter | None = None
+    """Restrict to executions that ran against matching datasets."""
 
 
 @attrs.frozen(kw_only=True)
@@ -466,6 +473,10 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
         stmt = stmt.where(Provider.slug == filters.provider_slug)
     if filters.since is not None:
         stmt = stmt.where(Execution.created_at >= filters.since)
+    if not filters.include_superseded:
+        stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
+    if filters.input_datasets:
+        stmt = stmt.where(filters.input_datasets.execution_clause())
     return apply_execution_scope(stmt, filters)
 
 

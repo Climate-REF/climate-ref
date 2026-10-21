@@ -7,12 +7,15 @@ from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import Reader, ResourceFilter
+from climate_ref.results import InputDatasetFilter, Reader, ResourceFilter
 from climate_ref.results.resources import _percentile
+from climate_ref_core.source_types import SourceDatasetType
 
 GIB = 1024**3
+CMIP6 = SourceDatasetType.CMIP6
 
 
 def _add_execution(session, group_id: int, index: int, **columns):
@@ -542,6 +545,79 @@ class TestSummary:
             for s in reader.summaries(ResourceFilter(latest_only=True), group_by="provider")
         }
         assert per_provider == {"esmvaltool": 1, "pmp": 1}
+
+
+class TestSuperseded:
+    @pytest.fixture
+    def db_superseded(self, db_with_resources):
+        with db_with_resources.session.begin():
+            diagnostic = db_with_resources.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            diagnostic.promoted_version = 2
+        return db_with_resources
+
+    def test_counted_by_default(self, db_superseded):
+        reader = Reader(db_superseded).resources
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel")) is not None
+        assert "enso_tel" in _by_slug(reader.profiles())
+
+    def test_excluded_when_asked(self, db_superseded):
+        reader = Reader(db_superseded).resources
+        f = ResourceFilter(include_superseded=False)
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", include_superseded=False)) is None
+        assert {m.diagnostic_slug for m in reader.measurements(f)} == {
+            "extratropical-modes-of-variability-nao",
+            "enso-characteristics",
+        }
+        assert "enso_tel" not in _by_slug(reader.profiles(f))
+        assert "enso_tel" not in {s.diagnostic_slug for s in reader.summaries(f)}
+
+
+class TestInputDatasets:
+    @pytest.fixture
+    def db_with_inputs(self, db_with_resources):
+        session = db_with_resources.session
+        with session.begin():
+            slug = "CMIP6.CMIP.TEST.FACET-A.historical.r1i1p1f1.Amon.tas.gn.v1"
+            dataset = CMIP6Dataset(
+                slug=slug,
+                activity_id="CMIP",
+                experiment_id="historical",
+                institution_id="TEST",
+                source_id="FACET-A",
+                member_id="r1i1p1f1",
+                table_id="Amon",
+                variable_id="tas",
+                grid_label="gn",
+                version="v1",
+                instance_id=slug,
+                variant_label="r1i1p1f1",
+            )
+            session.add(dataset)
+            execution = (
+                session.query(Execution)
+                .join(ExecutionGroup)
+                .filter(ExecutionGroup.key == "nao")
+                .order_by(Execution.id)
+                .first()
+            )
+            execution.datasets = [dataset]
+        return db_with_resources
+
+    def test_scopes_every_read(self, db_with_inputs):
+        reader = Reader(db_with_inputs).resources
+        f = ResourceFilter(
+            input_datasets=InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-A"})
+        )
+        none = ResourceFilter(
+            input_datasets=InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "NO-SUCH-MODEL"})
+        )
+        summary = reader.summary(f)
+        assert summary is not None
+        assert summary.timed_execution_count == 1
+        assert [s.diagnostic_slug for s in reader.summaries(f)] == ["extratropical-modes-of-variability-nao"]
+        assert len(reader.measurements(f)) == 1
+        assert list(_by_slug(reader.profiles(f))) == ["extratropical-modes-of-variability-nao"]
+        assert reader.summary(none) is None
 
 
 class TestRetracted:

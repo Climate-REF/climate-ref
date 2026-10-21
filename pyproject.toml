@@ -31,6 +31,7 @@ dev = [
     "coverage>=7.2.0",
     "mypy>=2.3.1",
     "ruff>=0.15.11",
+    "import-linter>=2.15",
     "pre-commit>=3.3.1",
     "towncrier>=25.8.0",
     "bump-my-version>=0.28.1",
@@ -141,6 +142,28 @@ exclude = [
 mypy_path = "stubs"
 # We need a custom mypy plugin to handle the way we create configuration classes
 plugins = "mypy_plugin.py"
+
+[tool.importlinter]
+root_packages = [
+    "climate_ref",
+    "climate_ref_celery",
+    "climate_ref_core",
+    "climate_ref_esmvaltool",
+    "climate_ref_example",
+    "climate_ref_ilamb",
+    "climate_ref_pmp",
+]
+
+[[tool.importlinter.contracts]]
+# Providers ship without the application, so they may depend only on climate_ref_core.
+name = "Package layers"
+type = "layers"
+layers = [
+    "climate_ref_celery",
+    "climate_ref",
+    "climate_ref_esmvaltool | climate_ref_example | climate_ref_ilamb | climate_ref_pmp",
+    "climate_ref_core",
+]
 
 [tool.jupytext]
 formats = "ipynb,py:percent"

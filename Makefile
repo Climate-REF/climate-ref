@@ -34,6 +34,10 @@ pre-commit:  ## run all the linting checks of the codebase
 mypy:  ## run mypy on the codebase
 	uv run mypy packages
 
+.PHONY: lint-imports
+lint-imports:  ## check the import layers between packages
+	uv run lint-imports
+
 .PHONY: clean
 clean:  ## clean up temporary files
 	rm -rf site dist build

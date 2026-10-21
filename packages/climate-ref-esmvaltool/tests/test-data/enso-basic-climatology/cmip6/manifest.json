@@ -2,150 +2,210 @@
   "catalog_hash": "95adcf0e15ac8162a61c2dcf727948a746453a99",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "f1a62fdcea7c346688eb476587778df31bec3e0b457b8fb5b4aeb7d57d2bb63e",
-    "series.json": "ad93b4525763b2e0070f0bf92a20d95ea77731b911e21da770d5fba7d13e7782"
+    "output.json": "07f77b37f94c64bc2a1efc567c321b0738e7f3c07a305a86fd57f11e7635d251",
+    "series.json": "fb377eb3bc1005244a95873147d9aff1b717a73f1e3b6bfcb14828fcb5e420bd"
   },
-  "diagnostic_version": 1,
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
       "size": 128
     },
     "executions/recipe/index.html": {
-      "sha256": "b7d39c220a44efe4b8da71b0eebdb40bf0823f1f72f8e6868ccc274f4fa297c5",
-      "size": 36384
+      "sha256": "05f3df64be7160e8c0051e73fddc1ad912271d06ac570cbbf13b9ea0b401fc56",
+      "size": 48085
     },
-    "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_pr_map_bias_level2.png": {
-      "sha256": "5e8e2a6e1caed24b58fc1a2377e379048706feae72ceea221c789a1b4201e59d",
-      "size": 388164
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel2_script/png/CanESM5_pr_map_bias_level2.png": {
+      "sha256": "313e01478ccd39ab3bb686b03357e9f91b0351c83de6269f98716210e7489f7e",
+      "size": 393325
     },
-    "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_pr_map_sea_cyclel2.png": {
-      "sha256": "ea78148980ca86c57b7a0cfa11d35e0d7f242e8e9135e371cbde9836263d1ea6",
-      "size": 398370
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel2_script/png/CanESM5_pr_map_sea_cyclel2.png": {
+      "sha256": "fe0484d8f45286c8190c6e68bf66634a216140090d526673fe2b448154ccbbee",
+      "size": 406868
     },
-    "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_tauu_map_bias_level2.png": {
-      "sha256": "7fa90b8bf1e1cf33ab093dfa0a9a76764dd1b0e9fd23283addb28e3ae5541a24",
-      "size": 368249
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel2_script/png/CanESM5_tauu_map_bias_level2.png": {
+      "sha256": "b2d73abb7fdd94cce4b2e14d32a4194b94b2d10bd656d130207fa522c6ee3646",
+      "size": 375299
     },
-    "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_tos_map_bias_level2.png": {
-      "sha256": "0071e7fbb42054259bdd3d5f0b926b78a6fcd24cc71b79eddb3bdfc28072c471",
-      "size": 378690
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel2_script/png/CanESM5_tos_map_bias_level2_sea.png": {
+      "sha256": "93e7be0f06cd183867406b4ece0dae37cfcbe317c2b76a24e22e499844eb96f1",
+      "size": 391927
+    },
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel3_script/png/CanESM5_doubleITCZ_seacycle_level3.png": {
+      "sha256": "85317eaf192f5fa756f29d59e0b19c953a31c5bd5805c5b77314e6562b7f69d0",
+      "size": 471945
+    },
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel3_script/png/CanESM5_pr_seacycle_level3.png": {
+      "sha256": "888c3f7274ccb2aaf6a18ab4074fe4f3875ff28db7b4809f30bbcc73885bb7bb",
+      "size": 327688
     },
     "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_pr_bias.png": {
-      "sha256": "a2e4b0735f58424cea52570b02fe39da672b96aaf308f4a1c2a4264e3b4658c6",
-      "size": 180985
+      "sha256": "96b2494ac34b10149d3d5f27eea15a73c9c1b30db92e42151cf0b45c6429a641",
+      "size": 178504
     },
     "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_pr_seacycle.png": {
-      "sha256": "9f937e585c7d880326672068f5d47f7fe3d2c2ef216e8e844dff2b980efa8186",
-      "size": 183021
+      "sha256": "0ae5f63de01735413b30996989d1670d8ff3cadb267edbcd0720cdde303cddf2",
+      "size": 193515
     },
     "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_sst_bias.png": {
-      "sha256": "69b17316439a382172a440a925cf365252c4adc66116a39e4e98e332bfd364d9",
-      "size": 197840
+      "sha256": "7a640bc434bd0898efe6c67e24facc104398383eb3654990b3fec57128af553b",
+      "size": 201580
     },
     "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_sst_seacycle.png": {
-      "sha256": "f5ff67d1cb021397928939e5e8a2edac4f40d42182fd018c6e4dbe5126bac8c6",
-      "size": 193141
+      "sha256": "1155b7b65dbf12d16f1c90188be47d0e9cfa6e31691eba87d2d299b0e02b874f",
+      "size": 198600
     },
     "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_tauu_bias.png": {
-      "sha256": "833534f718ea693966bf0927815fee9e88fa477ef1cc1ff5653715fdfbbe1485",
-      "size": 225020
+      "sha256": "4913a03146bd3a58089ce3dbd7e6128ebb8e97ecbf602a3fc838b9195b1f4f06",
+      "size": 227110
     },
     "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_tauu_seacycle.png": {
-      "sha256": "61440982103d2e7c577c29a64544fae526e089faad94a83d2249a8b9d1d71a3d",
-      "size": 218845
+      "sha256": "b6993ee3e0723204a4f3c0b484525e54cb5f0215a70fc409103f7c2560661b30",
+      "size": 224667
     },
     "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_pr_double.png": {
-      "sha256": "1d21d968b734ea27b999d2ef224b17fef12e84afc2e2e9a5c794435ff85148f4",
-      "size": 194336
+      "sha256": "3c7896e6aca4ab9e845fd54bcd65214052a09d95d1745fbe01812dbe140a5f09",
+      "size": 202514
     },
     "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_pr_double_seacycle.png": {
-      "sha256": "43ab496fa1d323cfb1b21c77d9c2fdfe683a1a0530a747c9f5ab7a46463ae7aa",
-      "size": 209312
+      "sha256": "664f6619e8e4a26033dd49f026836ce4d78febefaf546555cd79627651333e53",
+      "size": 221531
     },
-    "executions/recipe/run/diagnostic_level2/plot_script/diagnostic_provenance.yml": {
-      "sha256": "4a8b8451153951bb540b9edc850be950aff889fb31e77952babd2d17ec056f70",
-      "size": 5364
+    "executions/recipe/run/diagnostic_divedowns/plotlevel2_script/diagnostic_provenance.yml": {
+      "sha256": "8902dcc43c8c22aac25dd61ba8a7f1852fc8ba52769a5908486f39c3ecdc707c",
+      "size": 9032
+    },
+    "executions/recipe/run/diagnostic_divedowns/plotlevel3_script/diagnostic_provenance.yml": {
+      "sha256": "caa6dea92333169ed10fa711bad40d7cd4b7fe12a76c118f2e90cf561758d40d",
+      "size": 4743
     },
     "executions/recipe/run/diagnostic_metrics/plot_script/diagnostic_provenance.yml": {
-      "sha256": "12d151f1c2ac4ec9b64e8e8a06f9ee297933963f4447f2c6b607daf8012b20a1",
-      "size": 64204
+      "sha256": "a6f78716f51e8e36590d6cd14b8274cd0ebf783c32a6bd8451cd5ad53ff3c993",
+      "size": 18380
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/CanESM5_pr_map_bias_level2.nc": {
+      "sha256": "fadc60fb7b00f2e4ceb4a930e00e23bdb7b80acef1f94c9175c0fbb394d54cfd",
+      "size": 43947
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/CanESM5_pr_map_sea_cyclel2.nc": {
+      "sha256": "ae30bdc67fb57258d8145412fd5f2999e2dbaba2992846f7886226f9170d87ed",
+      "size": 42698
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/CanESM5_tauu_map_bias_level2.nc": {
+      "sha256": "3d73cbec563bcafcd85146ec30a58124adb2cc07c707ea530a02cc0443ce1b3c",
+      "size": 42879
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/CanESM5_tos_map_bias_level2_sea.nc": {
+      "sha256": "43d9c55d1da4500635590c0196d99edb21a251fed13a2ace85b7ff1fce4a0a45",
+      "size": 42758
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/GPCP-V3.3_pr_map_bias_level2.nc": {
+      "sha256": "45a8ad7f31e97cad0bfc5a766ea2b43b8426becccfc1c640e50684d08fe02689",
+      "size": 37279
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/GPCP-V3.3_pr_map_sea_cyclel2.nc": {
+      "sha256": "1068fca7071f64d35b1036a1ac26e1739d8f3c9ef5d85aa309fb0f5ff7b3e2df",
+      "size": 37309
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/TROPFLUX_tauu_map_bias_level2.nc": {
+      "sha256": "ff5154ac80f9c6db4948039ef2cf0b0ab7b992e66ab7fd16325b03aad3aa6441",
+      "size": 34151
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/TROPFLUX_tos_map_bias_level2_sea.nc": {
+      "sha256": "30c0bf9fda746a847c926be49cdc8f61d7f83778393abaae025d48bee0ef342d",
+      "size": 34246
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel3_script/CanESM5_pr_doubleITCZ_seacycle_level3.nc": {
+      "sha256": "d6dc4ff2a7df8ec3bb1d910f81f37affc26062451ed9ee040017806e29d6af6f",
+      "size": 24991
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel3_script/CanESM5_pr_pr_seacycle_level3.nc": {
+      "sha256": "e4e8eb0eb5b6f8423b54e5cfc262acd1b8843e5e362bfa22925f270be648ef29",
+      "size": 29808
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel3_script/GPCP-V3.3_pr_doubleITCZ_seacycle_level3.nc": {
+      "sha256": "e9ba1dbde3fcdd8839ec5a8908f16250a436701aac45c505a78d5bcd0afbc0d1",
+      "size": 19706
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel3_script/GPCP-V3.3_pr_pr_seacycle_level3.nc": {
+      "sha256": "8eba21c1d7d9110c42412cd3fb2410a164166d932f78bcfa4447374da5a9bcac",
+      "size": 24442
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_pr_bias.nc": {
-      "sha256": "d41dc07794860d38af1aac6e9ed7d7d80ca32ffd34acce7c49b1f69ffb4f4158",
-      "size": 25433
+      "sha256": "9a336701396ae23adfd75d72b3bfc7a7ad992303790b788cf881373672b01655",
+      "size": 25581
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_pr_seacycle.nc": {
-      "sha256": "74798ddae670af1168c44f48aa88af99f9d5477640515d10b88756e07a636834",
-      "size": 27300
+      "sha256": "694fa28489b30f1842813a177347bc1ee6bc6069f500e66e8a7032b597f8e822",
+      "size": 25278
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_sst_bias.nc": {
-      "sha256": "a5d4c8de9cb618a12a6895c21e22509adf2b470b4ba5cf3ab77c3795d3a459eb",
-      "size": 25537
+      "sha256": "8deb51b8122d5626161c59004b9867822f652b81fa6ffb41d2af61728d0c1c19",
+      "size": 25915
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_sst_seacycle.nc": {
-      "sha256": "f19c47b2c177d16e53962447bf8fe7e93931489e002000f31c2ba5f7fa00c09d",
-      "size": 26975
+      "sha256": "7382383de7899e6b34034d915c2ebd1f105b29ffd3ce69291515850c2538e1d0",
+      "size": 24958
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_tauu_bias.nc": {
-      "sha256": "3fab752378aa10748c3e835ce535e252b0973058b12ee6b79c8c27c51ffd0b4d",
-      "size": 25483
+      "sha256": "5f6bfc0020d6e4200be31a754c6cde547c723612e5533ac8f99a3a8ee62ec66c",
+      "size": 25866
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_tauu_seacycle.nc": {
-      "sha256": "b2ae0ee926390ff1d0440c3fb4f524cd427b8d33dc06e474fbd35a7a83e20f5a",
-      "size": 27352
+      "sha256": "b7cb0014e74bf06471890b09447ac88d60a6d32c313cc651efdd42fc49264d98",
+      "size": 25337
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_pr_double.nc": {
-      "sha256": "357429f802d4b2117172240151165437873b1952eda8f0c2f7e9caa233fde6fd",
-      "size": 23326
+      "sha256": "ffe3c0af71407a6bfb5e4ed33c332ae9187cb4fa2c60cd6e5e49919212cda81a",
+      "size": 23503
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_pr_double_seacycle.nc": {
-      "sha256": "c5bc7f5e779d898ad0e1d986ee8fe51865f3285f3122acd6918832595e2474eb",
-      "size": 23983
+      "sha256": "24aab480def37e14fa77091aa838e2a2a66bf4c252c8adb53118a5e53a0edd7b",
+      "size": 23944
     },
-    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_eq_pr_bias.nc": {
-      "sha256": "26b9215ad41a144f883f63a93e7a16898c82337f78031e840321cbb932b67f46",
-      "size": 21582
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V3.3_eq_pr_bias.nc": {
+      "sha256": "75d7fc525c7cd2fd15aec944bfd8869773c6f79b7f34cf0415abd019ccc83d4e",
+      "size": 20340
     },
-    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_eq_pr_seacycle.nc": {
-      "sha256": "e89b1700256f05f5a1f71070d4ede4c8d22718c8eef22cd81e8a4b151ac3f232",
-      "size": 23426
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V3.3_eq_pr_seacycle.nc": {
+      "sha256": "5276ac7f9d6575859f2beb6d2537a37f4a6da1625d64549a9479093b0d4717a3",
+      "size": 19599
     },
-    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_pr_double.nc": {
-      "sha256": "1bf124020d87961183a12506ad600038dd0152b19749d830fb3ea32651b9d71f",
-      "size": 19489
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V3.3_pr_double.nc": {
+      "sha256": "443b7574f86d52345382d0659e93d3a8374456718575ae376e9a5e26ce5ac972",
+      "size": 18278
     },
-    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_pr_double_seacycle.nc": {
-      "sha256": "b4fad07f622099357441ebb2128f86e039d8614decb580d98f6f19d113da377e",
-      "size": 20101
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V3.3_pr_double_seacycle.nc": {
+      "sha256": "22dacff5b04d3e28c804a9d8aa86a2565a179b783bac7125266083069d3f9105",
+      "size": 18249
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_bias.nc": {
-      "sha256": "a7e5a9d76b8f272205358cabd0364e8864ed6da66a906637d82ef04ab17c85a8",
-      "size": 17114
+      "sha256": "877054af786ad11def9c28cdda763c25f9b05d7c4019dded8233b8ccf66b1a63",
+      "size": 17275
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_seacycle.nc": {
-      "sha256": "7b49d8b6584b02eaf429bb939735dbdc95f70927103c4a96d664c53e5dd6d93e",
-      "size": 18428
+      "sha256": "74fb4390f8cca764c3533464817dbf518998046bfce1a2741d494d4bcc257e7d",
+      "size": 16509
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_bias.nc": {
-      "sha256": "558bd07b647c923efe2ba3573ec7acc3b782ec0c2fe6d75b9d20d0e00f5122e5",
-      "size": 17079
+      "sha256": "fbc919d563614bcbce406c80a8be7e90644f157dc2a8bebe3eaf12243205a406",
+      "size": 17257
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_seacycle.nc": {
-      "sha256": "95b3198358220e0f47768339003c3283266cde702148fa2d99d4bd6ff5bdca5c",
-      "size": 18466
+      "sha256": "99fb3e7b58aea1c61330e10316cc2d482390623a9f53021c48277aa27af60f48",
+      "size": 16503
     },
     "executions/recipe/work/diagnostic_metrics/plot_script/matrix.csv": {
-      "sha256": "dfb1eba6335680002b084a0d97a330d21cd64564f1ebc6ac8482cdf82dbf3a5b",
-      "size": 325
+      "sha256": "8ecf9f85d4039ddd7282d799f2642c5b9ee5ed66a639d69c404e164dff6bafb4",
+      "size": 328
     },
     "output.json": {
-      "sha256": "a778cdf1abf190ec3bd207cdda3a4e9076bc645e753f0a87f7187d15ca724e44",
-      "size": 15481
+      "sha256": "5d4d69c5f59288a5ebf3f2a828ac95af4df08ca1856e07bff11e4eded032310f",
+      "size": 21835
     },
     "series.json": {
-      "sha256": "5aefac17c9d1a33f5143f78010c6d54f9895ce2718953e26d33513cc7208292f",
-      "size": 93534
+      "sha256": "fa9102a8534180092bc859b06bf6e833995338b7bae47392b9ffadf3db95f4ae",
+      "size": 73576
     }
   },
   "schema": 2,

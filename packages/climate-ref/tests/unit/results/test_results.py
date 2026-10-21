@@ -424,6 +424,41 @@ class TestLatestOnly:
         assert len(reader.values.series_values(MetricValueFilter(latest_only=True))) == 2
 
 
+class TestRetracted:
+    @pytest.fixture
+    def retracted_latest(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            execution_id = _add_execution(
+                session, dal_db.execution_group_id, "retracted", datetime.datetime(2030, 1, 1)
+            )
+            session.get(Execution, execution_id).retracted = True
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution_id,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        return execution_id
+
+    def test_excluded_by_default(self, dal_db, retracted_latest):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter())
+        assert retracted_latest not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_include_retracted(self, dal_db, retracted_latest):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter(include_retracted=True))
+        assert len(values) == 9
+
+    def test_retracted_latest_execution_still_wins_its_group(self, dal_db, retracted_latest):
+        reader = Reader(dal_db).values
+        assert len(reader.scalar_values(MetricValueFilter(latest_only=True))) == 0
+        latest = reader.scalar_values(MetricValueFilter(latest_only=True, include_retracted=True))
+        assert {v.execution_id for v in latest.items} == {retracted_latest}
+
+
 class _FakeScalar:
     """Minimal stand-in exposing the attributes ``detect_scalar_outliers`` reads."""
 

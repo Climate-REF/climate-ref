@@ -25,6 +25,7 @@ from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, MetricValueType
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
+from climate_ref.results._query import ExecutionScope, apply_execution_scope
 from climate_ref.results._stats import rows_to_execution_stats
 from climate_ref.results.executions import ExecutionStats, select_execution_statistics
 
@@ -233,11 +234,11 @@ def select_diagnostics_with_values(
         .where(
             ExecutionGroup.diagnostic_id == Diagnostic.id,
             ExecutionGroup.diagnostic_version == Diagnostic.promoted_version,
-            Execution.retracted.is_(False),
             # Without table statistics SQLite picks ix_metric_value_type and reads every series row.
             _Unindexed(MetricValue.type.expression) == value_type,
         )
     )
+    has_values = apply_execution_scope(has_values, ExecutionScope())
     if execution_group_where is not None:
         has_values = has_values.where(execution_group_where)
 

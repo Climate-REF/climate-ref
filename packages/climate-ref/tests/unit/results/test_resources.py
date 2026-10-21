@@ -542,3 +542,49 @@ class TestSummary:
             for s in reader.summaries(ResourceFilter(latest_only=True), group_by="provider")
         }
         assert per_provider == {"esmvaltool": 1, "pmp": 1}
+
+
+class TestRetracted:
+    @pytest.fixture
+    def db_with_retracted(self, db_seeded):
+        """``enso_tel`` has an older live run of 100 s and a newer retracted run of 900 s."""
+        now = datetime.datetime(2026, 1, 1)
+        with db_seeded.session.begin():
+            _register_provider(db_seeded, pmp_provider)
+            diagnostic = db_seeded.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            group = ExecutionGroup(key="retracted", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+            _add_execution(
+                db_seeded.session, group.id, 0, created_at=now - datetime.timedelta(days=1), **_sample()
+            )
+            _add_execution(
+                db_seeded.session, group.id, 1, created_at=now, retracted=True, **_sample(wall_seconds=900.0)
+            )
+        return db_seeded
+
+    def test_excluded_by_default(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        summary = reader.summary()
+        assert summary is not None
+        assert summary.timed_execution_count == 1
+        assert summary.wall_seconds_total == pytest.approx(100.0)
+        assert len(reader.measurements()) == 1
+
+    def test_include_retracted(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        summary = reader.summary(ResourceFilter(include_retracted=True))
+        assert summary is not None
+        assert summary.timed_execution_count == 2
+        assert len(reader.measurements(ResourceFilter(include_retracted=True))) == 2
+
+    def test_retracted_latest_execution_still_wins_its_group(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        assert reader.summary(ResourceFilter(latest_only=True)) is None
+        summary = reader.summary(ResourceFilter(latest_only=True, include_retracted=True))
+        assert summary is not None
+        assert summary.wall_seconds_total == pytest.approx(900.0)
+
+    def test_profiles_keep_retracted_samples(self, db_with_retracted):
+        (profile,) = Reader(db_with_retracted).resources.profiles()
+        assert profile.n_samples == 2

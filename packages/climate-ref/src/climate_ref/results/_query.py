@@ -30,7 +30,37 @@ from climate_ref.results._converters import _as_str_tuple
 
 
 @attrs.frozen(kw_only=True)
-class MetricValueFilter:
+class ExecutionScope:
+    """
+    Which executions a filter considers, shared by every filter over execution outputs.
+
+    Apply it with [apply_execution_scope][climate_ref.results._query.apply_execution_scope].
+    """
+
+    include_retracted: bool = False
+    """Include retracted executions."""
+
+    latest_only: bool = False
+    """
+    Keep only each group's latest execution, as picked by ``select_latest_executions``.
+
+    A retracted latest execution still wins its group,
+    so with ``include_retracted=False`` that group contributes nothing.
+    """
+
+
+def apply_execution_scope(stmt: Select[Any], scope: ExecutionScope) -> Select[Any]:
+    """Apply an ``ExecutionScope`` to a select already joined to ``Execution``."""
+    if not scope.include_retracted:
+        stmt = stmt.where(Execution.retracted.is_(False))
+    if scope.latest_only:
+        latest = select_latest_executions().subquery()
+        stmt = stmt.where(Execution.id.in_(select(latest.c.execution_id)))
+    return stmt
+
+
+@attrs.frozen(kw_only=True)
+class MetricValueFilter(ExecutionScope):
     """
     Declarative filter over metric values.
 
@@ -82,12 +112,6 @@ class MetricValueFilter:
     promoted_only: bool = True
     """Restrict to execution groups at the diagnostic's currently promoted version."""
 
-    include_retracted: bool = False
-    """Include values produced by retracted executions."""
-
-    latest_only: bool = False
-    """Restrict to values from each group's latest execution, as picked by ``select_latest_executions``."""
-
     def dimension_clauses(self, entity: type[MetricValue]) -> list[Any]:
         """
         Build validated SQLAlchemy clauses for the dynamic CV dimension columns.
@@ -122,19 +146,17 @@ def _apply_common(  # noqa: PLR0912
     needs_diag = bool(
         f.diagnostic_slug or f.provider_slug or f.diagnostic_contains or f.provider_contains
     ) or (f.promoted_only)
-    needs_exec = bool(f.execution_ids or f.execution_group_ids or needs_diag or not f.include_retracted)
+    needs_exec = bool(
+        f.execution_ids or f.execution_group_ids or needs_diag or not f.include_retracted or f.latest_only
+    )
 
     if needs_exec:
         stmt = stmt.join(Execution, entity.execution_id == Execution.id)
-    if not f.include_retracted:
-        stmt = stmt.where(Execution.retracted.is_(False))
+        stmt = apply_execution_scope(stmt, f)
     if f.execution_ids:
         stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
     if f.execution_group_ids:
         stmt = stmt.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
-    if f.latest_only:
-        latest = select_latest_executions().subquery()
-        stmt = stmt.where(entity.execution_id.in_(select(latest.c.execution_id)))
 
     if needs_diag:
         stmt = stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)

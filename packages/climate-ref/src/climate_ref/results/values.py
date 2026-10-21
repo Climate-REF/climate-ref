@@ -15,9 +15,10 @@ power users who need the raw ``Select`` or ORM rows use those modules directly.
 """
 
 import functools
+import warnings
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 import attrs
 import pandas as pd
@@ -26,7 +27,7 @@ from sqlalchemy.orm import Session, joinedload
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
-from climate_ref.models.metric_value import ScalarMetricValue, SeriesMetricValue
+from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesMetricValue
 from climate_ref.results._page import Page
 from climate_ref.results._query import (
     MetricValueFilter,
@@ -44,6 +45,28 @@ if TYPE_CHECKING:
     from climate_ref.results.datasets import DatasetsReader
     from climate_ref.results.diagnostics import DiagnosticsReader
     from climate_ref.results.resources import ResourcesReader
+
+
+class _Unset:
+    """Sentinel type for ``with_facets`` when the caller did not pass it."""
+
+    def __repr__(self) -> str:
+        return "<unset>"
+
+
+_UNSET: Final = _Unset()
+
+
+def _resolve_with_facets(with_facets: "bool | _Unset") -> bool:
+    if isinstance(with_facets, _Unset):
+        warnings.warn(
+            "Facets will default to off in a future release. "
+            "Pass with_facets=True to keep them, or call ValuesReader.facets() instead.",
+            FutureWarning,
+            stacklevel=3,
+        )
+        return True
+    return with_facets
 
 
 def _kind_of(dimensions: Mapping[str, str]) -> str:
@@ -227,6 +250,22 @@ class ValuesReader:
         facet_map = collect_facets(self.session, base_stmt, entity)
         return tuple(Facet(key=k, values=tuple(v)) for k, v in facet_map.items())
 
+    def facets(
+        self,
+        filters: MetricValueFilter | None = None,
+        *,
+        value_type: MetricValueType = MetricValueType.SCALAR,
+    ) -> tuple[Facet, ...]:
+        """
+        Distinct CV dimension values over the full filtered set of scalar or series values.
+
+        This is the same data as the ``facets`` of the matching collection, in one query.
+        """
+        filters = filters or MetricValueFilter()
+        if value_type is MetricValueType.SERIES:
+            return self._facets(select_series_values(filters), SeriesMetricValue)
+        return self._facets(select_scalar_values(filters), ScalarMetricValue)
+
     def scalar_values(  # noqa: PLR0913
         self,
         filters: MetricValueFilter | None = None,
@@ -235,7 +274,7 @@ class ValuesReader:
         include_unverified: bool = False,
         offset: int = 0,
         limit: int | None = None,
-        with_facets: bool = True,
+        with_facets: "bool | _Unset" = _UNSET,
         with_count: bool = True,
         include_context: bool = False,
     ) -> ScalarValueCollection:
@@ -253,7 +292,7 @@ class ValuesReader:
         policy = outliers or OutlierPolicy(method="off")
 
         base_stmt = select_scalar_values(filters)
-        facets = self._facets(base_stmt, ScalarMetricValue) if with_facets else ()
+        facets = self._facets(base_stmt, ScalarMetricValue) if _resolve_with_facets(with_facets) else ()
 
         if not policy.enabled:
             # No detection: page and count in SQL so we never materialise the whole table.
@@ -307,7 +346,7 @@ class ValuesReader:
         *,
         offset: int = 0,
         limit: int | None = None,
-        with_facets: bool = True,
+        with_facets: "bool | _Unset" = _UNSET,
         with_count: bool = True,
         include_context: bool = False,
     ) -> SeriesValueCollection:
@@ -320,7 +359,7 @@ class ValuesReader:
         filters = filters or MetricValueFilter()
 
         base_stmt = select_series_values(filters)
-        facets = self._facets(base_stmt, SeriesMetricValue) if with_facets else ()
+        facets = self._facets(base_stmt, SeriesMetricValue) if _resolve_with_facets(with_facets) else ()
         total_count = count_values(self.session, base_stmt) if with_count else None
 
         load_stmt = paginate(base_stmt.options(self._series_loader(include_context)), offset, limit)

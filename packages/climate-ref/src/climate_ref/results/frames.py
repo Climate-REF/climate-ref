@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-from sqlalchemy import Select, distinct
+from sqlalchemy import Select, String, literal, select, union_all
 from sqlalchemy.orm import Session
 
 from climate_ref.models.metric_value import MetricValue
@@ -99,14 +99,24 @@ def collect_facets(
     """
     Distinct non-null values for each registered CV dimension of a filtered query.
 
-    Runs one ``DISTINCT`` per dimension over the (pre-pagination) ``stmt`` so cost scales with
-    cardinality rather than row count. Returns only dimensions that have at least one value.
+    Runs one statement: a CTE over the (pre-pagination) ``stmt`` that selects only the dimension columns,
+    then a ``UNION ALL`` of one ``GROUP BY`` per dimension.
+    The wide ``SERIES`` payload is never read, and the filtered rows are scanned once.
+    Returns only dimensions that have at least one value.
     """
+    keys = list(entity._cv_dimensions)
+    if not keys:
+        return {}
+    rows_cte = stmt.with_only_columns(*(getattr(entity, k) for k in keys)).order_by(None).cte("facet_rows")
+    union = union_all(
+        *(
+            select(literal(k, String).label("key"), rows_cte.c[k].label("value"))
+            .where(rows_cte.c[k].is_not(None))
+            .group_by(rows_cte.c[k])
+            for k in keys
+        )
+    )
     facets: dict[str, list[str]] = {}
-    for key in entity._cv_dimensions:
-        col = getattr(entity, key)
-        sub = stmt.with_only_columns(distinct(col)).order_by(None)
-        values = [v for (v,) in session.execute(sub) if v is not None]
-        if values:
-            facets[key] = sorted(values)
-    return facets
+    for key, value in session.execute(union):
+        facets.setdefault(key, []).append(value)
+    return {k: sorted(facets[k]) for k in keys if k in facets}

@@ -6,18 +6,24 @@ import math
 import attrs
 import pytest
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
+from sqlalchemy import distinct
 
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models import execution as models_execution
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.metric_value import ScalarMetricValue, SeriesIndex, SeriesMetricValue
+from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.results import (
     MetricValueFilter,
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results._query import latest_execution_for_group, select_latest_executions
-from climate_ref.results.frames import scalar_values_to_frame, series_values_to_frame
+from climate_ref.results._query import (
+    latest_execution_for_group,
+    select_latest_executions,
+    select_scalar_values,
+    select_series_values,
+)
+from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
 from climate_ref.results.outliers import detect_scalar_outliers
 
 
@@ -766,3 +772,72 @@ class TestReaderSession:
             values = Reader(dal_db, session=session).values.scalar_values()
 
         assert len(values.items) == len(expected.items) > 0
+
+
+def _per_dimension_facets(session, stmt, entity):
+    """The previous implementation: one DISTINCT per dimension."""
+    facets = {}
+    for key in entity._cv_dimensions:
+        sub = stmt.with_only_columns(distinct(getattr(entity, key))).order_by(None)
+        values = [v for (v,) in session.execute(sub) if v is not None]
+        if values:
+            facets[key] = sorted(values)
+    return facets
+
+
+class TestFacets:
+    @pytest.mark.parametrize("value_type", [MetricValueType.SCALAR, MetricValueType.SERIES])
+    @pytest.mark.parametrize("filtered", [False, True])
+    def test_matches_collection_facets(self, dal_db, value_type, filtered):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]) if filtered else None
+        if value_type is MetricValueType.SCALAR:
+            expected = values.scalar_values(filters, with_facets=True).facets
+        else:
+            expected = values.series_values(filters, with_facets=True).facets
+
+        assert values.facets(filters, value_type=value_type) == expected
+        assert expected
+
+    @pytest.mark.parametrize(
+        ("value_type", "entity", "select_fn"),
+        [
+            (MetricValueType.SCALAR, ScalarMetricValue, select_scalar_values),
+            (MetricValueType.SERIES, SeriesMetricValue, select_series_values),
+        ],
+    )
+    def test_matches_per_dimension_distinct(self, dal_db, value_type, entity, select_fn):
+        stmt = select_fn(MetricValueFilter())
+        assert collect_facets(dal_db.session, stmt, entity) == _per_dimension_facets(
+            dal_db.session, stmt, entity
+        )
+
+    def test_filter_narrows_facets(self, dal_db):
+        values = Reader(dal_db).values
+        wild = values.facets(MetricValueFilter(dimensions={"source_id": "WILD"}))
+        assert {f.key: f.values for f in wild}["source_id"] == ("WILD",)
+
+    def test_single_query(self, dal_db, count_queries):
+        stmt = select_scalar_values(MetricValueFilter())
+        with count_queries(dal_db) as statements:
+            collect_facets(dal_db.session, stmt, ScalarMetricValue)
+        assert len(statements) == 1
+
+
+class TestWithFacetsDeprecation:
+    def test_unset_warns_and_computes(self, dal_db):
+        values = Reader(dal_db).values
+        with pytest.warns(FutureWarning, match=r"ValuesReader\.facets\(\)") as record:
+            scalar = values.scalar_values()
+        with pytest.warns(FutureWarning):
+            series = values.series_values()
+        assert scalar.facets
+        assert series.facets
+        assert record[0].filename == __file__
+
+    @pytest.mark.parametrize("flag", [True, False])
+    def test_explicit_does_not_warn(self, dal_db, flag, recwarn):
+        values = Reader(dal_db).values
+        values.scalar_values(with_facets=flag)
+        values.series_values(with_facets=flag)
+        assert not [w for w in recwarn if issubclass(w.category, FutureWarning)]

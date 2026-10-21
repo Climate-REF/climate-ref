@@ -182,6 +182,8 @@ filterwarnings = [
     "ignore:cannot collect test class 'TestCaseRunner':pytest.PytestCollectionWarning",
     "ignore:cannot collect test class 'TestCaseNotFoundError':pytest.PytestCollectionWarning",
     "ignore:cannot collect test class 'TestCasePaths':pytest.PytestCollectionWarning",
+    # Most reader tests leave with_facets unset, the warning itself is covered in test_results.py
+    "ignore:Facets will default to off:FutureWarning",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",

@@ -1,7 +1,8 @@
 """
-Filter and ``Select`` builders for metric-value queries.
+Filter and ``Select`` builders for metric-value queries, and the execution scope they share.
 
 This module is the single source of truth for *how* metric values are filtered and joined.
+``ExecutionScope`` and ``apply_execution_scope`` also decide which executions resource queries consider.
 Both the typed facade ([climate_ref.results.values.Reader][]) and any power-user / API
 caller build on the ``select_*`` functions here, so the filter/join semantics live in exactly
 one place. This mirrors the existing house style of module-level query functions that take a
@@ -30,13 +31,47 @@ from climate_ref.results._converters import _as_str_tuple
 
 
 @attrs.frozen(kw_only=True)
-class MetricValueFilter:
+class ExecutionScope:
+    """
+    Which executions a filter considers, shared by every filter over execution outputs.
+
+    Apply it with [apply_execution_scope][climate_ref.results._query.apply_execution_scope].
+    """
+
+    include_retracted: bool = False
+    """Include retracted executions."""
+
+    latest_only: bool = False
+    """
+    Keep only each group's latest execution, as picked by ``select_latest_executions``.
+
+    The latest is picked before retracted executions are dropped.
+    So if a group's newest execution is retracted, that group contributes nothing
+    unless ``include_retracted=True``.
+    It never falls back to an older execution, because the newer one superseded it.
+    ``DatasetFilter`` drops retracted rows first instead, because an older dataset version is still valid.
+    """
+
+
+def apply_execution_scope(stmt: Select[Any], scope: ExecutionScope) -> Select[Any]:
+    """Apply an ``ExecutionScope`` to a select already joined to ``Execution``."""
+    if not scope.include_retracted:
+        stmt = stmt.where(Execution.retracted.is_(False))
+    if scope.latest_only:
+        latest = select_latest_executions().subquery()
+        stmt = stmt.where(Execution.id.in_(select(latest.c.execution_id)))
+    return stmt
+
+
+@attrs.frozen(kw_only=True)
+class MetricValueFilter(ExecutionScope):
     """
     Declarative filter over metric values.
 
-    Every field is optional; ``None``/empty means "do not constrain on this axis". The same
-    object drives scalar and series queries, frame conversion and facet collection, so a filter
-    is written once and reused across output shapes.
+    ``None``/empty means "do not constrain on this axis",
+    except ``include_retracted`` and ``promoted_only``, which constrain by default.
+    The same object drives scalar and series queries, frame conversion and facet collection,
+    so a filter is written once and reused across output shapes.
 
     Two styles of diagnostic/provider filtering are offered deliberately:
 
@@ -61,10 +96,10 @@ class MetricValueFilter:
     provider_slug: str | None = None
     """Exact-match provider slug, for API path-scoped queries."""
 
-    diagnostic_contains: Sequence[str] | None = attrs.field(default=None, converter=_as_str_tuple)
+    diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on diagnostic slug (OR-combined), for CLI-style search."""
 
-    provider_contains: Sequence[str] | None = attrs.field(default=None, converter=_as_str_tuple)
+    provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
 
     dimensions: Mapping[str, str | Sequence[str]] | None = None
@@ -81,12 +116,6 @@ class MetricValueFilter:
 
     promoted_only: bool = True
     """Restrict to execution groups at the diagnostic's currently promoted version."""
-
-    include_retracted: bool = False
-    """Include values produced by retracted executions."""
-
-    latest_only: bool = False
-    """Restrict to values from each group's latest execution, as picked by ``select_latest_executions``."""
 
     def dimension_clauses(self, entity: type[MetricValue]) -> list[Any]:
         """
@@ -119,35 +148,36 @@ def _apply_common(  # noqa: PLR0912
     This is the ONLY place provenance, version, retraction, dimension and id filtering is
     expressed, so scalar and series can never diverge.
     """
-    needs_diag = bool(
-        f.diagnostic_slug or f.provider_slug or f.diagnostic_contains or f.provider_contains
-    ) or (f.promoted_only)
-    needs_exec = bool(f.execution_ids or f.execution_group_ids or needs_diag or not f.include_retracted)
+    needs_diag = (
+        f.diagnostic_slug is not None
+        or f.provider_slug is not None
+        or bool(f.diagnostic_contains or f.provider_contains)
+        or f.promoted_only
+    )
+    needs_exec = bool(
+        f.execution_ids or f.execution_group_ids or needs_diag or not f.include_retracted or f.latest_only
+    )
 
     if needs_exec:
         stmt = stmt.join(Execution, entity.execution_id == Execution.id)
-    if not f.include_retracted:
-        stmt = stmt.where(Execution.retracted.is_(False))
+        stmt = apply_execution_scope(stmt, f)
     if f.execution_ids:
         stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
     if f.execution_group_ids:
         stmt = stmt.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
-    if f.latest_only:
-        latest = select_latest_executions().subquery()
-        stmt = stmt.where(entity.execution_id.in_(select(latest.c.execution_id)))
 
     if needs_diag:
         stmt = stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
         stmt = stmt.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
     if f.promoted_only:
         stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
-    if f.diagnostic_slug:
+    if f.diagnostic_slug is not None:
         stmt = stmt.where(Diagnostic.slug == f.diagnostic_slug)
     if f.diagnostic_contains:
         stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in f.diagnostic_contains)))
-    if f.provider_slug or f.provider_contains:
+    if f.provider_slug is not None or f.provider_contains:
         stmt = stmt.join(Provider, Diagnostic.provider_id == Provider.id)
-        if f.provider_slug:
+        if f.provider_slug is not None:
             stmt = stmt.where(Provider.slug == f.provider_slug)
         if f.provider_contains:
             stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in f.provider_contains)))

@@ -329,6 +329,8 @@ def select_execution_statistics(
     * ``not_started`` -- no execution exists for the group.
     * ``dirty`` -- the group's ``dirty`` flag is set.
 
+    Retraction is ignored, so a retracted latest execution still sets its group's status.
+
     Only execution groups whose ``diagnostic_version`` matches the diagnostic's
     ``promoted_version`` are counted (same promoted-version gate as
     [get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered]).

@@ -10,6 +10,21 @@ documentation:
 preprocessors:
   base_bias:
     custom_order: true
+    mask_landsea:
+      mask_out: land
+    climate_statistics:
+      operator: mean
+      period: full
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 210.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+  base_bias_sea:
+    custom_order: true
     climate_statistics:
       operator: mean
       period: full
@@ -23,6 +38,8 @@ preprocessors:
       end_latitude: 15.0
   ITCZ_bias:
     custom_order: true
+    mask_landsea:
+      mask_out: land
     climate_statistics:
       operator: mean
       period: full
@@ -40,6 +57,23 @@ preprocessors:
       operator: mean
   eq_bias:
     custom_order: true
+    mask_landsea:
+      mask_out: land
+    climate_statistics:
+      operator: mean
+      period: full
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    meridional_statistics:
+      operator: mean
+  eq_bias_sea:
+    custom_order: true
     climate_statistics:
       operator: mean
       period: full
@@ -55,6 +89,8 @@ preprocessors:
       operator: mean
   base_cycle:
     custom_order: true
+    mask_landsea:
+      mask_out: land
     climate_statistics:
       operator: mean
       period: monthly
@@ -68,6 +104,8 @@ preprocessors:
       end_latitude: 15.0
   ITCZ_sea_cycle:
     custom_order: true
+    mask_landsea:
+      mask_out: land
     climate_statistics:
       operator: mean
       period: monthly
@@ -83,6 +121,21 @@ preprocessors:
       units: mm/day
   eq_sea_cycle:
     custom_order: true
+    mask_landsea:
+      mask_out: land
+    climate_statistics:
+      operator: mean
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+  eq_sea_cycle_tos:
+    custom_order: true
     climate_statistics:
       operator: mean
       period: monthly
@@ -95,6 +148,21 @@ preprocessors:
       start_latitude: -5.0
       end_latitude: 5.0
   map_bias_level2:
+    custom_order: true
+    mask_landsea:
+      mask_out: land
+    climate_statistics:
+      operator: mean
+      period: full
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+  map_bias_level2_sea:
     custom_order: true
     climate_statistics:
       operator: mean
@@ -109,6 +177,8 @@ preprocessors:
       end_latitude: 15.0
   map_sea_cyclel2:
     custom_order: true
+    mask_landsea:
+      mask_out: land
     climate_statistics:
       operator: mean
       period: monthly
@@ -128,13 +198,14 @@ diagnostics:
         short_name: pr
         preprocessor: ITCZ_bias
         mip: atmos
+        frequency: mon
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
-        - dataset: GPCP-V2.3
+        - dataset: GPCP-V3.3
           project: obs4MIPs
           tier: 1
-          start_year: 1979
-          end_year: 2017
-          mip: Amon
+          start_year: 1983
+          end_year: 2021
         - &id001
           project: CMIP7
           activity: CMIP
@@ -152,27 +223,29 @@ diagnostics:
         short_name: pr
         preprocessor: eq_bias
         mip: atmos
+        frequency: mon
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
-        - dataset: GPCP-V2.3
+        - dataset: GPCP-V3.3
           project: obs4MIPs
           tier: 1
-          start_year: 1979
-          end_year: 2017
-          mip: Amon
+          start_year: 1983
+          end_year: 2021
         - *id001
       eq_sst_bias:
         short_name: tos
-        preprocessor: eq_bias
+        preprocessor: eq_bias_sea
         mip: ocean
+        branding_suffix: tavg-u-hxy-sea
         additional_datasets:
         - dataset: TROPFLUX
-          version: v1
+          version: v2
           project: OBS6
           type: reanaly
           tier: 2
-          start_year: 1979
-          end_year: 2018
           mip: Omon
+          start_year: 1979
+          end_year: 2021
         - &id002
           project: CMIP7
           activity: CMIP
@@ -190,15 +263,16 @@ diagnostics:
         short_name: tauu
         preprocessor: eq_bias
         mip: atmos
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
         - dataset: TROPFLUX
-          version: v1
+          version: v2
           project: OBS6
           type: reanaly
           tier: 2
           mip: Amon
           start_year: 1979
-          end_year: 2018
+          end_year: 2021
         - &id003
           project: CMIP7
           activity: CMIP
@@ -216,56 +290,62 @@ diagnostics:
         short_name: pr
         preprocessor: ITCZ_sea_cycle
         mip: atmos
+        frequency: mon
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
-        - dataset: GPCP-V2.3
+        - dataset: GPCP-V3.3
           project: obs4MIPs
           tier: 1
-          start_year: 1979
-          end_year: 2017
-          mip: Amon
+          start_year: 1983
+          end_year: 2021
         - *id001
       eq_pr_seacycle:
         short_name: pr
         preprocessor: eq_sea_cycle
         mip: atmos
+        frequency: mon
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
-        - dataset: GPCP-V2.3
+        - dataset: GPCP-V3.3
           project: obs4MIPs
           tier: 1
-          start_year: 1979
-          end_year: 2017
-          mip: Amon
+          start_year: 1983
+          end_year: 2021
         - *id001
       eq_sst_seacycle:
         short_name: tos
-        preprocessor: eq_sea_cycle
+        preprocessor: eq_sea_cycle_tos
         mip: ocean
+        branding_suffix: tavg-u-hxy-sea
         additional_datasets:
         - dataset: TROPFLUX
-          version: v1
+          version: v2
           project: OBS6
           type: reanaly
           tier: 2
           mip: Omon
+          start_year: 1979
+          end_year: 2021
         - *id002
       eq_tauu_seacycle:
         short_name: tauu
         preprocessor: eq_sea_cycle
         mip: atmos
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
         - dataset: TROPFLUX
-          version: v1
+          version: v2
           project: OBS6
           type: reanaly
           tier: 2
           mip: Amon
           start_year: 1979
-          end_year: 2018
+          end_year: 2021
         - *id003
     scripts:
       plot_script:
         script: enso_metrics/climatology_diagnostic1.py
-  diagnostic_level2:
+  diagnostic_divedowns:
     description: run preprocessors on variables for background climatology diagnostic
       level 2
     variables:
@@ -273,52 +353,60 @@ diagnostics:
         short_name: pr
         preprocessor: map_bias_level2
         mip: atmos
+        frequency: mon
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
-        - dataset: GPCP-V2.3
+        - dataset: GPCP-V3.3
           project: obs4MIPs
           tier: 1
-          start_year: 1979
-          end_year: 2017
-          mip: Amon
+          start_year: 1983
+          end_year: 2021
         - *id001
       pr_seacycle:
         short_name: pr
         preprocessor: map_sea_cyclel2
         mip: atmos
+        frequency: mon
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
-        - dataset: GPCP-V2.3
+        - dataset: GPCP-V3.3
           project: obs4MIPs
           tier: 1
-          start_year: 1979
-          end_year: 2017
-          mip: Amon
+          start_year: 1983
+          end_year: 2021
         - *id001
       sst_bias:
         short_name: tos
-        preprocessor: map_bias_level2
+        preprocessor: map_bias_level2_sea
         mip: ocean
+        branding_suffix: tavg-u-hxy-sea
         additional_datasets:
         - dataset: TROPFLUX
-          version: v1
+          version: v2
           project: OBS6
           type: reanaly
           tier: 2
           mip: Omon
+          start_year: 1979
+          end_year: 2021
         - *id002
       tauu_bias:
         short_name: tauu
         preprocessor: map_bias_level2
         mip: atmos
+        branding_suffix: tavg-u-hxy-u
         additional_datasets:
         - dataset: TROPFLUX
-          version: v1
+          version: v2
           project: OBS6
           type: reanaly
           tier: 2
           mip: Amon
           start_year: 1979
-          end_year: 2018
+          end_year: 2021
         - *id003
     scripts:
-      plot_script:
+      plotlevel2_script:
         script: enso_metrics/climatology_diagnosticlevel2.py
+      plotlevel3_script:
+        script: enso_metrics/climatology_diagnosticlevel3.py

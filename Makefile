@@ -81,6 +81,14 @@ test-ref-unit:  ## run the climate-ref unit tests (+ src doctests)
 		--ignore=packages/climate-ref/tests/integration \
 		-r a -v --doctest-modules --durations=0 --durations-min=1
 
+# Fraction of the production database size to synthesise. 1 is about 8 GB and takes a few minutes to build.
+REF_PERF_SCALE ?= 0.1
+
+.PHONY: test-reader-perf
+test-reader-perf:  ## run the reader performance tests against a synthetic database (REF_PERF_SCALE=1 for full size)
+	REF_PERF_SCALE=$(REF_PERF_SCALE) uv run --package climate-ref \
+		pytest packages/climate-ref/tests/perf -r a -v
+
 .PHONY: test-ref-integration
 test-ref-integration:  ## run the climate-ref integration tests
 	uv run --package climate-ref \

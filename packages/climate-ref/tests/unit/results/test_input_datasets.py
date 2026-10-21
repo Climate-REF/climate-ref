@@ -165,6 +165,11 @@ class TestExecutionGroups:
         f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"mip_era": "CMIP7", "source_id": "FACET-A"})
         assert _group_ids(db_with_inputs, f) == {ids["cmip7-a"]}
 
+    def test_facets_no_single_era_carries_match_nothing(self, db_with_inputs):
+        f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"table_id": "Amon", "region": "glb"})
+        assert _group_ids(db_with_inputs, f) == set()
+        assert _value_sources(db_with_inputs, f) == set()
+
     def test_combines_with_diagnostic_filter(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})

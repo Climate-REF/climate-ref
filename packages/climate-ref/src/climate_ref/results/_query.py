@@ -16,7 +16,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
-from sqlalchemy import ColumnElement, Select, and_, func, or_, select
+from sqlalchemy import ColumnElement, Select, and_, false, func, or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref.models import Execution, ExecutionGroup
@@ -72,7 +72,8 @@ class InputDatasetFilter:
                 continue
             conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
             branches.append(Execution.datasets.of_type(entity).any(and_(*conditions)))
-        return or_(*branches)
+        # An empty or_() emits no predicate, which would match every execution.
+        return or_(*branches) if branches else false()
 
     def execution_group_clause(self) -> ColumnElement[bool]:
         """Clause over ``ExecutionGroup`` that is true when any of its executions matches."""

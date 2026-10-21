@@ -1,9 +1,13 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
     "grid_label": {
       "gn": {}
     },
     "json_structure": [
+      "experiment_id",
       "grid_label",
       "source_id",
       "variant_label",
@@ -33,17 +37,19 @@
   "NOTES": null,
   "PROVENANCE": null,
   "RESULTS": {
-    "gn": {
-      "CanESM5": {
-        "r1i1p1f1": {
-          "global": {
-            "09pattern": 0.2525872,
-            "10lifecycle": 0.2503408,
-            "11amplitude": 7.707193,
-            "12seasonality": 44.73485,
-            "13asymmetry": 0.142175,
-            "14duration": 76.92308,
-            "15diversity": 16.54676
+    "historical": {
+      "gn": {
+        "CanESM5": {
+          "r1i1p1f1": {
+            "global": {
+              "09pattern": 0.2525872,
+              "10lifecycle": 0.2503408,
+              "11amplitude": 7.707193,
+              "12seasonality": 44.73485,
+              "13asymmetry": 0.142175,
+              "14duration": 76.92308,
+              "15diversity": 16.54676
+            }
           }
         }
       }

@@ -1,15 +1,15 @@
 {
   "catalog_hash": "fcadf51d663bdd186da737aa8ad77c14ec223173",
   "committed": {
-    "diagnostic.json": "6773a430175bafa4be7a5e7077eb993a83a05f2d79ca4eded60e2d8a5a38be81",
+    "diagnostic.json": "0cf6c9b6e0ff74632a0242300d5bd177fe759e4740d827a90f8d213a22494459",
     "output.json": "f4e5689e245cf6258b6a06a1ba529e3fe2f0cbd67850adc5075d0b3937f0833c",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
-      "sha256": "8326a12db7fbc936f732154069b4ad2c8eed753aad3a18d4f179c6afcf652c06",
-      "size": 1041
+      "sha256": "0cac3890e36d8faf5fa3527b638ff4055c55cda85cb6de991554245f5c0c4bf5",
+      "size": 1173
     },
     "executions/recipe/index.html": {
       "sha256": "54629b2bb004573965837dd9dedf1f3f9e24187692bf59e59d80acda2072feb7",

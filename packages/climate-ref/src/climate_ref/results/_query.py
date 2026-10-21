@@ -23,6 +23,7 @@ from sqlalchemy.orm import Session
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.dataset_query import _as_facets, _entity_for
 from climate_ref.models.diagnostic import Diagnostic
+from climate_ref.models.execution import select_latest_executions as select_latest_executions  # noqa: PLC0414
 from climate_ref.models.metric_value import (
     MetricValue,
     ScalarMetricValue,
@@ -306,41 +307,6 @@ def select_series_values(f: MetricValueFilter | None = None) -> Select[tuple[Ser
 def count_values(session: Session, stmt: Select[Any]) -> int:
     """Total row count for a builder's ``Select``, ignoring any offset/limit. For pagination."""
     return session.execute(select(func.count()).select_from(stmt.order_by(None).subquery())).scalar_one()
-
-
-def select_latest_executions() -> Select[tuple[int, int]]:
-    """
-    Build a ``Select`` of the latest execution in each execution group.
-
-    "Latest" is the greatest ``created_at``, with the greatest ``id`` breaking a tie,
-    the same ordering as [latest_execution_for_group][climate_ref.results._query.latest_execution_for_group].
-    Retracted executions are not skipped, so a retracted latest execution still wins its group.
-
-    Returns
-    -------
-        A ``Select`` with ``execution_group_id`` and ``execution_id`` columns, one row per group
-        that has at least one execution. Call ``.subquery()`` to join or filter against it.
-    """
-    newest = (
-        select(
-            Execution.execution_group_id,
-            func.max(Execution.created_at).label("created_at"),
-        )
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
-    return (
-        select(
-            Execution.execution_group_id.label("execution_group_id"),
-            func.max(Execution.id).label("execution_id"),
-        )
-        .join(
-            newest,
-            (Execution.execution_group_id == newest.c.execution_group_id)
-            & (Execution.created_at == newest.c.created_at),
-        )
-        .group_by(Execution.execution_group_id)
-    )
 
 
 def latest_execution_for_group(session: Session, execution_group_id: int) -> Execution | None:

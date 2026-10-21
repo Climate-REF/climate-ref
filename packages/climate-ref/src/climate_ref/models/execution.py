@@ -12,12 +12,14 @@ from sqlalchemy import (
     ColumnElement,
     Float,
     ForeignKey,
+    Select,
     String,
     Table,
     UniqueConstraint,
     func,
     inspect,
     or_,
+    select,
 )
 from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
 from sqlalchemy.orm.query import RowReturningQuery
@@ -631,57 +633,54 @@ class ExecutionOutput(DimensionMixin, CreatedUpdatedMixin, Base):
         )
 
 
-def _latest_execution_ids(
-    session: Session,
-    among_executions: Sequence[Any] | None = None,
-) -> Any:
+def select_latest_executions(
+    among_executions: Sequence[ColumnElement[bool]] = (),
+) -> Select[tuple[int, int]]:
     """
-    Subquery selecting the id of the latest execution in each group.
+    Build a ``Select`` of the latest execution in each execution group.
 
-    "Latest" is the execution with the greatest ``created_at``,
-    breaking ties deterministically by greatest ``id`` so that exactly one execution wins per group.
+    "Latest" is the greatest ``created_at``, with the greatest ``id`` breaking a tie,
+    the same ordering as [latest_execution_for_group][climate_ref.results._query.latest_execution_for_group].
+    Retracted executions are not skipped, so a retracted latest execution still wins its group.
 
     Parameters
     ----------
-    session
-        The database session to use for the query.
     among_executions
-        Optional predicates on ``Execution`` applied *before* ranking.
-        These change which execution is considered "latest" for each group -- the
-        winner is the newest execution *among those matching the predicates*.
-
-        For example ``[Execution.successful.is_(True)]`` selects each group's
-        latest **successful** execution rather than its latest execution.
-        Group-level filters (diagnostic, provider, dirty, version) do not belong here
-        Apply them to the outer query,
+        Predicates on ``Execution`` applied *before* picking the latest,
+        so the winner is the newest execution *among those matching*.
+        For example ``[Execution.successful.is_(True)]`` picks each group's latest successful execution.
+        Group-level filters (diagnostic, provider, dirty, version) belong on the outer query instead,
         where they narrow which groups are returned without changing which execution wins.
 
     Returns
     -------
-        A subquery exposing ``execution_id`` and ``group_id`` columns,
+        A ``Select`` with ``execution_group_id`` and ``execution_id`` columns,
         one row per group that has at least one matching execution.
+        Call ``.subquery()`` to join or filter against it.
     """
-    ranked = session.query(
-        Execution.id.label("execution_id"),
-        Execution.execution_group_id.label("group_id"),
-        func.row_number()
-        .over(
-            partition_by=Execution.execution_group_id,
-            order_by=(Execution.created_at.desc(), Execution.id.desc()),
+    # Grouped max rather than row_number: with a predicate, SQLite 3.40 rescans a filtered window
+    # subquery for every outer row when it is left-joined to execution_group.
+    newest = (
+        select(
+            Execution.execution_group_id,
+            func.max(Execution.created_at).label("created_at"),
         )
-        .label("rn"),
-    )
-    for predicate in among_executions or ():
-        ranked = ranked.filter(predicate)
-    ranked_sq = ranked.subquery()
-
-    return (
-        session.query(
-            ranked_sq.c.execution_id.label("execution_id"),
-            ranked_sq.c.group_id.label("group_id"),
-        )
-        .filter(ranked_sq.c.rn == 1)
+        .where(*among_executions)
+        .group_by(Execution.execution_group_id)
         .subquery()
+    )
+    return (
+        select(
+            Execution.execution_group_id.label("execution_group_id"),
+            func.max(Execution.id).label("execution_id"),
+        )
+        .join(
+            newest,
+            (Execution.execution_group_id == newest.c.execution_group_id)
+            & (Execution.created_at == newest.c.created_at),
+        )
+        .where(*among_executions)
+        .group_by(Execution.execution_group_id)
     )
 
 
@@ -713,7 +712,7 @@ def get_execution_group_and_latest(
         The database session to use for the query.
     among_executions
         Optional predicates on ``Execution`` applied *before* the latest-per-group ranking,
-        so "latest" is chosen from that filtered population (see :func:`_latest_execution_ids`).
+        so "latest" is chosen from that filtered population (see :func:`select_latest_executions`).
         Defaults to ranking over all executions.
 
     Returns
@@ -722,7 +721,7 @@ def get_execution_group_and_latest(
         The result is a tuple of the execution group and the most recent result,
         which can be None.
     """
-    latest = _latest_execution_ids(session, among_executions)
+    latest = select_latest_executions(among_executions or ()).subquery()
 
     # Groups with no matching execution still appear (outer join, Execution=None).
     # Every known caller (`cli/executions.py::delete_groups`, `ExecutionsReader.groups()`,
@@ -731,7 +730,7 @@ def get_execution_group_and_latest(
     query = (
         session.query(ExecutionGroup, Execution)
         .options(joinedload(ExecutionGroup.diagnostic).joinedload(Diagnostic.provider))
-        .outerjoin(latest, latest.c.group_id == ExecutionGroup.id)
+        .outerjoin(latest, latest.c.execution_group_id == ExecutionGroup.id)
         .outerjoin(Execution, Execution.id == latest.c.execution_id)
     )
 

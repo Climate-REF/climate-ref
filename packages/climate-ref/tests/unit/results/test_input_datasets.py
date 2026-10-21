@@ -5,7 +5,7 @@ import pytest
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.dataset import CMIP6Dataset, CMIP7Dataset
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.metric_value import ScalarMetricValue
+from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue
 from climate_ref.results import (
     DiagnosticFilter,
     ExecutionGroupFilter,
@@ -210,3 +210,13 @@ class TestDiagnostics:
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
         stats = Reader(db_with_inputs).diagnostics.stats(input_datasets=f)
         assert {(s.provider, s.diagnostic): s.total for s in stats} == {ids["diag_1"]: 1, ids["diag_2"]: 1}
+
+    def test_with_values_scoped(self, db_with_inputs):
+        ids = db_with_inputs.ids
+        reader = Reader(db_with_inputs).diagnostics
+        cmip7 = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"})
+        missing = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "NO-SUCH-MODEL"})
+        assert reader.with_values(MetricValueType.SCALAR, DiagnosticFilter(input_datasets=cmip7)) == {
+            ids["diag_1"]
+        }
+        assert reader.with_values(MetricValueType.SCALAR, DiagnosticFilter(input_datasets=missing)) == set()

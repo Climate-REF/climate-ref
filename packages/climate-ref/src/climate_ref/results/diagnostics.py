@@ -159,6 +159,7 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     ``execution_group_count`` counts every ``ExecutionGroup`` row for the diagnostic
     (all versions, not scoped to ``promoted_version``),
     so it reflects the diagnostic's full execution history.
+    With ``filters.input_datasets`` it counts only matching groups, and diagnostics without one are dropped.
     Ordered by ``(Provider.slug, Diagnostic.slug, Diagnostic.id)``.
     The diagnostic primary key is the final tiebreak so SQL pagination is deterministic across pages.
     """
@@ -251,6 +252,8 @@ def select_diagnostics_with_values(
     has_values = apply_execution_scope(has_values, ExecutionScope(include_retracted=False))
     if execution_group_where is not None:
         has_values = has_values.where(execution_group_where)
+    if filters.input_datasets:
+        has_values = has_values.where(filters.input_datasets.execution_clause())
 
     stmt = (
         select(

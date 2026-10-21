@@ -4,6 +4,7 @@ import datetime
 import math
 
 import attrs
+import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
@@ -18,7 +19,7 @@ from climate_ref.results import (
 )
 from climate_ref.results._query import latest_execution_for_group, select_latest_executions
 from climate_ref.results.frames import scalar_values_to_frame, series_values_to_frame
-from climate_ref.results.outliers import detect_scalar_outliers
+from climate_ref.results.outliers import flag_outliers
 
 
 @pytest.fixture
@@ -682,7 +683,7 @@ class TestPromotedOnlyAlias:
 
 
 class _FakeScalar:
-    """Minimal stand-in exposing the attributes ``detect_scalar_outliers`` reads."""
+    """Minimal stand-in for a scalar metric value row."""
 
     def __init__(self, id_, value, dimensions):
         self.id = id_
@@ -692,11 +693,12 @@ class _FakeScalar:
 
 def _flags(scalars, **policy_kwargs):
     """Run detection and return a ``{id: is_outlier}`` mapping."""
-    annotated, _ = detect_scalar_outliers(scalars, OutlierPolicy(**policy_kwargs))
-    return {a.value.id: a.is_outlier for a in annotated}
+    frame = pd.DataFrame([{"value": sv.value, **sv.dimensions} for sv in scalars])
+    verdicts = flag_outliers(frame, OutlierPolicy(**policy_kwargs))
+    return {sv.id: bool(v) for sv, v in zip(scalars, verdicts)}
 
 
-class TestDetectScalarOutliers:
+class TestFlagOutliers:
     def test_outlier_policy_rejects_min_n_below_two(self):
         with pytest.raises(ValueError):
             OutlierPolicy(min_n=1)

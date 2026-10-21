@@ -126,10 +126,14 @@ def collect_facets(
     if not keys:
         return {}
     sub = stmt.with_only_columns(*(_DistinctValues(getattr(entity, key)) for key in keys)).order_by(None)
-    row = session.execute(sub).one()
-    facets: dict[str, list[str]] = {}
-    for key, values in zip(keys, row, strict=True):
-        present = sorted(v for v in values or () if v is not None)
+    return facets_from_columns(keys, session.execute(sub).one())
+
+
+def facets_from_columns(keys: Sequence[str], columns: Sequence[Sequence[Any] | None]) -> dict[str, list[Any]]:
+    """Sorted distinct non-null values per key, dropping keys with none."""
+    facets: dict[str, list[Any]] = {}
+    for key, values in zip(keys, columns, strict=True):
+        present = sorted({v for v in values or () if v is not None})
         if present:
             facets[key] = present
     return facets

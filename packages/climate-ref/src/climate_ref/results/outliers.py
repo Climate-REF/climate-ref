@@ -23,13 +23,10 @@ Non-finite values (NaN/inf) are always flagged.
 """
 
 import statistics
-from collections.abc import Sequence
 
 import attrs
 import numpy as np
 import pandas as pd
-
-from climate_ref.models.metric_value import ScalarMetricValue
 
 _SUPPORTED_METHODS = ("off", "iqr")
 
@@ -66,20 +63,6 @@ class OutlierPolicy:
     def enabled(self) -> bool:
         """Whether detection should run."""
         return self.method == "iqr"
-
-
-@attrs.frozen(kw_only=True)
-class AnnotatedScalar:
-    """A scalar ORM row paired with its outlier verdict."""
-
-    value: ScalarMetricValue
-    """The underlying scalar metric value row."""
-
-    is_outlier: bool
-    """Whether this value was flagged as an outlier."""
-
-    verification_status: str
-    """``"verified"`` or ``"unverified"``, mirroring ``is_outlier``."""
 
 
 def _iqr_bounds(samples: list[float], factor: float, min_n: int) -> tuple[float, float] | None:
@@ -175,43 +158,3 @@ def flag_outliers(frame: pd.DataFrame, policy: OutlierPolicy) -> np.ndarray:
 
     # Non-finite values are always flagged.
     return in_group & ((finite & out_of_bounds & eligible) | ~finite)
-
-
-def detect_scalar_outliers(
-    scalar_values: Sequence[ScalarMetricValue],
-    policy: OutlierPolicy,
-) -> tuple[list[AnnotatedScalar], int]:
-    """
-    Annotate scalar values with outlier verdicts.
-
-    Parameters
-    ----------
-    scalar_values
-        The full (unpaginated) set of scalar rows for the query scope. Detection must run over
-        the whole set so IQR bounds are globally consistent.
-    policy
-        Detection configuration.
-
-    Returns
-    -------
-    :
-        A tuple of (annotated values in input order, total number of outliers).
-    """
-    if not scalar_values:
-        return [], 0
-
-    if policy.enabled:
-        frame = pd.DataFrame([{"value": sv.value, **sv.dimensions} for sv in scalar_values])
-        verdicts = flag_outliers(frame, policy).tolist()
-    else:
-        verdicts = [False] * len(scalar_values)
-
-    annotated = [
-        AnnotatedScalar(
-            value=sv,
-            is_outlier=is_outlier,
-            verification_status="unverified" if is_outlier else "verified",
-        )
-        for sv, is_outlier in zip(scalar_values, verdicts)
-    ]
-    return annotated, sum(verdicts)

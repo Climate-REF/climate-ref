@@ -40,7 +40,12 @@ from climate_ref.results._query import (
     select_value_ids,
 )
 from climate_ref.results.executions import ExecutionsReader
-from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
+from climate_ref.results.frames import (
+    collect_facets,
+    facets_from_columns,
+    scalar_values_to_frame,
+    series_values_to_frame,
+)
 from climate_ref.results.outliers import OutlierPolicy, flag_outliers
 
 if TYPE_CHECKING:
@@ -54,9 +59,10 @@ _ID_CHUNK = 900
 """Ids per ``IN`` lookup, below the 999 bound parameters SQLite allowed before 3.32."""
 
 
-def _kind_of(dimensions: Mapping[str, str]) -> str:
-    """Resolve the model/reference ``kind`` from the CV dimensions (defaults to ``"model"``)."""
-    return dimensions.get("kind", "model")
+def _split_kind(dimensions: Mapping[str, str]) -> tuple[str, dict[str, str]]:
+    """Split the model/reference ``kind`` (defaults to ``"model"``) from the other CV dimensions."""
+    rest = dict(dimensions)
+    return rest.pop("kind", "model"), rest
 
 
 @attrs.frozen(kw_only=True)
@@ -211,15 +217,8 @@ class SeriesValueCollection(Page[SeriesValue]):
         return series_values_to_frame(self.items, explode=explode)
 
 
-def _facets_from_columns(dims: Sequence[str], columns: Sequence[Sequence[Any]]) -> tuple[Facet, ...]:
-    """Build the facets ``collect_facets`` would return, from dimension columns already loaded."""
-    facets = []
-    for key, column in zip(dims, columns):
-        values = set(column)
-        values.discard(None)
-        if values:
-            facets.append(Facet(key=key, values=tuple(sorted(values))))
-    return tuple(facets)
+def _to_facets(facet_map: Mapping[str, Sequence[Any]]) -> tuple[Facet, ...]:
+    return tuple(Facet(key=k, values=tuple(v)) for k, v in facet_map.items())
 
 
 class ValuesReader:
@@ -243,8 +242,7 @@ class ValuesReader:
         return self._session if self._session is not None else self._db.session
 
     def _facets(self, value_ids: Any) -> tuple[Facet, ...]:
-        facet_map = collect_facets(self.session, value_ids, MetricValue)
-        return tuple(Facet(key=k, values=tuple(v)) for k, v in facet_map.items())
+        return _to_facets(collect_facets(self.session, value_ids, MetricValue))
 
     def scalar_values(  # noqa: PLR0913
         self,
@@ -330,7 +328,7 @@ class ValuesReader:
             self.session.flush()
         scalar_rows = self.session.connection().execute(detect_stmt).tuples().all()
         _, _, values, *dim_columns = zip(*scalar_rows) if scalar_rows else [()] * (3 + len(dims))
-        facets = _facets_from_columns(dims, dim_columns) if with_facets else ()
+        facets = _to_facets(facets_from_columns(dims, dim_columns)) if with_facets else ()
         detection_dims = {*policy.group_by, "source_id"}
         frame = pd.DataFrame(
             {
@@ -367,7 +365,7 @@ class ValuesReader:
             ScalarMetricValue.attributes,
         ]
         if include_context:
-            columns += [Diagnostic.slug, Provider.slug]
+            columns += [Diagnostic.slug.label("diagnostic_slug"), Provider.slug.label("provider_slug")]
         extra_stmt = select(*columns).join(Execution, ScalarMetricValue.execution_id == Execution.id)
         if include_context:
             extra_stmt = (
@@ -380,7 +378,7 @@ class ValuesReader:
         for start in range(0, len(ids), _ID_CHUNK):
             chunk = ids[start : start + _ID_CHUNK]
             for row in self.session.execute(extra_stmt.where(ScalarMetricValue.id.in_(chunk))):
-                extras[row[0]] = row
+                extras[row.id] = row
 
         items = []
         for i in positions:
@@ -389,23 +387,21 @@ class ValuesReader:
             if extra is None:
                 # Deleted by another transaction since detection read it.
                 continue
-            dimensions = {k: v for k, v in zip(dims, dim_values) if v is not None}
-            kind = _kind_of(dimensions)
-            dimensions.pop("kind", None)
+            kind, dimensions = _split_kind({k: v for k, v in zip(dims, dim_values) if v is not None})
             flagged = bool(is_outlier[i])
             items.append(
                 ScalarValue(
                     id=row_id,
                     execution_id=execution_id,
-                    execution_group_id=extra[1],
+                    execution_group_id=extra.execution_group_id,
                     value=value,
                     kind=kind,
                     dimensions=dimensions,
-                    attributes=dict(extra[2] or {}),
+                    attributes=dict(extra.attributes or {}),
                     is_outlier=flagged,
                     verification_status="unverified" if flagged else "verified",
-                    diagnostic_slug=extra[3] if include_context else None,
-                    provider_slug=extra[4] if include_context else None,
+                    diagnostic_slug=extra.diagnostic_slug if include_context else None,
+                    provider_slug=extra.provider_slug if include_context else None,
                 )
             )
         return tuple(items)
@@ -473,9 +469,7 @@ class ValuesReader:
 
     def _to_scalar_dto(self, row: ScalarMetricValue, include_context: bool) -> ScalarValue:
         diagnostic_slug, provider_slug = self._context_slugs(row.execution, include_context)
-        dims = dict(row.dimensions)
-        kind = _kind_of(dims)
-        dims.pop("kind", None)
+        kind, dims = _split_kind(row.dimensions)
         return ScalarValue(
             id=row.id,
             execution_id=row.execution_id,
@@ -490,9 +484,7 @@ class ValuesReader:
 
     def _to_series_dto(self, row: SeriesMetricValue, include_context: bool) -> SeriesValue:
         diagnostic_slug, provider_slug = self._context_slugs(row.execution, include_context)
-        dims = dict(row.dimensions)
-        kind = _kind_of(dims)
-        dims.pop("kind", None)
+        kind, dims = _split_kind(row.dimensions)
         return SeriesValue(
             id=row.id,
             execution_id=row.execution_id,

@@ -233,7 +233,7 @@ class _Writer:
                         wall,
                         wall * rng.uniform(0.5, 4) if wall else None,
                         int(rng.lognormvariate(21, 1)) if measured else None,
-                        "cgroup" if measured else None,
+                        "proc_tree" if measured else None,
                         "oom" if successful is False and rng.random() < _OOM_FRACTION else None,
                     )
                 )

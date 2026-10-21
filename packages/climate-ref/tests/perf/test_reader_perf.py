@@ -81,6 +81,17 @@ SCENARIOS = [
         id="values.scalar.all-page",
         call=lambda r, t: r.values.scalar_values(limit=100, with_facets=False),
     ),
+    # notebooks: a whole diagnostic as a DataFrame
+    Scenario(
+        id="values.scalar.diagnostic-frame",
+        call=lambda r, t: r.values.scalar_values(_diagnostic(t), with_facets=False).to_pandas(),
+        budget_seconds=10.0,
+    ),
+    Scenario(
+        id="values.series.diagnostic-frame",
+        call=lambda r, t: r.values.series_values(_diagnostic(t), with_facets=False).to_pandas(explode=False),
+        budget_seconds=30.0,
+    ),
     Scenario(
         id="values.series.diagnostic-page",
         call=lambda r, t: r.values.series_values(_diagnostic(t), limit=100),

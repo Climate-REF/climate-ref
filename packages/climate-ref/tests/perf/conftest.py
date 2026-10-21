@@ -195,16 +195,18 @@ def measure(perf_database: Database, perf_database_path: Path) -> Iterator[Calla
         ) -> None:
             captured.append((statement, parameters))
 
-        seconds = []
-        for run in range(repeat):
-            if run == 0:
-                event.listen(perf_database._engine, "before_cursor_execute", _capture)
+        def _time() -> float:
             with perf_database.session_scope() as session:
                 start = time.perf_counter()
                 call(Reader(perf_database, session=session))
-                seconds.append(time.perf_counter() - start)
-            if run == 0:
-                event.remove(perf_database._engine, "before_cursor_execute", _capture)
+                return time.perf_counter() - start
+
+        event.listen(perf_database._engine, "before_cursor_execute", _capture)
+        try:
+            seconds = [_time()]
+        finally:
+            event.remove(perf_database._engine, "before_cursor_execute", _capture)
+        seconds += [_time() for _ in range(repeat - 1)]
 
         plans = tuple(
             tuple(row[3] for row in explain.execute(f"EXPLAIN QUERY PLAN {statement}", parameters or ()))

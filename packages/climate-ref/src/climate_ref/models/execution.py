@@ -872,6 +872,15 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         If None, do not filter by failure reason.
     group_conditions
         Extra SQL conditions over ``ExecutionGroup``, ANDed with the other filters.
+        For example, to keep only groups that ran against ACCESS-ESM1-5 CMIP6 data:
+
+        ```python
+        scope = InputDatasetFilter(
+            source_types=(SourceDatasetType.CMIP6,),
+            facets={"source_id": ("ACCESS-ESM1-5",)},
+        )
+        get_execution_group_and_latest_filtered(session, group_conditions=[scope.execution_group_clause()])
+        ```
 
     Returns
     -------

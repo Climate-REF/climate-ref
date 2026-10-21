@@ -1,5 +1,6 @@
 """Unit tests for the metric-value data access layer (spike)."""
 
+import datetime
 import math
 
 import pytest
@@ -13,7 +14,7 @@ from climate_ref.results import (
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results._query import latest_execution_for_group
+from climate_ref.results._query import latest_execution_for_group, select_latest_executions
 from climate_ref.results.frames import scalar_values_to_frame, series_values_to_frame
 from climate_ref.results.outliers import detect_scalar_outliers
 
@@ -352,6 +353,75 @@ class TestLatestExecutionForGroup:
         latest = latest_execution_for_group(session, group_id)
         assert latest is not None
         assert latest.id == newer_id
+
+
+def _add_execution(session, group_id, fragment, created_at):
+    execution = Execution(
+        execution_group_id=group_id,
+        output_fragment=fragment,
+        dataset_hash=f"hash-{fragment}",
+        successful=True,
+        created_at=created_at,
+    )
+    session.add(execution)
+    session.flush()
+    return execution.id
+
+
+class TestSelectLatestExecutions:
+    def test_newest_created_at_wins_over_higher_id(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            newest = _add_execution(session, group_id, "newest", datetime.datetime(2030, 1, 1))
+            _add_execution(session, group_id, "older", datetime.datetime(2029, 1, 1))
+        rows = session.execute(select_latest_executions()).all()
+        assert dict(rows)[group_id] == newest
+
+    def test_tied_created_at_picks_highest_id(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        tied_at = datetime.datetime(2030, 1, 1)
+        with session.begin():
+            ids = [_add_execution(session, group_id, f"tie-{i}", tied_at) for i in range(2)]
+        rows = session.execute(select_latest_executions()).all()
+        assert [r.execution_id for r in rows if r.execution_group_id == group_id] == [max(ids)]
+
+    def test_one_row_per_group(self, dal_db):
+        session = dal_db.session
+        rows = session.execute(select_latest_executions()).all()
+        group_ids = [r.execution_group_id for r in rows]
+        assert len(group_ids) == len(set(group_ids))
+        assert dal_db.execution_group_id in group_ids
+
+
+class TestLatestOnly:
+    def test_drops_values_from_superseded_execution(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            newer = _add_execution(session, group_id, "newer", datetime.datetime(2030, 1, 1))
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=newer,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        reader = Reader(dal_db)
+        latest = reader.values.scalar_values(MetricValueFilter(latest_only=True))
+        assert {v.execution_id for v in latest.items} == {newer}
+        assert len(latest) == 1
+        everything = reader.values.scalar_values(MetricValueFilter())
+        assert len(everything) == 9
+
+    def test_keeps_all_values_of_sole_execution(self, dal_db):
+        reader = Reader(dal_db)
+        assert len(reader.values.scalar_values(MetricValueFilter(latest_only=True))) == len(
+            reader.values.scalar_values(MetricValueFilter())
+        )
+        assert len(reader.values.series_values(MetricValueFilter(latest_only=True))) == 2
 
 
 class _FakeScalar:

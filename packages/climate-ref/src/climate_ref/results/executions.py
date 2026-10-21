@@ -40,7 +40,7 @@ from climate_ref.models.execution import (
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_failure_reasons, _as_str_tuple
-from climate_ref.results._query import latest_execution_for_group
+from climate_ref.results._query import latest_execution_for_group, select_latest_executions
 from climate_ref.results._stats import rows_to_execution_stats
 
 
@@ -333,29 +333,7 @@ def select_execution_statistics(
     ``promoted_version`` are counted (same promoted-version gate as
     [get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered]).
     """
-    # Resolve to a single latest execution id per group, tie-broken by max id (matching the
-    # created_at DESC, id DESC tie-break used elsewhere -- see `_query.latest_execution_for_group`).
-    # Joining on `execution_group_id` + `created_at` alone (without this tie-break) can match two
-    # rows for a group whose executions share an exact `created_at`, double-counting that group in
-    # every aggregate column below.
-    latest_exec_subquery = (
-        select(
-            Execution.execution_group_id,
-            func.max(Execution.created_at).label("latest_created_at"),
-        )
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
-    latest_exec_id_subquery = (
-        select(func.max(Execution.id).label("latest_execution_id"))
-        .join(
-            latest_exec_subquery,
-            (Execution.execution_group_id == latest_exec_subquery.c.execution_group_id)
-            & (Execution.created_at == latest_exec_subquery.c.latest_created_at),
-        )
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
+    latest = select_latest_executions().subquery()
 
     stmt = (
         select(
@@ -378,7 +356,7 @@ def select_execution_statistics(
         .join(Provider, Diagnostic.provider_id == Provider.id)
         .outerjoin(
             Execution,
-            Execution.id.in_(select(latest_exec_id_subquery.c.latest_execution_id))
+            Execution.id.in_(select(latest.c.execution_id))
             & (Execution.execution_group_id == ExecutionGroup.id),
         )
         .group_by(Provider.slug, Diagnostic.slug)

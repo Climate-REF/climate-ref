@@ -136,6 +136,25 @@ class TestScalarValues:
         assert "BROKEN" not in source_ids
         assert "Reference" in source_ids
 
+    def test_outlier_detection_sees_pending_changes(self, dal_db):
+        session = dal_db.session
+        rows = session.query(ScalarMetricValue).all()
+        wild = next(r for r in rows if r.dimensions.get("source_id") == "WILD")
+        broken = next(r for r in rows if r.dimensions.get("source_id") == "BROKEN")
+        wild.value = 10.1
+        session.delete(broken)
+
+        coll = Reader(dal_db).values.scalar_values(
+            MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]),
+            outliers=OutlierPolicy(),
+            include_unverified=True,
+        )
+        by_source = {v.dimensions["source_id"]: v for v in coll}
+        assert "BROKEN" not in by_source
+        assert by_source["WILD"].value == 10.1
+        assert by_source["WILD"].is_outlier is False
+        session.rollback()
+
     def test_include_unverified_keeps_flagged_with_annotation(self, dal_db):
         ref = Reader(dal_db)
         coll = ref.values.scalar_values(

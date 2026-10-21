@@ -325,7 +325,9 @@ class ValuesReader:
             .with_only_columns(table.id, table.execution_id, table.value, *(table[d] for d in dims))
             .order_by(table.id)
         )
-        # Core execution, because the ORM result layer adds a third to this fetch.
+        # Core execution, because the ORM result layer adds a third to this fetch, so flush as it would.
+        if self.session.autoflush:
+            self.session.flush()
         scalar_rows = self.session.connection().execute(detect_stmt).tuples().all()
         _, _, values, *dim_columns = zip(*scalar_rows) if scalar_rows else [()] * (3 + len(dims))
         facets = _facets_from_columns(dims, dim_columns) if with_facets else ()
@@ -377,13 +379,16 @@ class ValuesReader:
         ids = [rows[i][0] for i in positions]
         for start in range(0, len(ids), _ID_CHUNK):
             chunk = ids[start : start + _ID_CHUNK]
-            for extra in self.session.execute(extra_stmt.where(ScalarMetricValue.id.in_(chunk))):
-                extras[extra[0]] = extra
+            for row in self.session.execute(extra_stmt.where(ScalarMetricValue.id.in_(chunk))):
+                extras[row[0]] = row
 
         items = []
         for i in positions:
             row_id, execution_id, value, *dim_values = rows[i]
-            extra = extras[row_id]
+            extra = extras.get(row_id)
+            if extra is None:
+                # Deleted by another transaction since detection read it.
+                continue
             dimensions = {k: v for k, v in zip(dims, dim_values) if v is not None}
             kind = _kind_of(dimensions)
             dimensions.pop("kind", None)

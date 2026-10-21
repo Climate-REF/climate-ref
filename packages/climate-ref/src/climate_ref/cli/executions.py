@@ -699,7 +699,7 @@ def values(  # noqa: PLR0913
     filters = MetricValueFilter(
         execution_ids=[execution_id],
         dimensions=dimensions or None,
-        promoted_only=False,
+        include_superseded=True,
         include_retracted=True,
     )
 

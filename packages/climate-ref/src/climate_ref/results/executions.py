@@ -40,7 +40,11 @@ from climate_ref.models.execution import (
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_failure_reasons, _as_str_tuple
-from climate_ref.results._query import latest_execution_for_group, select_latest_executions
+from climate_ref.results._query import (
+    InputDatasetFilter,
+    latest_execution_for_group,
+    select_latest_executions,
+)
 from climate_ref.results._stats import rows_to_execution_stats
 
 
@@ -102,6 +106,9 @@ class ExecutionGroupFilter:
         default=None, converter=_as_failure_reasons
     )
     """Keep a group only if its latest execution failed for one of these reasons."""
+
+    input_datasets: InputDatasetFilter | None = None
+    """Keep a group only if one of its executions ran against matching datasets."""
 
 
 @attrs.frozen(kw_only=True)
@@ -311,12 +318,13 @@ def select_execution_statistics(
     *,
     diagnostic_contains: Sequence[str] | None = None,
     provider_contains: Sequence[str] | None = None,
+    input_datasets: InputDatasetFilter | None = None,
 ) -> Select[Any]:
     """
     Build the per-(provider, diagnostic) status-count aggregate ``Select``.
 
     Moved out of ``cli/executions.py::stats`` so the aggregate is reusable plumbing.
-    Only ``diagnostic_contains``/``provider_contains`` are accepted
+    Only ``diagnostic_contains``/``provider_contains``/``input_datasets`` are accepted
     (not the full [ExecutionGroupFilter][climate_ref.results.executions.ExecutionGroupFilter])
     so ``dirty`` / ``successful`` / ``facets`` are never silently ignored
     on an aggregate that cannot honour them.
@@ -369,6 +377,8 @@ def select_execution_statistics(
         stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in diagnostic_contains)))
     if provider_contains:
         stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in provider_contains)))
+    if input_datasets:
+        stmt = stmt.where(input_datasets.execution_group_clause())
 
     return stmt
 
@@ -459,6 +469,9 @@ class ExecutionsReader:
         # since the Python facet filter runs after the SQL query.
         filters = filters or ExecutionGroupFilter()
 
+        group_conditions = []
+        if filters.input_datasets:
+            group_conditions.append(filters.input_datasets.execution_group_clause())
         all_results = get_execution_group_and_latest_filtered(
             self.session,
             diagnostic_filters=list(filters.diagnostic_contains) if filters.diagnostic_contains else None,
@@ -469,6 +482,7 @@ class ExecutionsReader:
             latest_successful=filters.latest_successful,
             include_superseded=filters.include_superseded,
             failure_reasons=filters.failure_reasons,
+            group_conditions=group_conditions,
         )
         all_results = sorted(all_results, key=lambda pair: pair[0].id)
 
@@ -483,10 +497,13 @@ class ExecutionsReader:
         *,
         diagnostic_contains: Sequence[str] | None = None,
         provider_contains: Sequence[str] | None = None,
+        input_datasets: InputDatasetFilter | None = None,
     ) -> tuple[ExecutionStats, ...]:
         """Execute the ``select_execution_statistics`` builder and map rows to ``ExecutionStats``."""
         stmt = select_execution_statistics(
-            diagnostic_contains=diagnostic_contains, provider_contains=provider_contains
+            diagnostic_contains=diagnostic_contains,
+            provider_contains=provider_contains,
+            input_datasets=input_datasets,
         )
         return rows_to_execution_stats(self.session.execute(stmt).all())
 

@@ -8,6 +8,7 @@ from loguru import logger
 from sqlalchemy import (
     BigInteger,
     Column,
+    ColumnElement,
     Float,
     ForeignKey,
     String,
@@ -817,6 +818,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     latest_successful: bool | None = None,
     include_superseded: bool = False,
     failure_reasons: Sequence[ExecutionFailureReason] | None = None,
+    group_conditions: Sequence[ColumnElement[bool]] | None = None,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
     Query execution groups with filtering capabilities.
@@ -868,6 +870,8 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         Post-rank filter on the *winning* execution.
         If provided, only return execution groups whose latest execution failed for one of these reasons.
         If None, do not filter by failure reason.
+    group_conditions
+        Extra SQL conditions over ``ExecutionGroup``, ANDed with the other filters.
 
     Returns
     -------
@@ -930,6 +934,9 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
             query = query.filter(ExecutionGroup.dirty.is_(True))
         else:
             query = query.filter(or_(ExecutionGroup.dirty.is_(False), ExecutionGroup.dirty.is_(None)))
+
+    for condition in group_conditions or ():
+        query = query.filter(condition)
 
     if facet_filters:
         # Load all results into memory for Python-based filtering

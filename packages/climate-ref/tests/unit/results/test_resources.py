@@ -585,6 +585,13 @@ class TestRetracted:
         assert summary is not None
         assert summary.wall_seconds_total == pytest.approx(900.0)
 
+    def test_measurement_by_id_finds_a_retracted_execution(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        retracted = [
+            m for m in reader.measurements(ResourceFilter(include_retracted=True)) if m.wall_seconds == 900.0
+        ]
+        assert reader.measurement(retracted[0].execution_id) is not None
+
     def test_profiles_keep_retracted_samples(self, db_with_retracted):
         (profile,) = Reader(db_with_retracted).resources.profiles()
         assert profile.n_samples == 2

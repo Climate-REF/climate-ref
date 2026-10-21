@@ -85,6 +85,9 @@ class MetricValueFilter:
     include_retracted: bool = False
     """Include values produced by retracted executions."""
 
+    latest_only: bool = False
+    """Restrict to values from each group's latest execution, as picked by ``select_latest_executions``."""
+
     def dimension_clauses(self, entity: type[MetricValue]) -> list[Any]:
         """
         Build validated SQLAlchemy clauses for the dynamic CV dimension columns.
@@ -129,6 +132,9 @@ def _apply_common(  # noqa: PLR0912
         stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
     if f.execution_group_ids:
         stmt = stmt.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
+    if f.latest_only:
+        latest = select_latest_executions().subquery()
+        stmt = stmt.where(entity.execution_id.in_(select(latest.c.execution_id)))
 
     if needs_diag:
         stmt = stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
@@ -188,6 +194,41 @@ def select_series_values(f: MetricValueFilter | None = None) -> Select[tuple[Ser
 def count_values(session: Session, stmt: Select[Any]) -> int:
     """Total row count for a builder's ``Select``, ignoring any offset/limit. For pagination."""
     return session.execute(select(func.count()).select_from(stmt.order_by(None).subquery())).scalar_one()
+
+
+def select_latest_executions() -> Select[tuple[int, int]]:
+    """
+    Build a ``Select`` of the latest execution in each execution group.
+
+    "Latest" is the greatest ``created_at``, with the greatest ``id`` breaking a tie,
+    the same ordering as [latest_execution_for_group][climate_ref.results._query.latest_execution_for_group].
+    Retracted executions are not skipped, so a retracted latest execution still wins its group.
+
+    Returns
+    -------
+        A ``Select`` with ``execution_group_id`` and ``execution_id`` columns, one row per group
+        that has at least one execution. Call ``.subquery()`` to join or filter against it.
+    """
+    newest = (
+        select(
+            Execution.execution_group_id,
+            func.max(Execution.created_at).label("created_at"),
+        )
+        .group_by(Execution.execution_group_id)
+        .subquery()
+    )
+    return (
+        select(
+            Execution.execution_group_id.label("execution_group_id"),
+            func.max(Execution.id).label("execution_id"),
+        )
+        .join(
+            newest,
+            (Execution.execution_group_id == newest.c.execution_group_id)
+            & (Execution.created_at == newest.c.created_at),
+        )
+        .group_by(Execution.execution_group_id)
+    )
 
 
 def latest_execution_for_group(session: Session, execution_group_id: int) -> Execution | None:

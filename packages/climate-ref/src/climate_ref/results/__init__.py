@@ -9,7 +9,7 @@ Layers:
 
 * [_query][climate_ref.results._query] -- ``MetricValueFilter`` + ``select_*`` builders
   (return a ``Select``; the source of truth for filter/join logic) + ``count_values`` +
-  ``latest_execution_for_group``.
+  ``latest_execution_for_group`` + ``select_latest_executions``.
 * [frames][climate_ref.results.frames] -- ``*_to_frame`` + ``collect_facets``.
 * [outliers][climate_ref.results.outliers] -- source-id-aware IQR outlier detection.
 * [values][climate_ref.results.values] -- typed DTOs + collections + the ``Reader`` facade.

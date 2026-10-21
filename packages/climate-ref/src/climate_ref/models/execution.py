@@ -1,6 +1,7 @@
 import datetime
 import enum
 import pathlib
+import warnings
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
@@ -767,12 +768,12 @@ def _selectors_match_facet(
     return False
 
 
-def _filter_executions_by_facets(
+def _filter_executions_by_selectors(
     results: Sequence[tuple[ExecutionGroup, Execution | None]],
-    facet_filters: dict[str, list[str]],
+    selector_filters: dict[str, list[str]],
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
-    Filter execution groups and their latest executions based on facet key-value pairs.
+    Filter execution groups by facet key-value pairs in their ``selectors``.
 
     This is a relatively expensive operation as it requires iterating over all results.
     This should be replaced once we have normalised the selectors into a separate table.
@@ -781,7 +782,7 @@ def _filter_executions_by_facets(
     ----------
     results
         List of tuples containing ExecutionGroup and its latest Execution (or None)
-    facet_filters
+    selector_filters
         Dictionary mapping facet keys to lists of allowed values.
         Different keys are ANDed; multiple values for the same key are ORed.
 
@@ -803,22 +804,40 @@ def _filter_executions_by_facets(
         for eg, execution in results
         if all(
             _selectors_match_facet(eg.selectors, facet_key, facet_values)
-            for facet_key, facet_values in facet_filters.items()
+            for facet_key, facet_values in selector_filters.items()
         )
     ]
+
+
+def _resolve_selector_filters(
+    selector_filters: dict[str, list[str]] | None, facet_filters: dict[str, list[str]] | None
+) -> dict[str, list[str]] | None:
+    if facet_filters is None:
+        return selector_filters
+    if selector_filters is not None and selector_filters != facet_filters:
+        raise ValueError("selector_filters and the deprecated facet_filters disagree")
+    warnings.warn(
+        "get_execution_group_and_latest_filtered(facet_filters=...) is deprecated. "
+        "Use selector_filters instead.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return facet_filters
 
 
 def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     session: Session,
     diagnostic_filters: list[str] | None = None,
     provider_filters: list[str] | None = None,
-    facet_filters: dict[str, list[str]] | None = None,
+    selector_filters: dict[str, list[str]] | None = None,
     dirty: bool | None = None,
     successful: bool | None = None,
     latest_successful: bool | None = None,
     include_superseded: bool = False,
     failure_reasons: Sequence[ExecutionFailureReason] | None = None,
     group_conditions: Sequence[ColumnElement[bool]] | None = None,
+    *,
+    facet_filters: dict[str, list[str]] | None = None,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
     Query execution groups with filtering capabilities.
@@ -843,10 +862,10 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         List of diagnostic slug substrings (OR logic, case-insensitive)
     provider_filters
         List of provider slug substrings (OR logic, case-insensitive)
-    facet_filters
+    selector_filters
         Dictionary mapping facet keys to lists of allowed values.
         Different keys are ANDed; multiple values for the same key are ORed.
-        These match each group's ``selectors`` in Python.
+        These match each group's ``ExecutionGroup.selectors`` in Python.
         To match the datasets an execution ran against in SQL, pass an
         ``InputDatasetFilter`` clause through ``group_conditions`` instead.
     dirty
@@ -886,6 +905,8 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         )
         get_execution_group_and_latest_filtered(session, group_conditions=[scope.execution_group_clause()])
         ```
+    facet_filters
+        Deprecated alias for ``selector_filters``, kept for one release.
 
     Returns
     -------
@@ -896,7 +917,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     - Diagnostic and provider filters use substring matching (case-insensitive)
     - Multiple values within same filter type use OR logic
     - Different filter types use AND logic
-    - Facet filters can either be key=value (searches all dataset types)
+    - Selector filters can either be key=value (searches all dataset types)
       or dataset_type.key=value (searches specific dataset type)
     - This helper is the only sanctioned path for new callers that should respect the promoted-version filter.
       The one acknowledged exception is the ``cli/executions.py::stats`` aggregation,
@@ -906,6 +927,8 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
       Operational queries that must remain version-agnostic
       (e.g. ``mark_failed_running`` in the same module) intentionally do not use this helper at all.
     """
+    selector_filters = _resolve_selector_filters(selector_filters, facet_filters)
+
     # Pre-rank population filter: restrict which executions "latest" is chosen from.
     among_executions = None if latest_successful is None else [_successful_predicate(latest_successful)]
 
@@ -954,10 +977,10 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
 
     query = query.order_by(ExecutionGroup.id)
 
-    if facet_filters:
+    if selector_filters:
         # Load all results into memory for Python-based filtering
         # TODO: Update once we have normalised the selector
         results = [r._tuple() for r in query.all()]
-        return _filter_executions_by_facets(results, facet_filters)
+        return _filter_executions_by_selectors(results, selector_filters)
     else:
         return [r._tuple() for r in query.all()]

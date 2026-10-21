@@ -2,13 +2,18 @@
 
 import datetime
 
+import attrs
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import ExecutionOutput, ResultOutputType
+from climate_ref.models.execution import (
+    ExecutionOutput,
+    ResultOutputType,
+    get_execution_group_and_latest_filtered,
+)
 from climate_ref.provider_registry import _register_provider
 from climate_ref.results import ExecutionGroupFilter, MetricValueFilter, OutlierPolicy, Reader
 from climate_ref.results.executions import select_execution_outputs, select_execution_statistics
@@ -182,13 +187,13 @@ class TestGroupsFilter:
 
     def test_facet_bare_key(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"source_id": ["GFDL-ESM4"]}))
         keys = {g.key for g in coll}
         assert keys == {"key1"}
 
     def test_facet_dataset_type_scoped_key(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"cmip6.source_id": ["GFDL-ESM4"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"cmip6.source_id": ["GFDL-ESM4"]}))
         keys = {g.key for g in coll}
         assert keys == {"key1"}
 
@@ -199,6 +204,59 @@ class TestGroupsFilter:
     def test_bare_string_rejected_provider_contains(self):
         with pytest.raises(TypeError):
             ExecutionGroupFilter(provider_contains="pmp")
+
+
+class TestDeprecatedFacetsAlias:
+    def test_maps_onto_selectors(self):
+        with pytest.warns(DeprecationWarning, match="selectors"):
+            f = ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]})
+        assert f.selectors == {"source_id": ("GFDL-ESM4",)}
+        assert f == ExecutionGroupFilter(selectors={"source_id": ["GFDL-ESM4"]})
+
+    def test_filters_like_selectors(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        with pytest.warns(DeprecationWarning):
+            f = ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]})
+        assert {g.key for g in reader.executions.groups(f)} == {"key1"}
+
+    def test_disagreeing_values_raise(self):
+        with pytest.raises(ValueError, match="disagree"):
+            ExecutionGroupFilter(selectors={"source_id": ["A"]}, facets={"source_id": ["B"]})
+
+    def test_agreeing_values_are_accepted(self):
+        with pytest.warns(DeprecationWarning):
+            f = ExecutionGroupFilter(selectors={"source_id": ["A"]}, facets={"source_id": ["A"]})
+        assert f.selectors == {"source_id": ("A",)}
+
+    def test_evolve_applies_alias(self):
+        with pytest.warns(DeprecationWarning):
+            f = attrs.evolve(ExecutionGroupFilter(), facets={"source_id": ["A"]})
+        assert f.selectors == {"source_id": ("A",)}
+
+    def test_evolve_keeps_resolved_value(self):
+        f = attrs.evolve(ExecutionGroupFilter(selectors={"source_id": ["A"]}), dirty=True)
+        assert f.selectors == {"source_id": ("A",)}
+
+
+class TestDeprecatedFacetFiltersKwarg:
+    def test_maps_onto_selector_filters(self, db_with_groups):
+        session = db_with_groups.session
+        expected = get_execution_group_and_latest_filtered(
+            session, selector_filters={"source_id": ["GFDL-ESM4"]}
+        )
+        with pytest.warns(DeprecationWarning, match="selector_filters"):
+            actual = get_execution_group_and_latest_filtered(
+                session, facet_filters={"source_id": ["GFDL-ESM4"]}
+            )
+        assert [eg.key for eg, _ in actual] == [eg.key for eg, _ in expected] == ["key1"]
+
+    def test_disagreeing_values_raise(self, db_with_groups):
+        with pytest.raises(ValueError, match="disagree"):
+            get_execution_group_and_latest_filtered(
+                db_with_groups.session,
+                selector_filters={"source_id": ["A"]},
+                facet_filters={"source_id": ["B"]},
+            )
 
 
 class TestGroupsPromotedVersion:
@@ -401,7 +459,7 @@ class TestGroupsToPandas:
 class TestGroupLatestMapping:
     def test_latest_none_when_no_executions(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"experiment_id": ["ssp126"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"experiment_id": ["ssp126"]}))
         assert len(coll) == 1
         assert coll.items[0].latest is None
         assert coll.items[0].successful is None
@@ -425,7 +483,7 @@ class TestGroupLatestMapping:
 
     def test_latest_running(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"experiment_id": ["ssp245"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"experiment_id": ["ssp245"]}))
         assert len(coll) == 1
         view = coll.items[0]
         assert view.latest is not None

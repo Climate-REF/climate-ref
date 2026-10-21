@@ -16,6 +16,7 @@ A common set of ordering (``created_at DESC, id DESC``) is used to ensure consis
 
 """
 
+import warnings
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
@@ -53,7 +54,7 @@ class ExecutionGroupFilter:
     This mirrors exactly what [get_execution_group_and_latest_filtered]
     [climate_ref.models.execution.get_execution_group_and_latest_filtered] supports --
     ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches (OR-combined),
-    ``facets`` is the selector-facet map consumed by the helper's Python-side matching,
+    ``selectors`` is the map matched against each group's ``selectors`` in Python,
     and ``successful`` vs ``latest_successful`` expose the helper's post-rank / pre-rank success filters.
 
     Exact-match ``diagnostic_slug``/``provider_slug`` are a documented follow-up,
@@ -92,12 +93,18 @@ class ExecutionGroupFilter:
     Composes with ``successful`` but answers a different question.
     """
 
-    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
+    selectors: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     """
-    Selector-facet map matched against each group's ``selectors``, in Python.
+    Facet map matched against each group's ``ExecutionGroup.selectors``, in Python.
 
+    A key is a bare facet such as ``source_id``, or ``<dataset_type>.<facet>`` for one dataset type.
     Unlike ``input_datasets``, this checks how the group was selected, not the datasets its executions used.
     """
+
+    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(
+        default=None, converter=_as_facets, repr=False, eq=False
+    )
+    """Deprecated alias for ``selectors``, kept for one release."""
 
     include_superseded: bool = False
     """Include execution groups whose ``diagnostic_version`` is not the diagnostic's promoted version."""
@@ -111,8 +118,21 @@ class ExecutionGroupFilter:
     """
     Keep a group only if one of its executions ran against matching datasets, in SQL.
 
-    Unlike ``facets``, this checks the datasets executions used, not the group's ``selectors``.
+    Unlike ``selectors``, this checks the datasets executions used, not how the group was selected.
     """
+
+    def __attrs_post_init__(self) -> None:
+        if self.facets is None:
+            return
+        if self.selectors is not None and self.selectors != self.facets:
+            raise ValueError("selectors and the deprecated facets disagree")
+        warnings.warn(
+            "ExecutionGroupFilter(facets=...) is deprecated. Use selectors instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        object.__setattr__(self, "selectors", self.facets)
+        object.__setattr__(self, "facets", None)
 
 
 @attrs.frozen(kw_only=True)
@@ -467,7 +487,9 @@ class ExecutionsReader:
             self.session,
             diagnostic_filters=list(filters.diagnostic_contains) if filters.diagnostic_contains else None,
             provider_filters=list(filters.provider_contains) if filters.provider_contains else None,
-            facet_filters={k: list(v) for k, v in filters.facets.items()} if filters.facets else None,
+            selector_filters={k: list(v) for k, v in filters.selectors.items()}
+            if filters.selectors
+            else None,
             dirty=filters.dirty,
             successful=filters.successful,
             latest_successful=filters.latest_successful,

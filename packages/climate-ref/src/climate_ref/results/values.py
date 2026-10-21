@@ -15,7 +15,7 @@ power users who need the raw ``Select`` or ORM rows use those modules directly.
 """
 
 import functools
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -27,9 +27,11 @@ from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import ScalarMetricValue, SeriesMetricValue
+from climate_ref.results._page import Page
 from climate_ref.results._query import (
     MetricValueFilter,
     count_values,
+    paginate,
     select_scalar_values,
     select_series_values,
 )
@@ -153,35 +155,21 @@ class SeriesValue:
 
 
 @attrs.frozen(kw_only=True)
-class ScalarValueCollection:
-    """An immutable page of scalar values plus collection-level, outlier-aware metadata."""
+class ScalarValueCollection(Page[ScalarValue]):
+    """
+    An immutable page of scalar values plus collection-level, outlier-aware metadata.
 
-    items: tuple[ScalarValue, ...]
-    """The scalar values on this page."""
-
-    total_count: int
-    """Total values matching the filter before ``offset``/``limit`` (after outlier removal, if any)."""
+    ``total_count`` is taken after outlier removal, if any.
+    """
 
     facets: tuple[Facet, ...]
     """Distinct CV dimension values observed over the full filtered set, before pagination."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
 
     had_outliers: bool
     """Whether outlier detection ran and flagged at least one value."""
 
     outlier_count: int
     """Number of values flagged as outliers, or ``0`` when detection did not run."""
-
-    def __iter__(self) -> Iterator[ScalarValue]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
 
     def facets_dict(self) -> dict[str, list[str]]:
         """Facets as a plain ``{dimension: [values]}`` mapping."""
@@ -194,29 +182,11 @@ class ScalarValueCollection:
 
 
 @attrs.frozen(kw_only=True)
-class SeriesValueCollection:
+class SeriesValueCollection(Page[SeriesValue]):
     """An immutable page of series values plus collection-level metadata."""
-
-    items: tuple[SeriesValue, ...]
-    """The series values on this page."""
-
-    total_count: int
-    """Total values matching the filter before ``offset``/``limit``."""
 
     facets: tuple[Facet, ...]
     """Distinct CV dimension values observed over the full filtered set, before pagination."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[SeriesValue]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
 
     def facets_dict(self) -> dict[str, list[str]]:
         """Facets as a plain ``{dimension: [values]}`` mapping."""
@@ -266,6 +236,7 @@ class ValuesReader:
         offset: int = 0,
         limit: int | None = None,
         with_facets: bool = True,
+        with_count: bool = True,
         include_context: bool = False,
     ) -> ScalarValueCollection:
         """
@@ -286,12 +257,8 @@ class ValuesReader:
 
         if not policy.enabled:
             # No detection: page and count in SQL so we never materialise the whole table.
-            total_count = count_values(self.session, base_stmt)
-            load_stmt = base_stmt.options(self._scalar_loader(include_context))
-            if limit is not None:
-                load_stmt = load_stmt.offset(offset).limit(limit)
-            elif offset:
-                load_stmt = load_stmt.offset(offset)
+            total_count = count_values(self.session, base_stmt) if with_count else None
+            load_stmt = paginate(base_stmt.options(self._scalar_loader(include_context)), offset, limit)
             rows = list(self.session.execute(load_stmt).scalars().all())
             items = tuple(
                 self._to_scalar_dto(r, False, "verified", include_context, detection_ran=False) for r in rows
@@ -316,7 +283,7 @@ class ValuesReader:
         if not include_unverified:
             annotated = [a for a in annotated if not a.is_outlier]
 
-        total_count = len(annotated)
+        total_count = len(annotated) if with_count else None
         page = annotated[offset : offset + limit] if limit is not None else annotated[offset:]
         items = tuple(
             self._to_scalar_dto(
@@ -334,13 +301,14 @@ class ValuesReader:
             outlier_count=outlier_count,
         )
 
-    def series_values(
+    def series_values(  # noqa: PLR0913
         self,
         filters: MetricValueFilter | None = None,
         *,
         offset: int = 0,
         limit: int | None = None,
         with_facets: bool = True,
+        with_count: bool = True,
         include_context: bool = False,
     ) -> SeriesValueCollection:
         """
@@ -353,13 +321,9 @@ class ValuesReader:
 
         base_stmt = select_series_values(filters)
         facets = self._facets(base_stmt, SeriesMetricValue) if with_facets else ()
-        total_count = count_values(self.session, base_stmt)
+        total_count = count_values(self.session, base_stmt) if with_count else None
 
-        load_stmt = base_stmt.options(self._series_loader(include_context))
-        if limit is not None:
-            load_stmt = load_stmt.offset(offset).limit(limit)
-        elif offset:
-            load_stmt = load_stmt.offset(offset)
+        load_stmt = paginate(base_stmt.options(self._series_loader(include_context)), offset, limit)
         rows = list(self.session.execute(load_stmt).scalars().unique().all())
 
         items = tuple(self._to_series_dto(r, include_context) for r in rows)

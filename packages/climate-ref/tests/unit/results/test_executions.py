@@ -316,6 +316,16 @@ class TestGroupsPagination:
         assert page_1 + page_2 + page_3 == full_ids  # no overlap, no gap
 
 
+class TestGroupsWithCount:
+    def test_without_count(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        full = reader.executions.groups(limit=3)
+        page = reader.executions.groups(limit=3, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+
+
 class TestGroupsLatestSuccessful:
     def test_latest_successful_surfaces_earlier_success(self, db_with_groups):
         # key3's only execution failed. Add an earlier successful run: successful=True (post-rank)

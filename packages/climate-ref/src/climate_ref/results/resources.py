@@ -15,7 +15,7 @@ Not all executions have resource data.
 import datetime
 import math
 import statistics
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import attrs
@@ -28,7 +28,8 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
-from climate_ref.results._query import ExecutionScope, apply_execution_scope, count_values
+from climate_ref.results._page import Page
+from climate_ref.results._query import ExecutionScope, apply_execution_scope, count_values, paginate
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -205,26 +206,8 @@ class ResourceSummary:
 
 
 @attrs.frozen(kw_only=True)
-class ResourceMeasurementCollection:
+class ResourceMeasurementCollection(Page[ResourceMeasurementView]):
     """An immutable page of resource measurements plus collection-level metadata."""
-
-    items: tuple[ResourceMeasurementView, ...]
-    """The measurements on this page."""
-
-    total_count: int
-    """Total measurements matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[ResourceMeasurementView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -776,6 +759,7 @@ class ResourcesReader:
         *,
         offset: int = 0,
         limit: int | None = None,
+        with_count: bool = True,
     ) -> ResourceMeasurementCollection:
         """
         Query the raw per-execution measurements behind the profiles.
@@ -790,6 +774,8 @@ class ResourcesReader:
             Rows to skip before the returned page.
         limit
             Page size, or ``None`` for every matching row.
+        with_count
+            Whether to run the count query. When ``False``, ``total_count`` is ``None``.
 
         Returns
         -------
@@ -797,13 +783,9 @@ class ResourcesReader:
             A page of measurements plus the pre-pagination total.
         """
         stmt = select_execution_resources(filters)
-        total_count = count_values(self.session, stmt)
+        total_count = count_values(self.session, stmt) if with_count else None
 
-        page = stmt.offset(offset)
-        if limit is not None:
-            page = page.limit(limit)
-
-        items = tuple(self._to_view(row) for row in self.session.execute(page).all())
+        items = tuple(self._to_view(row) for row in self.session.execute(paginate(stmt, offset, limit)).all())
         return ResourceMeasurementCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
     def summary(self, filters: ResourceFilter | None = None) -> ResourceSummary | None:

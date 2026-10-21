@@ -75,7 +75,7 @@ def list_(  # noqa: PLR0913
 
     render_dataframe(results_df, console=console, output_format=output_format)
 
-    filtered_count = collection.total_count
+    filtered_count = collection.total_count or 0
     if filtered_count > limit:
         logger.warning(
             f"Displaying {limit} of {filtered_count} filtered results. "

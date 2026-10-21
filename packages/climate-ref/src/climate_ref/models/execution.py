@@ -844,6 +844,9 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     facet_filters
         Dictionary mapping facet keys to lists of allowed values.
         Different keys are ANDed; multiple values for the same key are ORed.
+        These match each group's ``selectors`` in Python.
+        To match the datasets an execution ran against in SQL, pass an
+        ``InputDatasetFilter`` clause through ``group_conditions`` instead.
     dirty
         If True, only return dirty execution groups.
         If False, only return clean execution groups.
@@ -884,7 +887,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
 
     Returns
     -------
-        Query returning tuples of (ExecutionGroup, latest Execution or None)
+        List of (ExecutionGroup, latest Execution or None) tuples, ordered by group id
 
     Notes
     -----
@@ -946,6 +949,8 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
 
     for condition in group_conditions or ():
         query = query.filter(condition)
+
+    query = query.order_by(ExecutionGroup.id)
 
     if facet_filters:
         # Load all results into memory for Python-based filtering

@@ -97,7 +97,11 @@ class ExecutionGroupFilter:
     """
 
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
-    """Selector-facet map matched against each group's ``selectors``."""
+    """
+    Selector-facet map matched against each group's ``selectors``, in Python.
+
+    Unlike ``input_datasets``, this checks how the group was selected, not the datasets its executions used.
+    """
 
     include_superseded: bool = False
     """Include execution groups whose ``diagnostic_version`` is not the diagnostic's promoted version."""
@@ -108,7 +112,11 @@ class ExecutionGroupFilter:
     """Keep a group only if its latest execution failed for one of these reasons."""
 
     input_datasets: InputDatasetFilter | None = None
-    """Keep a group only if one of its executions ran against matching datasets."""
+    """
+    Keep a group only if one of its executions ran against matching datasets, in SQL.
+
+    Unlike ``facets``, this checks the datasets executions used, not the group's ``selectors``.
+    """
 
 
 @attrs.frozen(kw_only=True)
@@ -484,7 +492,6 @@ class ExecutionsReader:
             failure_reasons=filters.failure_reasons,
             group_conditions=group_conditions,
         )
-        all_results = sorted(all_results, key=lambda pair: pair[0].id)
 
         total_count = len(all_results)
         page = all_results[offset : offset + limit] if limit is not None else all_results[offset:]

@@ -45,9 +45,11 @@ class ExecutionScope:
     """
     Keep only each group's latest execution, as picked by ``select_latest_executions``.
 
-    A retracted latest execution still wins its group,
-    so with ``include_retracted=False`` that group contributes nothing.
-    This differs on purpose from ``DatasetFilter``, which drops retracted rows before picking the latest.
+    The latest is picked before retracted executions are dropped.
+    So if a group's newest execution is retracted, that group contributes nothing
+    unless ``include_retracted=True``.
+    It never falls back to an older execution, because the newer one superseded it.
+    ``DatasetFilter`` drops retracted rows first instead, because an older dataset version is still valid.
     """
 
 

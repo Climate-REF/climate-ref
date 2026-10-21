@@ -33,7 +33,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v10.0.1
         with:
-          version: "0.11.6"
+          version: "0.12.7"
           python-version: "3.12"
       - name: Verify installable
         # TODO: this step fails we fix https://github.com/Climate-REF/climate-ref/issues/217

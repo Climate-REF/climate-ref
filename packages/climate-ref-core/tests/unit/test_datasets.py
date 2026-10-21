@@ -143,8 +143,8 @@ class TestDatasetCollectionObs4MIPs:
         expected = dataset_collection_obs4mips.datasets.instance_id
         assert dataset_collection_obs4mips.instance_id.equals(expected)
 
-    def test_hash(self, dataset_collection_obs4mips, obs4mips_data_catalog, data_regression):
-        ts_datasets = obs4mips_data_catalog[obs4mips_data_catalog.variable_id == "ts"]
+    def test_hash(self, dataset_collection_obs4mips, obs4ref_data_catalog, data_regression):
+        ts_datasets = obs4ref_data_catalog[obs4ref_data_catalog.variable_id == "ts"]
         dataset_hash = hash(DatasetCollection(ts_datasets, "instance_id"))
         assert isinstance(dataset_hash, int)
 

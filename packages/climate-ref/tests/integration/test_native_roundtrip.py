@@ -900,6 +900,7 @@ class TestCliMintReplay:
         )
         mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
         mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=datasets)
+        mocker.patch("climate_ref_core.testing.validate_catalog_paths", return_value=datasets)
         mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value=None)
 
         # The CLI builds its store from the app-context config; rather than rely on
@@ -948,6 +949,7 @@ class TestCliMintReplay:
         )
         mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
         mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=datasets)
+        mocker.patch("climate_ref_core.testing.validate_catalog_paths", return_value=datasets)
         mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value=None)
 
         from climate_ref_core.regression.store import build_native_store as real_build  # noqa: PLC0415

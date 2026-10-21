@@ -38,7 +38,8 @@ These datasets can be downloaded manually or automatically via the `ref datasets
 
 - **Description:** Observational datasets formatted to be compatible with CMIP model output conventions, facilitating direct comparison.
 - **Metadata:** Includes fields such as `activity_id`, `institution_id`, `source_id`, `variable_id`, `grid_label`, `source_version_number`, and variable-specific metadata like `long_name`, `units`, and `vertical_levels`.
-- **Unique Identifier:** `instance_id` (constructed from key metadata fields and version).
+- **Unique Identifier:** `instance_id`, constructed as `<activity_id>.<institution_id>.<source_id>.<frequency>.<variable_id>.<grid_label>.<version>`.
+  Datasets that follow the obs4MIPs conventions without being published as obs4MIPs (obs4REF) prefix their identifier with their dataset type, so that the same file ingested as both types never yields the same identifier twice.
 - **Usage:** Used as observational reference data for model evaluation.
 
 #### PMP Climatology Datasets

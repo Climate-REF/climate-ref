@@ -4,6 +4,7 @@ import itertools
 
 import attrs
 import cftime
+import dask.array
 import netCDF4
 import numpy as np
 import pytest
@@ -1202,6 +1203,32 @@ class TestRepeatFinalYearTo:
 
         days = {t.day for t in extended["time"].values}
         assert days == {16}
+
+    def test_lazy_bounds(self, tmp_path):
+        """
+        A file opened with Dask-backed time bounds extends like any other.
+
+        Conversion opens its inputs chunked, which makes ``time_bnds`` a Dask array of
+        cftime objects. Dask cannot auto-chunk object dtype, so concatenating the eager
+        repeats onto lazy bounds used to fail outright.
+        """
+        path = tmp_path / "lazy.nc"
+        units = {"units": "days since 1850-01-01", "calendar": "noleap"}
+        self._monthly_dataset(1990, 12 * 3).to_netcdf(  # 1990-01 .. 1992-12
+            path, encoding={"time": units, "time_bnds": units}
+        )
+
+        time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+        with xr.open_dataset(path, decode_times=time_coder, chunks="auto") as ds:
+            assert isinstance(ds["time_bnds"].data, dask.array.Array), "expected lazy bounds"
+
+            extended = repeat_final_year_to(ds, end_year=1995, end_month=12)
+
+            last = extended["time"].values[-1]
+            assert (last.year, last.month) == (1995, 12)
+            assert len(extended["time_bnds"]) == len(extended["time"])
+            # The caller's dataset keeps the bounds it was opened with.
+            assert isinstance(ds["time_bnds"].data, dask.array.Array)
 
 
 class TestConvertCmip6DatasetExtendHistorical:

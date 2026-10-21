@@ -32,7 +32,7 @@ from climate_ref_core.testing import (
     TestCasePaths,
     collect_test_case_params,
     is_test_case_excluded,
-    load_datasets_from_yaml,
+    validate_catalog_paths,
 )
 
 
@@ -228,7 +228,7 @@ def assert_test_case_no_drift(
         )
 
     tc = diagnostic.test_data_spec.get_case(test_case_name)
-    datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
+    datasets = validate_catalog_paths(paths.catalog, paths.catalog_paths)
 
     slot = work_dir / "slot"
     slot.mkdir(parents=True, exist_ok=True)
@@ -269,6 +269,8 @@ def create_no_drift_test(provider: DiagnosticProvider) -> Callable[..., None]:
     and delegates to :func:`assert_test_case_no_drift`.
 
     Requires ``ref test-cases fetch --provider <slug>`` to have been run first.
+    Set ``REF_TEST_CASES_STRICT=true`` in CI to fail on missing catalogs or baselines
+    instead of silently skipping them. Explicit diagnostic exclusions still apply.
 
     Usage in a provider's ``tests/integration/test_diagnostics.py``::
 
@@ -303,16 +305,17 @@ def create_no_drift_test(provider: DiagnosticProvider) -> Callable[..., None]:
 
         diagnostic.provider.configure(config)
 
+        report_missing = pytest.fail if env.bool("REF_TEST_CASES_STRICT", default=False) else pytest.skip
         paths = TestCasePaths.from_diagnostic(diagnostic, test_case_name)
         if paths is None:
-            pytest.skip(f"No test-data directory for {diagnostic.slug} (not a development checkout)")
+            report_missing(f"No test-data directory for {diagnostic.slug} (not a development checkout)")
         if not paths.catalog.exists():
-            pytest.skip(
+            report_missing(
                 f"No catalog file for {diagnostic.slug}/{test_case_name}. "
                 f"Run `ref test-cases fetch --provider {provider.slug}` first."
             )
         if not paths.manifest.exists() or not paths.regression.exists():
-            pytest.skip(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
+            report_missing(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
 
         case_id = f"{diagnostic.provider.slug}/{diagnostic.slug}/{test_case_name}"
         with log_resources(case_id):

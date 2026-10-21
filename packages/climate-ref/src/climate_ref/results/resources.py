@@ -15,12 +15,12 @@ Not all executions have resource data.
 import datetime
 import math
 import statistics
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import attrs
 import pandas as pd
-from sqlalchemy import Select, or_, select
+from sqlalchemy import Select, func, null, or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
@@ -28,7 +28,8 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
-from climate_ref.results._query import count_values
+from climate_ref.results._page import Page
+from climate_ref.results._query import ExecutionScope, apply_execution_scope, count_values, paginate
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -81,11 +82,12 @@ def _percentile(values: Sequence[float], quantile: float) -> float:
 
 
 @attrs.frozen(kw_only=True)
-class ResourceFilter:
+class ResourceFilter(ExecutionScope):
     """
     Declarative filter over the executions considered for a resource profile.
 
     Every field is optional, and ``None`` means "do not constrain on this axis".
+    Every diagnostic version is counted, because there is no promoted-version scoping here.
     ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches
     (OR-combined within each field),
     matching the semantics used by
@@ -97,6 +99,12 @@ class ResourceFilter:
 
     provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on provider slug (OR-combined)."""
+
+    diagnostic_slug: str | None = None
+    """Exact-match diagnostic slug."""
+
+    provider_slug: str | None = None
+    """Exact-match provider slug."""
 
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
@@ -154,26 +162,52 @@ class ResourceMeasurementView:
 
 
 @attrs.frozen(kw_only=True)
-class ResourceMeasurementCollection:
+class ResourceSummary:
+    """
+    Totals and extremes of the resource usage recorded across a set of executions.
+
+    Only executions that recorded a wall time are counted in ``timed_execution_count``.
+    CPU time and peak memory are optional, so they may be missing even when wall time is present.
+    """
+
+    provider_slug: str | None
+    """Provider the summary covers, or ``None`` when it is not grouped by provider."""
+
+    diagnostic_slug: str | None
+    """Diagnostic the summary covers, or ``None`` when it is not grouped by diagnostic."""
+
+    timed_execution_count: int
+    """Number of executions that recorded a wall time."""
+
+    wall_seconds_total: float
+    """
+    Sum of wall clock time across the timed executions, in seconds.
+
+    Executions often run in parallel, so this can be more than the elapsed time of the run.
+    """
+
+    wall_seconds_mean: float
+    """Mean wall clock time per timed execution, in seconds."""
+
+    wall_seconds_max: float
+    """Longest wall clock time of any timed execution, in seconds."""
+
+    cpu_seconds_total: float | None
+    """Sum of CPU time across the executions that recorded it, in seconds."""
+
+    cpu_seconds_mean: float | None
+    """Mean CPU time per execution that recorded it, in seconds."""
+
+    peak_memory_bytes_min: int | None
+    """Smallest peak resident memory of any execution that recorded it, in bytes."""
+
+    peak_memory_bytes_max: int | None
+    """Largest peak resident memory of any execution that recorded it, in bytes."""
+
+
+@attrs.frozen(kw_only=True)
+class ResourceMeasurementCollection(Page[ResourceMeasurementView]):
     """An immutable page of resource measurements plus collection-level metadata."""
-
-    items: tuple[ResourceMeasurementView, ...]
-    """The measurements on this page."""
-
-    total_count: int
-    """Total measurements matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[ResourceMeasurementView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -384,9 +418,6 @@ def select_execution_resources(filters: ResourceFilter | None = None) -> Select[
             Execution.queue_seconds,
             Execution.created_at,
         )
-        .join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-        .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-        .join(Provider, Diagnostic.provider_id == Provider.id)
         .where(
             or_(
                 Execution.wall_seconds.is_not(None),
@@ -396,16 +427,74 @@ def select_execution_resources(filters: ResourceFilter | None = None) -> Select[
         )
         .order_by(Execution.created_at, Execution.id)
     )
+    return _apply_resource_filters(stmt, filters)
 
+
+def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Select[Any]:
+    """Join an ``Execution`` select through to its provider and apply the filter."""
+    stmt = (
+        stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
+        .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+        .join(Provider, Diagnostic.provider_id == Provider.id)
+    )
     if filters.diagnostic_contains:
         stmt = stmt.where(
             or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains))
         )
     if filters.provider_contains:
         stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
+    if filters.diagnostic_slug is not None:
+        stmt = stmt.where(Diagnostic.slug == filters.diagnostic_slug)
+    if filters.provider_slug is not None:
+        stmt = stmt.where(Provider.slug == filters.provider_slug)
     if filters.since is not None:
         stmt = stmt.where(Execution.created_at >= filters.since)
+    return apply_execution_scope(stmt, filters)
 
+
+_SUMMARY_AGGREGATES = (
+    func.count(Execution.wall_seconds).label("timed_execution_count"),
+    func.sum(Execution.wall_seconds).label("wall_seconds_total"),
+    func.avg(Execution.wall_seconds).label("wall_seconds_mean"),
+    func.max(Execution.wall_seconds).label("wall_seconds_max"),
+    func.sum(Execution.cpu_seconds).label("cpu_seconds_total"),
+    func.avg(Execution.cpu_seconds).label("cpu_seconds_mean"),
+    func.min(Execution.peak_memory_bytes).label("peak_memory_bytes_min"),
+    func.max(Execution.peak_memory_bytes).label("peak_memory_bytes_max"),
+)
+
+
+def select_resource_summary(
+    filters: ResourceFilter | None = None, *, group_by: GroupBy | None = None
+) -> Select[Any]:
+    """
+    Build the ``Select`` that aggregates resource usage in SQL.
+
+    Every execution matching ``filters`` is aggregated, including ones without a measurement,
+    because the aggregates skip missing values.
+
+    Parameters
+    ----------
+    filters
+        Restricts the executions considered. ``None`` means no restriction.
+    group_by
+        ``diagnostic`` or ``provider`` for one row per group, ordered by slug.
+        ``None`` for a single row over every matching execution.
+
+    Returns
+    -------
+    :
+        A ``Select`` yielding ``provider_slug``, ``diagnostic_slug`` and the aggregate columns.
+    """
+    provider: Any = Provider.slug if group_by is not None else null()
+    diagnostic: Any = Diagnostic.slug if group_by == "diagnostic" else null()
+    stmt = select(
+        provider.label("provider_slug"), diagnostic.label("diagnostic_slug"), *_SUMMARY_AGGREGATES
+    ).select_from(Execution)
+    stmt = _apply_resource_filters(stmt, filters or ResourceFilter())
+    if group_by is not None:
+        keys = [provider, diagnostic] if group_by == "diagnostic" else [provider]
+        stmt = stmt.group_by(*keys).order_by(*keys)
     return stmt
 
 
@@ -670,6 +759,7 @@ class ResourcesReader:
         *,
         offset: int = 0,
         limit: int | None = None,
+        with_count: bool = True,
     ) -> ResourceMeasurementCollection:
         """
         Query the raw per-execution measurements behind the profiles.
@@ -684,6 +774,8 @@ class ResourcesReader:
             Rows to skip before the returned page.
         limit
             Page size, or ``None`` for every matching row.
+        with_count
+            Whether to run the count query. When ``False``, ``total_count`` is ``None``.
 
         Returns
         -------
@@ -691,14 +783,31 @@ class ResourcesReader:
             A page of measurements plus the pre-pagination total.
         """
         stmt = select_execution_resources(filters)
-        total_count = count_values(self.session, stmt)
+        total_count = count_values(self.session, stmt) if with_count else None
 
-        page = stmt.offset(offset)
-        if limit is not None:
-            page = page.limit(limit)
-
-        items = tuple(self._to_view(row) for row in self.session.execute(page).all())
+        items = tuple(self._to_view(row) for row in self.session.execute(paginate(stmt, offset, limit)).all())
         return ResourceMeasurementCollection(items=items, total_count=total_count, offset=offset, limit=limit)
+
+    def summary(self, filters: ResourceFilter | None = None) -> ResourceSummary | None:
+        """
+        Aggregate resource usage across every execution matching ``filters``, in SQL.
+
+        Returns ``None`` when no matching execution recorded a wall time.
+        """
+        row = self.session.execute(select_resource_summary(filters)).one()
+        return ResourceSummary(**row._asdict()) if row.timed_execution_count else None
+
+    def summaries(
+        self, filters: ResourceFilter | None = None, *, group_by: GroupBy = "diagnostic"
+    ) -> tuple[ResourceSummary, ...]:
+        """
+        Aggregate resource usage per diagnostic or per provider, in SQL.
+
+        Groups with no execution that recorded a wall time are left out.
+        Ordered by provider then diagnostic slug.
+        """
+        rows = self.session.execute(select_resource_summary(filters, group_by=group_by)).all()
+        return tuple(ResourceSummary(**row._asdict()) for row in rows if row.timed_execution_count)
 
     def measurement(self, execution_id: int) -> ResourceMeasurementView | None:
         """
@@ -707,12 +816,16 @@ class ResourcesReader:
         Returns ``None`` when no execution has that id,
         or when the execution neither recorded a measurement nor failed.
         """
-        stmt = select_execution_resources().where(Execution.id == execution_id)
+        # A lookup by id names the execution, so retraction does not hide it.
+        stmt = select_execution_resources(ResourceFilter(include_retracted=True)).where(
+            Execution.id == execution_id
+        )
         row = self.session.execute(stmt).one_or_none()
         return self._to_view(row) if row is not None else None
 
     def profiles(  # noqa: PLR0913
         self,
+        filters: ResourceFilter | None = None,
         *,
         diagnostic_contains: Sequence[str] | None = None,
         provider_contains: Sequence[str] | None = None,
@@ -743,6 +856,9 @@ class ResourcesReader:
 
         Parameters
         ----------
+        filters
+            Which executions to aggregate.
+            Cannot be combined with ``diagnostic_contains``, ``provider_contains`` or ``since``.
         diagnostic_contains
             Case-insensitive substring matches on diagnostic slug (OR-combined).
         provider_contains
@@ -761,12 +877,20 @@ class ResourcesReader:
         -------
         :
             One profile per group, ordered by provider then diagnostic slug.
+
+        Raises
+        ------
+        ValueError
+            If ``filters`` is given together with ``diagnostic_contains``, ``provider_contains`` or ``since``.
         """
-        filters = ResourceFilter(
-            diagnostic_contains=diagnostic_contains,
-            provider_contains=provider_contains,
-            since=since,
-        )
+        if filters is None:
+            filters = ResourceFilter(
+                diagnostic_contains=diagnostic_contains,
+                provider_contains=provider_contains,
+                since=since,
+            )
+        elif diagnostic_contains or provider_contains or since is not None:
+            raise ValueError("Pass either filters or diagnostic_contains/provider_contains/since, not both")
         rows = [self._to_view(row) for row in self.session.execute(select_execution_resources(filters)).all()]
 
         grouped: dict[tuple[str, str], list[ResourceMeasurementView]] = {}

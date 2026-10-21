@@ -403,6 +403,7 @@ def make_tracking_id(file_id: str) -> str:
 
 def convert_cmip6_to_cmip7_attrs(
     cmip6_attrs: dict[str, Any],
+    file_id: str | None = None,
 ) -> dict[str, Any]:
     """
     Convert CMIP6 global attributes to CMIP7 format.
@@ -413,6 +414,9 @@ def convert_cmip6_to_cmip7_attrs(
     ----------
     cmip6_attrs
         Dictionary of CMIP6 global attributes. Must contain ``table_id``.
+    file_id
+        What identifies the file being written, used to derive its ``tracking_id`` (see
+        :func:`make_tracking_id`).
 
     Returns
     -------
@@ -490,7 +494,7 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["cmip6_compound_name"] = dreq_entry.cmip6_compound_name
 
     # Add tracking_id with CMIP7 handle prefix
-    attrs["tracking_id"] = f"hdl:21.14107/{uuid.uuid4()}"
+    attrs["tracking_id"] = make_tracking_id(file_id) if file_id else f"hdl:21.14107/{uuid.uuid4()}"
 
     # Add creation_date in ISO format
     attrs["creation_date"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -581,6 +585,15 @@ def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> 
         raise ValueError(f"The series must end in December to repeat whole years, ends {last}")
 
     bounds_name = ds["time"].attrs.get("bounds")
+    if bounds_name and bounds_name in ds.variables:
+        # The repeated blocks below carry their restamped bounds as a NumPy array of cftime
+        # objects. If the source bounds arrived lazily -- a file opened with ``chunks=`` gets
+        # Dask-backed ones -- the concat at the end mixes the two, and Dask refuses to chunk
+        # the NumPy side because it cannot size object dtype. The array is one row per
+        # timestep, so materialise it here rather than make every caller open the file a
+        # particular way. Assigned to a shallow copy, leaving the caller's dataset lazy.
+        ds = ds.copy()
+        ds[bounds_name] = ds[bounds_name].compute()
 
     def _restamp(t: cftime.datetime, shift: int) -> cftime.datetime:
         year = t.year + shift
@@ -621,6 +634,7 @@ def convert_cmip6_dataset(
     ds: xr.Dataset,
     inplace: bool = False,
     extend_historical_to: tuple[int, int] | None = None,
+    file_id: str | None = None,
 ) -> xr.Dataset:
     """
     Convert a CMIP6 xarray Dataset to CMIP7 format in-memory.
@@ -644,6 +658,9 @@ def convert_cmip6_dataset(
         via :func:`repeat_final_year_to`, fabricating CMIP7 coverage for years without real
         data. Defaults to ``None`` (time axis untouched), so existing conversions are
         byte-identical.
+    file_id
+        What identifies the file being written, so that converting it again gives it the
+        same ``tracking_id``. See :func:`convert_cmip6_to_cmip7_attrs`.
 
     Returns
     -------
@@ -673,7 +690,7 @@ def convert_cmip6_dataset(
     ds = ds.rename({variable_id: dreq_entry.variable_id})
 
     # Convert global attributes
-    ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs)
+    ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs, file_id=file_id)
 
     return ds
 

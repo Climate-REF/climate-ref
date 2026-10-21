@@ -324,6 +324,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
     # data is available alongside the reference dataset.
     _reference_requirement = DataRequirement(
         source_type=SourceDatasetType.obs4MIPs,
+        fallback_source_types=(SourceDatasetType.obs4REF,),
         filters=(
             FacetFilter(facets={"source_id": (_REFERENCE_SOURCE_ID,), "variable_id": (_REFERENCE_VARIABLE,)}),
         ),
@@ -338,7 +339,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": (_MODEL_VARIABLE,),
-                            "experiment_id": ("historical",),
+                            "experiment_id": ("historical", "esm-hist"),
                         }
                     ),
                 ),
@@ -358,7 +359,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": (_MODEL_VARIABLE,),
-                            "experiment_id": ("historical",),
+                            "experiment_id": ("historical", "esm-hist"),
                         }
                     ),
                 ),
@@ -390,7 +391,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     RegistryRequest(
                         slug="surface-temperature-obs",
                         registry_name="obs4ref",
-                        source_type="obs4MIPs",
+                        source_type="obs4REF",
                         facets={"source_id": _REFERENCE_SOURCE_ID, "variable_id": _REFERENCE_VARIABLE},
                     ),
                     CMIP6Request(
@@ -423,7 +424,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     RegistryRequest(
                         slug="surface-temperature-obs-cmip7",
                         registry_name="obs4ref",
-                        source_type="obs4MIPs",
+                        source_type="obs4REF",
                         facets={"source_id": _REFERENCE_SOURCE_ID, "variable_id": _REFERENCE_VARIABLE},
                     ),
                     CMIP7Request(

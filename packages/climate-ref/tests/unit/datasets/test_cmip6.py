@@ -62,6 +62,49 @@ class TestCMIP6Adapter:
         assert new_instance_id in limited.instance_id.tolist()
 
 
+class TestInstanceIdActivity:
+    """A multi-activity dataset is published under the first activity only."""
+
+    def _catalog(self, activity_id):
+        return pd.DataFrame(
+            [
+                {
+                    "activity_id": activity_id,
+                    "institution_id": "MIROC",
+                    "source_id": "MIROC-ES2L",
+                    "experiment_id": "esm-1pctCO2",
+                    "member_id": "r1i1p1f2",
+                    "table_id": "Amon",
+                    "variable_id": "tas",
+                    "grid_label": "gn",
+                    "version": "v20200622",
+                    "path": "/data/tas.nc",
+                }
+            ]
+        )
+
+    @pytest.mark.parametrize("activity_id", ["C4MIP CDRMIP", "C4MIP"])
+    def test_id_names_the_primary_activity(self, activity_id):
+        """
+        The id names one activity however many the source reports.
+
+        A parser may report every activity (from the file attribute, or from a directory
+        named after them) or just the first, and the id must come out the same either way,
+        because ESGF publishes the dataset under the first alone.
+        """
+        catalog = CMIP6DatasetAdapter()._enrich_parsed_catalog(self._catalog(activity_id))
+
+        assert catalog["instance_id"].iloc[0] == (
+            "CMIP6.C4MIP.MIROC.MIROC-ES2L.esm-1pctCO2.r1i1p1f2.Amon.tas.gn.v20200622"
+        )
+
+    def test_the_attribute_itself_is_kept(self):
+        """Only the id is narrowed; the dataset really does take part in both activities."""
+        catalog = CMIP6DatasetAdapter()._enrich_parsed_catalog(self._catalog("C4MIP CDRMIP"))
+
+        assert catalog["activity_id"].iloc[0] == "C4MIP CDRMIP"
+
+
 class TestCMIP6IterLocalDatasets:
     def test_streaming_matches_whole_tree(self, sample_data, sample_data_dir):
         """``iter_local_datasets`` must yield the same rows as ``find_local_datasets``."""

@@ -103,7 +103,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     series = (
         SeriesDefinition(
             file_pattern="ecs/calculate/ecs_regression_*.nc",

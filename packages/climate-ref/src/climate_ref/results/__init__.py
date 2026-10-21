@@ -9,7 +9,7 @@ Layers:
 
 * [_query][climate_ref.results._query] -- ``MetricValueFilter`` + ``select_*`` builders
   (return a ``Select``; the source of truth for filter/join logic) + ``count_values`` +
-  ``latest_execution_for_group``.
+  ``latest_execution_for_group`` + ``select_latest_executions``.
 * [frames][climate_ref.results.frames] -- ``*_to_frame`` + ``collect_facets``.
 * [outliers][climate_ref.results.outliers] -- source-id-aware IQR outlier detection.
 * [values][climate_ref.results.values] -- typed DTOs + collections + the ``Reader`` facade.
@@ -42,7 +42,7 @@ so the namespace stays small as domains are added:
 
 * the ``Reader`` entry point,
 * filter objects you construct and pass in (``MetricValueFilter``, ``ExecutionGroupFilter``,
-  ``DatasetFilter``, ``DiagnosticFilter``, ``ResourceFilter``),
+  ``DatasetFilter``, ``DiagnosticFilter``, ``ResourceFilter``, ``InputDatasetFilter``),
 * value objects you pass in (``OutlierPolicy``).
 
 Everything the package *returns* -- DTOs, collections, views -- and the sub-reader classes reached
@@ -53,7 +53,7 @@ The ``Select`` builders and other plumbing stay in ``climate_ref.results._query`
 and are not part of the public surface.
 """
 
-from climate_ref.results._query import MetricValueFilter
+from climate_ref.results._query import InputDatasetFilter, MetricValueFilter
 from climate_ref.results.datasets import DatasetFilter
 from climate_ref.results.diagnostics import DiagnosticFilter
 from climate_ref.results.executions import ExecutionGroupFilter
@@ -65,6 +65,7 @@ __all__ = [
     "DatasetFilter",
     "DiagnosticFilter",
     "ExecutionGroupFilter",
+    "InputDatasetFilter",
     "MetricValueFilter",
     "OutlierPolicy",
     "Reader",

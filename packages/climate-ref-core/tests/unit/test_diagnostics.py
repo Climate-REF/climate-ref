@@ -336,6 +336,20 @@ class TestExecutionResult:
         assert result.metric_bundle_filename is None
         assert result.definition == definition
 
+    def test_repr_is_short(self, tmp_path, mock_diagnostic):
+        definition = ExecutionDefinition(
+            diagnostic=mock_diagnostic,
+            root_directory=tmp_path,
+            output_directory=tmp_path,
+            key="mocked-diagnostic-slug",
+            datasets=None,
+        )
+        result = ExecutionResult.build_from_failure(definition, retryable=True)
+
+        assert repr(result) == (
+            f"<ExecutionResult {definition.execution_slug()} successful=False retryable=True>"
+        )
+
 
 @pytest.fixture
 def apply_data_catalog():

@@ -4,14 +4,9 @@ Obs4MIPs dataset request implementation.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
-
-import pandas as pd
+from typing import Any
 
 from climate_ref_core.esgf.base import IntakeESGFMixin
-
-if TYPE_CHECKING:
-    pass
 
 
 class Obs4MIPsRequest(IntakeESGFMixin):
@@ -22,6 +17,7 @@ class Obs4MIPsRequest(IntakeESGFMixin):
     """
 
     source_type = "obs4MIPs"
+    project = "obs4MIPs"
 
     obs4mips_path_items = (
         "activity_id",
@@ -71,7 +67,7 @@ class Obs4MIPsRequest(IntakeESGFMixin):
             Optional time range filter (start, end) in YYYY-MM format
         """
         self.slug = slug
-        self.facets = {"project": "obs4MIPs", **facets}
+        self.facets = facets
         self.remove_ensembles = remove_ensembles
         self.time_span = time_span
 
@@ -81,14 +77,6 @@ class Obs4MIPsRequest(IntakeESGFMixin):
         for key in self.obs4mips_filename_paths:
             if key not in self.avail_facets:
                 raise ValueError(f"Filename path {key!r} not in available facets")
-
-    def fetch_datasets(self) -> pd.DataFrame:
-        """Fetch dataset metadata from ESGF with project=obs4MIPs."""
-        # Ensure project facet is set to obs4MIPs
-        if "project" not in self.facets:
-            self.facets["project"] = "obs4MIPs"
-
-        return super().fetch_datasets()
 
     def __repr__(self) -> str:
         return f"Obs4MIPsRequest(slug={self.slug!r}, facets={self.facets!r})"

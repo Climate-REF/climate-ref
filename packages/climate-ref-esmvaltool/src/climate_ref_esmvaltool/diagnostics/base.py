@@ -80,6 +80,28 @@ def fillvalues_to_nan(array: np.ndarray) -> np.ndarray:
     return mask_fillvalues(array).filled(np.nan)
 
 
+_DATASET_LABEL_COORD = "dataset"
+"""Auxiliary coordinate holding the dataset label in ESMValTool's multi-dataset netCDF files."""
+
+
+def index_dataset_labels(dataset: xr.Dataset) -> xr.Dataset:
+    """Make the ``dataset`` label coordinate of an ESMValTool output file selectable.
+
+    This decodes the labels and indexes them, so ``dataset.sel(dataset="<label>")`` works.
+    Files without such a coordinate are returned unchanged.
+    """
+    if _DATASET_LABEL_COORD not in dataset.coords or dataset[_DATASET_LABEL_COORD].ndim != 1:
+        return dataset
+    labels = dataset[_DATASET_LABEL_COORD]
+    decoded = [v.decode() if isinstance(v, bytes) else str(v) for v in labels.values.tolist()]
+    dataset = dataset.assign_coords(
+        {_DATASET_LABEL_COORD: (labels.dims, [v.strip() for v in decoded], labels.attrs)}
+    )
+    if _DATASET_LABEL_COORD not in dataset.dims:
+        dataset = dataset.set_xindex(_DATASET_LABEL_COORD)
+    return dataset
+
+
 class ESMValToolDiagnostic(CommandLineDiagnostic):
     """ESMValTool Diagnostic base class."""
 
@@ -512,6 +534,9 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
     ) -> list[SeriesMetricValue]:
         """
         Extract series data from a file if it matches any of the series definitions.
+
+        String values in :attr:`SeriesDefinition.sel` are formatted with ``input_selectors``,
+        so a definition can select the model by its label, e.g. ``{"dataset": "{source_id}"}``.
         """
         variable_attributes = (
             "long_name",
@@ -526,7 +551,21 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 f"executions/*/{series_def.file_pattern.format(**input_selectors)}",
             ):
                 dataset = xr.open_dataset(filename, decode_times=xr.coders.CFDatetimeCoder(use_cftime=True))
-                dataset = dataset.sel(series_def.sel)
+                dataset = index_dataset_labels(dataset)
+                sel = {
+                    key: value.format(**input_selectors) if isinstance(value, str) else value
+                    for key, value in (series_def.sel or {}).items()
+                }
+                try:
+                    dataset = dataset.sel(sel)
+                except KeyError as exc:
+                    labels = (
+                        dataset[_DATASET_LABEL_COORD].values.tolist()
+                        if _DATASET_LABEL_COORD in dataset.coords
+                        else None
+                    )
+                    msg = f"No data matching {sel} in {filename} (dataset labels: {labels})"
+                    raise KeyError(msg) from exc
                 attributes = {
                     attr: dataset.attrs[attr] for attr in series_def.attributes if attr in dataset.attrs
                 }

@@ -270,6 +270,13 @@ class ExecutionResult:
     or when the result predates this field.
     """
 
+    def __repr__(self) -> str:
+        # The default repr includes the definition's dataset tables, which run to many lines
+        return (
+            f"<ExecutionResult {self.definition.execution_slug()} "
+            f"successful={self.successful} retryable={self.retryable}>"
+        )
+
     @staticmethod
     def build_from_output_bundle(
         definition: ExecutionDefinition,
@@ -441,6 +448,14 @@ class DataRequirement:
     All of the constraints must be satisfied for a given group to be run.
     Each filter is applied iterative to a set of datasets to reduce the set of datasets.
     This is effectively an AND operation.
+    """
+
+    fallback_source_types: tuple[SourceDatasetType, ...] = field(factory=tuple)
+    """
+    Source types that may supply this requirement when ``source_type`` does not hold the dataset.
+
+    A dataset present under ``source_type`` always wins,
+    and the data is delivered under ``source_type`` whichever collection it came from.
     """
 
     def apply_filters(self, data_catalog: pd.DataFrame) -> pd.DataFrame:

@@ -795,10 +795,7 @@ cmip6_historical_gn_r1i1p1f1_AWI-ESM-1-1-LR_rsut__pmp-climatology_CERES-EBAF-4-2
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_AWI-ESM-1-1-LR_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.AERmonZ.ta.gn.v20200212
   - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Amon.ta.gn.v20200212
-  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.CFmon.ta.gn.v20200212
-  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Emon.ta.gn.v20200212
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_AWI-ESM-1-1-LR_ts__pmp-climatology_ERA-5_ts:
@@ -808,17 +805,9 @@ cmip6_historical_gn_r1i1p1f1_AWI-ESM-1-1-LR_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_AWI-ESM-1-1-LR_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.AERmon.ua.gn.v20200212
-  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.AERmonZ.ua.gn.v20200212
   - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Amon.ua.gn.v20200212
-  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Emon.ua.gn.v20200212
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
-cmip6_historical_gn_r1i1p1f1_AWI-ESM-1-REcoM_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.AWI.AWI-ESM-1-REcoM.historical.r1i1p1f1.Emon.ta.gn.v20230314
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_BCC-CSM2-MR_psl__pmp-climatology_ERA-5_psl:
   cmip6:
   - CMIP6.CMIP.BCC.BCC-CSM2-MR.historical.r1i1p1f1.Amon.psl.gn.v20181126
@@ -876,7 +865,6 @@ cmip6_historical_gn_r1i1p1f1_BCC-ESM1_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_BCC-ESM1_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.BCC.BCC-ESM1.historical.r1i1p1f1.AERmon.ua.gn.v20190812
   - CMIP6.CMIP.BCC.BCC-ESM1.historical.r1i1p1f1.Amon.ua.gn.v20181217
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
@@ -957,15 +945,12 @@ cmip6_historical_gn_r1i1p1f1_CESM2-FV2_rsut__pmp-climatology_CERES-EBAF-4-2_rsut
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_CESM2-FV2_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.AERmonZ.ta.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.Amon.ta.gn.v20191120
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CESM2-FV2_ts__pmp-climatology_ERA-5_ts:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.Amon.ts.gn.v20191120
-  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.ImonAnt.ts.gn.v20191120
-  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.ImonGre.ts.gn.v20191120
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2_psl__pmp-climatology_ERA-5_psl:
@@ -985,16 +970,12 @@ cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2_rsut__pmp-climatology_CERES-EBAF-4-
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.AERmonZ.ta.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.Amon.ta.gn.v20191120
-  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.CFmon.ta.gn.v20200731
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2_ts__pmp-climatology_ERA-5_ts:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.Amon.ts.gn.v20191120
-  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.ImonAnt.ts.gn.v20191120
-  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.ImonGre.ts.gn.v20191120
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CESM2-WACCM_psl__pmp-climatology_ERA-5_psl:
@@ -1014,15 +995,12 @@ cmip6_historical_gn_r1i1p1f1_CESM2-WACCM_rsut__pmp-climatology_CERES-EBAF-4-2_rs
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_CESM2-WACCM_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.AERmonZ.ta.gn.v20190227
   - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.Amon.ta.gn.v20190227
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CESM2-WACCM_ts__pmp-climatology_ERA-5_ts:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.Amon.ts.gn.v20190227
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.ImonAnt.ts.gn.v20190227
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.ImonGre.ts.gn.v20190227
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CESM2_psl__pmp-climatology_ERA-5_psl:
@@ -1042,15 +1020,12 @@ cmip6_historical_gn_r1i1p1f1_CESM2_rsut__pmp-climatology_CERES-EBAF-4-2_rsut:
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_CESM2_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.AERmonZ.ta.gn.v20190308
   - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.ta.gn.v20190308
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CESM2_ts__pmp-climatology_ERA-5_ts:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.ts.gn.v20190308
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.ImonAnt.ts.gn.v20190308
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.ImonGre.ts.gn.v20190308
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CMCC-CM2-HR4_psl__pmp-climatology_ERA-5_psl:
@@ -1070,7 +1045,6 @@ cmip6_historical_gn_r1i1p1f1_CMCC-CM2-HR4_rsut__pmp-climatology_CERES-EBAF-4-2_r
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_CMCC-CM2-HR4_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.CMCC.CMCC-CM2-HR4.historical.r1i1p1f1.AERmonZ.ta.gn.v20200904
   - CMIP6.CMIP.CMCC.CMCC-CM2-HR4.historical.r1i1p1f1.Amon.ta.gn.v20200904
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
@@ -1081,7 +1055,6 @@ cmip6_historical_gn_r1i1p1f1_CMCC-CM2-HR4_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CMCC-CM2-HR4_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.CMCC.CMCC-CM2-HR4.historical.r1i1p1f1.AERmonZ.ua.gn.v20200904
   - CMIP6.CMIP.CMCC.CMCC-CM2-HR4.historical.r1i1p1f1.Amon.ua.gn.v20200904
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
@@ -1102,7 +1075,6 @@ cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5_rsut__pmp-climatology_CERES-EBAF-4-2_r
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.AERmonZ.ta.gn.v20200616
   - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Amon.ta.gn.v20200616
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
@@ -1113,7 +1085,6 @@ cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.AERmonZ.ua.gn.v20200616
   - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Amon.ua.gn.v20200616
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
@@ -1134,7 +1105,6 @@ cmip6_historical_gn_r1i1p1f1_CMCC-ESM2_rsut__pmp-climatology_CERES-EBAF-4-2_rsut
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_CMCC-ESM2_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.AERmonZ.ta.gn.v20210114
   - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Amon.ta.gn.v20210114
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
@@ -1145,7 +1115,6 @@ cmip6_historical_gn_r1i1p1f1_CMCC-ESM2_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CMCC-ESM2_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.AERmonZ.ua.gn.v20210114
   - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Amon.ua.gn.v20210114
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
@@ -1166,7 +1135,6 @@ cmip6_historical_gn_r1i1p1f1_CanESM5-1_rsut__pmp-climatology_CERES-EBAF-4-2_rsut
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_CanESM5-1_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.AERmonZ.ta.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Amon.ta.gn.v20190429
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
@@ -1177,7 +1145,6 @@ cmip6_historical_gn_r1i1p1f1_CanESM5-1_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_CanESM5-1_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.AERmonZ.ua.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Amon.ua.gn.v20190429
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
@@ -1484,7 +1451,6 @@ cmip6_historical_gn_r1i1p1f1_MIROC6_rsut__pmp-climatology_CERES-EBAF-4-2_rsut:
 cmip6_historical_gn_r1i1p1f1_MIROC6_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.Amon.ta.gn.v20190311
-  - CMIP6.CMIP.MIROC.MIROC6.historical.r1i1p1f1.CFmon.ta.gn.v20190311
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_MIROC6_ts__pmp-climatology_ERA-5_ts:
@@ -1509,10 +1475,7 @@ cmip6_historical_gn_r1i1p1f1_MPI-ESM-1-2-HAM_rsut__pmp-climatology_CERES-EBAF-4-
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_MPI-ESM-1-2-HAM_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.AERmonZ.ta.gn.v20190627
   - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Amon.ta.gn.v20190627
-  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.CFmon.ta.gn.v20190627
-  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Emon.ta.gn.v20190627
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_MPI-ESM-1-2-HAM_ts__pmp-climatology_ERA-5_ts:
@@ -1537,10 +1500,7 @@ cmip6_historical_gn_r1i1p1f1_MPI-ESM1-2-HR_rsut__pmp-climatology_CERES-EBAF-4-2_
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_MPI-ESM1-2-HR_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-HR.historical.r1i1p1f1.AERmonZ.ta.gn.v20190710
   - CMIP6.CMIP.MPI-M.MPI-ESM1-2-HR.historical.r1i1p1f1.Amon.ta.gn.v20190710
-  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-HR.historical.r1i1p1f1.CFmon.ta.gn.v20190710
-  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-HR.historical.r1i1p1f1.Emon.ta.gn.v20190710
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_MPI-ESM1-2-HR_ts__pmp-climatology_ERA-5_ts:
@@ -1565,10 +1525,7 @@ cmip6_historical_gn_r1i1p1f1_MPI-ESM1-2-LR_rsut__pmp-climatology_CERES-EBAF-4-2_
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p1f1_MPI-ESM1-2-LR_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.AERmonZ.ta.gn.v20190710
   - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Amon.ta.gn.v20190710
-  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.CFmon.ta.gn.v20190710
-  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Emon.ta.gn.v20190710
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_MPI-ESM1-2-LR_ts__pmp-climatology_ERA-5_ts:
@@ -1594,7 +1551,6 @@ cmip6_historical_gn_r1i1p1f1_MRI-ESM2-0_rsut__pmp-climatology_CERES-EBAF-4-2_rsu
 cmip6_historical_gn_r1i1p1f1_MRI-ESM2-0_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.Amon.ta.gn.v20190308
-  - CMIP6.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.CFmon.ta.gn.v20200207
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_MRI-ESM2-0_ts__pmp-climatology_ERA-5_ts:
@@ -1745,8 +1701,6 @@ cmip6_historical_gn_r1i1p1f1_TaiESM1_rsut__pmp-climatology_CERES-EBAF-4-2_rsut:
 cmip6_historical_gn_r1i1p1f1_TaiESM1_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Amon.ta.gn.v20200623
-  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.CFmon.ta.gn.v20200630
-  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Emon.ta.gn.v20200624
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_TaiESM1_ts__pmp-climatology_ERA-5_ts:
@@ -1756,9 +1710,7 @@ cmip6_historical_gn_r1i1p1f1_TaiESM1_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_TaiESM1_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.AERmon.ua.gn.v20200630
   - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Amon.ua.gn.v20200623
-  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Emon.ua.gn.v20200624
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f2_CAMS-CSM1-0_psl__pmp-climatology_ERA-5_psl:
@@ -1814,7 +1766,6 @@ cmip6_historical_gn_r1i1p1f2_MIROC-ES2L_rsut__pmp-climatology_CERES-EBAF-4-2_rsu
 cmip6_historical_gn_r1i1p1f2_MIROC-ES2L_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.Amon.ta.gn.v20190823
-  - CMIP6.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.CFmon.ta.gn.v20190823
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f2_MIROC-ES2L_ts__pmp-climatology_ERA-5_ts:
@@ -1840,7 +1791,6 @@ cmip6_historical_gn_r1i1p1f2_UKESM1-0-LL_rsut__pmp-climatology_CERES-EBAF-4-2_rs
 cmip6_historical_gn_r1i1p1f2_UKESM1-0-LL_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.Amon.ta.gn.v20190406
-  - CMIP6.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.CFmon.ta.gn.v20200818
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f2_UKESM1-0-LL_ts__pmp-climatology_ERA-5_ts:
@@ -1891,7 +1841,6 @@ cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-LL_rsut__pmp-climatology_CERES-EBAF-4-
 cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-LL_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.Amon.ta.gn.v20190624
-  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.CFmon.ta.gn.v20210510
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-LL_ts__pmp-climatology_ERA-5_ts:
@@ -1917,7 +1866,6 @@ cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-MM_rsut__pmp-climatology_CERES-EBAF-4-
 cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-MM_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.MOHC.HadGEM3-GC31-MM.historical.r1i1p1f3.Amon.ta.gn.v20191207
-  - CMIP6.CMIP.MOHC.HadGEM3-GC31-MM.historical.r1i1p1f3.CFmon.ta.gn.v20220903
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gn_r1i1p1f3_HadGEM3-GC31-MM_ts__pmp-climatology_ERA-5_ts:
@@ -1952,7 +1900,6 @@ cmip6_historical_gn_r1i1p2f1_CanESM5-CanOE_rsut__pmp-climatology_CERES-EBAF-4-2_
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gn_r1i1p2f1_CanESM5-CanOE_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.AERmonZ.ta.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Amon.ta.gn.v20190429
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
@@ -1963,7 +1910,6 @@ cmip6_historical_gn_r1i1p2f1_CanESM5-CanOE_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p2f1_CanESM5-CanOE_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.AERmonZ.ua.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Amon.ua.gn.v20190429
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
@@ -3557,41 +3503,6 @@ cmip6_historical_gn_r9i1p2f1_CanESM5_ts__pmp-climatology_ERA-5_ts:
   - CMIP6.CMIP.CCCma.CanESM5.historical.r9i1p2f1.Amon.ts.gn.v20190429
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
-cmip6_historical_gnz_r1i1p1f1_MRI-ESM2-0_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.AERmonZ.ta.gnz.v20200303
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_gnz_r1i1p1f2_MIROC-ES2L_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.AERmonZ.ta.gnz.v20190823
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_gnz_r1i1p1f2_UKESM1-0-LL_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.AERmonZ.ta.gnz.v20190406
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_gnz_r1i1p1f2_UKESM1-1-LL_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.AERmonZ.ta.gnz.v20220512
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_gnz_r1i1p1f3_HadGEM3-GC31-LL_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.AERmonZ.ta.gnz.v20190624
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_gnz_r1i1p1f3_HadGEM3-GC31-MM_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.MOHC.HadGEM3-GC31-MM.historical.r1i1p1f3.AERmonZ.ta.gnz.v20220903
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_gnz_r1i1p4f2_MIROC-ES2H_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.MIROC.MIROC-ES2H.historical.r1i1p4f2.AERmonZ.ta.gnz.v20230524
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gr1_r1i1p1f1_GFDL-ESM4_psl__pmp-climatology_ERA-5_psl:
   cmip6:
   - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Amon.psl.gr1.v20190726
@@ -3635,7 +3546,6 @@ cmip6_historical_gr1_r1i1p1f1_INM-CM4-8_rsut__pmp-climatology_CERES-EBAF-4-2_rsu
 cmip6_historical_gr1_r1i1p1f1_INM-CM4-8_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.INM.INM-CM4-8.historical.r1i1p1f1.Amon.ta.gr1.v20190605
-  - CMIP6.CMIP.INM.INM-CM4-8.historical.r1i1p1f1.CFmon.ta.gr1.v20190530
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gr1_r1i1p1f1_INM-CM4-8_ts__pmp-climatology_ERA-5_ts:
@@ -3661,7 +3571,6 @@ cmip6_historical_gr1_r1i1p1f1_INM-CM5-0_rsut__pmp-climatology_CERES-EBAF-4-2_rsu
 cmip6_historical_gr1_r1i1p1f1_INM-CM5-0_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.INM.INM-CM5-0.historical.r1i1p1f1.Amon.ta.gr1.v20190610
-  - CMIP6.CMIP.INM.INM-CM5-0.historical.r1i1p1f1.CFmon.ta.gr1.v20190610
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gr1_r1i1p1f1_INM-CM5-0_ts__pmp-climatology_ERA-5_ts:
@@ -4591,9 +4500,7 @@ cmip6_historical_gr_r1i1p1f1_EC-Earth3-AerChem_rsut__pmp-climatology_CERES-EBAF-
   - obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsut.100km.gn.v20250213
 cmip6_historical_gr_r1i1p1f1_EC-Earth3-AerChem_ta__pmp-climatology_ERA-5_ta:
   cmip6:
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.historical.r1i1p1f1.AERmonZ.ta.gr.v20200624
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.historical.r1i1p1f1.Amon.ta.gr.v20200624
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.historical.r1i1p1f1.CFmon.ta.gr.v20200624
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gr_r1i1p1f1_EC-Earth3-AerChem_ts__pmp-climatology_ERA-5_ts:
@@ -4603,7 +4510,6 @@ cmip6_historical_gr_r1i1p1f1_EC-Earth3-AerChem_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gr_r1i1p1f1_EC-Earth3-AerChem_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.historical.r1i1p1f1.AERmon.ua.gr.v20200624
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.historical.r1i1p1f1.Amon.ua.gr.v20200624
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
@@ -4747,11 +4653,6 @@ cmip6_historical_gr_r1i1p1f1_FGOALS-f3-L_ua__pmp-climatology_ERA-5_ua:
   - CMIP6.CMIP.CAS.FGOALS-f3-L.historical.r1i1p1f1.Amon.ua.gr.v20190927
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
-cmip6_historical_gr_r1i1p1f1_GISS-E3-G_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.NASA-GISS.GISS-E3-G.historical.r1i1p1f1.CFmon.ta.gr.v20220727
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gr_r1i1p1f1_IPSL-CM5A2-INCA_psl__pmp-climatology_ERA-5_psl:
   cmip6:
   - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.Amon.psl.gr.v20200729
@@ -4770,7 +4671,6 @@ cmip6_historical_gr_r1i1p1f1_IPSL-CM5A2-INCA_rsut__pmp-climatology_CERES-EBAF-4-
 cmip6_historical_gr_r1i1p1f1_IPSL-CM5A2-INCA_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.Amon.ta.gr.v20200729
-  - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.CFmon.ta.gr.v20200729
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gr_r1i1p1f1_IPSL-CM5A2-INCA_ts__pmp-climatology_ERA-5_ts:
@@ -4896,7 +4796,6 @@ cmip6_historical_gr_r1i1p1f2_CNRM-CM6-1_rsut__pmp-climatology_CERES-EBAF-4-2_rsu
 cmip6_historical_gr_r1i1p1f2_CNRM-CM6-1_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.Amon.ta.gr.v20180917
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.CFmon.ta.gr.v20180917
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gr_r1i1p1f2_CNRM-CM6-1_ts__pmp-climatology_ERA-5_ts:
@@ -4906,9 +4805,7 @@ cmip6_historical_gr_r1i1p1f2_CNRM-CM6-1_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gr_r1i1p1f2_CNRM-CM6-1_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.AERmon.ua.gr.v20180917
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.Amon.ua.gr.v20180917
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.Emon.ua.gr.v20180917
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
 cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1_psl__pmp-climatology_ERA-5_psl:
@@ -4929,7 +4826,6 @@ cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1_rsut__pmp-climatology_CERES-EBAF-4-2_rs
 cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1_ta__pmp-climatology_ERA-5_ta:
   cmip6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Amon.ta.gr.v20181206
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.CFmon.ta.gr.v20181206
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
 cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1_ts__pmp-climatology_ERA-5_ts:
@@ -4939,9 +4835,7 @@ cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1_ua__pmp-climatology_ERA-5_ua:
   cmip6:
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.ua.gr.v20181206
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Amon.ua.gr.v20181206
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Emon.ua.gr.v20181206
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
 cmip6_historical_gr_r20i1p1f1_E3SM-2-0_psl__pmp-climatology_ERA-5_psl:
@@ -5644,41 +5538,6 @@ cmip6_historical_gr_r9i1p1f2_CNRM-ESM2-1_ts__pmp-climatology_ERA-5_ts:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r9i1p1f2.Amon.ts.gr.v20200117
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
-cmip6_historical_grz_r1i1p1f1_IPSL-CM5A2-INCA_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.AERmonZ.ta.grz.v20200729
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_grz_r1i1p1f1_IPSL-CM6A-LR-INCA_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR-INCA.historical.r1i1p1f1.AERmonZ.ta.grz.v20210216
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_grz_r1i1p1f1_IPSL-CM6A-LR_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.AERmonZ.ta.grz.v20180803
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_grz_r1i1p1f2_CNRM-CM6-1_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.AERmonZ.ta.grz.v20180917
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_grz_r1i1p1f2_CNRM-CM6-1_ua__pmp-climatology_ERA-5_ua:
-  cmip6:
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.AERmonZ.ua.grz.v20180917
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
-cmip6_historical_grz_r1i1p1f2_CNRM-ESM2-1_ta__pmp-climatology_ERA-5_ta:
-  cmip6:
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmonZ.ta.grz.v20181206
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20250224
-cmip6_historical_grz_r1i1p1f2_CNRM-ESM2-1_ua__pmp-climatology_ERA-5_ua:
-  cmip6:
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmonZ.ua.grz.v20181206
-  pmp-climatology:
-  - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20250224
 cmip7_hist-GHG_gn_ACCESS-CM2_psl_r1i1p1f1__pmp-climatology_ERA-5_psl:
   cmip7:
   - CMIP7.DAMIP.CSIRO-ARCCSS.ACCESS-CM2.hist-GHG.r1i1p1f1.glb.mon.psl.tavg-u-hxy-u.gn.v20201120

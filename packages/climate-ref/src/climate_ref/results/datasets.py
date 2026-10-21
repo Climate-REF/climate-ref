@@ -11,18 +11,20 @@ The filter and query builder live in the models layer
 re-exported here so callers construct it from ``climate_ref.results``.
 """
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, selectin_polymorphic, selectinload
 
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models.dataset import Dataset
 from climate_ref.models.dataset_query import DatasetFilter, select_datasets
+from climate_ref.results._page import Page
+from climate_ref.results._query import count_values, paginate
 from climate_ref_core.source_types import SourceDatasetType
 
 __all__ = ["DatasetFilter", "select_datasets"]
@@ -78,33 +80,8 @@ class DatasetView:
 
 
 @attrs.frozen(kw_only=True)
-class DatasetCollection:
-    """
-    An immutable page of datasets plus collection-level metadata.
-
-    ``total_count`` is the number of datasets matching the filter *before* pagination, so a caller
-    can tell there are more rows than the returned page. ``offset``/``limit`` echo back the
-    pagination applied to produce ``items`` (``limit`` is ``None`` when the whole result was
-    returned).
-    """
-
-    items: tuple[DatasetView, ...]
-    """The datasets on this page."""
-
-    total_count: int
-    """Total datasets matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[DatasetView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
+class DatasetCollection(Page[DatasetView]):
+    """An immutable page of datasets plus collection-level metadata."""
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -204,6 +181,7 @@ class DatasetsReader:
         offset: int = 0,
         limit: int | None = None,
         include_files: bool = False,
+        with_count: bool = True,
     ) -> DatasetCollection:
         """
         Query one source type's datasets, optionally scoped to an execution or diagnostic.
@@ -218,18 +196,13 @@ class DatasetsReader:
         is computed from a separate unpaged count over the same deduplicated statement.
         """
         base_stmt = self._base_statement(filters)
-        count_stmt = select(func.count()).select_from(base_stmt.subquery())
-        total_count = self.session.execute(count_stmt).scalar_one()
+        total_count = count_values(self.session, base_stmt) if with_count else None
 
         stmt = base_stmt.order_by(None).order_by(Dataset.slug, Dataset.id)
         if include_files:
             stmt = stmt.options(selectinload(Dataset.files))  # type: ignore[attr-defined]
-        if limit is not None:
-            stmt = stmt.offset(offset).limit(limit)
-        elif offset:
-            stmt = stmt.offset(offset)
 
-        rows = list(self.session.execute(stmt).scalars().unique().all())
+        rows = list(self.session.execute(paginate(stmt, offset, limit)).scalars().unique().all())
         items = tuple(self._to_view(r, include_files=include_files) for r in rows)
 
         return DatasetCollection(items=items, total_count=total_count, offset=offset, limit=limit)

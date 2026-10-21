@@ -46,6 +46,7 @@ class CMIP6Request(IntakeESGFMixin):
     """
 
     source_type = "CMIP6"
+    project = "CMIP6"
 
     cmip6_path_items = (
         "mip_era",

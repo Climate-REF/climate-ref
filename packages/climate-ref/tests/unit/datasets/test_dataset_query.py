@@ -199,6 +199,31 @@ class TestSelectDatasetsLatestVersionDedup:
             DatasetFilter()  # type: ignore[call-arg]
 
 
+class TestSlugContains:
+    def test_case_insensitive_substring(self, db_with_versions):
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, slug_contains="dq.test-model.TAS"),
+            latest_group_by=ID_COLS,
+        )
+        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
+        assert {r.id for r in rows} == {db_with_versions.dq_ids["v10"]}
+
+    def test_applied_after_latest_window(self, db_with_versions):
+        """A match on a superseded version does not promote it to latest."""
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, slug_contains="tas.v2"),
+            latest_group_by=ID_COLS,
+        )
+        assert db_with_versions.session.execute(stmt).scalars().unique().all() == []
+
+    def test_all_versions(self, db_with_versions):
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, slug_contains="tas.v2", latest_only=False)
+        )
+        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
+        assert {r.id for r in rows} == {db_with_versions.dq_ids["v2"]}
+
+
 class TestRetractedFiltering:
     """``DatasetFilter.include_retracted`` (default ``False``) excludes retracted rows."""
 

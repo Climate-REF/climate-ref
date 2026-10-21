@@ -132,6 +132,69 @@ def test_get_child_and_parent_dataset_string_start_time():
     assert parent["timerange"] == "5201/5340"
 
 
+def _awi_cm_abrupt_and_picontrol(parent_time_units):
+    # Attributes of AWI-CM-1-1-MR abrupt-4xCO2/piControl r1i1p1f1 on ESGF: the child's
+    # branch_time_in_parent is relative to 2401-01-01 (parent_time_units),
+    # while the piControl files use a time axis relative to 1901-01-01.
+    return pd.DataFrame(
+        {
+            "instance_id": [
+                "CMIP6.CMIP.AWI.AWI-CM-1-1-MR.abrupt-4xCO2.r1i1p1f1.Amon.tas.gn.v20191015",
+                "CMIP6.CMIP.AWI.AWI-CM-1-1-MR.piControl.r1i1p1f1.Amon.tas.gn.v20191015",
+            ],
+            "activity_id": ["CMIP", "CMIP"],
+            "branch_time_in_child": [0.0, 0.0],
+            "branch_time_in_parent": [90945.0, 0.0],
+            "parent_time_units": [parent_time_units, "days since 2401-01-01 00:00:00"],
+            "experiment_id": ["abrupt-4xCO2", "piControl"],
+            "grid_label": ["gn", "gn"],
+            "institution_id": ["AWI", "AWI"],
+            "source_id": ["AWI-CM-1-1-MR", "AWI-CM-1-1-MR"],
+            "table_id": ["Amon", "Amon"],
+            "variable_id": ["tas", "tas"],
+            "variant_label": ["r1i1p1f1", "r1i1p1f1"],
+            "member_id": ["r1i1p1f1", "r1i1p1f1"],
+            "start_time": [
+                cftime.datetime(1850, 1, 16, 12, 0, calendar="proleptic_gregorian"),
+                cftime.datetime(2401, 1, 16, 12, 0, calendar="proleptic_gregorian"),
+            ],
+            "end_time": [
+                cftime.datetime(1999, 12, 16, 12, 0, calendar="proleptic_gregorian"),
+                cftime.datetime(2900, 12, 16, 12, 0, calendar="proleptic_gregorian"),
+            ],
+            "time_units": ["days since 1850-01-01 00:00:00", "days since 1901-01-01 00:00:00"],
+            "calendar": ["proleptic_gregorian", "proleptic_gregorian"],
+            "path": [
+                "tas_Amon_AWI-CM-1-1-MR_abrupt-4xCO2_r1i1p1f1_gn_185001-185012.nc",
+                "tas_Amon_AWI-CM-1-1-MR_piControl_r1i1p1f1_gn_240101-240112.nc",
+            ],
+            "version": ["v20191015", "v20191015"],
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("parent_time_units", "expected_parent_timerange"),
+    [
+        # branch_time_in_parent is decoded with the child's parent_time_units
+        ("days since 2401-01-01 00:00:00", "2650/2799"),
+        # Without parent_time_units, fall back to the parent's own time units
+        (None, "2150/2299"),
+    ],
+)
+def test_get_child_and_parent_dataset_parent_time_units(parent_time_units, expected_parent_timerange):
+    child, parent = get_child_and_parent_dataset(
+        _awi_cm_abrupt_and_picontrol(parent_time_units),
+        parent_experiment="piControl",
+        child_duration_in_years=150,
+        parent_offset_in_years=0,
+        parent_duration_in_years=150,
+    )
+
+    assert child["timerange"] == "1850/1999"
+    assert parent["timerange"] == expected_parent_timerange
+
+
 def test_as_facets_uses_activity_from_instance_id():
     """activity_id can be space-separated (e.g. 'C4MIP CDRMIP').
 

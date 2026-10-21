@@ -14,6 +14,9 @@ from climate_ref.cli._utils import OutputFormat, pretty_print_df, render_datafra
 if TYPE_CHECKING:
     from rich.console import Console
 
+    from climate_ref.config import Config
+    from climate_ref.database import Database
+    from climate_ref_core.providers import DiagnosticProvider
     from climate_ref_core.summary import ProviderSummary
 
 app = typer.Typer(help=__doc__)
@@ -252,6 +255,36 @@ def create_env(
     list_(ctx)
 
 
+def _setup_provider(  # noqa: PLR0913
+    provider: "DiagnosticProvider",
+    config: "Config",
+    db: "Database",
+    *,
+    skip_env: bool,
+    skip_data: bool,
+    skip_validate: bool,
+) -> bool:
+    """Set up one provider and ingest its data, returning whether it succeeded."""
+    from climate_ref.datasets import ingest_provider_data
+
+    logger.info(f"Setting up provider {provider.slug}")
+    try:
+        provider.setup(config, skip_env=skip_env, skip_data=skip_data)
+        if not skip_data:
+            ingest_provider_data(provider, config, db)
+        if skip_validate:
+            logger.info(f"Skipped validation for provider {provider.slug}")
+            return True
+        if not provider.validate_setup(config):
+            logger.error(f"Provider {provider.slug} setup completed but validation failed")
+            return False
+        logger.info(f"Finished setting up provider {provider.slug}")
+        return True
+    except Exception as e:
+        logger.opt(exception=True).error(f"Failed to setup provider {provider.slug}: {e}")
+        return False
+
+
 @app.command()
 def setup(  # noqa: PLR0913
     ctx: typer.Context,
@@ -316,20 +349,9 @@ def setup(  # noqa: PLR0913
                 failed_providers.append(provider_.slug)
             continue
 
-        logger.info(f"Setting up provider {provider_.slug}")
-        try:
-            provider_.setup(config, db=db, skip_env=skip_env, skip_data=skip_data)
-            if not skip_validate:
-                is_valid = provider_.validate_setup(config)
-                if not is_valid:
-                    logger.error(f"Provider {provider_.slug} setup completed but validation failed")
-                    failed_providers.append(provider_.slug)
-                else:
-                    logger.info(f"Finished setting up provider {provider_.slug}")
-            else:
-                logger.info(f"Skipped validation for provider {provider_.slug}")
-        except Exception as e:
-            logger.opt(exception=True).error(f"Failed to setup provider {provider_.slug}: {e}")
+        if not _setup_provider(
+            provider_, config, db, skip_env=skip_env, skip_data=skip_data, skip_validate=skip_validate
+        ):
             failed_providers.append(provider_.slug)
 
     if failed_providers:
@@ -339,3 +361,36 @@ def setup(  # noqa: PLR0913
 
     if not validate_only:
         list_(ctx)
+
+
+@app.command()
+def check_health(
+    ctx: typer.Context,
+    provider: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Only check providers whose slug contains this value. Multiple values can be provided."
+        ),
+    ] = None,
+) -> None:
+    """
+    Check that each provider can launch a diagnostic on this host.
+
+    This is the check `ref solve` runs before solving.
+    It is cheaper than `ref providers setup --validate-only`, which also verifies reference data.
+    Exits non-zero when any provider is unhealthy.
+    """
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref.solver import SolveFilterOptions, check_provider_health
+
+    config = ctx.obj.config
+    console = ctx.obj.console
+    providers = ProviderRegistry.build_from_config(config, ctx.obj.database, register=False).providers
+
+    health = check_provider_health(providers, config, SolveFilterOptions(provider=provider))
+    for slug, problems in health.items():
+        status = "[red]unhealthy[/red]" if problems else "[green]healthy[/green]"
+        console.print(f"Provider {slug}: {status}")
+
+    if any(health.values()):
+        raise typer.Exit(code=1)

@@ -1,5 +1,6 @@
 import hashlib
 import os
+import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -19,7 +20,7 @@ from ilamb3.transform.amoc import msftmz_to_rapid
 from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
-from climate_ref_core.cmip6_to_cmip7 import get_dreq_entry
+from climate_ref_core.cmip6_to_cmip7 import DReqVariableMapping, get_dreq_entry
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets
 from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.dataset_registry import dataset_registry_manager
@@ -102,7 +103,15 @@ class _MsftmzToRapid(msftmz_to_rapid):
     The ``RAPID-2023-1a`` file does not include a basin dimension.
     """
 
+    def required_variables(self) -> list[str]:
+        """Keep both MIP-era names through ILAMB's pre-transform filtering."""
+        return ["msftmz", "msftm"]
+
     def __call__(self, ds: xr.Dataset) -> xr.Dataset:
+        # CMIP7 renamed this DReq variable from ``msftmz`` to ``msftm``.
+        # ILAMB's transform still uses the CMIP6 name internally.
+        if "msftmz" not in ds and "msftm" in ds:
+            ds = ds.rename(msftm="msftmz")
         if "msftmz" in ds and "basin" not in ds["msftmz"].dims:
             ds = ds.assign(msftmz=ds["msftmz"].expand_dims("basin"))
         return super().__call__(ds)
@@ -126,7 +135,7 @@ class _CoarsenSpatial(ILAMBTransform):
     """
 
     # Bump when the coarsening algorithm changes so stale cache entries are ignored.
-    _CACHE_VERSION = 1
+    _CACHE_VERSION = 2
     _CACHE_NAME = "ilamb-coarsened"
 
     def __init__(self, variable_id: str, resolution: float = 0.5):
@@ -139,12 +148,7 @@ class _CoarsenSpatial(ILAMBTransform):
     def __call__(self, ds: xr.Dataset) -> xr.Dataset:
         if self.variable_id not in ds:
             return ds
-        lat = ds[get_dim_name(ds, "lat")]
-        lon = ds[get_dim_name(ds, "lon")]
-        current = float(
-            np.sqrt(lat.diff(lat.name).mean().values ** 2 + lon.diff(lon.name).mean().values ** 2)
-        )
-        if current >= self.resolution:
+        if self._spacing(ds) >= self.resolution:
             # Already at or coarser than the target (e.g. model data); leave it lazy.
             return ds
 
@@ -158,9 +162,16 @@ class _CoarsenSpatial(ILAMBTransform):
             self._write_cache(coarse, cache_path)
         return coarse
 
-    # Time steps coarsened per pass.
-    # One pass of the ~0.05 degree AVHRR LAI reference is about 12 * 3600 * 7200 * 8 bytes ~= 2.5 GB.
+    # Time steps coarsened per pass, which bounds the memory of a cold coarsen.
     _TIME_CHUNK = 12
+
+    @staticmethod
+    def _spacing(ds: xr.Dataset) -> float:
+        """Mean grid spacing in degrees, taking the coarser of the lat and lon axes."""
+        return max(
+            float(np.abs(ds[name].diff(name)).mean())
+            for name in (get_dim_name(ds, "lat"), get_dim_name(ds, "lon"))
+        )
 
     def _coarsen(self, ds: xr.Dataset) -> xr.Dataset:
         """
@@ -173,24 +184,48 @@ class _CoarsenSpatial(ILAMBTransform):
         So the field is coarsened one time block at a time,
         materialising only that block, and the small coarse blocks are concatenated.
         """
+        factor = round(self.resolution / self._spacing(ds))
+        # ``coarsen_dataset`` measures resolution along the cell diagonal, not the cell side.
+        lat = ds[get_dim_name(ds, "lat")]
+        lon = ds[get_dim_name(ds, "lon")]
+        res = factor * float(np.sqrt(lat.diff(lat.name).mean() ** 2 + lon.diff(lon.name).mean() ** 2))
+
         if "time" not in ds.dims:
             # A single 2D slice is small enough to coarsen in one pass.
-            return coarsen_dataset(ds.compute(), self.variable_id, res=self.resolution)
+            coarse = coarsen_dataset(ds.compute(), self.variable_id, res=res)
+        else:
+            blocks = [
+                coarsen_dataset(
+                    ds.isel(time=slice(start, start + self._TIME_CHUNK)).compute(),
+                    self.variable_id,
+                    res=res,
+                )
+                for start in range(0, ds.sizes["time"], self._TIME_CHUNK)
+            ]
+            # ``data_vars="minimal"`` concatenates only the time-varying field, so the time-invariant
+            # ``cell_measures`` is kept once rather than broadcast across every block.
+            coarse = xr.concat(blocks, dim="time", data_vars="minimal", coords="minimal", compat="override")
+        return self._coarsen_bounds(coarse, ds, factor)
 
-        ntime = ds.sizes["time"]
-        blocks = [
-            coarsen_dataset(
-                ds.isel(time=slice(start, start + self._TIME_CHUNK)).compute(),
-                self.variable_id,
-                res=self.resolution,
-            )
-            for start in range(0, ntime, self._TIME_CHUNK)
-        ]
-        if len(blocks) == 1:
-            return blocks[0]
-        # ``data_vars="minimal"`` concatenates only the time-varying field, so the time-invariant
-        # ``cell_measures`` is kept once rather than broadcast across every block.
-        return xr.concat(blocks, dim="time", data_vars="minimal", coords="minimal", compat="override")
+    @staticmethod
+    def _coarsen_bounds(coarse: xr.Dataset, fine: xr.Dataset, factor: int) -> xr.Dataset:
+        """Replace the lat/lon bounds, which ``coarsen_dataset`` sums like data, with the window extents."""
+        for dim in (get_dim_name(fine, "lat"), get_dim_name(fine, "lon")):
+            name = fine[dim].attrs.get("bounds")
+            if name not in fine or name not in coarse:
+                continue
+            bounds = fine[name]
+            if "time" in bounds.dims:
+                # ``open_mfdataset`` concatenates the bounds along time with the data.
+                bounds = bounds.isel(time=0, drop=True)
+            bounds = bounds.transpose(dim, ...)
+            values = np.asarray(bounds.values, dtype=float)
+            # Pad like ``coarsen(boundary="pad")`` so the last partial window lines up.
+            values = np.pad(values, ((0, -len(values) % factor), (0, 0)), constant_values=np.nan)
+            windows = values.reshape(-1, factor * values.shape[1])
+            extents = np.stack([np.nanmin(windows, axis=1), np.nanmax(windows, axis=1)], axis=1)
+            coarse[name] = (bounds.dims, extents)
+        return coarse
 
     def _cache_path(self, ds: xr.Dataset) -> Path | None:
         if os.environ.get("REF_ILAMB_COARSEN_NO_CACHE"):
@@ -277,22 +312,40 @@ def _get_branded_variable(
     :
         Branded variable names found in the Data Request
     """
-    tables = _LAND_TABLES if realm == "land" else _OCEAN_TABLES
-
     branded: list[str] = []
-    for var_id in variable_ids:
-        found = False
-        for table in tables:
-            try:
-                entry = get_dreq_entry(table, var_id)
-                branded.append(entry.branded_variable)
-                found = True
-            except KeyError:
-                continue
-        if not found:
+    for var_id, entries in _lookup_dreq_entries(variable_ids, realm):
+        if not entries:
             logger.debug(f"No CMIP7 branded variable name found for {var_id}")
+        branded.extend(entry.branded_variable for entry in entries)
 
     return tuple(branded)
+
+
+def _lookup_dreq_entries(
+    variable_ids: tuple[str, ...], realm: str
+) -> list[tuple[str, list[DReqVariableMapping]]]:
+    """Find the Data Request entries for each CMIP6 variable ID across the realm's tables."""
+    tables = _LAND_TABLES if realm == "land" else _OCEAN_TABLES
+    found: list[tuple[str, list[DReqVariableMapping]]] = []
+    for var_id in variable_ids:
+        entries: list[DReqVariableMapping] = []
+        for table in tables:
+            try:
+                entries.append(get_dreq_entry(table, var_id))
+            except KeyError:
+                continue
+        found.append((var_id, entries))
+    return found
+
+
+def _get_cmip7_variable_ids(variable_ids: tuple[str, ...], realm: str) -> tuple[str, ...]:
+    """Translate CMIP6 variable IDs to their CMIP7 Data Request IDs."""
+    translated: list[str] = []
+    for var_id, entries in _lookup_dreq_entries(variable_ids, realm):
+        cmip7_id = entries[0].variable_id if entries else var_id
+        if cmip7_id not in translated:
+            translated.append(cmip7_id)
+    return tuple(translated)
 
 
 def _get_cmip_source_type(
@@ -690,7 +743,7 @@ def _build_test_data_spec(  # noqa: PLR0913
                     slug=slug,
                     registry_name="obs4ref",
                     facets=obs_filters,
-                    source_type="obs4MIPs",
+                    source_type="obs4REF",
                 ),
             )
         elif obs_source == "obs4mips":
@@ -908,13 +961,16 @@ class ILAMBStandard(Diagnostic):
 
         relationship_variable_ids = tuple(ilamb_kwargs.get("relationships", {}).keys())
 
+        cmip7_primary_variable_ids = _get_cmip7_variable_ids(primary_variable_ids, realm)
+        cmip7_relationship_variable_ids = _get_cmip7_variable_ids(relationship_variable_ids, realm)
+
         # Create the data requirement for the dataset under test
         cmip6_requirement = _build_cmip_data_requirement(
             source_type=SourceDatasetType.CMIP6,
             filters={
                 "variable_id": all_variable_ids,
                 "frequency": "mon",
-                "experiment_id": ("historical", "land-hist"),
+                "experiment_id": ("historical", "esm-hist", "land-hist"),
                 "table_id": (
                     "AERmonZ",
                     "Amon",
@@ -938,21 +994,21 @@ class ILAMBStandard(Diagnostic):
             filters={
                 "branded_variable": branded_variables,
                 "frequency": "mon",
-                "experiment_id": ("historical", "land-hist"),
+                "experiment_id": ("historical", "esm-hist", "land-hist"),
                 "region": "glb",
             },
             group_by=("experiment_id", "source_id", "variant_label", "grid_label"),
-            primary_variable_ids=primary_variable_ids,
-            relationship_variable_ids=relationship_variable_ids,
+            primary_variable_ids=cmip7_primary_variable_ids,
+            relationship_variable_ids=cmip7_relationship_variable_ids,
             is_land=is_land,
         )
 
-        # obs4MIPs data requirement, normally ilamb3 expects the `sources` to
+        # Observational data requirement, normally ilamb3 expects the `sources` to
         # resolve to keys in one of its data registries. If instead we find a
         # dictionary, then assume that these keys are meant to be keywords in a
         # REF data requirement.
-        # obs_source key is used to determine whether to fetch from ESGF
-        # or use the pre-fetched obs4REF registry.
+        # obs_source names where the test data is fetched from, the registry or ESGF.
+        # It does not affect the requirement below.
         filters: dict[str, tuple[str, ...]] = {}
         obs_source = None
         for _, source in sources.items():
@@ -967,6 +1023,7 @@ class ILAMBStandard(Diagnostic):
                 source_type=SourceDatasetType.obs4MIPs,
                 filters=(FacetFilter(facets=filters),),
                 group_by=tuple(filters.keys()),
+                fallback_source_types=(SourceDatasetType.obs4REF,),
             )
             if filters
             else None
@@ -1030,15 +1087,16 @@ class ILAMBStandard(Diagnostic):
         # data not yet available in obs4{MIPs,REF}. This logic allows for
         # DataRequirement filters to be added as a 'source' in the ilamb
         # configure file. If a dictionary instead of a string was found, we
-        # populate an obs4MIPs requirement.
+        # populate an observational requirement.
         if SourceDatasetType.obs4MIPs in definition.datasets:
             # ilamb3 will expect the reference dataset dataframe to have a `key`
             # column that uniquely describes each dataset. Create one using the
             # `instance_id` and an integer and then modify the ilamb3 configure
-            # so that it finds the proper data.
+            # so that it finds the proper data. The `#` separator keeps e.g. `obs.v1`
+            # from matching the keys of `obs.v10`.
             ref_datasets = definition.datasets[SourceDatasetType.obs4MIPs].datasets
             ref_datasets = ref_datasets.reset_index()
-            ref_datasets["key"] = ref_datasets["instance_id"] + ref_datasets.index.astype(str)
+            ref_datasets["key"] = ref_datasets["instance_id"] + "#" + ref_datasets.index.astype(str)
             source_keys = {
                 entry["variable_id"]: key
                 for key, entry in ilamb_kwargs["sources"].items()
@@ -1047,7 +1105,7 @@ class ILAMBStandard(Diagnostic):
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 source_key = source_keys.get(variable_id, variable_id)
-                ilamb_kwargs["sources"][source_key] = f"{instance_id}*"
+                ilamb_kwargs["sources"][source_key] = rf"^{re.escape(str(instance_id))}#\d+$"
             # Relationship analyses (and any remaining legacy string-path sources)
             # still refer to keys in the ILAMB/obs4REF registries.
             # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so

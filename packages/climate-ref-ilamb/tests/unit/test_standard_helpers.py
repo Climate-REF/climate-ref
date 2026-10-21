@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
-from climate_ref_ilamb import standard
+from climate_ref_ilamb import provider, standard
 from climate_ref_ilamb.standard import (
     ILAMBStandard,
     _build_cmec_bundle,
@@ -20,6 +20,7 @@ from climate_ref_ilamb.standard import (
     _set_ilamb3_options,
 )
 from ilamb3.dataset import coarsen_dataset, convert
+from ilamb3.run import find_related_variables, setup_transforms
 from ilamb3.transform.amoc import msftmz_to_rapid
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
@@ -112,6 +113,46 @@ class TestCoarsenSpatial:
         coarsened_spacing = float(np.diff(result["lat"].values).mean())
         assert coarsened_spacing > original_spacing
 
+    def test_coarsened_to_target_resolution(self, monkeypatch):
+        monkeypatch.setenv("REF_ILAMB_COARSEN_NO_CACHE", "1")
+        ds = self._dataset(spacing=0.1, extent=10.0)
+
+        result = _CoarsenSpatial("tas", resolution=0.5)(ds)
+
+        assert float(np.diff(result["lat"].values).mean()) == pytest.approx(0.5)
+        assert float(np.diff(result["lon"].values).mean()) == pytest.approx(0.5)
+
+    def test_bounds_span_the_coarse_cells(self, monkeypatch):
+        monkeypatch.setenv("REF_ILAMB_COARSEN_NO_CACHE", "1")
+        ds = self._dataset(spacing=0.1, extent=10.0)
+        for dim in ("lat", "lon"):
+            ds[f"{dim}_bnds"] = ((dim, "bnds"), np.stack([ds[dim] - 0.05, ds[dim] + 0.05], axis=1))
+            ds[dim].attrs["bounds"] = f"{dim}_bnds"
+
+        result = _CoarsenSpatial("tas", resolution=0.5)(ds)
+
+        for dim in ("lat", "lon"):
+            bounds = result[f"{dim}_bnds"].values
+            np.testing.assert_allclose(bounds[:, 0], np.arange(0, 10, 0.5) - 0.05)
+            np.testing.assert_allclose(bounds[:, 1], np.arange(0.5, 10.5, 0.5) - 0.05)
+
+    def test_time_varying_bounds_span_the_coarse_cells(self, monkeypatch):
+        monkeypatch.setenv("REF_ILAMB_COARSEN_NO_CACHE", "1")
+        ds = self._timed_dataset(extent=10.0, ntime=14)
+        for dim in ("lat", "lon"):
+            edges = np.stack([ds[dim] - 0.05, ds[dim] + 0.05], axis=1)
+            ds[f"{dim}_bnds"] = (
+                ("time", dim, "bnds"),
+                np.broadcast_to(edges, (ds.sizes["time"], *edges.shape)),
+            )
+            ds[dim].attrs["bounds"] = f"{dim}_bnds"
+
+        result = _CoarsenSpatial("tas", resolution=0.5)(ds)
+
+        for dim in ("lat", "lon"):
+            assert result[f"{dim}_bnds"].dims == (dim, "bnds")
+            np.testing.assert_allclose(result[f"{dim}_bnds"].values[:, 0], np.arange(0, 10, 0.5) - 0.05)
+
     def _timed_dataset(self, spacing: float = 0.1, extent: float = 2.0, ntime: int = 4) -> xr.Dataset:
         lat = np.arange(0, extent, spacing)
         lon = np.arange(0, extent, spacing)
@@ -127,7 +168,8 @@ class TestCoarsenSpatial:
         # The chunked (streaming) coarsen must produce the same numbers as coarsening the
         # whole materialised cube in one pass.
         ds = self._timed_dataset()
-        expected = coarsen_dataset(ds.compute(), "tas", res=0.5)
+        # ``coarsen_dataset`` takes the diagonal resolution, so 0.5 degree cells need 0.5 * sqrt(2).
+        expected = coarsen_dataset(ds.compute(), "tas", res=0.5 * np.sqrt(2))
 
         transform = _CoarsenSpatial("tas", resolution=0.5)
         result = transform._coarsen(ds)
@@ -230,6 +272,32 @@ class TestMsftmzToRapid:
 
         off_section = convert(ds["msftmz"].sel(lat=20.0).max("depth"), "Sv", "msftmz")
         assert not np.allclose(amoc.values, off_section.values)
+
+    def test_accepts_cmip7_msftm_name(self):
+        ds = self._dataset(with_basin=True).rename(msftmz="msftm")
+        transform = ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"]()
+
+        assert transform.required_variables() == ["msftmz", "msftm"]
+        result = transform(ds)
+
+        assert "amoc" in result
+        assert "msftm" not in result
+
+    def test_ilamb_pipeline_filter_keeps_cmip7_msftm(self):
+        """Exercise the same variable filtering used by ``run_single_block``."""
+        transforms = setup_transforms({"transforms": ["climate_ref_msftmz_to_rapid"]})
+        related_vars = [
+            *find_related_variables({}, transforms, []),
+            "areacella",
+            "sftlf",
+            "areacello",
+            "sftof",
+        ]
+        comparison_data = pd.DataFrame({"variable_id": ["msftm", "areacello", "sftof", "unrelated"]})
+
+        filtered = comparison_data[comparison_data["variable_id"].isin(related_vars)]
+
+        assert filtered["variable_id"].tolist() == ["msftm", "areacello", "sftof"]
 
 
 class TestCleanUnits:
@@ -386,6 +454,19 @@ class TestVersionOverride:
         assert diagnostic.version == ILAMBStandard.version
 
 
+class TestCmip7VariableRequirements:
+    def test_uses_dreq_variable_id_without_changing_cmip6(self):
+        diagnostic = next(
+            diagnostic for diagnostic in provider.diagnostics() if diagnostic.slug == "amoc-rapid"
+        )
+
+        cmip6_requirement = diagnostic.data_requirements[0][0]
+        cmip7_requirement = diagnostic.data_requirements[1][0]
+
+        assert cmip6_requirement.constraints[0].required_facets == ("amoc", "msftmz")
+        assert cmip7_requirement.constraints[0].required_facets == ("amoc", "msftm")
+
+
 class TestRealmMaskDecoupling:
     """
     Proves mask-loading is independent of realm, not just "is land".
@@ -466,13 +547,18 @@ class TestObs4MIPsSourceRewrite:
             analysis_variable="amoc",
         )
 
-    def _definition(self, tmp_path, instance_id: str):
+    def _definition(self, tmp_path, *refs: tuple[str, str, int]):
+        """Build a definition from `(instance_id, variable_id, n_files)` reference datasets."""
         obs = pd.DataFrame(
-            {
-                "instance_id": [instance_id],
-                "variable_id": ["msftmz"],
-                "path": [f"/data/{instance_id}.nc"],
-            }
+            [
+                {
+                    "instance_id": instance_id,
+                    "variable_id": variable_id,
+                    "path": f"/data/{instance_id}_{i}.nc",
+                }
+                for instance_id, variable_id, n_files in refs
+                for i in range(n_files)
+            ]
         ).set_index("instance_id")
         model = pd.DataFrame(
             {
@@ -494,7 +580,7 @@ class TestObs4MIPsSourceRewrite:
         captured: dict = {}
 
         def _capture(slug, ref_datasets, model_datasets, output_directory, **kwargs):
-            captured.update(kwargs)
+            captured.update(kwargs, ref_datasets=ref_datasets)
 
         monkeypatch.setattr(standard.run, "run_single_block", _capture)
         monkeypatch.setattr(standard.run, "set_model_colors", lambda _: None)
@@ -503,19 +589,50 @@ class TestObs4MIPsSourceRewrite:
 
     def test_derived_analysis_variable_keeps_the_configured_key(self, tmp_path, monkeypatch):
         diagnostic = self._diagnostic()
-        captured = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
+        captured = self._run_and_capture(
+            diagnostic, self._definition(tmp_path, ("obs4REF.first", "msftmz", 1)), monkeypatch
+        )
 
         # `amoc` is derived from the on-disk `msftmz`, so the configure key must survive.
-        assert captured["sources"] == {"amoc": "obs4REF.first*"}
+        assert captured["sources"] == {"amoc": r"^obs4REF\.first#\d+$"}
 
     def test_second_execution_is_unaffected_by_the_first(self, tmp_path, monkeypatch):
         diagnostic = self._diagnostic()
 
-        first = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
-        second = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.second"), monkeypatch)
+        first = self._run_and_capture(
+            diagnostic, self._definition(tmp_path, ("obs4REF.first", "msftmz", 1)), monkeypatch
+        )
+        second = self._run_and_capture(
+            diagnostic, self._definition(tmp_path, ("obs4REF.second", "msftmz", 1)), monkeypatch
+        )
 
-        assert first["sources"] == {"amoc": "obs4REF.first*"}
-        # Without the copy this is `{"amoc": "obs4REF.first*", "msftmz": "obs4REF.second*"}`.
-        assert second["sources"] == {"amoc": "obs4REF.second*"}
+        assert first["sources"] == {"amoc": r"^obs4REF\.first#\d+$"}
+        # Without the copy this is `{"amoc": ..first.., "msftmz": ..second..}`.
+        assert second["sources"] == {"amoc": r"^obs4REF\.second#\d+$"}
         # The diagnostic itself still holds the configured mapping.
         assert diagnostic.ilamb_kwargs["sources"]["amoc"]["source_id"] == "RAPID-2023-1a"
+
+    def test_source_matches_only_the_ingested_files(self, tmp_path, monkeypatch):
+        # The obs4ref registry also contains `obs4REF/IIASA-FAO/HWSD-2-0/fx/cSoil/gn/v20250903/...`,
+        # which an unescaped instance_id pattern would match too.
+        instance_id = "obs4REF.IIASA-FAO.HWSD-2-0.fx.cSoil.gn.v20250903"
+        definition = self._definition(tmp_path, (instance_id, "cSoil", 12))
+        captured = self._run_and_capture(self._diagnostic(), definition, monkeypatch)
+
+        found = ilamb3.load._lookup(captured["ref_datasets"].set_index("key"), captured["sources"]["cSoil"])
+
+        assert found == sorted(f"/data/{instance_id}_{i}.nc" for i in range(12))
+
+    def test_source_does_not_match_instance_ids_sharing_a_prefix(self, tmp_path, monkeypatch):
+        definition = self._definition(tmp_path, ("obs.v1", "pr", 2), ("obs.v10", "tas", 2))
+        captured = self._run_and_capture(self._diagnostic(), definition, monkeypatch)
+        ref_datasets = captured["ref_datasets"].set_index("key")
+
+        assert ilamb3.load._lookup(ref_datasets, captured["sources"]["pr"]) == [
+            "/data/obs.v1_0.nc",
+            "/data/obs.v1_1.nc",
+        ]
+        assert ilamb3.load._lookup(ref_datasets, captured["sources"]["tas"]) == [
+            "/data/obs.v10_0.nc",
+            "/data/obs.v10_1.nc",
+        ]

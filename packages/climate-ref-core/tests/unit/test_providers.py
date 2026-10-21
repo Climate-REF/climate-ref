@@ -276,6 +276,27 @@ class TestCondaDiagnosticProvider:
         # HOME is defaulted at launch so micromamba has a writable directory
         assert "HOME" in provider._launch_env()
 
+    def test_launch_env_disables_lockfiles_on_request(self, config, mocker: pytest_mock.MockFixture) -> None:
+        mocker.patch.object(climate_ref_core.providers.os, "environ", {})
+        provider = CondaDiagnosticProvider("provider_name", "v0.23")
+        provider.configure(config)
+
+        assert "MAMBA_USE_LOCKFILES" not in provider._launch_env()
+        assert provider._launch_env(use_lockfiles=False)["MAMBA_USE_LOCKFILES"] == "false"
+
+    def test_launch_env_keeps_an_explicit_lockfile_setting(
+        self, config, mocker: pytest_mock.MockFixture
+    ) -> None:
+        mocker.patch.object(
+            climate_ref_core.providers.os,
+            "environ",
+            {"MAMBA_USE_LOCKFILES": "true"},
+        )
+        provider = CondaDiagnosticProvider("provider_name", "v0.23")
+        provider.configure(config)
+
+        assert provider._launch_env(use_lockfiles=False)["MAMBA_USE_LOCKFILES"] == "true"
+
     def test_launch_env_merges_the_live_environment(self, config, mocker: pytest_mock.MockFixture) -> None:
         mocker.patch.object(
             climate_ref_core.providers.os,
@@ -473,7 +494,11 @@ class TestCondaDiagnosticProvider:
 
         pip_install_calls = [c for c in run.call_args_list if "pip" in c.args[0]]
         assert len(pip_install_calls) == 2
-        assert pip_install_calls[0].args[0][-1] == "git+https://example.com/tool.git@abc123"
+        assert pip_install_calls[0].args[0][-3:] == [
+            "--no-deps",
+            "--force-reinstall",
+            "git+https://example.com/tool.git@abc123",
+        ]
         assert pip_install_calls[1].args[0][-1] == "git+https://example.com/core.git@def456"
 
     def test_skip_create_env(self, mocker, caplog, provider):
@@ -560,8 +585,9 @@ class TestCondaDiagnosticProvider:
             assert env["existing_var"] == "existing_value"
             assert env["test_var"] == "test_value"
             assert env["HOME"] == str(provider.prefix)
+            assert env["MAMBA_USE_LOCKFILES"] == "false"
 
-    def test_run_command_fails(self, mocker: pytest_mock.MockerFixture, tmp_path, provider):
+    def test_run_command_fails(self, mocker: pytest_mock.MockerFixture, tmp_path, provider, caplog):
         """Test that run() re-raises CalledProcessError when command fails."""
         conda_exe = tmp_path / "conda" / "micromamba"
         mock_env_path = mocker.Mock(
@@ -597,6 +623,28 @@ class TestCondaDiagnosticProvider:
         with pytest.raises(CondaCommandError) as exc_info:
             provider.run(["mock-command"])
         assert "error output" in exc_info.value.stdout
+        assert "exited with code 1" in exc_info.value.short_message
+        assert "Last lines of output:\nerror output" in caplog.text
+        assert not exc_info.value.launch_failed
+
+    def test_run_micromamba_fails_to_start(self, mocker: pytest_mock.MockerFixture, provider):
+        mocker.patch.object(CondaDiagnosticProvider, "get_conda_exe", return_value=Path("micromamba"))
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "env_path",
+            new_callable=mocker.PropertyMock,
+            return_value=mocker.Mock(spec=Path, exists=lambda: True),
+        )
+        output = (
+            'warning  libmamba Could not create proc dir: "/tmp/cache/mamba/proc" (Permission denied)\n'
+            "critical libmamba filesystem error: directory iterator cannot open directory\n"
+        )
+        error = subprocess.CalledProcessError(1, "mock-command", output=output)
+        mocker.patch.object(climate_ref_core.providers.subprocess, "run", side_effect=error)
+
+        with pytest.raises(CondaCommandError) as exc_info:
+            provider.run(["mock-command"])
+        assert exc_info.value.launch_failed
 
 
 class TestLifecycleHooks:
@@ -664,6 +712,7 @@ class TestLifecycleHooks:
         # These should not raise
         provider.setup_environment(mock_config)
         provider.fetch_data(mock_config)
+        assert provider.data_to_ingest(mock_config) == []
 
     def test_validate_setup_default_returns_true(self, mocker):
         """Test that default validate_setup returns True."""
@@ -695,33 +744,86 @@ class TestLifecycleHooks:
 
         create_env.assert_called_once()
 
-    def test_conda_validate_setup_checks_env_path(self, mocker, tmp_path):
-        """Test that CondaDiagnosticProvider.validate_setup checks env_path exists."""
-        mocker.patch.object(
-            climate_ref_core.providers.os.environ,
-            "copy",
-            return_value={},
-        )
+    def test_check_health_default_returns_no_problems(self, mocker):
+        provider = DiagnosticProvider("test", "1.0")
+
+        assert provider.check_health(mocker.Mock()) == []
+
+    @pytest.fixture
+    def conda_provider(self, mocker, tmp_path):
+        mocker.patch.object(climate_ref_core.providers.os, "environ", {})
         provider = CondaDiagnosticProvider("test", "1.0")
         provider.prefix = tmp_path / "conda"
-        mock_config = mocker.Mock()
-
-        env_path = tmp_path / "conda" / "test-env"
         mocker.patch.object(
             CondaDiagnosticProvider,
             "env_path",
             new_callable=mocker.PropertyMock,
-            return_value=env_path,
+            return_value=tmp_path / "conda" / "test-env",
         )
+        return provider
 
-        # Should return False when env_path doesn't exist
-        assert provider.validate_setup(mock_config) is False
+    @staticmethod
+    def _install_micromamba(provider: CondaDiagnosticProvider, script: str) -> None:
+        provider.prefix.mkdir(parents=True, exist_ok=True)
+        provider.conda_exe_path.write_text(f"#!/bin/sh\n{script}\n")
+        provider.conda_exe_path.chmod(0o755)
 
-        # Create the path
-        env_path.mkdir(parents=True)
+    def test_conda_check_health_missing_micromamba(self, conda_provider, mocker):
+        problems = conda_provider.check_health(mocker.Mock())
 
-        # Should return True when env_path exists
-        assert provider.validate_setup(mock_config) is True
+        assert len(problems) == 1
+        assert "micromamba is not available" in problems[0]
+        assert conda_provider.validate_setup(mocker.Mock()) is False
+
+    def test_conda_check_health_missing_env(self, conda_provider, mocker):
+        self._install_micromamba(conda_provider, "exit 0")
+
+        problems = conda_provider.check_health(mocker.Mock())
+
+        assert len(problems) == 1
+        assert "Conda environment for test is not available" in problems[0]
+
+    def test_conda_check_health_launch_fails(self, conda_provider, mocker):
+        self._install_micromamba(
+            conda_provider,
+            "echo 'critical libmamba filesystem error: directory iterator cannot open directory: "
+            "[/cache/mamba/proc]'\nexit 1",
+        )
+        conda_provider.env_path.mkdir(parents=True)
+
+        problems = conda_provider.check_health(mocker.Mock())
+
+        assert len(problems) == 1
+        assert "failed with exit code 1" in problems[0]
+        assert "/cache/mamba/proc" in problems[0]
+        assert conda_provider.validate_setup(mocker.Mock()) is False
+
+    def test_conda_check_health_launcher_not_executable(self, conda_provider, mocker):
+        self._install_micromamba(conda_provider, "exit 0")
+        conda_provider.conda_exe_path.chmod(0o644)
+        conda_provider.env_path.mkdir(parents=True)
+
+        problems = conda_provider.check_health(mocker.Mock())
+
+        assert len(problems) == 1
+        assert "could not be launched" in problems[0]
+        assert conda_provider.validate_setup(mocker.Mock()) is False
+
+    def test_conda_check_health_launches_through_micromamba_run(self, conda_provider, mocker, tmp_path):
+        args_file = tmp_path / "args"
+        self._install_micromamba(conda_provider, f'echo "$@" > {args_file}')
+        conda_provider.env_path.mkdir(parents=True)
+
+        assert conda_provider.check_health(mocker.Mock()) == []
+        assert conda_provider.validate_setup(mocker.Mock()) is True
+        assert args_file.read_text().split() == [
+            "run",
+            "--prefix",
+            str(conda_provider.env_path),
+            "python",
+            "-c",
+            "pass",
+        ]
 
 
 class TestProviderLookup:

@@ -4,12 +4,13 @@ import importlib
 import sys
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from attrs import define, field
 from loguru import logger
 from rich.console import Console
+from typer.core import TyperGroup
 
 from climate_ref import __version__
 from climate_ref.config import Config
@@ -218,6 +219,20 @@ def _load_config(
     return config, None
 
 
+class _LoggingGroup(TyperGroup):
+    """Root command group that records an uncaught exception in the log file before it propagates."""
+
+    def invoke(self, ctx: Any) -> Any:
+        try:
+            return super().invoke(ctx)
+        except (typer.Exit, typer.Abort, typer.BadParameter):
+            raise
+        except Exception:
+            # Typer prints the traceback to stderr, so keep this below the default console level
+            logger.opt(exception=True).debug("Command failed with an uncaught exception")
+            raise
+
+
 def build_app() -> typer.Typer:
     """
     Build the CLI app
@@ -244,7 +259,7 @@ def build_app() -> typer.Typer:
         test_cases,
     )
 
-    app = typer.Typer(name="ref", no_args_is_help=True)
+    app = typer.Typer(name="ref", no_args_is_help=True, cls=_LoggingGroup)
 
     app.command(name="solve")(solve.solve)
     app.command(name="doctor")(doctor.doctor)
@@ -316,7 +331,12 @@ def main(  # noqa: PLR0913
         config.log_level = log_level.value
 
     log_format = config.log_format
-    initialise_logging(level=config.log_level, format=log_format, log_directory=config.paths.log)
+    initialise_logging(
+        level=config.log_level,
+        format=log_format,
+        log_directory=config.paths.log,
+        serialize=config.log_json,
+    )
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
 

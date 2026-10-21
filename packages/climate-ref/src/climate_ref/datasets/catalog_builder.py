@@ -15,18 +15,36 @@ from typing import Any
 
 import pandas as pd
 from loguru import logger
-from tqdm import tqdm
 
-from climate_ref.datasets.base import DatasetParsingFunction
+from climate_ref.datasets.base import DatasetParsingFunction, SkipFunction
+from climate_ref.progress import LoggedProgress
 
 INVALID_ASSET = "INVALID_ASSET"
 TRACEBACK = "TRACEBACK"
 
 
+def _walk_sorted(root: Path) -> Iterator[tuple[str, list[str]]]:
+    """
+    Walk ``root``, descending into subdirectories in sorted order.
+
+    Parameters
+    ----------
+    root
+        Directory to walk.
+
+    Yields
+    ------
+    :
+        The directory path and the names of the files directly inside it.
+    """
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames.sort()
+        yield dirpath, filenames
+
+
 def discover_files(
     paths: list[str],
     include_patterns: list[str] | None = None,
-    depth: int = 0,
 ) -> list[str]:
     """
     Discover files matching the given glob patterns within the specified paths
@@ -38,9 +56,6 @@ def discover_files(
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``).
         Defaults to ``["*"]`` if not provided.
-    depth
-        Maximum directory depth below each root to search.
-        ``0`` means only files directly inside the root directory.
 
     Returns
     -------
@@ -60,12 +75,7 @@ def discover_files(
                 assets.append(str(root))
             continue
 
-        for dirpath, dirnames, filenames in os.walk(root):
-            current_depth = len(Path(dirpath).relative_to(root).parts)
-            if current_depth >= depth:
-                # Still process files at this level, but don't descend further
-                dirnames.clear()
-
+        for dirpath, filenames in _walk_sorted(root):
             for filename in filenames:
                 if any(fnmatch.fnmatch(filename, pat) for pat in include_patterns):
                     assets.append(os.path.join(dirpath, filename))
@@ -131,7 +141,7 @@ def parse_files(
     max_workers = _resolve_worker_count(n_jobs, len(assets)) if n_jobs != 1 else 1
 
     if max_workers == 1:
-        return [parsing_func(asset) for asset in tqdm(assets, desc="Parsing files", unit="file")]
+        return [parsing_func(asset) for asset in LoggedProgress(assets, desc="Parsing files", unit="file")]
 
     # Batch assets per task to amortise inter-process dispatch and result pickling.
     chunksize = max(1, len(assets) // (max_workers * 4))
@@ -142,7 +152,7 @@ def parse_files(
         mp_context=mp.get_context("spawn"),
     ) as executor:
         return list(
-            tqdm(
+            LoggedProgress(
                 executor.map(parsing_func, assets, chunksize=chunksize),
                 total=len(assets),
                 desc="Parsing files",
@@ -151,12 +161,13 @@ def parse_files(
         )
 
 
-def build_catalog(
+def build_catalog(  # noqa: PLR0913
     paths: list[str],
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
-    depth: int = 0,
     n_jobs: int = 1,
+    skip: SkipFunction | None = None,
+    error_if_none_valid: str | None = None,
 ) -> pd.DataFrame:
     """
     Build a catalog DataFrame by discovering and parsing dataset files
@@ -173,28 +184,37 @@ def build_catalog(
         Must return a dict with an ``INVALID_ASSET`` key on failure.
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``)
-    depth
-        Maximum directory depth to search
     n_jobs
         Number of parallel workers for parsing.
         ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many worker processes.
+    skip
+        Selects discovered files to leave unparsed, such as files already in the database.
+    error_if_none_valid
+        Message for the ``ValueError`` raised when files were parsed but none were valid.
+        If not set, an empty DataFrame is returned instead.
 
     Returns
     -------
     :
-        DataFrame containing parsed metadata for all valid files
+        DataFrame containing parsed metadata for all valid files.
+        Empty if ``skip`` selects every discovered file.
 
     Raises
     ------
     ValueError
-        If no files matching the include patterns are found in the specified paths
+        If no files matching the include patterns are found in the specified paths,
+        or if ``error_if_none_valid`` is set and no parsed file is valid
     """
-    assets = discover_files(paths, include_patterns=include_patterns, depth=depth)
+    assets = discover_files(paths, include_patterns=include_patterns)
 
     if not assets:
         raise ValueError(f"No files matching {include_patterns} found in {paths}")
 
     logger.info(f"Discovered {len(assets)} files matching {include_patterns} in {paths}")
+
+    assets = _without_skipped(assets, skip)
+    if not assets:
+        return pd.DataFrame()
 
     entries = parse_files(assets, parsing_func, n_jobs=n_jobs)
     df = pd.DataFrame(entries)
@@ -202,13 +222,16 @@ def build_catalog(
 
     logger.info(f"Built catalog with {len(df)} valid entries ({len(assets) - len(df)} invalid)")
 
+    if df.empty and error_if_none_valid is not None:
+        logger.error("No datasets found")
+        raise ValueError(error_if_none_valid)
+
     return df
 
 
 def iter_discovered_chunks(
     paths: list[str],
     include_patterns: list[str] | None = None,
-    depth: int = 0,
     chunk_size: int = 10_000,
 ) -> Iterator[list[str]]:
     """
@@ -216,7 +239,7 @@ def iter_discovered_chunks(
 
     Walks the directory tree once and yields batches of up to ``chunk_size`` paths.
     Batches only flush at directory boundaries, so files within a single directory are kept together.
-    This assumption holds for the current directory structures used by CMIP6 and CMIP7.
+    This assumption holds for the directory structures used by the built-in adapters.
 
     Parameters
     ----------
@@ -225,8 +248,6 @@ def iter_discovered_chunks(
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``).
         Defaults to ``["*"]``.
-    depth
-        Maximum directory depth below each root to search.
     chunk_size
         Soft target for the number of files per batch. A batch may exceed
         this if a single directory contains more matching files.
@@ -257,12 +278,7 @@ def iter_discovered_chunks(
                 yield from _flush()
             continue
 
-        for dirpath, dirnames, filenames in os.walk(root):
-            dirnames.sort()
-            current_depth = len(Path(dirpath).relative_to(root).parts)
-            if current_depth >= depth:
-                dirnames.clear()
-
+        for dirpath, filenames in _walk_sorted(root):
             matched = [
                 os.path.join(dirpath, fn)
                 for fn in filenames
@@ -276,6 +292,42 @@ def iter_discovered_chunks(
             buffer.extend(matched)
 
     yield from _flush()
+
+
+def _iter_unskipped_chunks(
+    paths: list[str],
+    include_patterns: list[str] | None,
+    chunk_size: int,
+    skip: SkipFunction | None,
+) -> Iterator[list[str]]:
+    """
+    Yield discovered paths not selected by ``skip``, regrouped into chunks of up to ``chunk_size``.
+
+    Regrouping keeps a mostly skipped walk from parsing (and starting workers for) many tiny chunks.
+    Each discovered chunk is kept whole, so files from one directory stay together.
+    """
+    buffer: list[str] = []
+    for discovered in iter_discovered_chunks(paths, include_patterns=include_patterns, chunk_size=chunk_size):
+        remaining = _without_skipped(discovered, skip)
+        if buffer and len(buffer) + len(remaining) > chunk_size:
+            yield buffer
+            buffer = []
+        buffer.extend(remaining)
+    if buffer:
+        yield buffer
+
+
+def _without_skipped(assets: list[str], skip: SkipFunction | None) -> list[str]:
+    """
+    Drop the paths selected by ``skip`` from ``assets``, logging how many were dropped.
+    """
+    if skip is None:
+        return assets
+    skipped = skip(assets)
+    remaining = [asset for asset in assets if asset not in skipped]
+    if len(remaining) < len(assets):
+        logger.info(f"Skipping {len(assets) - len(remaining)} of {len(assets)} files")
+    return remaining
 
 
 def _filter_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
@@ -300,9 +352,9 @@ def iter_built_catalogs(  # noqa: PLR0913
     paths: list[str],
     parsing_func: DatasetParsingFunction,
     include_patterns: list[str] | None = None,
-    depth: int = 0,
     n_jobs: int = 1,
     chunk_size: int = 10_000,
+    skip: SkipFunction | None = None,
 ) -> Iterator[pd.DataFrame]:
     """
     Yield catalog DataFrames in chunks, parsing files chunk by chunk.
@@ -319,12 +371,14 @@ def iter_built_catalogs(  # noqa: PLR0913
         Must return a dict with an ``INVALID_ASSET`` key on failure.
     include_patterns
         Glob patterns to include (e.g. ``["*.nc"]``).
-    depth
-        Maximum directory depth to search.
     n_jobs
         Number of parallel workers per chunk for parsing.
     chunk_size
         Soft target for the number of files per chunk.
+    skip
+        Selects discovered files to leave unparsed, such as files already in the database.
+        It is called once per discovered chunk, so it only ever sees about ``chunk_size`` paths at a time.
+        The files that remain are batched back up to ``chunk_size`` before parsing.
 
     Yields
     ------
@@ -332,10 +386,10 @@ def iter_built_catalogs(  # noqa: PLR0913
         DataFrames with parsed metadata for each chunk. Empty chunks
         (all invalid) are skipped.
     """
+    any_parsed = False
     any_emitted = False
-    for chunk_paths in iter_discovered_chunks(
-        paths, include_patterns=include_patterns, depth=depth, chunk_size=chunk_size
-    ):
+    for chunk_paths in _iter_unskipped_chunks(paths, include_patterns, chunk_size, skip):
+        any_parsed = True
         logger.info(f"Parsing chunk of {len(chunk_paths)} files")
         entries = parse_files(chunk_paths, parsing_func, n_jobs=n_jobs)
         df = pd.DataFrame(entries)
@@ -348,5 +402,5 @@ def iter_built_catalogs(  # noqa: PLR0913
         any_emitted = True
         yield df
 
-    if not any_emitted:
-        logger.info(f"No valid files found in {paths} matching {include_patterns}")
+    if not any_emitted and (skip is None or any_parsed):
+        logger.warning(f"No valid files found in {paths} matching {include_patterns}")

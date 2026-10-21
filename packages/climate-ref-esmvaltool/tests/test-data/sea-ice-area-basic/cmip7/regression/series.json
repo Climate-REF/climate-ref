@@ -10,6 +10,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "OSI-450-nh",
       "region": "Northern Hemisphere",
@@ -60,6 +61,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "OSI-450-nh",
       "region": "Northern Hemisphere",
@@ -173,6 +175,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "OSI-450-sh",
       "region": "Southern Hemisphere",
@@ -223,6 +226,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "OSI-450-sh",
       "region": "Southern Hemisphere",
@@ -352,6 +356,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Northern Hemisphere",
       "source_id": "CanESM5",
@@ -400,6 +405,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Northern Hemisphere",
       "source_id": "CanESM5",
@@ -511,6 +517,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Southern Hemisphere",
       "source_id": "CanESM5",
@@ -559,6 +566,7 @@
       "values_name": "siconc"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "region": "Southern Hemisphere",
       "source_id": "CanESM5",

@@ -39,19 +39,19 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": "siconc",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "SImon",
                         },
                     ),
                     FacetFilter(
                         facets={
                             "variable_id": "tas",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
                 ),
-                group_by=("experiment_id",),  # this does nothing, but group_by cannot be empty
+                group_by=("experiment_id",),  # one execution per experiment, spanning every model
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -83,7 +83,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "siconc_tavg-u-hxy-u",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -91,13 +91,13 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "tas_tavg-h2m-hxy-u",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
                     ),
                 ),
-                group_by=("experiment_id",),  # this does nothing, but group_by cannot be empty
+                group_by=("experiment_id",),  # one execution per experiment, spanning every model
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),

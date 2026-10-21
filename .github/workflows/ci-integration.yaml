@@ -59,13 +59,11 @@ jobs:
           uv run ref providers setup
       # Warm the shared intake-esgf cache (~/.esgf) here, as the single writer, so the
       # downstream test jobs only ever read from it.
-      # Per-test-case failures are logged and skipped inside the command,
-      # so a non-zero exit here means the fetch crashed and the sidecars are incomplete.
-      # Failing fast beats the confusing DatasetResolutionError cascade in the test-cases jobs.
+      # Complete the fetch loop, then fail if any required case could not be resolved.
       - name: Prefetch test-case data from ESGF
         timeout-minutes: 90
         run: |
-          uv run ref test-cases fetch
+          uv run ref test-cases fetch --strict
       - name: Verify paths sidecars were written to the shared cache
         run: |
           sidecar_root="${REF_DATASET_CACHE_DIR:?REF_DATASET_CACHE_DIR is not set on this runner}/test-case-paths"
@@ -122,6 +120,7 @@ jobs:
     runs-on: "arc-climate-ref"
     env:
       TQDM_DISABLE: "1"
+      REF_TEST_CASES_STRICT: "true"
       # Diagnostics whose full-resolution ESGF data is too large to fetch/run within CI limits
       REF_TEST_CASES_SKIP: "ilamb/thetao-woa2023-surface"
     strategy:
@@ -146,11 +145,14 @@ jobs:
         timeout-minutes: ${{ matrix.timeout || 60 }}
         run: |
           uv sync
-          uv run pytest packages/climate-ref-${{ matrix.provider }} -m test_cases --slow -v -r a
+          uv run pytest packages/climate-ref-${{ matrix.provider }} -m test_cases --slow -v -r a \
+            --basetemp=test-case-outputs --junitxml=test-case-results.xml
       - name: Upload test case outputs
         uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-case-outputs-${{ matrix.provider }}
-          path: ~/.climate-ref/results/
+          path: |
+            test-case-outputs/
+            test-case-results.xml
           retention-days: 7

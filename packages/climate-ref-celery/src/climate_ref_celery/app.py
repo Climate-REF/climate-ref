@@ -40,7 +40,9 @@ def setup_logging_handler(loglevel: int, **kwargs: Any) -> None:  # pragma: no c
     config = Config.default()
     msg_format = config.log_format
 
-    initialise_logging(level=loglevel, format=msg_format, log_directory=config.paths.log)
+    initialise_logging(
+        level=loglevel, format=msg_format, log_directory=config.paths.log, serialize=config.log_json
+    )
 
 
 @worker_ready.connect

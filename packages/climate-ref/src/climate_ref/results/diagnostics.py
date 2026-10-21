@@ -25,7 +25,7 @@ from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, MetricValueType
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
-from climate_ref.results._query import ExecutionScope, apply_execution_scope
+from climate_ref.results._query import ExecutionScope, InputDatasetFilter, apply_execution_scope
 from climate_ref.results._stats import rows_to_execution_stats
 from climate_ref.results.executions import ExecutionStats, select_execution_statistics
 
@@ -46,6 +46,13 @@ class DiagnosticFilter:
 
     diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on diagnostic slug (OR-combined)."""
+
+    input_datasets: InputDatasetFilter | None = None
+    """
+    Keep only execution groups with an execution that ran against matching datasets.
+
+    This scopes the counts as well, and drops diagnostics left with no groups.
+    """
 
 
 @attrs.frozen(kw_only=True)
@@ -152,19 +159,19 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     ``execution_group_count`` counts every ``ExecutionGroup`` row for the diagnostic
     (all versions, not scoped to ``promoted_version``),
     so it reflects the diagnostic's full execution history.
+    With ``filters.input_datasets`` it counts only matching groups, and diagnostics without one are dropped.
     Ordered by ``(Provider.slug, Diagnostic.slug, Diagnostic.id)``.
     The diagnostic primary key is the final tiebreak so SQL pagination is deterministic across pages.
     """
     filters = filters or DiagnosticFilter()
 
-    group_count_subquery = (
-        select(
-            ExecutionGroup.diagnostic_id,
-            func.count(ExecutionGroup.id).label("execution_group_count"),
-        )
-        .group_by(ExecutionGroup.diagnostic_id)
-        .subquery()
-    )
+    group_count_stmt = select(
+        ExecutionGroup.diagnostic_id,
+        func.count(ExecutionGroup.id).label("execution_group_count"),
+    ).group_by(ExecutionGroup.diagnostic_id)
+    if filters.input_datasets:
+        group_count_stmt = group_count_stmt.where(filters.input_datasets.execution_group_clause())
+    group_count_subquery = group_count_stmt.subquery()
 
     stmt = (
         select(
@@ -175,7 +182,11 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
             func.coalesce(group_count_subquery.c.execution_group_count, 0).label("execution_group_count"),
         )
         .join(Provider, Diagnostic.provider_id == Provider.id)
-        .outerjoin(group_count_subquery, Diagnostic.id == group_count_subquery.c.diagnostic_id)
+        .join(
+            group_count_subquery,
+            Diagnostic.id == group_count_subquery.c.diagnostic_id,
+            isouter=filters.input_datasets is None,
+        )
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
 
@@ -241,6 +252,8 @@ def select_diagnostics_with_values(
     has_values = apply_execution_scope(has_values, ExecutionScope(include_retracted=False))
     if execution_group_where is not None:
         has_values = has_values.where(execution_group_where)
+    if filters.input_datasets:
+        has_values = has_values.where(filters.input_datasets.execution_clause())
 
     stmt = (
         select(
@@ -320,6 +333,7 @@ class DiagnosticsReader:
         stats = self.stats(
             provider_contains=filters.provider_contains,
             diagnostic_contains=filters.diagnostic_contains,
+            input_datasets=filters.input_datasets,
         )
         stats_by_key = {(s.provider, s.diagnostic): s for s in stats}
         items = tuple(self._to_view(row, stats_by_key) for row in rows)
@@ -342,6 +356,7 @@ class DiagnosticsReader:
         *,
         diagnostic_contains: Sequence[str] | None = None,
         provider_contains: Sequence[str] | None = None,
+        input_datasets: InputDatasetFilter | None = None,
     ) -> tuple[ExecutionStats, ...]:
         """
         Per-(provider, diagnostic) execution status counts.
@@ -353,6 +368,8 @@ class DiagnosticsReader:
         just reachable under the diagnostics domain.
         """
         stmt = select_execution_statistics(
-            diagnostic_contains=diagnostic_contains, provider_contains=provider_contains
+            diagnostic_contains=diagnostic_contains,
+            provider_contains=provider_contains,
+            input_datasets=input_datasets,
         )
         return rows_to_execution_stats(self.session.execute(stmt).all())

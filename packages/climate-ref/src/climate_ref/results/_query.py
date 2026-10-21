@@ -16,10 +16,11 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import ColumnElement, Select, and_, false, func, or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.dataset_query import _as_facets, _entity_for
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.metric_value import (
     MetricValue,
@@ -28,6 +29,55 @@ from climate_ref.models.metric_value import (
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
+from climate_ref_core.source_types import SourceDatasetType
+
+
+@attrs.frozen(kw_only=True)
+class InputDatasetFilter:
+    """
+    Match executions by the datasets they ran against.
+
+    An execution matches when one of its input datasets has one of ``source_types``
+    and satisfies every facet in ``facets`` (values for one facet are OR-combined).
+    A source type whose dataset table lacks a requested facet cannot match,
+    so a CMIP7-only facet does not pull in all of CMIP6.
+
+    Raises
+    ------
+    ValueError
+        If ``source_types`` is empty, or a facet is a column on none of the ``source_types``.
+    """
+
+    source_types: tuple[SourceDatasetType, ...] = attrs.field(converter=tuple)
+    """Dataset types to match against, e.g. ``(SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)``."""
+
+    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
+    """Dataset columns to match, e.g. ``{"source_id": ("ACCESS-CM2",)}``. ``None`` matches any dataset."""
+
+    def __attrs_post_init__(self) -> None:
+        if not self.source_types:
+            raise ValueError("`source_types` must name at least one dataset type")
+        for facet in self.facets or {}:
+            if not any(facet in _entity_for(t).__mapper__.columns for t in self.source_types):
+                names = ", ".join(t.value for t in self.source_types)
+                raise ValueError(f"Unknown facet {facet!r} for {names}")
+
+    def execution_clause(self) -> ColumnElement[bool]:
+        """Clause over ``Execution`` that is true when the execution ran against a matching dataset."""
+        facets = self.facets or {}
+        branches = []
+        for source_type in self.source_types:
+            entity = _entity_for(source_type)
+            if any(facet not in entity.__mapper__.columns for facet in facets):
+                continue
+            conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
+            branches.append(Execution.datasets.of_type(entity).any(and_(*conditions)))
+        # An empty or_() emits no predicate, which would match every execution.
+        return or_(*branches) if branches else false()
+
+    def execution_group_clause(self) -> ColumnElement[bool]:
+        """Clause over ``ExecutionGroup`` that is true when any of its executions matches."""
+        return ExecutionGroup.executions.any(self.execution_clause())
 
 
 @attrs.frozen(kw_only=True)
@@ -117,6 +167,9 @@ class MetricValueFilter(ExecutionScope):
     promoted_only: bool = True
     """Restrict to execution groups at the diagnostic's currently promoted version."""
 
+    input_datasets: InputDatasetFilter | None = None
+    """Restrict to values produced by executions that ran against matching datasets."""
+
     def dimension_clauses(self, entity: type[MetricValue]) -> list[Any]:
         """
         Build validated SQLAlchemy clauses for the dynamic CV dimension columns.
@@ -155,7 +208,12 @@ def _apply_common(  # noqa: PLR0912
         or f.promoted_only
     )
     needs_exec = bool(
-        f.execution_ids or f.execution_group_ids or needs_diag or not f.include_retracted or f.latest_only
+        f.execution_ids
+        or f.execution_group_ids
+        or f.input_datasets
+        or needs_diag
+        or not f.include_retracted
+        or f.latest_only
     )
 
     if needs_exec:
@@ -165,6 +223,8 @@ def _apply_common(  # noqa: PLR0912
         stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
     if f.execution_group_ids:
         stmt = stmt.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
+    if f.input_datasets:
+        stmt = stmt.where(f.input_datasets.execution_clause())
 
     if needs_diag:
         stmt = stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)

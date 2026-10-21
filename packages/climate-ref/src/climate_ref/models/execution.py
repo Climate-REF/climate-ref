@@ -8,6 +8,7 @@ from loguru import logger
 from sqlalchemy import (
     BigInteger,
     Column,
+    ColumnElement,
     Float,
     ForeignKey,
     String,
@@ -817,6 +818,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     latest_successful: bool | None = None,
     include_superseded: bool = False,
     failure_reasons: Sequence[ExecutionFailureReason] | None = None,
+    group_conditions: Sequence[ColumnElement[bool]] | None = None,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
     Query execution groups with filtering capabilities.
@@ -842,6 +844,9 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     facet_filters
         Dictionary mapping facet keys to lists of allowed values.
         Different keys are ANDed; multiple values for the same key are ORed.
+        These match each group's ``selectors`` in Python.
+        To match the datasets an execution ran against in SQL, pass an
+        ``InputDatasetFilter`` clause through ``group_conditions`` instead.
     dirty
         If True, only return dirty execution groups.
         If False, only return clean execution groups.
@@ -868,10 +873,21 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         Post-rank filter on the *winning* execution.
         If provided, only return execution groups whose latest execution failed for one of these reasons.
         If None, do not filter by failure reason.
+    group_conditions
+        Extra SQL conditions over ``ExecutionGroup``, ANDed with the other filters.
+        For example, to keep only groups that ran against ACCESS-ESM1-5 CMIP6 data:
+
+        ```python
+        scope = InputDatasetFilter(
+            source_types=(SourceDatasetType.CMIP6,),
+            facets={"source_id": ("ACCESS-ESM1-5",)},
+        )
+        get_execution_group_and_latest_filtered(session, group_conditions=[scope.execution_group_clause()])
+        ```
 
     Returns
     -------
-        Query returning tuples of (ExecutionGroup, latest Execution or None)
+        List of (ExecutionGroup, latest Execution or None) tuples, ordered by group id
 
     Notes
     -----
@@ -930,6 +946,11 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
             query = query.filter(ExecutionGroup.dirty.is_(True))
         else:
             query = query.filter(or_(ExecutionGroup.dirty.is_(False), ExecutionGroup.dirty.is_(None)))
+
+    for condition in group_conditions or ():
+        query = query.filter(condition)
+
+    query = query.order_by(ExecutionGroup.id)
 
     if facet_filters:
         # Load all results into memory for Python-based filtering

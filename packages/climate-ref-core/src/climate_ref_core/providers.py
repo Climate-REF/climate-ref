@@ -25,7 +25,7 @@ from typing import Any
 
 import requests
 import yaml
-from attrs import evolve
+from attrs import evolve, frozen
 from loguru import logger
 
 from climate_ref_core.constraints import IgnoreFacets
@@ -37,6 +37,7 @@ from climate_ref_core.exceptions import (
     InvalidDiagnosticException,
     InvalidProviderException,
 )
+from climate_ref_core.logging import execution_log_only
 
 
 def _slugify(value: str) -> str:
@@ -54,6 +55,19 @@ def _slugify(value: str) -> str:
         Slugified string.
     """
     return value.lower().replace(" ", "-")
+
+
+@frozen
+class DataIngestRequest:
+    """
+    A directory of fetched provider data that the application should ingest into its database.
+    """
+
+    source_type: SourceDatasetType
+    """Source type whose dataset adapter parses the files"""
+
+    path: Path
+    """Directory containing the files to ingest"""
 
 
 class DiagnosticProvider:
@@ -202,15 +216,16 @@ class DiagnosticProvider:
         self,
         config: Any,
         *,
-        db: Any = None,
         skip_env: bool = False,
         skip_data: bool = False,
     ) -> None:
         """
         Perform all setup required before offline execution.
 
-        This calls setup_environment, fetch_data, and ingest_data in the correct order.
+        This calls setup_environment and fetch_data in the correct order.
         Override individual hooks for fine-grained control.
+        Ingesting the fetched data is left to the application,
+        which reads what to ingest from `data_to_ingest`.
 
         This method MUST be idempotent - safe to call multiple times.
 
@@ -218,11 +233,6 @@ class DiagnosticProvider:
         ----------
         config
             The application configuration
-        db
-            Optional database instance for data ingestion.
-
-            If None, ingestion is skipped. This allows providers to be set up without the full
-            climate-ref package (e.g., for environment setup or data fetching only).
         skip_env
             If True, skip environment setup (e.g., conda)
         skip_data
@@ -232,8 +242,6 @@ class DiagnosticProvider:
             self.setup_environment(config)
         if not skip_data:
             self.fetch_data(config)
-            if db is not None:
-                self.ingest_data(config, db)
 
     def setup_environment(self, config: Any) -> None:
         """
@@ -275,41 +283,35 @@ class DiagnosticProvider:
         """
         pass
 
-    def ingest_data(self, config: Any, db: Any) -> None:
+    def data_to_ingest(self, config: Any) -> list[DataIngestRequest]:
         """
-        Ingest fetched data into the database.
+        Describe the fetched data that needs ingesting into the database.
 
-        This is called after fetch_data to register any provider-specific
-        datasets in the database. For example, PMP climatology data needs
-        to be ingested so it can be used by diagnostics.
+        `ref providers setup` ingests each request after fetch_data,
+        using `climate_ref.datasets.ingest_provider_data`,
+        so the solver can find provider-specific datasets such as the PMP climatologies.
 
-        Default implementation does nothing. Override in subclasses
-        that have data to ingest.
-
-        This method MUST be idempotent.
-
-        Note: This method is only called when a database instance is provided
-        to setup(). The database and ingestion utilities are part of the
-        climate-ref package, not climate-ref-core. Provider implementations
-        should handle ImportError gracefully if they need to import from
-        climate-ref, allowing the provider to work standalone without
-        the full climate-ref package installed.
+        Default implementation returns no requests.
+        Override in subclasses that have data to ingest.
 
         Parameters
         ----------
         config
             The application configuration
-        db
-            The database instance (from climate-ref package)
+
+        Returns
+        -------
+        :
+            The directories to ingest
         """
-        pass
+        return []
 
     def validate_setup(self, config: Any) -> bool:
         """
         Validate that the provider is ready for offline execution.
 
         Returns True if setup is complete and valid, False otherwise.
-        Default implementation returns True.
+        The default implementation logs and fails on any `check_health` problem.
 
         Parameters
         ----------
@@ -321,7 +323,29 @@ class DiagnosticProvider:
         bool
             True if setup is valid and complete
         """
-        return True
+        problems = self.check_health(config)
+        for problem in problems:
+            logger.error(problem)
+        return not problems
+
+    def check_health(self, config: Any) -> list[str]:
+        """
+        Check that the provider can launch a diagnostic on this host right now.
+
+        Unlike `validate_setup`, this must be cheap enough to run before every solve.
+        The default implementation reports no problems.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+
+        Returns
+        -------
+        :
+            A description of each problem found, empty when the provider is healthy
+        """
+        return []
 
     def get_data_path(self) -> Path | None:
         """
@@ -478,6 +502,16 @@ MICROMAMBA_EXE_URL = (
 MICROMAMBA_MAX_AGE = datetime.timedelta(days=7)
 """Do not update if the micromamba executable is younger than this age."""
 
+COMMAND_OUTPUT_TAIL_LINES = 50
+"""Lines of a failed command's output that are logged to the console."""
+
+MICROMAMBA_FAILURE_PREFIX = "critical libmamba"
+"""Output line prefix written when micromamba itself fails, before the wrapped command runs."""
+
+
+HEALTH_CHECK_TIMEOUT_SECONDS = 300
+"""Upper bound on a provider health check, which can be slow on a cold network filesystem."""
+
 
 def _get_micromamba_url() -> str:
     """
@@ -534,7 +568,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         Environment variables overriding the process environment
         for commands run in the conda environment.
     pip_packages
-        Pip packages to install (as URLs) with ``--no-deps``
+        Pip packages to install (as URLs) with ``--no-deps --force-reinstall``
         after creating the conda environment.
 
     """
@@ -567,7 +601,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
-    def _launch_env(self) -> dict[str, str]:
+    def _launch_env(self, *, use_lockfiles: bool = True) -> dict[str, str]:
         """
         Environment for a command launched in the conda environment.
 
@@ -575,10 +609,20 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         so settings applied to a worker reach every command it launches,
         with the provider's overrides on top.
         HOME falls back to the conda prefix so micromamba has a writable directory.
+
+        Parameters
+        ----------
+        use_lockfiles
+            Whether micromamba should take its file locks.
+            Disable this for commands that only read the environment.
+            An explicit ``MAMBA_USE_LOCKFILES`` in the process environment
+            or in `env_overrides` always wins.
         """
         env = {**os.environ, **self.env_overrides}
         if "HOME" not in env:
             env["HOME"] = str(self.prefix)
+        if not use_lockfiles:
+            env.setdefault("MAMBA_USE_LOCKFILES", "false")
         return env
 
     @property
@@ -708,6 +752,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                     "pip",
                     "install",
                     "--no-deps",
+                    "--force-reinstall",
                     pkg,
                 ]
                 logger.debug(f"Running {' '.join(cmd)}")
@@ -728,56 +773,79 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             If the command fails
 
         """
-        if not self.env_path.exists():
+        env_path = self.env_path
+        if not env_path.exists():
             msg = (
                 f"Conda environment for provider `{self.slug}` not available at "
-                f"{self.env_path}. Please install it by running the command "
+                f"{env_path}. Please install it by running the command "
                 f"`ref providers create-env --provider {self.slug}`"
             )
             raise RuntimeError(msg)
 
-        cmd = [
-            f"{self.get_conda_exe(update=False)}",
-            "run",
-            "--prefix",
-            f"{self.env_path}",
-            *cmd,
-        ]
+        cmd = self._run_command(self.get_conda_exe(update=False), env_path, cmd)
         logger.info(f"Running '{' '.join(cmd)}'")
         try:
             # This captures the log output until the execution is complete
             # We could poll using `subprocess.Popen` if we want something more responsive
-            res = subprocess.run(  # noqa: S603
-                cmd,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                env=self._launch_env(),
-            )
+            res = self._launch(cmd)
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")
         except subprocess.CalledProcessError as e:
-            # These are logged to the execution log
-            logger.error(f"Failed to run {cmd}")
-            logger.error(f"stdout: {e.stdout}")
-            logger.error(f"stderr: {e.stderr}")
-            # This will be shown in the solve log
-            raise CondaCommandError(f"Failed to run {cmd}", stdout=e.stdout, stderr=e.stderr) from e
+            output = e.stdout or ""
+            message = f"Command exited with code {e.returncode}: {cmd}"
+            # The full output goes to the execution log, the tail also to the console
+            execution_log_only().error("Command output: \n" + output)
+            tail = "\n".join(output.splitlines()[-COMMAND_OUTPUT_TAIL_LINES:])
+            logger.error(f"{message}\nLast lines of output:\n{tail}")
+            raise CondaCommandError(
+                message,
+                stdout=e.stdout,
+                stderr=e.stderr,
+                launch_failed=any(line.startswith(MICROMAMBA_FAILURE_PREFIX) for line in output.splitlines()),
+            ) from e
+
+    @staticmethod
+    def _run_command(conda_exe: Path, env_path: Path, cmd: Iterable[str]) -> list[str]:
+        return [str(conda_exe), "run", "--prefix", str(env_path), *cmd]
+
+    def _launch(self, cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(  # noqa: S603
+            cmd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            env=self._launch_env(use_lockfiles=False),
+            **kwargs,
+        )
 
     def setup_environment(self, config: Any) -> None:
         """Set up the conda environment."""
         self.create_env()
 
-    def validate_setup(self, config: Any) -> bool:
-        """Validate conda environment exists."""
-        env_exists = self.env_path.exists()
-        if not env_exists:
-            logger.error(
-                f"Conda environment for {self.slug} is not available at {self.env_path}. "
-                f"Please run `ref providers setup --provider {self.slug}` to install it."
-            )
+    def check_health(self, config: Any) -> list[str]:
+        """
+        Check that a command can be launched inside the conda environment.
 
-        # TODO: Could add more validation here (e.g., check packages installed)
+        This runs a trivial command through `micromamba run`,
+        the same way `run` launches a diagnostic,
+        so it catches a missing environment or a launcher that fails before the diagnostic starts.
+        """
+        remedy = f"Run `ref providers setup --provider {self.slug}` to install it."
+        conda_exe = self.conda_exe_path
+        env_path = self.env_path
+        if not conda_exe.exists():
+            return [f"micromamba is not available at {conda_exe}. {remedy}"]
+        if not env_path.exists():
+            return [f"Conda environment for {self.slug} is not available at {env_path}. {remedy}"]
 
-        return env_exists
+        cmd = self._run_command(conda_exe, env_path, ["python", "-c", "pass"])
+        try:
+            self._launch(cmd, timeout=HEALTH_CHECK_TIMEOUT_SECONDS)
+        except subprocess.CalledProcessError as e:
+            return [f"`{' '.join(cmd)}` failed with exit code {e.returncode}:\n{e.stdout}"]
+        except subprocess.TimeoutExpired:
+            return [f"`{' '.join(cmd)}` did not finish within {HEALTH_CHECK_TIMEOUT_SECONDS}s"]
+        except OSError as e:
+            return [f"`{' '.join(cmd)}` could not be launched: {e}"]
+        return []

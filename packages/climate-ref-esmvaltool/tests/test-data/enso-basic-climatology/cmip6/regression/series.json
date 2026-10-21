@@ -11,6 +11,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "GPCP-V2.3",
@@ -96,6 +97,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "GPCP-V2.3",
@@ -181,6 +183,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "GPCP-V2.3",
@@ -266,6 +269,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "GPCP-V2.3",
@@ -531,6 +535,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "GPCP-V2.3",
@@ -796,6 +801,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "GPCP-V2.3",
@@ -1061,6 +1067,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "GPCP-V2.3",
@@ -1326,6 +1333,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "TROPFLUX",
@@ -1591,6 +1599,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "TROPFLUX",
@@ -1856,6 +1865,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "TROPFLUX",
@@ -2121,6 +2131,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "TROPFLUX",
@@ -2386,6 +2397,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "reference_source_id": "TROPFLUX",
@@ -2651,6 +2663,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -2734,6 +2747,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -2817,6 +2831,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -2900,6 +2915,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -3163,6 +3179,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -3426,6 +3443,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -3689,6 +3707,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -3952,6 +3971,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",
@@ -4215,6 +4235,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "source_id": "CanESM5",

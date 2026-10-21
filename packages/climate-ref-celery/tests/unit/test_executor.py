@@ -2,6 +2,12 @@ import pytest
 from climate_ref_celery.executor import CeleryExecutor
 from climate_ref_celery.routing import ROUTES_ENV_VAR, RoutingTableError
 from climate_ref_celery.worker_tasks import handle_failure, handle_result
+from climate_ref_example import provider as example_provider
+
+from climate_ref.database import Database
+from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.execution import ExecutionFailureReason
+from climate_ref.provider_registry import _register_provider
 
 
 @pytest.mark.parametrize("include_execution_result", [True, False])
@@ -117,3 +123,41 @@ def test_join_raises(mocker):
 
     with pytest.raises(TimeoutError):
         executor.join(0.1)
+
+
+class TestWaitForRecording:
+    @pytest.fixture
+    def execution_id(self, config):
+        db = Database.from_config(config, run_migrations=True)
+        with db.session.begin():
+            _register_provider(db, example_provider)
+            group = ExecutionGroup(diagnostic_id=1, key="recording", dirty=True)
+            execution = Execution(output_fragment="recording", dataset_hash="hash", execution_group=group)
+            db.session.add(execution)
+        return db, execution.id
+
+    def test_waits_until_outcome_is_recorded(self, config, execution_id, mocker):
+        db, id_ = execution_id
+        executor = CeleryExecutor(config=config, database=db)
+        executor._execution_ids = [id_]
+
+        def record(_):
+            with db.session_scope() as session:
+                session.get(Execution, id_).mark_failed(ExecutionFailureReason.SystemError)
+                session.commit()
+
+        sleep = mocker.patch("climate_ref_celery.executor.time.sleep", side_effect=record)
+
+        executor.join(timeout=10)
+
+        assert sleep.call_count == 1
+
+    def test_gives_up_after_grace_period(self, config, execution_id, mocker):
+        db, id_ = execution_id
+        executor = CeleryExecutor(config=config, database=db)
+        executor._execution_ids = [id_]
+        mocker.patch("climate_ref_celery.executor.RECORDING_GRACE_SECONDS", 0.0)
+
+        executor.join(timeout=0)
+
+        assert executor._execution_ids == []

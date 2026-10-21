@@ -1,5 +1,5 @@
 _metadata:
-  hash: 8fe7eddb18ede3fe8ed9689e02e4b11cf40da1ab
+  hash: 99a269b380775f35b86d63a397ebb9b91d4bf034
 pmp-climatology:
   slug_column: instance_id
   selector:
@@ -13,7 +13,7 @@ pmp-climatology:
     frequency: mon
     grid: 1.5x1.5 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
+    instance_id: obs4MIPs.ECMWF.ERA-5.mon.ts.gn.v20250224
     institution_id: ECMWF
     long_name: Surface Temperature
     nominal_resolution: 100 km

@@ -126,6 +126,25 @@ class TestFinalisationEdgeCases:
                 f"Expected {field}={expected!r}, got {result[field].iloc[0]!r}"
             )
 
+    def test_string_branch_time_fills_a_float_column(self, config, adapter_config, db):
+        """A catalog loaded from the database holds unparsed branch times as float NaN."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/fake/path.nc"])
+        df["branch_time_in_parent"] = np.nan
+        df["branch_time_in_child"] = np.nan
+        parsed = {
+            **adapter_config.successful_parsed_result,
+            "branch_time_in_parent": "488370",
+            "branch_time_in_child": "0D",
+        }
+
+        with patch(adapter_config.complete_parser_patch_path, return_value=parsed):
+            result = adapter.finalise_datasets(db, df)
+
+        assert result["finalised"].iloc[0]
+        assert result["branch_time_in_parent"].iloc[0] == 488370.0
+        assert result["branch_time_in_child"].iloc[0] == 0.0
+
     def test_partial_failure_finalises_only_successful_rows(self, config, adapter_config, db):
         """When one row fails and another succeeds, only the successful one is finalised."""
         adapter = adapter_config.adapter_cls(config=config)

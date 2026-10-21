@@ -2,17 +2,35 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 from loguru import logger
 
 from climate_ref.config import Config
-from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
+from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction, SkipFunction
 from climate_ref.datasets.catalog_builder import build_catalog, iter_built_catalogs
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.datasets.utils import build_instance_id, clean_branch_time, parse_cftime_dates
 from climate_ref.models.dataset import CMIP6Dataset
+
+
+def _primary_activity(item: str, value: Any) -> str:
+    """
+    Spell one DRS component the way the ``instance_id`` does.
+
+    A dataset can take part in several activities, and its ``activity_id`` then lists them
+    all (e.g. ``"C4MIP CDRMIP"``), whether it is read from the file's attributes or from a
+    directory named after them. The DRS uses only the first, so an id built from the value
+    verbatim names no dataset that ESGF publishes.
+
+    Narrowing it here rather than in a parser keeps the id the same whichever parser built
+    the catalog, and leaves the ``activity_id`` column itself reporting every activity the
+    dataset belongs to.
+    """
+    text = str(value)
+    return text.split(" ", 1)[0] if item == "activity_id" else text
 
 
 def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
@@ -191,6 +209,9 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         The caller owns ``datasets`` and the result,
         so we mutate in place to avoid an extra full-table copy in :func:`build_instance_id`.
         """
+        if datasets.empty:
+            return datasets
+
         if "init_year" in datasets.columns:
             datasets = datasets.drop(["init_year"], axis=1)
 
@@ -201,7 +222,9 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             datasets["end_time"] = parse_cftime_dates(datasets["end_time"], cal)
 
         drs_items = [*self.dataset_id_metadata, self.version_metadata]
-        datasets = build_instance_id(datasets, drs_items, prefix="CMIP6", copy=False)
+        datasets = build_instance_id(
+            datasets, drs_items, prefix="CMIP6", transform=_primary_activity, copy=False
+        )
 
         missing_columns = set(self.dataset_specific_metadata + self.file_specific_metadata) - set(
             datasets.columns
@@ -212,7 +235,7 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
         return _apply_fixes(datasets)
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip: SkipFunction | None = None) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
 
@@ -223,6 +246,8 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         ----------
         file_or_directory
             File or directory containing the datasets
+        skip
+            Selects files to leave out of the catalog, such as files already in the database
 
         Returns
         -------
@@ -235,14 +260,17 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             paths=[str(file_or_directory)],
             parsing_func=parsing_function,
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=self.n_jobs,
+            skip=skip,
         )
 
         return self._enrich_parsed_catalog(datasets)
 
     def iter_local_datasets(
-        self, file_or_directory: Path, chunk_size: int = 10_000
+        self,
+        file_or_directory: Path,
+        chunk_size: int = 10_000,
+        skip: SkipFunction | None = None,
     ) -> Iterator[pd.DataFrame]:
         """
         Stream the data catalog in chunks to bound peak memory.
@@ -259,6 +287,8 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         chunk_size
             Soft target for the number of files per chunk. Increasing this
             trades higher peak memory for fewer per-chunk overheads.
+        skip
+            Selects files to leave out of the catalog, such as files already in the database.
 
         Yields
         ------
@@ -272,9 +302,9 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             paths=[str(file_or_directory)],
             parsing_func=parsing_function,
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=self.n_jobs,
             chunk_size=chunk_size,
+            skip=skip,
         ):
             enriched = self._enrich_parsed_catalog(raw_chunk)
             if enriched.empty:

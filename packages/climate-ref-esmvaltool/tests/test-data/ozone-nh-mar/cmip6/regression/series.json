@@ -11,6 +11,7 @@
       "values_name": "toz"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gr1",
       "member_id": "r1i1p1f1",
       "source_id": "GFDL-ESM4",

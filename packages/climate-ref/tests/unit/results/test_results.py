@@ -1,11 +1,14 @@
 """Unit tests for the metric-value data access layer (spike)."""
 
+import datetime
 import math
 
+import attrs
 import pytest
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models import execution as models_execution
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.metric_value import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.results import (
@@ -13,7 +16,7 @@ from climate_ref.results import (
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results._query import latest_execution_for_group
+from climate_ref.results._query import latest_execution_for_group, select_latest_executions
 from climate_ref.results.frames import scalar_values_to_frame, series_values_to_frame
 from climate_ref.results.outliers import detect_scalar_outliers
 
@@ -268,6 +271,42 @@ class TestSeriesValues:
             assert col in df.columns
 
 
+class TestWithCount:
+    def test_scalar_without_count(self, dal_db, count_queries):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        with count_queries(dal_db) as counted:
+            full = values.scalar_values(filters, limit=3, with_facets=False)
+        with count_queries(dal_db) as uncounted:
+            page = values.scalar_values(filters, limit=3, with_facets=False, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1
+
+    def test_scalar_outliers_without_count(self, dal_db):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        policy = OutlierPolicy(method="iqr")
+        full = values.scalar_values(filters, outliers=policy)
+        page = values.scalar_values(filters, outliers=policy, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+
+    def test_series_without_count(self, dal_db, count_queries):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        with count_queries(dal_db) as counted:
+            full = values.series_values(filters, limit=1, with_facets=False)
+        with count_queries(dal_db) as uncounted:
+            page = values.series_values(filters, limit=1, with_facets=False, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1
+
+
 class TestFrameParity:
     """Both frame doors -- the frames.py builders and the collections' ``to_pandas()`` -- must emit
     identical columns and rows for the same DTOs, so no consumer sees a different scalar/series
@@ -352,6 +391,263 @@ class TestLatestExecutionForGroup:
         latest = latest_execution_for_group(session, group_id)
         assert latest is not None
         assert latest.id == newer_id
+
+
+def _add_execution(session, group_id, fragment, created_at):
+    execution = Execution(
+        execution_group_id=group_id,
+        output_fragment=fragment,
+        dataset_hash=f"hash-{fragment}",
+        successful=True,
+        created_at=created_at,
+    )
+    session.add(execution)
+    session.flush()
+    return execution.id
+
+
+class TestSelectLatestExecutions:
+    def test_newest_created_at_wins_over_higher_id(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            newest = _add_execution(session, group_id, "newest", datetime.datetime(2030, 1, 1))
+            _add_execution(session, group_id, "older", datetime.datetime(2029, 1, 1))
+        rows = session.execute(select_latest_executions()).all()
+        assert dict(rows)[group_id] == newest
+
+    def test_tied_created_at_picks_highest_id(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        tied_at = datetime.datetime(2030, 1, 1)
+        with session.begin():
+            ids = [_add_execution(session, group_id, f"tie-{i}", tied_at) for i in range(2)]
+        rows = session.execute(select_latest_executions()).all()
+        assert [r.execution_id for r in rows if r.execution_group_id == group_id] == [max(ids)]
+
+    def test_one_row_per_group(self, dal_db):
+        session = dal_db.session
+        rows = session.execute(select_latest_executions()).all()
+        group_ids = [r.execution_group_id for r in rows]
+        assert len(group_ids) == len(set(group_ids))
+        assert dal_db.execution_group_id in group_ids
+
+    def test_among_executions_picks_newest_matching(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            older_success = _add_execution(session, group_id, "older-ok", datetime.datetime(2030, 1, 1))
+            newer = _add_execution(session, group_id, "newer-failed", datetime.datetime(2031, 1, 1))
+            session.get(Execution, newer).successful = False
+        all_rows = dict(session.execute(select_latest_executions()).all())
+        successful_rows = dict(
+            session.execute(select_latest_executions([Execution.successful.is_(True)])).all()
+        )
+        assert all_rows[group_id] == newer
+        assert successful_rows[group_id] == older_success
+
+    def test_each_group_and_version_gets_its_own_latest(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            diagnostic_id = session.get(ExecutionGroup, dal_db.execution_group_id).diagnostic_id
+            groups = {}
+            for key, version in [("multi", 1), ("multi", 2), ("other", 1)]:
+                group = ExecutionGroup(
+                    key=key, diagnostic_id=diagnostic_id, diagnostic_version=version, selectors={}
+                )
+                session.add(group)
+                session.flush()
+                groups[key, version] = group.id
+            # Interleaved so the newest execution overall belongs to one group only.
+            expected = {}
+            for (key, version), group_id in groups.items():
+                for year in (2030, 2032, 2031):
+                    execution_id = _add_execution(
+                        session,
+                        group_id,
+                        f"{key}-v{version}-{year}",
+                        datetime.datetime(year, 1, 1, version),
+                    )
+                    if year == 2032:
+                        expected[group_id] = execution_id
+        rows = dict(session.execute(select_latest_executions()).all())
+        assert {group_id: rows[group_id] for group_id in groups.values()} == expected
+
+    def test_latest_only_follows_the_promoted_version(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            diagnostic = session.get(ExecutionGroup, dal_db.execution_group_id).diagnostic
+            latest = {}
+            for version in (1, 2):
+                group = ExecutionGroup(
+                    key="versioned", diagnostic_id=diagnostic.id, diagnostic_version=version, selectors={}
+                )
+                session.add(group)
+                session.flush()
+                for year in (2030, 2031):
+                    execution_id = _add_execution(
+                        session, group.id, f"versioned-v{version}-{year}", datetime.datetime(year, 1, 1)
+                    )
+                    session.add(
+                        ScalarMetricValue.build(
+                            execution_id=execution_id,
+                            value=float(version),
+                            attributes=None,
+                            dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                        )
+                    )
+                latest[version] = execution_id
+            diagnostic.promoted_version = 2
+
+        values = Reader(dal_db).values
+        promoted = values.scalar_values(MetricValueFilter(latest_only=True))
+        assert {v.execution_id for v in promoted.items} == {latest[2]}
+        every_version = values.scalar_values(MetricValueFilter(latest_only=True, include_superseded=True))
+        assert {latest[1], latest[2]} <= {v.execution_id for v in every_version.items}
+
+    def test_among_executions_drops_groups_without_a_match(self, dal_db):
+        session = dal_db.session
+        rows = session.execute(select_latest_executions([Execution.output_fragment == "no-such"])).all()
+        assert rows == []
+
+    def test_results_re_exports_the_models_builder(self):
+        assert select_latest_executions is models_execution.select_latest_executions
+
+
+class TestLatestOnly:
+    def test_drops_values_from_superseded_execution(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            newer = _add_execution(session, group_id, "newer", datetime.datetime(2030, 1, 1))
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=newer,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        reader = Reader(dal_db)
+        latest = reader.values.scalar_values(MetricValueFilter(latest_only=True))
+        assert {v.execution_id for v in latest.items} == {newer}
+        assert len(latest) == 1
+        everything = reader.values.scalar_values(MetricValueFilter())
+        assert len(everything) == 9
+
+    def test_keeps_all_values_of_sole_execution(self, dal_db):
+        reader = Reader(dal_db)
+        assert len(reader.values.scalar_values(MetricValueFilter(latest_only=True))) == len(
+            reader.values.scalar_values(MetricValueFilter())
+        )
+        assert len(reader.values.series_values(MetricValueFilter(latest_only=True))) == 2
+
+
+class TestRetracted:
+    @pytest.fixture
+    def retracted_latest(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            execution_id = _add_execution(
+                session, dal_db.execution_group_id, "retracted", datetime.datetime(2030, 1, 1)
+            )
+            session.get(Execution, execution_id).retracted = True
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution_id,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        return execution_id
+
+    def test_excluded_by_default(self, dal_db, retracted_latest):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter())
+        assert retracted_latest not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_include_retracted(self, dal_db, retracted_latest):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter(include_retracted=True))
+        assert len(values) == 9
+
+    def test_retracted_latest_execution_still_wins_its_group(self, dal_db, retracted_latest):
+        reader = Reader(dal_db).values
+        assert len(reader.scalar_values(MetricValueFilter(latest_only=True))) == 0
+        latest = reader.scalar_values(MetricValueFilter(latest_only=True, include_retracted=True))
+        assert {v.execution_id for v in latest.items} == {retracted_latest}
+
+
+class TestPromotedOnly:
+    @pytest.fixture
+    def superseded_execution(self, dal_db):
+        """A group at version 2 holds one value, while the diagnostic stays promoted at version 1."""
+        session = dal_db.session
+        with session.begin():
+            original = session.get(ExecutionGroup, dal_db.execution_group_id)
+            group = ExecutionGroup(
+                key=original.key, diagnostic_id=original.diagnostic_id, selectors={}, diagnostic_version=2
+            )
+            session.add(group)
+            session.flush()
+            execution_id = _add_execution(session, group.id, "superseded", datetime.datetime(2030, 1, 1))
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution_id,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        return execution_id
+
+    def test_default_drops_unpromoted_versions(self, dal_db, superseded_execution):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter())
+        assert superseded_execution not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_include_superseded_keeps_every_version(self, dal_db, superseded_execution):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter(include_superseded=True))
+        assert len(values) == 9
+
+    def test_latest_only_is_per_group_across_versions(self, dal_db, superseded_execution):
+        reader = Reader(dal_db).values
+        promoted = reader.scalar_values(MetricValueFilter(latest_only=True))
+        assert superseded_execution not in {v.execution_id for v in promoted.items}
+        assert len(promoted) == 8
+        every_version = reader.scalar_values(MetricValueFilter(latest_only=True, include_superseded=True))
+        assert len(every_version) == 9
+
+
+class TestPromotedOnlyAlias:
+    def test_default_excludes_superseded(self):
+        assert not MetricValueFilter().include_superseded
+        assert MetricValueFilter() == MetricValueFilter(include_superseded=False)
+
+    @pytest.mark.parametrize(("promoted_only", "include_superseded"), [(True, False), (False, True)])
+    def test_maps_onto_include_superseded(self, promoted_only, include_superseded):
+        with pytest.warns(DeprecationWarning, match="include_superseded"):
+            f = MetricValueFilter(promoted_only=promoted_only)
+        assert f.include_superseded is include_superseded
+        assert f == MetricValueFilter(include_superseded=include_superseded)
+
+    def test_disagreeing_values_raise(self):
+        with pytest.raises(ValueError, match="disagree"):
+            MetricValueFilter(promoted_only=True, include_superseded=True)
+
+    def test_agreeing_values_are_accepted(self):
+        with pytest.warns(DeprecationWarning):
+            assert MetricValueFilter(promoted_only=False, include_superseded=True).include_superseded
+
+    @pytest.mark.parametrize(("promoted_only", "include_superseded"), [(True, False), (False, True)])
+    def test_evolve_applies_alias(self, promoted_only, include_superseded):
+        with pytest.warns(DeprecationWarning):
+            f = attrs.evolve(MetricValueFilter(), promoted_only=promoted_only)
+        assert bool(f.include_superseded) is include_superseded
+
+    def test_evolve_keeps_resolved_value(self):
+        f = attrs.evolve(MetricValueFilter(include_superseded=True), latest_only=True)
+        assert f.include_superseded is True
 
 
 class _FakeScalar:

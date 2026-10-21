@@ -88,7 +88,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     name = "Sea ice area basic"
     slug = "sea-ice-area-basic"
     base_recipe = "ref/recipe_ref_sea_ice_area_basic.yml"
-    version = 2
+    version = 4
 
     data_requirements = (
         (
@@ -98,12 +98,12 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": "siconc",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "SImon",
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -123,13 +123,13 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "siconc_tavg-u-hxy-u",
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -167,7 +167,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     series = tuple(
         SeriesDefinition(
             file_pattern=f"siarea_min/allplots/timeseries_sea_ice_area_{region}_*.nc",
-            sel={"dim0": i},
+            sel={"dataset": "{source_id}" if i == 0 else f"OSI-450-{region}"},
             dimensions=(
                 {
                     "region": REGIONS[region],
@@ -184,7 +184,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     ) + tuple(
         SeriesDefinition(
             file_pattern=f"siarea_seas/allplots/annual_cycle_sea_ice_area_{region}_*.nc",
-            sel={"dim0": i},
+            sel={"dataset": "{source_id}" if i == 0 else f"OSI-450-{region}"},
             dimensions=(
                 {
                     "region": REGIONS[region],

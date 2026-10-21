@@ -27,11 +27,11 @@ Provided fixtures
 from __future__ import annotations
 
 import atexit
+import fcntl
 import os
 import re
-import tempfile
-from collections.abc import Callable, Iterator
-from contextlib import ExitStack
+from collections.abc import Callable, Generator, Iterator
+from contextlib import ExitStack, contextmanager
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
@@ -49,7 +49,7 @@ from climate_ref.config import (
     DiagnosticProviderConfig,
 )
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
-from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
+from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, Obs4REFDatasetAdapter
 from climate_ref.models import Execution
 from climate_ref.solve_helpers import load_solve_catalog
 from climate_ref.solver import solve_executions
@@ -111,10 +111,65 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 
 
 @pytest.fixture(scope="session")
-def tmp_path_session() -> Iterator[Path]:
-    """Session-scoped temporary directory."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        yield Path(tmpdir)
+def shared_session_dir(tmp_path_factory: pytest.TempPathFactory, request: pytest.FixtureRequest) -> Path:
+    """Temporary directory shared by every xdist worker in this pytest run."""
+    base_temp = tmp_path_factory.getbasetemp()
+    if hasattr(request.config, "workerinput"):
+        return base_temp.parent
+    return base_temp
+
+
+@contextmanager
+def _exclusive_file_lock(path: Path) -> Generator[None]:
+    """Hold an advisory process lock for a shared test artifact."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
+
+
+def _build_cached_file[T](cache_path: Path, builder: Callable[[Path], T]) -> T | None:
+    """Build and atomically publish a file once across xdist workers."""
+    with _exclusive_file_lock(cache_path.with_suffix(".lock")):
+        if cache_path.exists():
+            return None
+
+        temporary_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
+        temporary_path.unlink(missing_ok=True)
+        try:
+            result = builder(temporary_path)
+            os.replace(temporary_path, cache_path)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+        return result
+
+
+def _run_once(marker_path: Path, action: Callable[[], None]) -> None:
+    """Run an action once across xdist workers in the current pytest run."""
+    with _exclusive_file_lock(marker_path.with_suffix(".lock")):
+        if marker_path.exists():
+            return
+        action()
+        marker_path.touch()
+
+
+def _load_or_create_dataframe(cache_path: Path, builder: Callable[[], pd.DataFrame]) -> pd.DataFrame:
+    """Build and cache a DataFrame once across xdist workers."""
+
+    def _build(temporary_path: Path) -> pd.DataFrame:
+        dataframe = builder()
+        dataframe.to_pickle(temporary_path)
+        return dataframe
+
+    dataframe = _build_cached_file(cache_path, _build)
+    if dataframe is not None:
+        return dataframe
+
+    # This is a trusted, run-local cache created by the fixture above.
+    return cast(pd.DataFrame, pd.read_pickle(cache_path))  # noqa: S301
 
 
 @pytest.fixture
@@ -200,40 +255,60 @@ def esgf_data_catalog_trimmed(
 
 
 @pytest.fixture(scope="session")
-def sample_data() -> None:
+def sample_data(shared_session_dir: Path) -> None:
     """Download sample data if not already present."""
     if os.environ.get("REF_TEST_DATA_DIR"):
         logger.warning("Not fetching sample data. Using custom test data directory")
         return
-    logger.disable("climate_ref_core.dataset_registry")
-    fetch_sample_data(force_cleanup=False, symlink=False)
-    logger.enable("climate_ref_core.dataset_registry")
+
+    def _fetch() -> None:
+        logger.disable("climate_ref_core.dataset_registry")
+        try:
+            fetch_sample_data(force_cleanup=False, symlink=False)
+        finally:
+            logger.enable("climate_ref_core.dataset_registry")
+
+    _run_once(shared_session_dir / "sample-data.ready", _fetch)
 
 
 @pytest.fixture(scope="session")
-def cmip6_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
+def cmip6_data_catalog(sample_data: None, sample_data_dir: Path, shared_session_dir: Path) -> pd.DataFrame:
     """CMIP6 sample data catalog."""
-    adapter = CMIP6DatasetAdapter()
-    return adapter.find_local_datasets(sample_data_dir / "CMIP6")
+    return _load_or_create_dataframe(
+        shared_session_dir / "cmip6-data-catalog.pkl",
+        lambda: CMIP6DatasetAdapter().find_local_datasets(sample_data_dir / "CMIP6"),
+    )
 
 
 @pytest.fixture(scope="session")
-def obs4mips_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
+def obs4mips_data_catalog(sample_data: None, sample_data_dir: Path, shared_session_dir: Path) -> pd.DataFrame:
     """obs4MIPs sample data catalog."""
-    adapter = Obs4MIPsDatasetAdapter()
-    obs4ref = adapter.find_local_datasets(sample_data_dir / "obs4REF")
-    obs4mips = adapter.find_local_datasets(sample_data_dir / "obs4MIPs")
-    return pd.concat([obs4ref, obs4mips], ignore_index=True)
+    return _load_or_create_dataframe(
+        shared_session_dir / "obs4mips-data-catalog.pkl",
+        lambda: Obs4MIPsDatasetAdapter().find_local_datasets(sample_data_dir / "obs4MIPs"),
+    )
+
+
+@pytest.fixture(scope="session")
+def obs4ref_data_catalog(sample_data: None, sample_data_dir: Path, shared_session_dir: Path) -> pd.DataFrame:
+    """obs4REF sample data catalog."""
+    return _load_or_create_dataframe(
+        shared_session_dir / "obs4ref-data-catalog.pkl",
+        lambda: Obs4REFDatasetAdapter().find_local_datasets(sample_data_dir / "obs4REF"),
+    )
 
 
 @pytest.fixture(scope="session")
 def data_catalog(
-    cmip6_data_catalog: pd.DataFrame, obs4mips_data_catalog: pd.DataFrame
+    cmip6_data_catalog: pd.DataFrame,
+    obs4mips_data_catalog: pd.DataFrame,
+    obs4ref_data_catalog: pd.DataFrame,
 ) -> dict[SourceDatasetType, pd.DataFrame]:
-    """Provide combined data catalog with CMIP6 and obs4MIPs sources."""
+    """Provide combined data catalog with CMIP6, obs4MIPs and obs4REF sources."""
     return {
         SourceDatasetType.CMIP6: cmip6_data_catalog,
         SourceDatasetType.obs4MIPs: obs4mips_data_catalog,
+        SourceDatasetType.obs4REF: obs4ref_data_catalog,
     }
 
 

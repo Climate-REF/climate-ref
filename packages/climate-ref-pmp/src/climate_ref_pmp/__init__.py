@@ -2,12 +2,10 @@
 Rapid evaluating CMIP data
 """
 
-from __future__ import annotations
-
 import importlib.metadata
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from loguru import logger
 
@@ -19,16 +17,25 @@ from climate_ref_core.dataset_registry import (
     fetch_all_files,
     validate_registry_cache,
 )
-from climate_ref_core.providers import CondaDiagnosticProvider
+from climate_ref_core.providers import CondaDiagnosticProvider, DataIngestRequest
 from climate_ref_core.source_types import SourceDatasetType
 from climate_ref_pmp.diagnostics import ENSO, AnnualCycle, ExtratropicalModesOfVariability
-
-if TYPE_CHECKING:
-    from climate_ref.config import Config
 
 __version__ = importlib.metadata.version("climate-ref-pmp")
 
 _REGISTRY_NAME = "pmp-climatology"
+
+_THREAD_LIMIT_VARS = (
+    "OMP_NUM_THREADS",
+    "OPENBLAS_NUM_THREADS",
+    "MKL_NUM_THREADS",
+    "NUMEXPR_NUM_THREADS",
+    "VECLIB_MAXIMUM_THREADS",
+)
+
+# Conservative default for ~10% improvement over a single thread
+# Without a default BLAS will take as many CPUs as available
+_DEFAULT_THREAD_LIMIT = "2"
 
 
 # Create the PMP diagnostics provider
@@ -38,7 +45,7 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
     Provider for PMP diagnostics.
     """
 
-    def configure(self, config: Config) -> None:
+    def configure(self, config: Any) -> None:
         """Configure the provider."""
         super().configure(config)
         self.env_overrides["PCMDI_CONDA_EXE"] = str(self.conda_exe_path)
@@ -49,12 +56,18 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
             logger.debug("Setting env variable 'FI_PROVIDER=tcp'")
             self.env_overrides["FI_PROVIDER"] = "tcp"
 
-    def fetch_data(self, config: Config) -> None:
+        # If any budgets are set, don't set default values
+        if not any(name in os.environ for name in _THREAD_LIMIT_VARS):
+            logger.debug(f"Limiting threads to {_DEFAULT_THREAD_LIMIT}")
+            for name in _THREAD_LIMIT_VARS:
+                self.env_overrides[name] = _DEFAULT_THREAD_LIMIT
+
+    def fetch_data(self, config: Any) -> None:
         """Fetch PMP climatology data."""
         registry = dataset_registry_manager[_REGISTRY_NAME]
         fetch_all_files(registry, _REGISTRY_NAME, output_dir=None)
 
-    def validate_setup(self, config: Config) -> bool:
+    def validate_setup(self, config: Any) -> bool:
         """Validate conda environment and data checksums."""
         # First check conda environment
         if not super().validate_setup(config):
@@ -77,46 +90,21 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
         """Get the path where PMP data is cached."""
         return resolve_cache_dir(_REGISTRY_NAME)
 
-    def ingest_data(self, config: Config, db: Any) -> None:
-        """
-        Ingest PMP climatology data into the database.
-
-        This registers the climatology datasets so they can be used by diagnostics.
-
-        Note: This method requires the climate-ref package to be installed.
-        When using climate-ref-pmp standalone (without climate-ref), ingestion
-        will be skipped with a warning message.
-        """
-        try:
-            from climate_ref.datasets import ingest_datasets  # noqa: PLC0415
-            from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter  # noqa: PLC0415
-        except ImportError:
-            logger.info(
-                f"Skipping {self.slug} data ingestion: climate-ref package not installed. "
-                "Run `ref datasets ingest --source-type pmp-climatology` manually if needed."
-            )
-            return
-
+    def data_to_ingest(self, config: Any) -> list[DataIngestRequest]:
+        """Request ingestion of the fetched PMP climatology data."""
         data_path = self.get_data_path()
         if data_path is None or not data_path.exists():
             logger.warning(
                 f"PMP data path does not exist. Run `ref providers setup --provider {self.slug}` first."
             )
-            return
+            return []
 
-        # Find the pmp-climatology subdirectory
         climatology_path = data_path / "PMP_obs4MIPsClims"
         if not climatology_path.exists():
             logger.warning(f"PMP climatology data not found at {climatology_path}")
-            return
+            return []
 
-        adapter = PMPClimatologyDatasetAdapter()
-
-        try:
-            stats = ingest_datasets(adapter, climatology_path, db, skip_invalid=True)
-            stats.log_summary("PMP climatology ingestion complete:")
-        except ValueError as e:
-            logger.warning(f"No valid PMP climatology datasets found: {e}")
+        return [DataIngestRequest(SourceDatasetType.PMPClimatology, climatology_path)]
 
 
 provider = PMPDiagnosticProvider("PMP", __version__)

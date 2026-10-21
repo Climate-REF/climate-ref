@@ -1,0 +1,19 @@
+### Regression baseline diff
+
+{% if cases %}
+{{ cases | length }} test case(s) changed against `{{ report.report.base_ref }}`. [Full report]({{ index_url }})
+
+| case | versions |{% for kind in report.kinds %} {{ kind }} |{% endfor %} |
+| --- | --- |{% for kind in report.kinds %} --- |{% endfor %} --- |
+{% for case in cases %}
+| `{{ case.label }}` | {{ case.versions }} |{% for count in case.counts %} {{ count }} |{% endfor %} [view]({{ case.url }}) |
+{% endfor %}
+{% else %}
+No baseline manifests changed against `{{ report.report.base_ref }}`.
+{% endif %}
+{% if previous %}
+
+_Previous reports for this pull request: {% for p in previous %}[{{ p.label }}]({{ p.url }}){{ ", " if not loop.last }}{% endfor %}_
+{% endif %}
+
+<!-- climate-ref-baseline-diff -->

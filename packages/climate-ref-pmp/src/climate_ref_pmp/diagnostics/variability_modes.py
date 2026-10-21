@@ -40,7 +40,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     ts_modes = ("PDO", "NPGO", "AMO")
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
-    version = 3
+    version = 4
 
     facets = (
         "kind",
@@ -71,7 +71,8 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                 FacetFilter(
                     facets={
                         "frequency": "mon",
-                        "experiment_id": ("historical", "hist-GHG", *extra_experiments),
+                        "table_id": "Amon",
+                        "experiment_id": ("historical", "esm-hist", "hist-GHG", *extra_experiments),
                         "variable_id": model_variable,
                     }
                 )
@@ -81,7 +82,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                 FacetFilter(
                     facets={
                         "branded_variable": (_BRANDED_VARIABLE_NAMES[model_variable],),
-                        "experiment_id": ("historical", "hist-GHG", *extra_experiments),
+                        "experiment_id": ("historical", "esm-hist", "hist-GHG", *extra_experiments),
                         "frequency": "mon",
                         "region": "glb",
                     }
@@ -90,6 +91,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
             obs_requirement = DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (obs_variable,)}),),
                 group_by=("source_id", "variable_id"),
             )
@@ -121,7 +123,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             RegistryRequest(
                                 slug=f"mov-{self.mode_id.lower()}-obs",
                                 registry_name="obs4ref",
-                                source_type="obs4MIPs",
+                                source_type="obs4REF",
                                 facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
                             ),
                             CMIP6Request(
@@ -132,6 +134,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                     "variable_id": "ts",
                                     "member_id": "r1i1p1f1",
                                     "frequency": "mon",
+                                    "table_id": "Amon",
                                 },
                                 time_span=("2000-01", "2014-12"),
                             ),
@@ -144,7 +147,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             RegistryRequest(
                                 slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
                                 registry_name="obs4ref",
-                                source_type="obs4MIPs",
+                                source_type="obs4REF",
                                 facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
                             ),
                             CMIP7Request(
@@ -187,6 +190,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                     "variable_id": "psl",
                                     "member_id": "r1i1p1f1",
                                     "frequency": "mon",
+                                    "table_id": "Amon",
                                 },
                                 time_span=("2000-01", "2014-12"),
                             ),

@@ -1,11 +1,26 @@
 import datetime
 import enum
 import pathlib
+import warnings
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from loguru import logger
-from sqlalchemy import BigInteger, Column, Float, ForeignKey, Table, UniqueConstraint, func, or_
+from sqlalchemy import (
+    BigInteger,
+    Column,
+    ColumnElement,
+    Float,
+    ForeignKey,
+    Select,
+    String,
+    Table,
+    UniqueConstraint,
+    func,
+    inspect,
+    or_,
+    select,
+)
 from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
 from sqlalchemy.orm.query import RowReturningQuery
 
@@ -20,6 +35,21 @@ if TYPE_CHECKING:
     from climate_ref.models.metric_value import MetricValue
     from climate_ref_core.datasets import ExecutionDatasetCollection
     from climate_ref_core.resources import ResourceUsage
+
+
+class SkipReason(enum.Enum):
+    """
+    Why a solve does not run an execution group
+    """
+
+    InProgress = "in progress"
+    """The latest execution has not finished"""
+
+    FailedNotDirty = "failed and not dirty (use --rerun-failed)"
+    """The latest execution failed and no new data has arrived since"""
+
+    UpToDate = "up to date"
+    """The latest execution succeeded and no new data has arrived since"""
 
 
 class ExecutionGroup(CreatedUpdatedMixin, Base):
@@ -81,19 +111,27 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
     These are also used to define the dataset key.
     """
 
+    def __repr__(self) -> str:
+        # Read loaded state only, so a detached or expired instance cannot raise while being logged
+        values = inspect(self).dict
+        return (
+            f"<ExecutionGroup id={values.get('id')} diagnostic_id={values.get('diagnostic_id')} "
+            f"key={values.get('key')}>"
+        )
+
     diagnostic: Mapped["Diagnostic"] = relationship(back_populates="execution_groups")
     executions: Mapped[list["Execution"]] = relationship(
         back_populates="execution_group", order_by="Execution.created_at, Execution.id"
     )
 
-    def should_run(
+    def skip_reason(  # noqa: PLR0911
         self,
         dataset_hash: str,
         rerun_failed: bool = False,
         stale_cutoff: "datetime.datetime | None" = None,
-    ) -> bool:
+    ) -> SkipReason | None:
         """
-        Check if the diagnostic execution group needs to be executed.
+        Explain why the diagnostic execution group does not need to be executed.
 
         The dirty flag is the primary signal for whether an execution group needs to be rerun.
         It is set when the group is created or when new data is available,
@@ -124,10 +162,15 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
             an in-progress execution created before this timestamp is treated as already failed.
             A real solve reaps such abandoned executions (via ``fail_stale_in_progress_executions``)
             before evaluating this method.
+
+        Returns
+        -------
+        :
+            ``None`` if the group should run, otherwise the reason it should not
         """
         if not self.executions:
             logger.debug(f"Execution group {self.diagnostic.slug}/{self.key} was never executed")
-            return True
+            return None
 
         last_execution = self.executions[-1]
 
@@ -136,7 +179,7 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
                 f"Execution group {self.diagnostic.slug}/{self.key} hash mismatch:"
                 f" {last_execution.dataset_hash} != {dataset_hash}"
             )
-            return True
+            return None
 
         treat_as_failed = (
             last_execution.successful is None
@@ -151,22 +194,37 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
                 f"Execution group {self.diagnostic.slug}/{self.key} "
                 f"already has an in-progress execution with hash {dataset_hash}"
             )
-            return False
+            return SkipReason.InProgress
 
         # Dirty flag is the primary signal for rerunning existing jobs
         if self.dirty:
             logger.debug(f"Execution group {self.diagnostic.slug}/{self.key} is dirty")
-            return True
+            return None
+
+        if last_execution.successful is not False and not treat_as_failed:
+            return SkipReason.UpToDate
 
         # Re-run all failed executions if explicitly requested
-        if (last_execution.successful is False or treat_as_failed) and rerun_failed:
+        if rerun_failed:
             logger.debug(
                 f"Execution group {self.diagnostic.slug}/{self.key} "
                 f"last execution failed, rerunning (rerun_failed=True)"
             )
-            return True
+            return None
+        return SkipReason.FailedNotDirty
 
-        return False
+    def should_run(
+        self,
+        dataset_hash: str,
+        rerun_failed: bool = False,
+        stale_cutoff: "datetime.datetime | None" = None,
+    ) -> bool:
+        """
+        Check if the diagnostic execution group needs to be executed.
+
+        See [skip_reason][climate_ref.models.execution.ExecutionGroup.skip_reason] for the rules.
+        """
+        return ExecutionGroup.skip_reason(self, dataset_hash, rerun_failed, stale_cutoff) is None
 
 
 execution_datasets = Table(
@@ -175,6 +233,33 @@ execution_datasets = Table(
     Column("execution_id", ForeignKey("execution.id"), index=True),
     Column("dataset_id", ForeignKey("dataset.id"), index=True),
 )
+
+
+class ExecutionFailureReason(enum.Enum):
+    """
+    Why an execution failed
+    """
+
+    DiagnosticError = "diagnostic_error"
+    """The diagnostic ran and reported an error that a retry with the same inputs would repeat"""
+
+    SystemError = "system_error"
+    """The diagnostic could not run to completion for a reason outside it, e.g. a broken environment"""
+
+    ResultError = "result_error"
+    """The diagnostic succeeded but its outputs could not be copied or ingested"""
+
+    Abandoned = "abandoned"
+    """The execution started but no result was recorded, e.g. its worker was killed"""
+
+    NotStarted = "not_started"
+    """The execution was queued but never started, e.g. the solve was killed first"""
+
+    Cancelled = "cancelled"
+    """The execution was marked failed by hand"""
+
+    Unknown = "unknown"
+    """The caller did not say why the execution failed"""
 
 
 class Execution(CreatedUpdatedMixin, Base):
@@ -271,6 +356,15 @@ class Execution(CreatedUpdatedMixin, Base):
     and executions routinely peak well above that.
     """
 
+    # Plain text rather than an enum, so a release still reads reasons added after it.
+    failure_reason: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    """
+    Why the execution failed, as an `ExecutionFailureReason` value.
+
+    NULL for successful or in-progress executions.
+    Failures recorded before the column existed are ``unknown``.
+    """
+
     memory_source: Mapped[str | None] = mapped_column(nullable=True)
     """
     Provenance of ``peak_memory_bytes``.
@@ -333,6 +427,14 @@ class Execution(CreatedUpdatedMixin, Base):
     The datasets used in this execution
     """
 
+    def __repr__(self) -> str:
+        # Read loaded state only, so a detached or expired instance cannot raise while being logged
+        values = inspect(self).dict
+        return (
+            f"<Execution id={values.get('id')} group_id={values.get('execution_group_id')} "
+            f"output_fragment={values.get('output_fragment')}>"
+        )
+
     def register_datasets(self, db: "Database", execution_dataset: "ExecutionDatasetCollection") -> None:
         """
         Register the datasets used in the diagnostic calculation with the execution
@@ -349,6 +451,7 @@ class Execution(CreatedUpdatedMixin, Base):
         """
         # TODO: this needs to accept both a diagnostic and output bundle
         self.successful = True
+        self.failure_reason = None
         self.path = str(path)
 
     def apply_resource_usage(
@@ -393,11 +496,17 @@ class Execution(CreatedUpdatedMixin, Base):
         self.resources_exclusive = exclusive
         self.resource_context = context
 
-    def mark_failed(self) -> None:
+    def mark_failed(self, reason: ExecutionFailureReason = ExecutionFailureReason.Unknown) -> None:
         """
         Mark the diagnostic execution as unsuccessful
+
+        Parameters
+        ----------
+        reason
+            Why the execution failed
         """
         self.successful = False
+        self.failure_reason = reason.value
 
 
 class ResultOutputType(enum.Enum):
@@ -524,57 +633,54 @@ class ExecutionOutput(DimensionMixin, CreatedUpdatedMixin, Base):
         )
 
 
-def _latest_execution_ids(
-    session: Session,
-    among_executions: Sequence[Any] | None = None,
-) -> Any:
+def select_latest_executions(
+    among_executions: Sequence[ColumnElement[bool]] = (),
+) -> Select[tuple[int, int]]:
     """
-    Subquery selecting the id of the latest execution in each group.
+    Build a ``Select`` of the latest execution in each execution group.
 
-    "Latest" is the execution with the greatest ``created_at``,
-    breaking ties deterministically by greatest ``id`` so that exactly one execution wins per group.
+    "Latest" is the greatest ``created_at``, with the greatest ``id`` breaking a tie,
+    the same ordering as [latest_execution_for_group][climate_ref.results._query.latest_execution_for_group].
+    Retracted executions are not skipped, so a retracted latest execution still wins its group.
 
     Parameters
     ----------
-    session
-        The database session to use for the query.
     among_executions
-        Optional predicates on ``Execution`` applied *before* ranking.
-        These change which execution is considered "latest" for each group -- the
-        winner is the newest execution *among those matching the predicates*.
-
-        For example ``[Execution.successful.is_(True)]`` selects each group's
-        latest **successful** execution rather than its latest execution.
-        Group-level filters (diagnostic, provider, dirty, version) do not belong here
-        Apply them to the outer query,
+        Predicates on ``Execution`` applied *before* picking the latest,
+        so the winner is the newest execution *among those matching*.
+        For example ``[Execution.successful.is_(True)]`` picks each group's latest successful execution.
+        Group-level filters (diagnostic, provider, dirty, version) belong on the outer query instead,
         where they narrow which groups are returned without changing which execution wins.
 
     Returns
     -------
-        A subquery exposing ``execution_id`` and ``group_id`` columns,
+        A ``Select`` with ``execution_group_id`` and ``execution_id`` columns,
         one row per group that has at least one matching execution.
+        Call ``.subquery()`` to join or filter against it.
     """
-    ranked = session.query(
-        Execution.id.label("execution_id"),
-        Execution.execution_group_id.label("group_id"),
-        func.row_number()
-        .over(
-            partition_by=Execution.execution_group_id,
-            order_by=(Execution.created_at.desc(), Execution.id.desc()),
+    # Grouped max rather than row_number: with a predicate, SQLite 3.40 rescans a filtered window
+    # subquery for every outer row when it is left-joined to execution_group.
+    newest = (
+        select(
+            Execution.execution_group_id,
+            func.max(Execution.created_at).label("created_at"),
         )
-        .label("rn"),
-    )
-    for predicate in among_executions or ():
-        ranked = ranked.filter(predicate)
-    ranked_sq = ranked.subquery()
-
-    return (
-        session.query(
-            ranked_sq.c.execution_id.label("execution_id"),
-            ranked_sq.c.group_id.label("group_id"),
-        )
-        .filter(ranked_sq.c.rn == 1)
+        .where(*among_executions)
+        .group_by(Execution.execution_group_id)
         .subquery()
+    )
+    return (
+        select(
+            Execution.execution_group_id.label("execution_group_id"),
+            func.max(Execution.id).label("execution_id"),
+        )
+        .join(
+            newest,
+            (Execution.execution_group_id == newest.c.execution_group_id)
+            & (Execution.created_at == newest.c.created_at),
+        )
+        .where(*among_executions)
+        .group_by(Execution.execution_group_id)
     )
 
 
@@ -606,7 +712,7 @@ def get_execution_group_and_latest(
         The database session to use for the query.
     among_executions
         Optional predicates on ``Execution`` applied *before* the latest-per-group ranking,
-        so "latest" is chosen from that filtered population (see :func:`_latest_execution_ids`).
+        so "latest" is chosen from that filtered population (see :func:`select_latest_executions`).
         Defaults to ranking over all executions.
 
     Returns
@@ -615,7 +721,7 @@ def get_execution_group_and_latest(
         The result is a tuple of the execution group and the most recent result,
         which can be None.
     """
-    latest = _latest_execution_ids(session, among_executions)
+    latest = select_latest_executions(among_executions or ()).subquery()
 
     # Groups with no matching execution still appear (outer join, Execution=None).
     # Every known caller (`cli/executions.py::delete_groups`, `ExecutionsReader.groups()`,
@@ -624,7 +730,7 @@ def get_execution_group_and_latest(
     query = (
         session.query(ExecutionGroup, Execution)
         .options(joinedload(ExecutionGroup.diagnostic).joinedload(Diagnostic.provider))
-        .outerjoin(latest, latest.c.group_id == ExecutionGroup.id)
+        .outerjoin(latest, latest.c.execution_group_id == ExecutionGroup.id)
         .outerjoin(Execution, Execution.id == latest.c.execution_id)
     )
 
@@ -661,12 +767,12 @@ def _selectors_match_facet(
     return False
 
 
-def _filter_executions_by_facets(
+def _filter_executions_by_selectors(
     results: Sequence[tuple[ExecutionGroup, Execution | None]],
-    facet_filters: dict[str, list[str]],
+    selector_filters: dict[str, list[str]],
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
-    Filter execution groups and their latest executions based on facet key-value pairs.
+    Filter execution groups by facet key-value pairs in their ``selectors``.
 
     This is a relatively expensive operation as it requires iterating over all results.
     This should be replaced once we have normalised the selectors into a separate table.
@@ -675,7 +781,7 @@ def _filter_executions_by_facets(
     ----------
     results
         List of tuples containing ExecutionGroup and its latest Execution (or None)
-    facet_filters
+    selector_filters
         Dictionary mapping facet keys to lists of allowed values.
         Different keys are ANDed; multiple values for the same key are ORed.
 
@@ -697,23 +803,45 @@ def _filter_executions_by_facets(
         for eg, execution in results
         if all(
             _selectors_match_facet(eg.selectors, facet_key, facet_values)
-            for facet_key, facet_values in facet_filters.items()
+            for facet_key, facet_values in selector_filters.items()
         )
     ]
+
+
+def _resolve_selector_filters(
+    selector_filters: dict[str, list[str]] | None, facet_filters: dict[str, list[str]] | None
+) -> dict[str, list[str]] | None:
+    if facet_filters is None:
+        return selector_filters
+    if selector_filters is not None and selector_filters != facet_filters:
+        raise ValueError("selector_filters and the deprecated facet_filters disagree")
+    warnings.warn(
+        "get_execution_group_and_latest_filtered(facet_filters=...) is deprecated. "
+        "Use selector_filters instead.",
+        DeprecationWarning,
+        stacklevel=3,
+    )
+    return facet_filters
 
 
 def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     session: Session,
     diagnostic_filters: list[str] | None = None,
     provider_filters: list[str] | None = None,
-    facet_filters: dict[str, list[str]] | None = None,
+    selector_filters: dict[str, list[str]] | None = None,
     dirty: bool | None = None,
     successful: bool | None = None,
     latest_successful: bool | None = None,
     include_superseded: bool = False,
+    failure_reasons: Sequence[ExecutionFailureReason] | None = None,
+    group_conditions: Sequence[ColumnElement[bool]] | None = None,
+    *,
+    facet_filters: dict[str, list[str]] | None = None,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
     Query execution groups with filtering capabilities.
+
+    New callers should build an ``ExecutionGroupFilter`` and use ``ExecutionsReader.group_rows`` instead.
 
     By default, returns only execution groups whose ``diagnostic_version`` matches
     the parent diagnostic's ``promoted_version`` so consumers see exactly one
@@ -733,9 +861,12 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         List of diagnostic slug substrings (OR logic, case-insensitive)
     provider_filters
         List of provider slug substrings (OR logic, case-insensitive)
-    facet_filters
+    selector_filters
         Dictionary mapping facet keys to lists of allowed values.
         Different keys are ANDed; multiple values for the same key are ORed.
+        These match each group's ``ExecutionGroup.selectors`` in Python.
+        To match the datasets an execution ran against in SQL, pass an
+        ``InputDatasetFilter`` clause through ``group_conditions`` instead.
     dirty
         If True, only return dirty execution groups.
         If False, only return clean execution groups.
@@ -758,17 +889,34 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         == Diagnostic.promoted_version``.
         Set this for recovery / audit callers that need the full version history
         (e.g. ``executor/reingest.py``).
+    failure_reasons
+        Post-rank filter on the *winning* execution.
+        If provided, only return execution groups whose latest execution failed for one of these reasons.
+        If None, do not filter by failure reason.
+    group_conditions
+        Extra SQL conditions over ``ExecutionGroup``, ANDed with the other filters.
+        For example, to keep only groups that ran against ACCESS-ESM1-5 CMIP6 data:
+
+        ```python
+        scope = InputDatasetFilter(
+            source_types=(SourceDatasetType.CMIP6,),
+            facets={"source_id": ("ACCESS-ESM1-5",)},
+        )
+        get_execution_group_and_latest_filtered(session, group_conditions=[scope.execution_group_clause()])
+        ```
+    facet_filters
+        Deprecated alias for ``selector_filters``, kept for one release.
 
     Returns
     -------
-        Query returning tuples of (ExecutionGroup, latest Execution or None)
+        List of (ExecutionGroup, latest Execution or None) tuples, ordered by group id
 
     Notes
     -----
     - Diagnostic and provider filters use substring matching (case-insensitive)
     - Multiple values within same filter type use OR logic
     - Different filter types use AND logic
-    - Facet filters can either be key=value (searches all dataset types)
+    - Selector filters can either be key=value (searches all dataset types)
       or dataset_type.key=value (searches specific dataset type)
     - This helper is the only sanctioned path for new callers that should respect the promoted-version filter.
       The one acknowledged exception is the ``cli/executions.py::stats`` aggregation,
@@ -778,6 +926,8 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
       Operational queries that must remain version-agnostic
       (e.g. ``mark_failed_running`` in the same module) intentionally do not use this helper at all.
     """
+    selector_filters = _resolve_selector_filters(selector_filters, facet_filters)
+
     # Pre-rank population filter: restrict which executions "latest" is chosen from.
     among_executions = None if latest_successful is None else [_successful_predicate(latest_successful)]
 
@@ -812,16 +962,24 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     if successful is not None:
         query = query.filter(_successful_predicate(successful))
 
+    if failure_reasons:
+        query = query.filter(Execution.failure_reason.in_([reason.value for reason in failure_reasons]))
+
     if dirty is not None:
         if dirty:
             query = query.filter(ExecutionGroup.dirty.is_(True))
         else:
             query = query.filter(or_(ExecutionGroup.dirty.is_(False), ExecutionGroup.dirty.is_(None)))
 
-    if facet_filters:
+    for condition in group_conditions or ():
+        query = query.filter(condition)
+
+    query = query.order_by(ExecutionGroup.id)
+
+    if selector_filters:
         # Load all results into memory for Python-based filtering
         # TODO: Update once we have normalised the selector
         results = [r._tuple() for r in query.all()]
-        return _filter_executions_by_facets(results, facet_filters)
+        return _filter_executions_by_selectors(results, selector_filters)
     else:
         return [r._tuple() for r in query.all()]

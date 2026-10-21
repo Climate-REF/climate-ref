@@ -5,12 +5,10 @@ This module provides a diagnostics provider for ILAMB, a tool for evaluating
 climate models against observations.
 """
 
-from __future__ import annotations
-
 import importlib.metadata
 import importlib.resources
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any
 
 import yaml
 from loguru import logger
@@ -26,9 +24,6 @@ from climate_ref_core.dataset_registry import (
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_ilamb.standard import ILAMBStandard
 
-if TYPE_CHECKING:
-    from climate_ref.config import Config
-
 __version__ = importlib.metadata.version("climate-ref-ilamb")
 
 _REGISTRY_NAMES = ("ilamb-test", "ilamb", "ilamb-regions")
@@ -37,14 +32,17 @@ _REGISTRY_NAMES = ("ilamb-test", "ilamb", "ilamb-regions")
 class ILAMBProvider(DiagnosticProvider):
     """Provider for ILAMB diagnostics."""
 
-    def fetch_data(self, config: Config) -> None:
+    def fetch_data(self, config: Any) -> None:
         """Fetch ILAMB reference data from all registries."""
         for name in _REGISTRY_NAMES:
             registry = dataset_registry_manager[name]
             fetch_all_files(registry, name, output_dir=None)
 
-    def validate_setup(self, config: Config) -> bool:
+    def validate_setup(self, config: Any) -> bool:
         """Validate that all ILAMB data is cached with correct checksums."""
+        if not super().validate_setup(config):
+            return False
+
         all_errors: list[str] = []
         for name in _REGISTRY_NAMES:
             registry = dataset_registry_manager[name]

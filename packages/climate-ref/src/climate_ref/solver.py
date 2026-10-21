@@ -8,12 +8,14 @@ import datetime
 import itertools
 import pathlib
 import typing
+from collections import Counter
 from collections.abc import Mapping, Sequence
 
 import attrs
 import pandas as pd
 from attrs import define, frozen
 from loguru import logger
+from sqlalchemy import func
 
 from climate_ref.config import Config, refresh_ignore_datasets_file
 from climate_ref.data_catalog import DataCatalog
@@ -28,11 +30,12 @@ from climate_ref.datasets import (
     get_slug_column,
 )
 from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
+from climate_ref.executor.result_handling import mark_execution_failed
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
 from climate_ref.models.diagnostic import recompute_promoted_version
-from climate_ref.models.execution import Execution
+from climate_ref.models.execution import Execution, ExecutionFailureReason
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.constraints import apply_constraint
 from climate_ref_core.datasets import (
@@ -40,9 +43,12 @@ from climate_ref_core.datasets import (
     ExecutionDatasetCollection,
     Selector,
     SourceDatasetType,
+    version_sort_key,
 )
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition
 from climate_ref_core.exceptions import InvalidDiagnosticException
+from climate_ref_core.logging import EXECUTION_LOG_FILENAME
+from climate_ref_core.output_files import copy_output_file
 from climate_ref_core.providers import DiagnosticProvider
 
 
@@ -248,6 +254,126 @@ def _process_group_constraints(
     return group
 
 
+def as_frame(catalog: pd.DataFrame | DataCatalog) -> pd.DataFrame:
+    """
+    Unwrap a catalog to the DataFrame behind it.
+
+    Parameters
+    ----------
+    catalog
+        Either a catalog wrapper or a plain frame.
+
+    Returns
+    -------
+    :
+        The catalog as a DataFrame.
+    """
+    return catalog.to_frame() if isinstance(catalog, DataCatalog) else catalog
+
+
+def union_with_fallbacks(
+    primary: pd.DataFrame | DataCatalog,
+    fallbacks: Sequence[pd.DataFrame | DataCatalog],
+    primary_type: SourceDatasetType,
+) -> pd.DataFrame | DataCatalog:
+    """
+    Fill a reference catalog from its fallback collections.
+
+    A dataset held by more than one collection is taken at its newest version,
+    and from the primary when the versions tie.
+    So publishing a dataset to obs4MIPs takes over from the obs4REF copy without any re-ingest,
+    but a newer registry version is not lost to a stale published one.
+
+    Parameters
+    ----------
+    primary
+        The catalog the requirement asks for, which wins a version tie.
+    fallbacks
+        Catalogs that may stand in for it, tried in order.
+    primary_type
+        Source type the merged rows are delivered under.
+
+    Returns
+    -------
+    :
+        The primary catalog, extended with the fallback rows that win.
+        The original catalog is returned untouched when nothing is added.
+        The added rows carry ``activity_id`` of the primary, because that is the collection they stand in for.
+        Their ``instance_id`` still names the collection they came from, so the provenance is not lost.
+    """
+    usable = [
+        frame
+        for frame in (as_frame(fallback) for fallback in fallbacks)
+        if not frame.empty and "instance_id" in frame.columns
+    ]
+    if not usable:
+        return primary
+
+    merged = as_frame(primary)
+    if len(merged) and "instance_id" not in merged.columns:
+        return primary
+    changed = False
+    for fallback_df in usable:
+        taken = newer_rows(fallback_df, merged)
+        if taken.empty:
+            continue
+        # The rows are served as the primary's data, so they must group as the primary's data too.
+        # A requirement grouping by activity_id would otherwise split its reference data in two.
+        if "activity_id" in taken.columns:
+            taken = taken.assign(activity_id=primary_type.name)
+        if len(merged):
+            beaten = _obs_dataset_key(merged["instance_id"]).isin(_obs_dataset_key(taken["instance_id"]))
+            merged = pd.concat([merged[~beaten], taken], ignore_index=True)
+        else:
+            merged = taken.reset_index(drop=True)
+        changed = True
+
+    if not changed:
+        return primary
+    if isinstance(primary, DataCatalog) or any(isinstance(f, DataCatalog) for f in fallbacks):
+        # No adapter can reload the merge, so the result carries none and never reloads.
+        return DataCatalog.from_frame(merged)
+    return merged
+
+
+def _obs_dataset_version(instance_id: pd.Series) -> pd.Series:
+    """Read the numeric version key off the end of an obs4MIPs or obs4REF ``instance_id``."""
+    return instance_id.astype(str).str.rsplit(".", n=1).str[1].map(version_sort_key)
+
+
+def _obs_dataset_key(instance_id: pd.Series) -> pd.Series:
+    """Strip the collection prefix to be common between obs4MIPs or obs4REF"""
+    return instance_id.astype(str).str.split(".", n=2).str[2].str.rsplit(".", n=1).str[0]
+
+
+def newer_rows(candidate: pd.DataFrame, held: pd.DataFrame) -> pd.DataFrame:
+    """
+    Select the rows of ``candidate`` that ``held`` lacks, or holds at an older version.
+
+    Parameters
+    ----------
+    candidate
+        Rows offered by a fallback collection.
+    held
+        Rows already taken, which win a version tie.
+
+    Returns
+    -------
+    :
+        The subset of ``candidate`` that should replace or extend ``held``.
+    """
+    if not len(held):
+        return candidate
+    held_version = pd.Series(
+        _obs_dataset_version(held["instance_id"]).to_numpy(),
+        index=_obs_dataset_key(held["instance_id"]).to_numpy(),
+    )
+    held_version = held_version.groupby(level=0).max()
+    current = _obs_dataset_key(candidate["instance_id"]).map(held_version)
+    wins = current.isna() | (_obs_dataset_version(candidate["instance_id"]) > current)
+    return candidate[wins]
+
+
 def solve_executions(
     data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
@@ -275,7 +401,6 @@ def solve_executions(
         raise ValueError(f"Diagnostic {diagnostic.slug!r} has no data requirements")
 
     first_item = next(iter(diagnostic.data_requirements))
-
     if isinstance(first_item, DataRequirement):
         # We have a single collection of data requirements
         yield from _solve_from_data_requirements(
@@ -310,6 +435,40 @@ def solve_executions(
         raise TypeError(f"Expected a DataRequirement, got {type(first_item)}")
 
 
+def catalog_for_requirement(
+    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
+    requirement: DataRequirement,
+) -> pd.DataFrame | DataCatalog | None:
+    """
+    Resolve the catalog a requirement is solved against, folding in its declared fallbacks.
+
+    Parameters
+    ----------
+    data_catalog
+        Data catalogs for each source dataset type.
+    requirement
+        The requirement to resolve a catalog for.
+
+    Returns
+    -------
+    :
+        The requirement's catalog, or ``None`` when neither it nor any of its fallbacks
+        has been ingested.
+    """
+    fallbacks = [
+        data_catalog[source_type]
+        for source_type in requirement.fallback_source_types
+        if source_type in data_catalog
+    ]
+    if requirement.source_type not in data_catalog and not fallbacks:
+        return None
+
+    primary = data_catalog.get(requirement.source_type, pd.DataFrame())
+    if not fallbacks:
+        return primary
+    return union_with_fallbacks(primary, fallbacks, requirement.source_type)
+
+
 def _solve_from_data_requirements(
     data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
@@ -322,16 +481,15 @@ def _solve_from_data_requirements(
     for requirement in data_requirements:
         if not isinstance(requirement, DataRequirement):
             raise TypeError(f"Expected a DataRequirement, got {type(requirement)}")
-        if requirement.source_type not in data_catalog:
+        catalog = catalog_for_requirement(data_catalog, requirement)
+        if catalog is None:
             logger.debug(
                 f"No data catalog for source type {requirement.source_type} of "
                 f"{provider.slug} diagnostic {diagnostic.slug}"
             )
             return
 
-        dataset_groups[requirement.source_type] = extract_covered_datasets(
-            data_catalog[requirement.source_type], requirement
-        )
+        dataset_groups[requirement.source_type] = extract_covered_datasets(catalog, requirement)
 
     # Calculate the product across each of the source types
     for items in itertools.product(*dataset_groups.values()):
@@ -372,6 +530,10 @@ class SolveFilterOptions:
     Keys are facet names (e.g. ``source_id``, ``variable_id``) and values are
     lists of allowed values.  Different facets are ANDed together; multiple
     values for the same facet are ORed.
+    """
+    exclude_provider: list[str] | None = None
+    """
+    Exclude providers by exact, case-insensitive slug.
     """
     exclude_diagnostic: list[str] | None = None
     """
@@ -461,6 +623,9 @@ def matches_filter(diagnostic: Diagnostic, filters: SolveFilterOptions | None) -
     if filters.provider and not any([f.lower() in provider_slug for f in filters.provider]):
         return False
 
+    if filters.exclude_provider and provider_slug.lower() in {f.lower() for f in filters.exclude_provider}:
+        return False
+
     if filters.diagnostic and not any([f.lower() in diagnostic_slug for f in filters.diagnostic]):
         return False
 
@@ -541,19 +706,31 @@ class ExecutionSolver:
         if filters and filters.dataset:
             data_catalog = apply_dataset_filters(data_catalog, filters.dataset)
 
-        for provider in self.provider_registry.providers:
-            for diagnostic in provider.diagnostics():
-                # Filter the diagnostic based on the provided filters
-                if not matches_filter(diagnostic, filters):
-                    logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
-                    continue
-                logger.info(f"Solving {diagnostic.full_slug()}")
-                try:
-                    yield from solve_executions(data_catalog, diagnostic, provider)
-                except InvalidDiagnosticException as e:
-                    # Skip diagnostics that don't have matching data
-                    logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")
-                    continue
+        no_data = errored = 0
+        try:
+            for provider in self.provider_registry.providers:
+                for diagnostic in provider.diagnostics():
+                    # Filter the diagnostic based on the provided filters
+                    if not matches_filter(diagnostic, filters):
+                        logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
+                        continue
+                    logger.info(f"Solving {diagnostic.full_slug()}")
+                    try:
+                        yield from solve_executions(data_catalog, diagnostic, provider)
+                    except InvalidDiagnosticException as e:
+                        # Skip diagnostics that don't have matching data
+                        logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")
+                        no_data += 1
+                    except Exception:
+                        # One broken diagnostic must not abort the solve and orphan work already submitted
+                        logger.exception(f"Failed to solve {diagnostic.full_slug()}, skipping it")
+                        errored += 1
+        finally:
+            if no_data or errored:
+                logger.info(
+                    f"Skipped {no_data + errored} diagnostics: "
+                    f"{no_data} with no matching data, {errored} errored"
+                )
 
 
 DEFAULT_STALE_EXECUTION_AGE_SECONDS = 6 * 60 * 60
@@ -572,6 +749,8 @@ def fail_stale_in_progress_executions(
     db: Database,
     *,
     stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
+    scratch_root: pathlib.Path | None = None,
+    results_root: pathlib.Path | None = None,
 ) -> int:
     """
     Mark abandoned in-progress executions as failed so the next solve can retry them.
@@ -592,6 +771,13 @@ def fail_stale_in_progress_executions(
         Minimum age in seconds before an in-progress execution is considered
         abandoned. Defaults to 6 hours, matching the Celery and LocalExecutor
         per-task time limits.
+    scratch_root
+        Scratch directory the executions wrote to.
+        When given, an execution with no scratch output is recorded as never started
+        rather than abandoned.
+    results_root
+        Results directory the API serves logs from.
+        When given with ``scratch_root``, the partial log of an abandoned execution is copied there.
 
     Returns
     -------
@@ -600,6 +786,7 @@ def fail_stale_in_progress_executions(
     """
     cutoff = _stale_execution_cutoff(stale_after_seconds)
 
+    adopt_logs: list[str] = []
     with db.session.begin():
         stale = (
             db.session.query(Execution)
@@ -607,18 +794,110 @@ def fail_stale_in_progress_executions(
             .all()
         )
         for execution in stale:
+            started = scratch_root is None or (scratch_root / execution.output_fragment).exists()
+            reason = ExecutionFailureReason.Abandoned if started else ExecutionFailureReason.NotStarted
             logger.warning(
-                f"Marking abandoned execution {execution.id} (group "
+                f"Marking {reason.value} execution {execution.id} (group "
                 f"{execution.execution_group_id}) as failed; created at {execution.created_at}"
             )
-            execution.mark_failed()
+            execution.mark_failed(reason)
+            if scratch_root is not None and started:
+                adopt_logs.append(execution.output_fragment)
             # This reaper only runs from a real solve (never from reingest), so no
             # update_dirty guard is needed here.
             execution.execution_group.dirty = True
 
+    # Copied after the commit so file I/O does not hold the database write lock.
+    if scratch_root is not None and results_root is not None:
+        for fragment in adopt_logs:
+            try:
+                copy_output_file(scratch_root, results_root, fragment, EXECUTION_LOG_FILENAME)
+            except FileNotFoundError:
+                logger.debug(f"No partial log to adopt for abandoned execution at {fragment}")
+            except (OSError, ValueError) as e:
+                logger.warning(f"Could not adopt the partial log of abandoned execution at {fragment}: {e}")
+
     if stale:
         logger.info(f"Marked {len(stale)} stale in-progress executions as failed")
     return len(stale)
+
+
+@frozen
+class SolveOutcome:
+    """What went wrong in a solve, so the caller can exit non-zero."""
+
+    unhealthy_providers: list[str] = attrs.field(factory=list)
+    """Slugs of the providers left out because they failed their health check"""
+
+    failed_executions: int = 0
+    """
+    Executions submitted by this solve that had failed when it finished.
+
+    Always 0 unless the solve waited, because results are only known after waiting.
+    Undercounts when a result is recorded after ``join`` returns, eg. a slow Celery result callback.
+    """
+
+    @property
+    def ok(self) -> bool:
+        """Whether every provider was healthy and no submitted execution failed"""
+        return not self.unhealthy_providers and not self.failed_executions
+
+
+def check_provider_health(
+    providers: Sequence[DiagnosticProvider],
+    config: Config,
+    filters: SolveFilterOptions | None = None,
+) -> dict[str, list[str]]:
+    """
+    Health check the providers a solve would use, logging each problem found.
+
+    Parameters
+    ----------
+    providers
+        Configured providers
+    config
+        The application configuration
+    filters
+        Solve filters, which limit the providers checked to those with a diagnostic the solve would use
+
+    Returns
+    -------
+    :
+        The problems found for each provider checked, keyed by slug
+    """
+    results = {}
+    for provider in providers:
+        if not any(matches_filter(diagnostic, filters) for diagnostic in provider.diagnostics()):
+            continue
+        results[provider.slug] = provider.check_health(config)
+        for problem in results[provider.slug]:
+            logger.error(f"Provider {provider.slug} failed its health check: {problem}")
+    return results
+
+
+def _log_submitted_outcomes(db: Database, execution_ids: list[int]) -> int:
+    """Log how the executions submitted by a solve ended and return how many failed."""
+    if not execution_ids:
+        return 0
+    with db.session.begin():
+        rows = (
+            db.session.query(Execution.successful, func.count())
+            .filter(Execution.id.in_(execution_ids))
+            .group_by(Execution.successful)
+            .all()
+        )
+    outcomes: dict[bool | None, int] = {successful: count for successful, count in rows}
+    failed = outcomes.get(False, 0)
+    logger.info(
+        f"Executions submitted in this solve: {outcomes.get(True, 0)} succeeded, {failed} failed, "
+        f"{outcomes.get(None, 0)} still in progress"
+    )
+    if outcomes.get(None, 0):
+        logger.warning(
+            "Some executions were still being recorded when the solve finished, "
+            "so a failure among them is not reflected in the exit code"
+        )
+    return failed
 
 
 def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
@@ -634,7 +913,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     filters: SolveFilterOptions | None = None,
     limit: int | None = None,
     rerun_failed: bool = False,
-) -> None:
+    check_health: bool = True,
+) -> SolveOutcome:
     """
     Solve for executions that require recalculation
 
@@ -645,6 +925,14 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     copying their outputs to the results directory and ingesting them.
     ``timeout`` bounds that wait; a non-positive ``timeout`` (``<= 0``) waits with no time limit.
     ``wait=False`` queues the executions and returns immediately without collecting their results.
+
+    When ``check_health`` is True and the executor runs diagnostics on this host,
+    each provider in scope is health checked first and an unhealthy provider is left out of the solve.
+
+    Returns
+    -------
+    :
+        The providers left out as unhealthy and how many submitted executions failed
 
     Raises
     ------
@@ -666,7 +954,9 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     else:
         # Reap any executions that were left in-progress by a previous run that crashed,
         # hit walltime, or otherwise lost its result-handling callback.
-        fail_stale_in_progress_executions(db)
+        fail_stale_in_progress_executions(
+            db, scratch_root=config.paths.scratch, results_root=config.paths.results
+        )
 
     executor = None if dry_run else config.executor.build(config, db)
 
@@ -680,9 +970,21 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             f"scratch outputs with `ref executions reingest --include-failed`."
         )
 
+    unhealthy: list[str] = []
+    # Optional executor attribute, so executors from other packages need not define it.
+    if check_health and execute and getattr(executor, "runs_on_solve_host", False):
+        health = check_provider_health(solver.provider_registry.providers, config, filters)
+        unhealthy = [slug for slug, problems in health.items() if problems]
+    if unhealthy:
+        logger.error(f"Skipping the diagnostics of unhealthy providers: {', '.join(unhealthy)}")
+        filters = filters or SolveFilterOptions()
+        filters = attrs.evolve(filters, exclude_provider=[*(filters.exclude_provider or []), *unhealthy])
+
     diagnostic_count: dict[str, int] = {}
     provider_count: dict[str, int] = {}
     total_count = 0
+    skipped: Counter[str] = Counter()
+    submitted_ids: list[int] = []
 
     # Prefetch all (provider_slug, diagnostic_slug) -> diagnostic_id mappings
     # so the per-iteration loop body avoids an N+1 SELECT against the
@@ -764,12 +1066,19 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
 
             # A not-yet-created group (dry-run only) would always run;
             # an existing group defers to its should_run logic.
-            if execution_group is not None and not execution_group.should_run(
-                definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
-            ):
+            skip_reason = (
+                execution_group.skip_reason(
+                    definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
+                )
+                if execution_group is not None
+                else None
+            )
+            if skip_reason is not None:
+                skipped[skip_reason.value] += 1
                 continue
 
             if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
+                skipped["one-of check"] += 1
                 logger.info(
                     f"Skipping execution due to one-of check: {potential_execution.execution_slug()!r}"
                 )
@@ -834,10 +1143,22 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         # ``pending`` is only set on the non-dry-run path, where the executor exists.
         if pending is not None and executor is not None:
             pending_definition, pending_execution = pending
-            executor.run(
-                definition=pending_definition,
-                execution=pending_execution,
-            )
+            submitted_ids.append(pending_execution.id)
+            try:
+                executor.run(
+                    definition=pending_definition,
+                    execution=pending_execution,
+                )
+            except Exception as exc:
+                logger.exception(f"Failed to submit {pending_definition.execution_slug()!r}")
+                mark_execution_failed(
+                    db,
+                    config,
+                    pending_definition,
+                    pending_execution.id,
+                    retryable=True,
+                    detail=f"submit to the executor failed: {exc!r}",
+                )
 
         if limit_reached:
             logger.info(f"Reached execution limit of {limit}")
@@ -850,11 +1171,21 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     for prov, count in provider_count.items():
         logger.info(f"  {prov}: {count} new executions")
 
+    if skipped:
+        logger.info(
+            f"Skipped {skipped.total()} executions: "
+            + ", ".join(f"{count} {reason}" for reason, count in skipped.items())
+        )
+
     # Executors may expose extra end-of-solve reporting, such as per-queue submission counts
     log_submission_summary = getattr(executor, "log_submission_summary", None)
     if log_submission_summary is not None:
         log_submission_summary()
 
-    if wait and executor is not None:
-        executor.join(timeout=timeout)
-        logger.info("All executions complete")
+    if not (wait and executor is not None):
+        return SolveOutcome(unhealthy_providers=unhealthy)
+
+    executor.join(timeout=timeout)
+    return SolveOutcome(
+        unhealthy_providers=unhealthy, failed_executions=_log_submitted_outcomes(db, submitted_ids)
+    )

@@ -29,6 +29,7 @@ from climate_ref_core.regression.gate import (
 )
 from climate_ref_core.regression.manifest import (
     COMMITTED_BUNDLE_FILES,
+    COMMITTED_DIRNAME,
     SCHEMA_VERSION,
     Manifest,
     NativeEntry,
@@ -36,6 +37,10 @@ from climate_ref_core.regression.manifest import (
     sha256_bytes,
     sha256_file,
     verify_committed_integrity,
+)
+from climate_ref_core.regression.report_store import (
+    ReportStore,
+    build_report_store,
 )
 from climate_ref_core.regression.store import (
     NativeStore,
@@ -46,6 +51,7 @@ from climate_ref_core.regression.store import (
 
 __all__ = [
     "COMMITTED_BUNDLE_FILES",
+    "COMMITTED_DIRNAME",
     "SCHEMA_VERSION",
     "Action",
     "GateDecision",
@@ -53,11 +59,13 @@ __all__ = [
     "NativeEntry",
     "NativeStore",
     "NativeStoreUnavailableError",
+    "ReportStore",
     "S3WriteConfig",
     "Tolerance",
     "assert_bundle_regression",
     "build_native_snapshot",
     "build_native_store",
+    "build_report_store",
     "compare_json_content",
     "compute_committed_digests",
     "decide_coupling",

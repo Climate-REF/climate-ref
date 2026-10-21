@@ -21,6 +21,223 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.19.2 (2026-10-20)
+
+### Features
+
+- Added a `--skip-existing` option to `ref datasets ingest`.
+  Files that are already in the database are skipped without being parsed,
+  which speeds up repeated ingests of a large archive.
+  Files are assumed to be immutable, so run a full ingest periodically to pick up changed files.
+  Combine it with `--chunk-size` to keep memory bounded on archives with millions of files. ([#968](https://github.com/Climate-REF/climate-ref/pull/968))
+- Added `--failure-reason` to `ref executions list-groups` and a new `ref executions requeue` command.
+  `requeue` flags failed execution groups as dirty so the next `ref solve` reruns them,
+  optionally narrowed to one kind of failure, eg. `ref executions requeue --failure-reason system_error`. ([#969](https://github.com/Climate-REF/climate-ref/pull/969))
+
+### Improvements
+
+- `ref datasets ingest --chunk-size` now streams obs4MIPs, obs4REF, PMP climatology and ESMValTool reference datasets
+  instead of falling back to loading the whole catalog. ([#968](https://github.com/Climate-REF/climate-ref/pull/968))
+
+
+## climate-ref 0.19.1 (2026-10-19)
+
+### Bug Fixes
+
+- Fixed `ILAMBStandard.execute` passing a glob string to ILAMB where it would have expected a regular expression. ([#952](https://github.com/Climate-REF/climate-ref/pull/952))
+- The ECS, TCR, TCRE and ZEC diagnostics now decode `branch_time_in_parent` with the child's `parent_time_units`,
+  as the CMIP6 conventions specify, instead of the parent's own time units. ([#964](https://github.com/Climate-REF/climate-ref/pull/964))
+- Fixed fetching CMIP6 test data with intake-esgf 2026.9 and later, which searches CMIP7 unless a project is given.
+  ESGF requests now always name their project. ([#966](https://github.com/Climate-REF/climate-ref/pull/966))
+
+
+## climate-ref 0.19.0 (2026-10-16)
+
+### Breaking Changes
+
+- `ref solve` and `ref datasets ingest --solve` now exit non-zero when any execution submitted by the solve fails while waiting for results.
+  Scripts that ignored failed executions will now see a failing exit code. ([#961](https://github.com/Climate-REF/climate-ref/pull/961))
+
+### Features
+
+- `ref solve` now health checks each provider before solving when diagnostics run on the solving host.
+  The diagnostics of an unhealthy provider are skipped and the command exits non-zero.
+  `ref providers check-health` runs the same check on its own. ([#955](https://github.com/Climate-REF/climate-ref/pull/955))
+- Long-running solves and ingests now log their progress every five minutes, including when stuck.
+  Set `REF_LOG_PROGRESS_INTERVAL` to change the interval in seconds, or 0 to turn it off. ([#959](https://github.com/Climate-REF/climate-ref/pull/959))
+
+### Improvements
+
+- Failed executions now record a `failure_reason`, shown by `ref executions list-groups` and `ref executions inspect`.
+  This tells an execution killed mid-run or never started apart from a diagnostic error.
+  The partial log of an abandoned execution is now kept, so the API can serve it. ([#955](https://github.com/Climate-REF/climate-ref/pull/955))
+- Execution warnings and errors now reach the console while a diagnostic runs, instead of only its `out.log`, prefixed with the execution they came from.
+  Set `REF_LOG_JSON=true` to write console logs as JSON, one record per line, tagged with the execution.
+  Console logs are only coloured on a terminal, and a failed conda command now logs its exit code and the end of its output. ([#958](https://github.com/Climate-REF/climate-ref/pull/958))
+- A failed execution's log now ends with a line saying why it failed, such as a timeout or an output that could not be copied.
+  `ref solve` now logs why execution groups were skipped and how many of its submitted executions succeeded or failed. ([#961](https://github.com/Climate-REF/climate-ref/pull/961))
+
+### Bug Fixes
+
+- Database backups taken before migrations and by `ref db backup` are now consistent while another process writes to the database.
+  Previously a plain file copy could produce a corrupt backup. ([#953](https://github.com/Climate-REF/climate-ref/pull/953))
+- An execution is now retried when micromamba fails to start, rather than being recorded as a diagnostic error. ([#958](https://github.com/Climate-REF/climate-ref/pull/958))
+- Halved the peak memory of the ILAMB `lai-avh15c1` diagnostic, from around 14 GB to around 7 GB per execution.
+  The AVHRR LAI reference is now coarsened to a true 0.5 degree grid with correct cell bounds,
+  where before it was coarsened to ~0.35 degrees with invalid bounds.
+  Its scores change slightly as a result. ([#960](https://github.com/Climate-REF/climate-ref/pull/960))
+- Executions interrupted by Ctrl-C during an HPC solve, rejected on submit, or failing while their failure was recorded are now marked failed and retried, instead of being left in progress.
+  A diagnostic that raises while being solved is now skipped rather than aborting the whole solve. ([#961](https://github.com/Climate-REF/climate-ref/pull/961))
+
+
+## climate-ref 0.18.3 (2026-10-12)
+
+### Improvements
+
+- Fetching test data for a test case that already has a catalog now resolves the datasets that catalog records,
+  rather than re-running the facet search each request declares.
+
+  obs4MIPs and obs4REF `instance_id`s are now the identifiers ESGF publishes the datasets under. ([#930](https://github.com/Climate-REF/climate-ref/pull/930))
+
+### Bug Fixes
+
+- CMIP6 `instance_id`s now only name the primary activity of a dataset that belongs to several, to match the
+  identifier ESGF publishes it under. The `activity_id` metadata still reports every activity the
+  dataset belongs to.
+
+  Fixed CMIP7 conversion of datasets extended past the end of their CMIP6 source (`extend_historical_to`).
+
+  A converted CMIP7 file's `tracking_id` is now derived from the file being written rather
+  than minted at random.
+
+  `ref test-cases fetch` now rewrites a test case's catalog whenever its content would change. ([#930](https://github.com/Climate-REF/climate-ref/pull/930))
+- Existing databases are migrated to the new ESGF-style `instance_id`s,
+  so the identifier format change no longer re-registers every dataset under a new id on the next ingestion.
+  Execution hashes are not rewritten, so affected execution groups re-run on the next solve. ([#933](https://github.com/Climate-REF/climate-ref/pull/933))
+- Fixed `ref solve` failing with `Invalid value ... for dtype float64` on CMIP6 or CMIP7 data ingested with the `drs` parser, when a file stores `branch_time_in_parent` or `branch_time_in_child` as a string. ([#949](https://github.com/Climate-REF/climate-ref/pull/949))
+- The ESMValTool `cloud-radiative-effects` and `sea-ice-area-basic` diagnostics no longer swap the model
+  and reference series for models whose name sorts after the observation. ([#950](https://github.com/Climate-REF/climate-ref/pull/950))
+
+
+## climate-ref 0.18.2 (2026-09-09)
+
+### Features
+
+- Added the monthly annual cycle values as series in the PMP annual cycle diagnostic.
+  Each region and statistic pair now produces a 12 point series indexed by month number,
+  with a `level` dimension for the 3D pressure-level variables. ([#901](https://github.com/Climate-REF/climate-ref/pull/901))
+
+### Bug Fixes
+
+- Updated the PMP conda environment to `pcmdi_metrics` 4.2.1, `enso_metrics` 2.0.1 and Python 3.12.
+  The extratropical modes of variability diagnostics now run roughly 40x faster
+  because the variability modes analysis chunks its SVD (singular value decomposition).
+  `enso_metrics` 2.0.1 fixes the ENSO feedback metrics on partial calendar years (CLIVAR-PRP/ENSO_metrics#98). ([#901](https://github.com/Climate-REF/climate-ref/pull/901))
+- Fixed integration tests silently passing when test-case data was missing or stale.
+  `ref test-cases fetch --strict` now fails if any catalog cannot be resolved,
+  and cached CMIP7 conversions are validated and rebuilt when broken.
+  Added a CMIP7 test case for the ozone diagnostic. ([#925](https://github.com/Climate-REF/climate-ref/pull/925))
+- Pinned the PMP annual cycle and modes of variability CMIP6 requirements to the `Amon` table.
+  Previously monthly variables published under other tables, such as `Emon` or `AERmonZ`,
+  were included in the same execution and the diagnostic failed to find its input files. ([#926](https://github.com/Climate-REF/climate-ref/pull/926))
+
+
+## climate-ref 0.18.1 (2026-09-04)
+
+### Improvements
+
+- Disabled micromamba's file locking for commands run inside a provider environment causing performance issues on NFS filesystems.
+  Environment creation still takes the lock. ([#922](https://github.com/Climate-REF/climate-ref/pull/922))
+- Baseline diff reports now shade a NetCDF variable amber and tag it `noise`
+  when every difference is at most `1e-9` times the base ref's own magnitude,
+  instead of shading it as a real change.
+  This keeps the last-bit wobble of a run reproduced on different hardware
+  from burying the rows that actually moved. ([#923](https://github.com/Climate-REF/climate-ref/pull/923))
+
+### Bug Fixes
+
+- Fixed the noise determination for integers or an infinite value. ([#924](https://github.com/Climate-REF/climate-ref/pull/924))
+
+
+## climate-ref 0.18.0 (2026-09-04)
+
+### Features
+
+- Accepts esm-hist alongside historical in diagnostic data requirements. ([#893](https://github.com/Climate-REF/climate-ref/pull/893))
+- Ingests the obs4REF collection under its own `obs4ref` source type.
+  The `instance_id` for `obs4ref` datasets now starts with `obs4REF`.
+  The diagnostics keep asking for obs4MIPs data.
+  Where a dataset is ingested from both, the newest version is used, and the obs4MIPs copy wins a tie.
+  Publishing a dataset to obs4MIPs therefore takes over from the registry copy without any change to the REF.
+  A newer registry version is still preferred over a stale published one, so nothing reruns for no reason.
+
+  `ref doctor` gains three checks: `misfiled-obs4ref`, `superseded-obs4ref` and `unsolvable-diagnostics`.
+  Data ingested with `--source-type obs4mips` in earlier releases still solves,
+  but re-ingesting it with `--source-type obs4ref` is recommended.
+
+  A data requirement can now declare the collections that may supply it,
+  through the new `fallback_source_types` field on `DataRequirement`.
+  A dataset present under `source_type` still wins,
+  and the data is delivered under `source_type` whichever collection it came from.
+  The solver, `ref doctor` and the generated reference data documentation all read the declaration.
+  Every observational requirement declares `obs4ref` as a fallback. ([#898](https://github.com/Climate-REF/climate-ref/pull/898))
+- `ref test-cases diff` renders the regression baselines changed on a branch as a local HTML report.
+  Images appear old and new side by side, with a button that overlays them.
+  Text outputs get a coloured diff,
+  and NetCDF and other binaries are listed with a size delta and a link to each blob.
+  `--html-dir` chooses where the report is written,
+  and `--no-fetch` skips blob downloads and reports sizes only. ([#910](https://github.com/Climate-REF/climate-ref/pull/910))
+- `ref test-cases diff --upload <prefix>` publishes the report to a public object store,
+  and `--comment-output <path>` writes the pull request comment markdown that links into it.
+
+  Reports are stored in their own bucket, separate from the baselines. ([#912](https://github.com/Climate-REF/climate-ref/pull/912))
+- Summarise the changes to `.nc` files in the `ref test-cases diff` report.
+  Each file gets a collapsible listing of its ncdump-style header and a table with one row per
+  data variable carrying min, max, mean, NaN count, the largest absolute and relative difference,
+  and the number of cells that differ. ([#913](https://github.com/Climate-REF/climate-ref/pull/913))
+- Regression baseline diffs are now published as an HTML report linked from a short pull request comment, with images shown side by side and NetCDF outputs summarised per variable. ([#915](https://github.com/Climate-REF/climate-ref/pull/915))
+- Diff the committed regression artefacts in the `ref test-cases diff` report, alongside the native outputs.
+  Each one carries an "in PR" pill, because those bytes also appear in the pull request's own file list.
+  Every case page also lists the folder structure of its captured baseline, the committed bundle included,
+  showing the files that did not move as well as the ones that did. ([#919](https://github.com/Climate-REF/climate-ref/pull/919))
+
+### Improvements
+
+- The ESMValTool diagnostics that run on a single historical experiment now group by `experiment_id`,
+  so their metric values carry the experiment as a dimension.
+  Each affected diagnostic has its version bumped, so existing executions are recomputed on the next solve. ([#914](https://github.com/Climate-REF/climate-ref/pull/914))
+
+### Bug Fixes
+
+- Celery workers now reuse a single database connection for the lifetime of a worker process
+  instead of opening a new one for every result they handle.
+  An execution that is still in flight when `ref solve` fails is now recorded as failed-retryable. ([#879](https://github.com/Climate-REF/climate-ref/pull/879))
+- Fabricated CMIP7 test data now reaches years without real CMIP6 source data by repeating the final year,
+  rather than relabelling the whole series onto the requested end date. ([#887](https://github.com/Climate-REF/climate-ref/pull/887))
+- - Fabricated CMIP7 test data now bumps its dataset version,
+    so a series padded with repeated years no longer shares an `instance_id` with the real data.
+  - The synthetic CMIP7 catalog generator now extends full-length historical runs on every calendar.
+
+  ([#895](https://github.com/Climate-REF/climate-ref/pull/895))
+- - The synthetic CMIP7 catalog now covers the five models using a 360_day calendar,
+    which previously ended in 2014 and were dropped by any diagnostic needing coverage past that year.
+  - CMIP7 tracking ids are now derived from the dataset instance id,
+    so regenerating the catalog leaves unchanged rows alone.
+
+  ([#896](https://github.com/Climate-REF/climate-ref/pull/896))
+- Dataset discovery now walks the whole directory tree instead of stopping 10 directories below the root.
+  The CMIP7 DRS nests files deeper than that, so ingesting a `MIP-DRS7` root found no files at all. ([#897](https://github.com/Climate-REF/climate-ref/pull/897))
+- Removed the `immutable` flag from read-only SQLite connections.
+  The flag told SQLite to skip locking, which did not hold when a background run was writing
+  to the same database. The connection is still opened read-only. ([#908](https://github.com/Climate-REF/climate-ref/pull/908))
+- PMP executions are now capped at two threads each.
+  Without a limit the scientific stack sized its thread pools from the machine's core count. ([#911](https://github.com/Climate-REF/climate-ref/pull/911))
+
+### Trivial/Internal Changes
+
+- [#877](https://github.com/Climate-REF/climate-ref/pull/877), [#888](https://github.com/Climate-REF/climate-ref/pull/888), [#916](https://github.com/Climate-REF/climate-ref/pull/916), [#917](https://github.com/Climate-REF/climate-ref/pull/917), [#918](https://github.com/Climate-REF/climate-ref/pull/918), [#920](https://github.com/Climate-REF/climate-ref/pull/920)
+
+
 ## climate-ref 0.17.2 (2026-08-14)
 
 ### Features

@@ -21,6 +21,7 @@ from climate_ref.models import ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.diagnostic import Diagnostic as DiagnosticModel
 from climate_ref.models.execution import (
     Execution,
+    ExecutionFailureReason,
     ExecutionGroup,
     ExecutionOutput,
     ResultOutputType,
@@ -37,6 +38,12 @@ from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.resources import ResourceUsage
+
+
+def test_execution_future_repr(mocker, mock_definition):
+    future = ExecutionFuture(mocker.Mock(), definition=mock_definition, execution_id=7032)
+
+    assert repr(future) == f"<ExecutionFuture {mock_definition.execution_slug()} execution_id=7032>"
 
 
 @pytest.fixture
@@ -240,7 +247,7 @@ def test_handle_execution_result_diagnostic_failure(config, db, mock_execution_r
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.DiagnosticError)
     assert not mock_execution_result.execution_group.dirty
 
 
@@ -253,7 +260,7 @@ def test_handle_execution_result_system_failure(config, db, mock_execution_resul
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
     assert mock_execution_result.execution_group.dirty
 
 
@@ -281,7 +288,7 @@ def test_handle_execution_result_ingestion_failure_leaves_dirty(
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.ResultError)
     mock_execution_result.mark_successful.assert_not_called()
     assert mock_execution_result.execution_group.dirty
 
@@ -297,7 +304,7 @@ def test_handle_execution_result_system_failure_respects_update_dirty_false(
 
     handle_execution_result(config, db, mock_execution_result, result, update_dirty=False)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
     assert mock_execution_result.execution_group.dirty is False
 
 
@@ -316,7 +323,7 @@ def test_handle_execution_result_missing_log_file_leaves_dirty(
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
     assert mock_execution_result.execution_group.dirty
 
 
@@ -337,8 +344,101 @@ def test_handle_execution_result_missing_output_marks_failed(
     # raises FileNotFoundError (not mocked).
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.ResultError)
     mock_execution_result.mark_successful.assert_not_called()
+
+
+def _results_log(config, execution):
+    return config.paths.results / execution.output_fragment / EXECUTION_LOG_FILENAME
+
+
+def test_failure_appends_trailer_to_results_log(config, db, mock_execution_result, mock_definition):
+    result = ExecutionResult(
+        definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=False
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    trailer = _results_log(config, mock_execution_result).read_text()
+    assert "REF: execution failed (diagnostic_error): the diagnostic reported failure" in trailer
+
+
+def test_failure_trailer_uses_supplied_detail(config, db, mock_execution_result, mock_definition):
+    result = ExecutionResult(
+        definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=True
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result, detail="per-task timeout")
+
+    trailer = _results_log(config, mock_execution_result).read_text()
+    assert "REF: execution failed (system_error): per-task timeout" in trailer
+
+
+def test_failure_trailer_is_written_on_reingest(config, db, mock_execution_result, mock_definition):
+    result = ExecutionResult(
+        definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=True
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result, update_dirty=False)
+
+    assert "REF: execution failed" in _results_log(config, mock_execution_result).read_text()
+
+
+def test_missing_log_creates_results_log_with_trailer(
+    config, db, mock_execution_result, mocker, definition_factory
+):
+    definition = definition_factory(diagnostic=mocker.Mock())
+    definition.output_directory.mkdir(parents=True, exist_ok=True)
+    result = ExecutionResult(
+        definition=definition, successful=True, metric_bundle_filename=pathlib.Path("diagnostic.json")
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    trailer = _results_log(config, mock_execution_result).read_text()
+    assert "REF: execution failed (system_error)" in trailer
+    assert "log file" in trailer
+
+
+def test_output_copy_failure_trailer(config, db, mock_execution_result, mock_definition):
+    result = ExecutionResult(
+        definition=mock_definition, successful=True, metric_bundle_filename=pathlib.Path("diagnostic.json")
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    assert "could not copy outputs" in _results_log(config, mock_execution_result).read_text()
+
+
+def test_ingest_failure_trailer(config, db, mock_execution_result, mocker, mock_definition):
+    result = ExecutionResult(
+        definition=mock_definition, successful=True, metric_bundle_filename=pathlib.Path("bundle.json")
+    )
+    mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+    mocker.patch(
+        "climate_ref.executor.result_handling.ingest_execution_result", side_effect=RuntimeError("boom")
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    trailer = _results_log(config, mock_execution_result).read_text()
+    assert "could not ingest results" in trailer
+    assert "boom" in trailer
+
+
+def test_failure_trailer_never_raises(config, db, mock_execution_result, mocker, mock_definition):
+    result = ExecutionResult(
+        definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=False
+    )
+    mocker.patch("climate_ref.executor.result_handling.copy_output_file")
+    # A file where the results directory should be makes the trailer unwritable
+    blocker = config.paths.results / mock_execution_result.output_fragment
+    blocker.parent.mkdir(parents=True, exist_ok=True)
+    blocker.write_text("not a directory")
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    mock_execution_result.mark_failed.assert_called_once()
 
 
 @pytest.fixture

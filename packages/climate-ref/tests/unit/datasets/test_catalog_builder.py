@@ -60,7 +60,7 @@ def empty_dir(tmp_path):
 
 class TestDiscoverFiles:
     def test_finds_nc_files(self, tmp_tree):
-        files = discover_files([str(tmp_tree)], include_patterns=["*.nc"], depth=10)
+        files = discover_files([str(tmp_tree)], include_patterns=["*.nc"])
         names = [Path(f).name for f in files]
         assert "root.nc" in names
         assert "a.nc" in names
@@ -69,41 +69,34 @@ class TestDiscoverFiles:
         # .txt should be excluded
         assert "root.txt" not in names
 
-    def test_depth_limiting(self, tmp_tree):
-        # depth=0: only root directory
-        files_d0 = discover_files([str(tmp_tree)], include_patterns=["*.nc"], depth=0)
-        names_d0 = [Path(f).name for f in files_d0]
-        assert names_d0 == ["root.nc"]
+    def test_walks_arbitrarily_deep_trees(self, tmp_path):
+        leaf = tmp_path
+        for level in range(14):
+            leaf = leaf / f"level{level}"
+        leaf.mkdir(parents=True)
+        (leaf / "deep.nc").touch()
 
-        # depth=1: root + sub
-        files_d1 = discover_files([str(tmp_tree)], include_patterns=["*.nc"], depth=1)
-        names_d1 = sorted(Path(f).name for f in files_d1)
-        assert names_d1 == ["a.nc", "root.nc"]
-
-        # depth=2: root + sub + deep
-        files_d2 = discover_files([str(tmp_tree)], include_patterns=["*.nc"], depth=2)
-        names_d2 = sorted(Path(f).name for f in files_d2)
-        assert names_d2 == ["a.nc", "b.nc", "root.nc"]
+        assert discover_files([str(tmp_path)], include_patterns=["*.nc"]) == [str(leaf / "deep.nc")]
 
     def test_nonexistent_path(self):
-        files = discover_files(["/nonexistent/path"], include_patterns=["*.nc"], depth=5)
+        files = discover_files(["/nonexistent/path"], include_patterns=["*.nc"])
         assert files == []
 
     def test_single_file_path(self, tmp_tree):
         nc_file = str(tmp_tree / "root.nc")
-        files = discover_files([nc_file], include_patterns=["*.nc"], depth=0)
+        files = discover_files([nc_file], include_patterns=["*.nc"])
         assert files == [nc_file]
 
         # Non-matching pattern
-        files = discover_files([nc_file], include_patterns=["*.txt"], depth=0)
+        files = discover_files([nc_file], include_patterns=["*.txt"])
         assert files == []
 
     def test_empty_directory(self, empty_dir):
-        files = discover_files([str(empty_dir)], include_patterns=["*.nc"], depth=5)
+        files = discover_files([str(empty_dir)], include_patterns=["*.nc"])
         assert files == []
 
     def test_default_include_all(self, tmp_tree):
-        files = discover_files([str(tmp_tree)], depth=0)
+        files = discover_files([str(tmp_tree)])
         names = sorted(Path(f).name for f in files)
         assert "root.nc" in names
         assert "root.txt" in names
@@ -145,7 +138,6 @@ class TestBuildCatalog:
             paths=[str(tmp_tree)],
             parsing_func=_good_parser,
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=1,
         )
         assert isinstance(df, pd.DataFrame)
@@ -158,7 +150,6 @@ class TestBuildCatalog:
             paths=[str(tmp_tree)],
             parsing_func=_good_parser,
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=2,
         )
         assert len(df) == 4
@@ -168,7 +159,6 @@ class TestBuildCatalog:
             paths=[str(tmp_tree)],
             parsing_func=_good_parser,
             include_patterns=["*.nc"],
-            depth=10,
             n_jobs=-1,
         )
         assert len(df) == 4
@@ -180,11 +170,10 @@ class TestBuildCatalog:
                 paths=[str(tmp_tree)],
                 parsing_func=_mixed_parser,
                 include_patterns=["*.nc", "*.txt"],
-                depth=0,
                 n_jobs=1,
             )
-        # Only root.nc should survive (depth=0, .txt filtered as INVALID)
-        assert len(df) == 1
+        # The four .nc files survive, root.txt is filtered as INVALID
+        assert len(df) == 4
         assert "INVALID_ASSET" not in df.columns
         assert "TRACEBACK" not in df.columns
 
@@ -194,7 +183,6 @@ class TestBuildCatalog:
                 paths=[str(empty_dir)],
                 parsing_func=_good_parser,
                 include_patterns=["*.nc"],
-                depth=5,
             )
 
     def test_all_invalid_returns_empty(self, tmp_tree):
@@ -206,8 +194,52 @@ class TestBuildCatalog:
                 paths=[str(tmp_tree)],
                 parsing_func=_all_invalid,
                 include_patterns=["*.nc"],
-                depth=10,
             )
+        assert df.empty
+
+    def test_skip_paths_are_not_parsed(self, tmp_tree):
+        skipped = str(tmp_tree / "sub" / "a.nc")
+        df = build_catalog(
+            paths=[str(tmp_tree)],
+            parsing_func=_good_parser,
+            include_patterns=["*.nc"],
+            skip=lambda paths: {skipped},
+        )
+        assert len(df) == 3
+        assert skipped not in set(df["path"])
+
+    def test_all_skipped_returns_empty(self, tmp_tree):
+        df = build_catalog(
+            paths=[str(tmp_tree)],
+            parsing_func=_good_parser,
+            include_patterns=["*.nc"],
+            skip=set,
+        )
+        assert df.empty
+
+    def test_all_invalid_after_skip_raises_when_requested(self, tmp_tree):
+        def _all_invalid(file: str, **kwargs: Any) -> dict[str, Any]:
+            return {"INVALID_ASSET": file, "TRACEBACK": "always fails"}
+
+        skipped = str(tmp_tree / "sub" / "a.nc")
+        with pytest.warns(UserWarning, match="Unable to parse"):
+            with pytest.raises(ValueError, match="nothing valid"):
+                build_catalog(
+                    paths=[str(tmp_tree)],
+                    parsing_func=_all_invalid,
+                    include_patterns=["*.nc"],
+                    skip=lambda paths: {skipped},
+                    error_if_none_valid="nothing valid",
+                )
+
+    def test_all_skipped_does_not_raise_when_requested(self, tmp_tree):
+        df = build_catalog(
+            paths=[str(tmp_tree)],
+            parsing_func=_good_parser,
+            include_patterns=["*.nc"],
+            skip=set,
+            error_if_none_valid="nothing valid",
+        )
         assert df.empty
 
 
@@ -223,7 +255,7 @@ class TestParallelParsingSafety:
     def test_parse_files_runs_in_worker_processes(self, tmp_path):
         """n_jobs > 1 must execute the parser out-of-process, not in threads."""
         root = _flat_tree(tmp_path, n=8)
-        assets = discover_files([str(root)], include_patterns=["*.nc"], depth=5)
+        assets = discover_files([str(root)], include_patterns=["*.nc"])
 
         results = parse_files(assets, _pid_parser, n_jobs=2)
 
@@ -236,7 +268,7 @@ class TestParallelParsingSafety:
     def test_parse_files_sequential_runs_in_process(self, tmp_path):
         """n_jobs == 1 stays in-process (no pool overhead)."""
         root = _flat_tree(tmp_path, n=4)
-        assets = discover_files([str(root)], include_patterns=["*.nc"], depth=5)
+        assets = discover_files([str(root)], include_patterns=["*.nc"])
 
         results = parse_files(assets, _pid_parser, n_jobs=1)
 
@@ -260,7 +292,6 @@ class TestParallelParsingSafety:
             paths=[str(root)],
             parsing_func=parse_cmip6_complete,
             include_patterns=["*.nc"],
-            depth=5,
             n_jobs=n_jobs,
         )
 
@@ -279,7 +310,6 @@ class TestParallelParsingSafety:
             paths=[str(root)],
             parsing_func=parse_cmip6_complete,
             include_patterns=["*.nc"],
-            depth=5,
         )
         sequential = build_catalog(n_jobs=1, **kwargs).sort_values("path").reset_index(drop=True)
         parallel = build_catalog(n_jobs=4, **kwargs).sort_values("path").reset_index(drop=True)
@@ -311,7 +341,7 @@ def _wide_tree(tmp_path: Path, num_dirs: int, files_per_dir: int) -> Path:
 class TestIterDiscoveredChunks:
     def test_yields_all_files(self, tmp_path):
         root = _flat_tree(tmp_path, n=25)
-        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], depth=5, chunk_size=10))
+        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], chunk_size=10))
         flat = [p for chunk in chunks for p in chunk]
         assert len(flat) == 25
         assert all(p.endswith(".nc") for p in flat)
@@ -319,7 +349,7 @@ class TestIterDiscoveredChunks:
     def test_chunk_size_respected_at_directory_boundaries(self, tmp_path):
         # 5 directories x 4 files = 20 files. chunk_size=8 forces splits between dirs.
         root = _wide_tree(tmp_path, num_dirs=5, files_per_dir=4)
-        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], depth=5, chunk_size=8))
+        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], chunk_size=8))
         # Every chunk groups whole directories together (no directory split across chunks).
         for chunk in chunks:
             dirs = {str(Path(p).parent) for p in chunk}
@@ -334,18 +364,68 @@ class TestIterDiscoveredChunks:
     def test_empty_root_yields_nothing(self, tmp_path):
         empty = tmp_path / "empty"
         empty.mkdir()
-        chunks = list(iter_discovered_chunks([str(empty)], include_patterns=["*.nc"], depth=5, chunk_size=10))
+        chunks = list(iter_discovered_chunks([str(empty)], include_patterns=["*.nc"], chunk_size=10))
         assert chunks == []
 
     def test_single_file_path(self, tmp_tree):
         nc_file = tmp_tree / "root.nc"
-        chunks = list(
-            iter_discovered_chunks([str(nc_file)], include_patterns=["*.nc"], depth=0, chunk_size=10)
-        )
+        chunks = list(iter_discovered_chunks([str(nc_file)], include_patterns=["*.nc"], chunk_size=10))
         assert chunks == [[str(nc_file)]]
 
 
 class TestIterBuiltCatalogs:
+    def test_skip_is_called_per_chunk(self, tmp_path):
+        root = _wide_tree(tmp_path, num_dirs=4, files_per_dir=3)
+        seen: list[list[str]] = []
+
+        def skip_first_dir(paths: list[str]) -> set[str]:
+            seen.append(paths)
+            return {p for p in paths if Path(p).parent.name == "ds_000"}
+
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                chunk_size=5,
+                skip=skip_first_dir,
+            )
+        )
+
+        assert len(seen) >= 2
+        assert all(len(batch) <= 5 for batch in seen)
+        parsed = {p for df in chunks for p in df["path"]}
+        assert len(parsed) == 9
+        assert not any(Path(p).parent.name == "ds_000" for p in parsed)
+
+    def test_unskipped_files_are_regrouped(self, tmp_path):
+        root = _wide_tree(tmp_path, num_dirs=4, files_per_dir=3)
+
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                chunk_size=5,
+                skip=lambda paths: {p for p in paths if not p.endswith("_000.nc")},
+            )
+        )
+
+        assert [len(df) for df in chunks] == [4]
+
+    def test_all_skipped_yields_nothing(self, tmp_path):
+        root = _wide_tree(tmp_path, num_dirs=2, files_per_dir=3)
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                chunk_size=5,
+                skip=set,
+            )
+        )
+        assert chunks == []
+
     def test_streams_chunks(self, tmp_path):
         root = _wide_tree(tmp_path, num_dirs=4, files_per_dir=3)
         chunks = list(
@@ -353,7 +433,6 @@ class TestIterBuiltCatalogs:
                 paths=[str(root)],
                 parsing_func=_good_parser,
                 include_patterns=["*.nc"],
-                depth=5,
                 n_jobs=1,
                 chunk_size=5,
             )
@@ -373,7 +452,6 @@ class TestIterBuiltCatalogs:
                     paths=[str(tmp_tree)],
                     parsing_func=_mixed_parser,
                     include_patterns=["*.nc", "*.txt"],
-                    depth=10,
                     chunk_size=2,
                 )
             )
@@ -392,7 +470,6 @@ class TestIterBuiltCatalogs:
                 paths=[str(empty)],
                 parsing_func=_good_parser,
                 include_patterns=["*.nc"],
-                depth=5,
                 chunk_size=10,
             )
         )
@@ -405,7 +482,6 @@ class TestIterBuiltCatalogs:
                 paths=[str(root)],
                 parsing_func=_good_parser,
                 include_patterns=["*.nc"],
-                depth=5,
                 n_jobs=1,
                 chunk_size=100,
             )
@@ -423,7 +499,6 @@ class TestIterBuiltCatalogs:
                     paths=[str(tmp_tree)],
                     parsing_func=_all_invalid,
                     include_patterns=["*.nc"],
-                    depth=10,
                     chunk_size=2,
                 )
             )
@@ -438,7 +513,6 @@ class TestIterBuiltCatalogs:
                 paths=[str(root)],
                 parsing_func=_good_parser,
                 include_patterns=["*.nc"],
-                depth=5,
                 chunk_size=2,
             )
         )
@@ -453,7 +527,6 @@ class TestDiscoverEdgeCases:
             iter_discovered_chunks(
                 ["/does/not/exist", str(root)],
                 include_patterns=["*.nc"],
-                depth=5,
                 chunk_size=10,
             )
         )
@@ -467,7 +540,7 @@ class TestDiscoverEdgeCases:
         for i in range(6):
             (root / f"f_{i}.nc").touch()
 
-        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], depth=5, chunk_size=2))
+        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], chunk_size=2))
         # All six files come from one directory; the buffer flushes once at the end.
         assert sum(len(c) for c in chunks) == 6
         for chunk in chunks:
@@ -482,8 +555,6 @@ class TestDiscoverEdgeCases:
         b.mkdir()
         (b / "2.nc").touch()
 
-        chunks = list(
-            iter_discovered_chunks([str(a), str(b)], include_patterns=["*.nc"], depth=5, chunk_size=10)
-        )
+        chunks = list(iter_discovered_chunks([str(a), str(b)], include_patterns=["*.nc"], chunk_size=10))
         flat = [p for chunk in chunks for p in chunk]
         assert len(flat) == 2

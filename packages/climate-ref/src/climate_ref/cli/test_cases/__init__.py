@@ -10,6 +10,7 @@ The command group is split across modules by concern:
 - :mod:`~climate_ref.cli.test_cases.run` -- ``run``
 - :mod:`~climate_ref.cli.test_cases.baselines` -- ``replay`` / ``mint``
 - :mod:`~climate_ref.cli.test_cases.ci_gate` -- ``ci-gate``
+- :mod:`~climate_ref.cli.test_cases.diff` -- ``diff``
 """
 
 from importlib import import_module
@@ -17,7 +18,9 @@ from importlib import import_module
 from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import (
     _build_catalog,
+    _check_pinned_datasets_found,
     _fetch_and_build_catalog,
+    _pin_requests_to_catalog,
     _solve_test_case,
 )
 from climate_ref.cli.test_cases._common import _iter_test_cases
@@ -25,13 +28,15 @@ from climate_ref.cli.test_cases._common import _iter_test_cases
 # Import each command module for its registration side effect on ``app``.
 # The sequence below is the order the verbs appear in ``ref test-cases --help``
 # a dynamic import keeps it explicit, where a plain ``import`` block would be alphabetised by ruff.
-for _command_module in ("discovery", "run", "baselines", "ci_gate"):
+for _command_module in ("discovery", "run", "baselines", "ci_gate", "diff"):
     import_module(f"{__name__}.{_command_module}")
 
 __all__ = [
     "_build_catalog",
+    "_check_pinned_datasets_found",
     "_fetch_and_build_catalog",
     "_iter_test_cases",
+    "_pin_requests_to_catalog",
     "_solve_test_case",
     "app",
 ]

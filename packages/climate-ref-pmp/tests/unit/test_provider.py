@@ -1,10 +1,32 @@
-import builtins
 from pathlib import Path
 
 import pooch
-from climate_ref_pmp import PMPDiagnosticProvider, __version__, provider
+from climate_ref_pmp import (
+    _DEFAULT_THREAD_LIMIT,
+    _THREAD_LIMIT_VARS,
+    PMPDiagnosticProvider,
+    __version__,
+    provider,
+)
 
 from climate_ref_core.data import LayeredResource, PackagedResource
+from climate_ref_core.providers import DataIngestRequest
+from climate_ref_core.source_types import SourceDatasetType
+
+
+def configured_provider(mocker, tmp_path):
+    """Build a provider and run `configure` against a mock config rooted at `tmp_path`."""
+    test_provider = PMPDiagnosticProvider("PMP-Test", "1.0")
+    mock_config = mocker.Mock()
+    mock_config.paths.software = tmp_path / "software"
+    mock_config.ignore_datasets_file = tmp_path / "ignore.yaml"
+    mock_config.ignore_datasets_file.touch()
+    mock_config.ignore_datasets_resource = LayeredResource(
+        packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
+        override=mock_config.ignore_datasets_file,
+    )
+    test_provider.configure(mock_config)
+    return test_provider, mock_config
 
 
 def test_provider():
@@ -89,19 +111,11 @@ class TestPMPProviderHooks:
         result = provider.validate_setup(mock_config)
         assert result is True
 
-    def test_configure_sets_env_vars(self, mocker, tmp_path):
+    def test_configure_sets_env_vars(self, mocker, tmp_path, monkeypatch):
         """Test that configure sets the required environment variables."""
-        test_provider = PMPDiagnosticProvider("PMP-Test", "1.0")
-        mock_config = mocker.Mock()
-        mock_config.paths.software = tmp_path / "software"
-        mock_config.ignore_datasets_file = tmp_path / "ignore.yaml"
-        mock_config.ignore_datasets_file.touch()
-        mock_config.ignore_datasets_resource = LayeredResource(
-            packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
-            override=mock_config.ignore_datasets_file,
-        )
-
-        test_provider.configure(mock_config)
+        for name in _THREAD_LIMIT_VARS:
+            monkeypatch.delenv(name, raising=False)
+        test_provider, mock_config = configured_provider(mocker, tmp_path)
 
         assert "PCMDI_CONDA_EXE" in test_provider.env_overrides
         # The path is recorded without installing anything, so `configure` stays offline.
@@ -110,91 +124,39 @@ class TestPMPProviderHooks:
         )
         assert "FI_PROVIDER" in test_provider.env_overrides
         assert test_provider.env_overrides["FI_PROVIDER"] == "tcp"
+        for name in _THREAD_LIMIT_VARS:
+            assert test_provider.env_overrides[name] == _DEFAULT_THREAD_LIMIT
 
-    def test_ingest_data_skips_when_climate_ref_not_installed(self, mocker, caplog):
-        """Test ingest_data gracefully skips when climate-ref package is not installed."""
+    def test_configure_keeps_user_thread_limits(self, mocker, tmp_path, monkeypatch):
+        """One thread limit in the environment suppresses the default for all of them."""
+        monkeypatch.setenv("OMP_NUM_THREADS", "4")
+        test_provider, _ = configured_provider(mocker, tmp_path)
 
-        mock_config = mocker.Mock()
-        mock_db = mocker.Mock()
+        for name in _THREAD_LIMIT_VARS:
+            assert name not in test_provider.env_overrides
 
-        original_import = builtins.__import__
-
-        def mock_import(name, *args, **kwargs):
-            if name.startswith("climate_ref.datasets"):
-                raise ImportError("No module named 'climate_ref'")
-            return original_import(name, *args, **kwargs)
-
-        mocker.patch.object(builtins, "__import__", side_effect=mock_import)
-
-        provider.ingest_data(mock_config, mock_db)
-
-        assert "climate-ref package not installed" in caplog.text
-
-    def test_ingest_data_path_not_exists(self, mocker, caplog):
-        """Test ingest_data logs warning when data path doesn't exist."""
-        mock_config = mocker.Mock()
-        mock_db = mocker.Mock()
-
+    def test_data_to_ingest_path_not_exists(self, mocker, caplog):
+        """Test data_to_ingest logs warning when data path doesn't exist."""
         mocker.patch.object(provider, "get_data_path", return_value=Path("/nonexistent"))
 
-        provider.ingest_data(mock_config, mock_db)
+        assert provider.data_to_ingest(mocker.Mock()) == []
 
         assert "does not exist" in caplog.text
 
-    def test_ingest_data_climatology_path_not_exists(self, mocker, tmp_path, caplog):
-        """Test ingest_data logs warning when climatology subdirectory doesn't exist."""
-        mock_config = mocker.Mock()
-        mock_db = mocker.Mock()
-
-        # Data path exists but pmp-climatology subdirectory doesn't
+    def test_data_to_ingest_climatology_path_not_exists(self, mocker, tmp_path, caplog):
+        """Test data_to_ingest logs warning when climatology subdirectory doesn't exist."""
         mocker.patch.object(provider, "get_data_path", return_value=tmp_path)
 
-        provider.ingest_data(mock_config, mock_db)
+        assert provider.data_to_ingest(mocker.Mock()) == []
 
         assert "PMP climatology data not found" in caplog.text
 
-    def test_ingest_data_no_valid_datasets(self, mocker, tmp_path, caplog):
-        """Test ingest_data handles case when no valid datasets found."""
-        mock_config = mocker.Mock()
-        mock_db = mocker.Mock()
-
-        # Create the climatology directory
+    def test_data_to_ingest(self, mocker, tmp_path):
+        """Test data_to_ingest requests the climatology directory."""
         climatology_dir = tmp_path / "PMP_obs4MIPsClims"
         climatology_dir.mkdir()
-
-        mocker.patch.object(provider, "get_data_path", return_value=tmp_path)
-        mocker.patch(
-            "climate_ref.datasets.ingest_datasets",
-            side_effect=ValueError("No valid datasets found"),
-        )
-
-        provider.ingest_data(mock_config, mock_db)
-
-        assert "No valid PMP climatology datasets found" in caplog.text
-
-    def test_ingest_data_success(self, mocker, tmp_path):
-        """Test ingest_data calls ingest_datasets with correct parameters."""
-        mock_config = mocker.Mock()
-        mock_db = mocker.Mock()
-
-        # Create the climatology directory
-        climatology_dir = tmp_path / "PMP_obs4MIPsClims"
-        climatology_dir.mkdir()
-
         mocker.patch.object(provider, "get_data_path", return_value=tmp_path)
 
-        mock_stats = mocker.Mock()
-        mock_ingest = mocker.patch(
-            "climate_ref.datasets.ingest_datasets",
-            return_value=mock_stats,
-        )
-
-        provider.ingest_data(mock_config, mock_db)
-
-        # Verify ingest_datasets was called
-        mock_ingest.assert_called_once()
-        call_kwargs = mock_ingest.call_args[1]
-        assert call_kwargs["skip_invalid"] is True
-
-        # Verify stats.log_summary was called
-        mock_stats.log_summary.assert_called_once()
+        assert provider.data_to_ingest(mocker.Mock()) == [
+            DataIngestRequest(SourceDatasetType.PMPClimatology, climatology_dir)
+        ]

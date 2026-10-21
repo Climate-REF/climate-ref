@@ -33,7 +33,15 @@ def _is_system_error(exc: BaseException) -> bool:
     :
         True if the exception is a system-level failure
     """
+    if isinstance(exc, CondaCommandError):
+        return exc.launch_failed
     return isinstance(exc, (MemoryError, OSError, SystemExit, KeyboardInterrupt))
+
+
+def _log_system_error(definition: ExecutionDefinition, detail: str) -> None:
+    logger.error(
+        f"System error running {definition.execution_slug()!r} (will be retried on next solve): {detail}"
+    )
 
 
 def execute_locally(
@@ -64,6 +72,18 @@ def execute_locally(
         Only the executor knows its own concurrency.
         When False the peak memory is measured over this process tree rather than the cgroup.
     """
+    # Bound so every record from this execution, including the diagnostic's own, can be filtered on it
+    with logger.contextualize(execution=definition.execution_slug()):
+        return _execute_locally(definition, log_level, raise_error, measure, exclusive)
+
+
+def _execute_locally(
+    definition: ExecutionDefinition,
+    log_level: str,
+    raise_error: bool,
+    measure: bool,
+    exclusive: bool,
+) -> ExecutionResult:
     logger.info(f"Executing {definition.execution_slug()!r}")
 
     deferred: Exception | None = None
@@ -80,20 +100,22 @@ def execute_locally(
 
             with redirect_logs(definition, log_level):
                 result = definition.diagnostic.run(definition=definition)
+                if not result.successful:
+                    logger.error("Diagnostic reported failure")
 
         except CondaCommandError as e:
-            # We don't need to see the stacktrace for this error
-            # This exception string includes the stdout and stderr from the conda command
-            logger.error(f"Conda command failed for {definition.execution_slug()}: {e}")
-            result = ExecutionResult.build_from_failure(definition, retryable=False)
+            # The command output was already logged, so neither it nor the stacktrace is repeated
+            retryable = _is_system_error(e)
+            if retryable:
+                _log_system_error(definition, f"micromamba failed to start: {e.short_message}")
+            else:
+                logger.error(f"Conda command failed for {definition.execution_slug()}: {e.short_message}")
+            result = ExecutionResult.build_from_failure(definition, retryable=retryable)
         except Exception as e:
             # If the diagnostic fails, we want to log the error and return a failure result
             retryable = _is_system_error(e)
             if retryable:
-                logger.error(
-                    f"System error running {definition.execution_slug()!r} "
-                    f"(will be retried on next solve): {e}"
-                )
+                _log_system_error(definition, repr(e))
             else:
                 logger.exception(f"Diagnostic error running {definition.execution_slug()!r}")
             result = ExecutionResult.build_from_failure(definition, retryable=retryable)

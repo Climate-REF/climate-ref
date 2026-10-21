@@ -11,6 +11,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Arctic-Ocean",
@@ -876,6 +877,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Arctic-Ocean",
@@ -1741,6 +1743,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Arctic-Ocean",
@@ -2606,6 +2609,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Arctic-Ocean",
@@ -3471,6 +3475,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "C.North-America",
@@ -4336,6 +4341,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "C.North-America",
@@ -5201,6 +5207,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "C.North-America",
@@ -6066,6 +6073,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "C.North-America",
@@ -6931,6 +6939,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Mediterranean",
@@ -7796,6 +7805,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Mediterranean",
@@ -8661,6 +8671,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Mediterranean",
@@ -9526,6 +9537,7 @@
       "values_name": "tas"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
       "region": "Mediterranean",

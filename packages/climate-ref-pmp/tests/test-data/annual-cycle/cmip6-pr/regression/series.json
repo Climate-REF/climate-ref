@@ -1,1 +1,740 @@
-[]
+[
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "bias_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      0.703971,
+      1.35521,
+      1.15102,
+      1.48322,
+      1.72687,
+      1.09149,
+      0.453848,
+      0.371312,
+      0.2412,
+      0.110027,
+      -0.303297,
+      -0.977376
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "cor_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      0.763448,
+      0.793799,
+      0.766621,
+      0.557742,
+      0.494031,
+      0.635156,
+      0.727059,
+      0.815325,
+      0.85953,
+      0.879228,
+      0.853131,
+      0.819843
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mae_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      2.50654,
+      3.31539,
+      2.83121,
+      3.22756,
+      3.08699,
+      2.28612,
+      1.68348,
+      1.23742,
+      1.0914,
+      1.1473,
+      1.61963,
+      2.18449
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mean-obs_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      8.14326,
+      8.48871,
+      7.61931,
+      6.48169,
+      5.27022,
+      4.83698,
+      4.24346,
+      3.57526,
+      3.49392,
+      4.09634,
+      5.20958,
+      7.318
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mean_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      8.84723,
+      9.84392,
+      8.77033,
+      7.96491,
+      6.99709,
+      5.92848,
+      4.69731,
+      3.94658,
+      3.73512,
+      4.20636,
+      4.90628,
+      6.34062
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "rms_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      3.2197,
+      3.97591,
+      3.4758,
+      3.8166,
+      3.95463,
+      3.14745,
+      2.58159,
+      1.95565,
+      1.61643,
+      1.64162,
+      2.20198,
+      2.70457
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "rmsc_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      3.1418,
+      3.73781,
+      3.27968,
+      3.5166,
+      3.55767,
+      2.95213,
+      2.54138,
+      1.92008,
+      1.59833,
+      1.63792,
+      2.181,
+      2.52179
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "std-obs_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      3.03409,
+      2.84124,
+      2.76052,
+      2.64938,
+      2.79786,
+      3.00447,
+      3.51372,
+      3.07475,
+      3.00388,
+      3.07317,
+      3.24026,
+      3.35303
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "doubleITCZ",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "std_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      4.77213,
+      5.56978,
+      4.87571,
+      4.22189,
+      3.97829,
+      3.7331,
+      3.35393,
+      3.22613,
+      3.02656,
+      3.43639,
+      4.14248,
+      4.38401
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "bias_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      0.0997154,
+      0.148613,
+      0.169489,
+      0.192361,
+      0.189111,
+      0.145999,
+      0.143162,
+      0.114436,
+      0.0991284,
+      0.132036,
+      0.10446,
+      0.0749299
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "cor_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      0.853711,
+      0.83653,
+      0.807504,
+      0.772186,
+      0.746497,
+      0.76435,
+      0.834899,
+      0.854668,
+      0.847633,
+      0.821366,
+      0.820685,
+      0.843791
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mae_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      1.02148,
+      1.07795,
+      1.08443,
+      1.13015,
+      1.19534,
+      1.14454,
+      1.04528,
+      1.00444,
+      0.992739,
+      0.992309,
+      1.03778,
+      1.04035
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mean-obs_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      3.08591,
+      3.02549,
+      2.98356,
+      2.97209,
+      3.03272,
+      3.14413,
+      3.16172,
+      3.12297,
+      3.07479,
+      3.02594,
+      3.06133,
+      3.10631
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mean_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      3.18563,
+      3.1741,
+      3.15305,
+      3.16445,
+      3.22184,
+      3.29013,
+      3.30489,
+      3.2374,
+      3.17392,
+      3.15798,
+      3.16579,
+      3.18124
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "rms_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      1.79271,
+      1.86008,
+      1.84053,
+      1.82517,
+      1.91759,
+      2.02509,
+      1.78496,
+      1.66749,
+      1.64865,
+      1.73636,
+      1.82335,
+      1.8278
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "rmsc_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      1.78993,
+      1.85414,
+      1.83271,
+      1.81501,
+      1.90825,
+      2.01982,
+      1.77921,
+      1.66356,
+      1.64567,
+      1.73133,
+      1.82036,
+      1.82627
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "std-obs_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      2.80832,
+      2.70808,
+      2.49871,
+      2.4023,
+      2.50436,
+      2.89177,
+      3.01191,
+      2.92118,
+      2.73519,
+      2.60316,
+      2.67976,
+      2.78776
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "GPCP-3-3",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "std_xy",
+      "variable_id": "pr"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      3.42956,
+      3.3772,
+      3.10697,
+      2.83701,
+      2.79934,
+      2.98677,
+      3.1607,
+      3.18026,
+      3.09439,
+      3.0285,
+      3.18374,
+      3.39962
+    ]
+  }
+]

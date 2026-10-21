@@ -15,16 +15,21 @@ from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
     DiagnosticExecution,
     ExecutionSolver,
     SolveFilterOptions,
+    _solve_from_data_requirements,
     apply_dataset_filters,
+    catalog_for_requirement,
+    check_provider_health,
     extract_covered_datasets,
     matches_filter,
     solve_executions,
     solve_required_executions,
+    union_with_fallbacks,
 )
 from climate_ref_core.constraints import AddParentDataset, AddSupplementaryDataset, RequireFacets
 from climate_ref_core.datasets import SourceDatasetType
@@ -787,6 +792,31 @@ def test_two_executions_same_group_distinct_output_fragments(
     assert fragment_b.split("/")[-1] == str(executions[1].id)
 
 
+def test_solve_snapshot_all_providers(db_seeded, config, data_regression):
+    """
+    Pin the solved output across every in-repo provider.
+
+    This is the oracle for the obs4REF fallback work. It must not move when the implicit
+    fold is replaced by declared fallbacks, so do not regenerate it with ``--force-regen``.
+
+    Rows are sorted because a seeded solve does not fix their order between runs.
+    `TestObs4REFFallback` pins the order the fallback itself produces.
+    """
+    solver = ExecutionSolver.build_from_db(config, db_seeded)
+    solver.provider_registry = ProviderRegistry(
+        providers=[example_provider, pmp_provider, esmvaltool_provider, ilamb_provider]
+    )
+
+    output = {}
+    for execution in solver.solve():
+        output[execution.execution_slug()] = {
+            str(source_type): sorted(collection.datasets[collection.slug_column])
+            for source_type, collection in execution.datasets.items()
+        }
+
+    data_regression.check(output)
+
+
 def test_solve_metrics(mocker, db_seeded, solver, data_regression, mock_executor):
     mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
 
@@ -1284,11 +1314,12 @@ def test_solve_with_new_datasets(obs4mips_data_catalog, mock_diagnostic, provide
     assert result_2.datasets.hash != result_1.datasets.hash
 
 
-def test_solve_with_new_areacella(obs4mips_data_catalog, mock_diagnostic, provider):
+def test_solve_with_new_areacella(obs4ref_data_catalog, mock_diagnostic, provider):
     expected_dataset_key = "cmip6_ssp126_ACCESS-ESM1-5_tas__obs4mips_HadISST-1-1_ts"
     mock_diagnostic.data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(FacetFilter(facets={"variable_id": "ts", "source_id": "HadISST-1-1"}),),
             group_by=("variable_id", "source_id"),
         ),
@@ -1315,7 +1346,7 @@ def test_solve_with_new_areacella(obs4mips_data_catalog, mock_diagnostic, provid
     result_1 = next(
         solve_executions(
             {
-                SourceDatasetType.obs4MIPs: obs4mips_data_catalog,
+                SourceDatasetType.obs4REF: obs4ref_data_catalog,
                 SourceDatasetType.CMIP6: cmip_data_catalog,
             },
             mock_diagnostic,
@@ -1340,7 +1371,7 @@ def test_solve_with_new_areacella(obs4mips_data_catalog, mock_diagnostic, provid
     result_2 = next(
         solve_executions(
             {
-                SourceDatasetType.obs4MIPs: obs4mips_data_catalog,
+                SourceDatasetType.obs4REF: obs4ref_data_catalog,
                 SourceDatasetType.CMIP6: cmip_data_catalog,
             },
             mock_diagnostic,
@@ -1498,6 +1529,12 @@ class TestMatchesFilter:
     def test_partial_match_provider(self, mock_diagnostic):
         # "mock" is contained in "mock_provider"
         assert matches_filter(mock_diagnostic, SolveFilterOptions(provider=["mock"])) is True
+
+    def test_exclude_provider_is_exact(self, mock_diagnostic):
+        assert (
+            matches_filter(mock_diagnostic, SolveFilterOptions(exclude_provider=["Mock_Provider"])) is False
+        )
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(exclude_provider=["mock"])) is True
 
     def test_partial_match_diagnostic(self, mock_diagnostic):
         # "ock" is contained in "mock"
@@ -1953,3 +1990,320 @@ def test_drs_and_complete_parsers_produce_same_executions(config, sample_data_di
     finally:
         db_complete.close()
         db_drs.close()
+
+
+class TestObs4REFFallback:
+    """obs4MIPs requirements are filled from obs4REF, taking the newest version of each dataset."""
+
+    @staticmethod
+    def _frame(prefix, source_ids, version="v1", start=0):
+        return pd.DataFrame(
+            {
+                "instance_id": [f"{prefix}.{prefix}.INST.{s}.mon.ts.gn.{version}" for s in source_ids],
+                "source_id": list(source_ids),
+                "variable_id": "ts",
+            },
+            index=range(start, start + len(source_ids)),
+        )
+
+    def test_missing_datasets_are_added(self):
+        obs4mips = self._frame("obs4MIPs", ["A"])
+        obs4ref = self._frame("obs4REF", ["A", "B"], start=10)
+
+        merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
+
+        # A is taken from obs4MIPs only, B comes from obs4REF and keeps its dataset id.
+        assert merged["source_id"].tolist() == ["A", "B"]
+        assert merged.index.tolist() == [0, 1]
+        assert merged["instance_id"].iloc[1].startswith("obs4REF.")
+
+    def test_the_merged_catalog_cannot_reload_away_the_obs4ref_rows(self):
+        obs4mips = DataCatalog(
+            database=None, adapter=CMIP6DatasetAdapter(), df=self._frame("obs4MIPs", ["A"])
+        )
+        obs4ref = DataCatalog.from_frame(self._frame("obs4REF", ["B"]))
+
+        merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
+
+        # A reload would go back to the obs4MIPs adapter alone and drop B.
+        assert isinstance(merged, DataCatalog)
+        assert merged.adapter is None
+        assert merged.to_frame()["source_id"].tolist() == ["A", "B"]
+
+    def test_added_rows_group_as_obs4mips(self):
+        # pmp/enso groups its reference data by activity_id, so a second value splits it in two.
+        obs4mips = self._frame("obs4MIPs", ["A"]).assign(activity_id="obs4MIPs")
+        obs4ref = self._frame("obs4REF", ["B"], start=10).assign(activity_id="obs4REF")
+
+        merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
+
+        assert merged["activity_id"].tolist() == ["obs4MIPs", "obs4MIPs"]
+        assert merged["instance_id"].iloc[1].startswith("obs4REF.")
+
+    def test_obs4mips_wins_a_version_tie(self):
+        obs4mips = self._frame("obs4MIPs", ["A"], version="v1")
+        obs4ref = self._frame("obs4REF", ["A"], version="v1", start=10)
+
+        assert union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs) is obs4mips
+
+    def test_a_newer_obs4ref_version_replaces_the_obs4mips_copy(self):
+        # A stale published copy must not force every diagnostic to rerun on the wrong data.
+        obs4mips = self._frame("obs4MIPs", ["A", "B"], version="v20240101")
+        obs4ref = self._frame("obs4REF", ["A"], version="v20250101", start=10)
+
+        merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
+
+        assert merged["source_id"].tolist() == ["B", "A"]
+        assert merged["instance_id"].tolist() == [
+            "obs4MIPs.obs4MIPs.INST.B.mon.ts.gn.v20240101",
+            "obs4REF.obs4REF.INST.A.mon.ts.gn.v20250101",
+        ]
+
+    def test_an_older_obs4ref_version_is_ignored(self):
+        obs4mips = self._frame("obs4MIPs", ["A"], version="v10")
+        obs4ref = self._frame("obs4REF", ["A"], version="v9", start=10)
+
+        assert union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs) is obs4mips
+
+    def test_a_primary_without_instance_id_is_left_alone(self):
+        obs4mips = pd.DataFrame({"source_id": ["A"], "variable_id": "ts"})
+        obs4ref = self._frame("obs4REF", ["B"])
+
+        assert union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs) is obs4mips
+
+    def test_untouched_when_nothing_to_add(self):
+        obs4mips = self._frame("obs4MIPs", ["A"])
+
+        assert union_with_fallbacks(obs4mips, [pd.DataFrame()], SourceDatasetType.obs4MIPs) is obs4mips
+
+    def test_obs4ref_alone_still_groups_as_obs4mips(self):
+        # A deployment that fetched only the registry is the ordinary case, not an edge case.
+        obs4ref = self._frame("obs4REF", ["A"]).assign(activity_id="obs4REF")
+
+        merged = union_with_fallbacks(pd.DataFrame(), [obs4ref], SourceDatasetType.obs4MIPs)
+
+        assert merged["activity_id"].tolist() == ["obs4MIPs"]
+        assert merged["instance_id"].tolist() == obs4ref["instance_id"].tolist()
+
+
+class TestDeclaredFallbacks:
+    """A requirement names the collections that may stand in for its source type."""
+
+    # PMPClimatology is never folded globally, so a union of it can only come from the requirement.
+    FALLBACK = SourceDatasetType.PMPClimatology
+
+    @staticmethod
+    def _frame(prefix, source_ids, version="v1", start=0):
+        return pd.DataFrame(
+            {
+                "instance_id": [f"{prefix}.{prefix}.INST.{s}.mon.ts.gn.{version}" for s in source_ids],
+                "source_id": list(source_ids),
+                "variable_id": "ts",
+                "activity_id": prefix,
+                "path": [f"/data/{prefix}/{s}.nc" for s in source_ids],
+            },
+            index=range(start, start + len(source_ids)),
+        )
+
+    def _requirement(self, fallbacks):
+        return DataRequirement(
+            source_type=SourceDatasetType.obs4MIPs,
+            filters=(),
+            group_by=("activity_id",),
+            fallback_source_types=fallbacks,
+        )
+
+    def test_a_declared_fallback_is_unioned_into_the_requirement(self):
+        catalogs = {
+            SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"]),
+            self.FALLBACK: self._frame("pmp-climatology", ["B"], start=10),
+        }
+
+        catalog = catalog_for_requirement(catalogs, self._requirement((self.FALLBACK,)))
+
+        assert catalog["source_id"].tolist() == ["A", "B"]
+        assert catalog["activity_id"].tolist() == ["obs4MIPs", "obs4MIPs"]
+        assert catalog.index.tolist() == [0, 1]
+
+    def test_an_undeclared_collection_is_left_out(self):
+        catalogs = {
+            SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"]),
+            self.FALLBACK: self._frame("pmp-climatology", ["B"], start=10),
+        }
+
+        catalog = catalog_for_requirement(catalogs, self._requirement(()))
+
+        assert catalog["source_id"].tolist() == ["A"]
+
+    def test_a_requirement_solves_from_its_fallback_alone(self, provider, mock_diagnostic):
+        # An ordinary registry-only deployment ingests nothing under the primary type.
+        catalogs = {self.FALLBACK: self._frame("pmp-climatology", ["A", "B"])}
+
+        executions = list(
+            _solve_from_data_requirements(
+                catalogs, mock_diagnostic, [self._requirement((self.FALLBACK,))], provider
+            )
+        )
+
+        # The data is delivered under the primary type whichever collection supplied it.
+        assert len(executions) == 1
+        datasets = executions[0].datasets[SourceDatasetType.obs4MIPs]
+        assert datasets["source_id"].tolist() == ["A", "B"]
+        assert datasets.selector_dict() == {"activity_id": "obs4MIPs"}
+
+    def test_a_missing_fallback_catalog_is_tolerated(self):
+        catalogs = {SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"])}
+
+        catalog = catalog_for_requirement(catalogs, self._requirement((self.FALLBACK,)))
+
+        assert catalog["source_id"].tolist() == ["A"]
+
+    def test_nothing_ingested_under_the_primary_or_any_fallback(self):
+        assert catalog_for_requirement({}, self._requirement((self.FALLBACK,))) is None
+
+    def test_the_union_is_idempotent(self):
+        # The global fold and the per-requirement union both run, so applying twice must not double up.
+        primary = self._frame("obs4MIPs", ["A"])
+        fallback = self._frame("obs4REF", ["A", "B"], start=10)
+
+        once = union_with_fallbacks(primary, [fallback], SourceDatasetType.obs4MIPs)
+        twice = union_with_fallbacks(once, [fallback], SourceDatasetType.obs4MIPs)
+
+        assert twice is once
+        pd.testing.assert_frame_equal(once, twice)
+        assert once["source_id"].tolist() == ["A", "B"]
+        assert once.index.tolist() == [0, 1]
+
+
+class TestProviderHealth:
+    @pytest.fixture
+    def solver(self, provider):
+        solver = mock.MagicMock(spec=ExecutionSolver)
+        solver.provider_registry = ProviderRegistry(providers=[provider])
+        return solver
+
+    def test_check_provider_health_only_checks_providers_in_scope(self, mocker, provider, config):
+        check_health = mocker.patch.object(provider, "check_health", return_value=["broken"])
+
+        assert check_provider_health([provider], config, SolveFilterOptions(provider=["other"])) == {}
+        check_health.assert_not_called()
+
+        assert check_provider_health([provider], config, SolveFilterOptions(provider=["mock"])) == {
+            provider.slug: ["broken"]
+        }
+
+    def test_check_provider_health_skips_providers_without_selected_diagnostics(
+        self, mocker, provider, config
+    ):
+        check_health = mocker.patch.object(provider, "check_health", return_value=["broken"])
+
+        assert check_provider_health([provider], config, SolveFilterOptions(diagnostic=["nonexistent"])) == {}
+        check_health.assert_not_called()
+
+    def test_solve_skips_unhealthy_provider(
+        self, mocker, mock_metric_execution, mock_executor, db_seeded, solver, provider
+    ):
+        mock_executor.return_value.runs_on_solve_host = True
+        mocker.patch.object(provider, "check_health", return_value=["micromamba run failed"])
+        solver.solve.return_value = []
+
+        outcome = solve_required_executions(db_seeded, solver=solver)
+
+        assert outcome.unhealthy_providers == [provider.slug]
+        assert solver.solve.call_args.args[0].exclude_provider == [provider.slug]
+
+    def test_solve_runs_healthy_provider(
+        self, mocker, mock_metric_execution, mock_executor, db_seeded, solver, provider
+    ):
+        mock_executor.return_value.runs_on_solve_host = True
+        mocker.patch.object(provider, "check_health", return_value=[])
+        solver.solve.return_value = [mock_metric_execution]
+
+        assert solve_required_executions(db_seeded, solver=solver).ok
+        assert mock_executor.return_value.run.call_count == 1
+
+    @pytest.mark.parametrize("runs_on_solve_host, check_health", [(False, True), (True, False)])
+    def test_solve_skips_health_check(
+        self, mocker, mock_executor, db_seeded, solver, provider, runs_on_solve_host, check_health
+    ):
+        mock_executor.return_value.runs_on_solve_host = runs_on_solve_host
+        provider_check = mocker.patch.object(provider, "check_health", return_value=["broken"])
+        solver.solve.return_value = []
+
+        assert solve_required_executions(db_seeded, solver=solver, check_health=check_health).ok
+        provider_check.assert_not_called()
+
+
+def test_solve_logs_skip_summary(db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    # The repeat is skipped as in progress, the third is skipped by the one-of check
+    solver.solve.return_value = [mock_metric_execution, mock_metric_execution, mock_execution_2]
+
+    with caplog.at_level("INFO"):
+        solve_required_executions(db_seeded, solver=solver, one_per_provider=True)
+
+    assert "Skipped 2 executions: 1 in progress, 1 one-of check" in caplog.text
+
+
+def test_solve_logs_diagnostics_skipped_during_solve(mocker, db_seeded, provider, caplog):
+    def fake_solve_executions(data_catalog, diagnostic, provider):
+        if diagnostic.slug == "mock":
+            raise InvalidDiagnosticException(diagnostic, "no data")
+        raise ValueError("constraint blew up")
+        yield
+
+    mocker.patch("climate_ref.solver.solve_executions", side_effect=fake_solve_executions)
+    solver = ExecutionSolver(provider_registry=ProviderRegistry(providers=[provider]), data_catalog={})
+
+    with caplog.at_level("INFO"):
+        assert not list(solver.solve())
+
+    assert "Skipped 2 diagnostics: 1 with no matching data, 1 errored" in caplog.text
+
+
+def test_solve_reports_outcomes_of_submitted_executions(
+    db_seeded, mock_metric_execution, mock_executor, caplog
+):
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+
+    def fail_all(timeout):
+        with db_seeded.session.begin():
+            for execution in db_seeded.session.query(Execution):
+                execution.mark_failed(ExecutionFailureReason.SystemError)
+
+    mock_executor.return_value.join.side_effect = fail_all
+
+    with caplog.at_level("INFO"):
+        outcome = solve_required_executions(db_seeded, solver=solver)
+
+    assert outcome.failed_executions == 1
+    assert "0 succeeded, 1 failed, 0 still in progress" in caplog.text
+    assert "All executions complete" not in caplog.text
+
+
+def test_solve_without_wait_reports_no_failures(db_seeded, mock_metric_execution, mock_executor, caplog):
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+
+    with caplog.at_level("INFO"):
+        outcome = solve_required_executions(db_seeded, solver=solver, wait=False)
+
+    assert outcome.failed_executions == 0
+    assert "still in progress" not in caplog.text
+
+
+def test_solve_warns_when_outcomes_are_still_being_recorded(
+    db_seeded, mock_metric_execution, mock_executor, caplog
+):
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+
+    with caplog.at_level("INFO"):
+        outcome = solve_required_executions(db_seeded, solver=solver)
+
+    assert outcome.failed_executions == 0
+    assert "1 still in progress" in caplog.text
+    assert "not reflected in the exit code" in caplog.text

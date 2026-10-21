@@ -18,7 +18,7 @@ except InvalidExecutorException as exc:
     HPCExecutor = exc  # type: ignore
 
 from .local import LocalExecutor
-from .result_handling import handle_execution_result
+from .result_handling import handle_execution_result, record_lost_execution
 from .synchronous import SynchronousExecutor
 
 __all__ = [
@@ -26,4 +26,5 @@ __all__ = [
     "LocalExecutor",
     "SynchronousExecutor",
     "handle_execution_result",
+    "record_lost_execution",
 ]

@@ -122,6 +122,14 @@ def solve(  # noqa: PLR0913
             "By default, failed executions are only retried if explicitly flagged dirty."
         ),
     ] = False,
+    check_health: Annotated[
+        bool,
+        typer.Option(
+            help="Health check each provider before solving and skip the diagnostics of unhealthy ones. "
+            "The command then exits non-zero. "
+            "Only applies to executors that run diagnostics on this host."
+        ),
+    ] = True,
 ) -> None:
     """
     Solve for executions that require recalculation
@@ -152,7 +160,7 @@ def solve(  # noqa: PLR0913
         exclude_diagnostic=exclude_diagnostic,
     )
 
-    solve_required_executions(
+    outcome = solve_required_executions(
         config=config,
         db=db,
         dry_run=dry_run,
@@ -164,4 +172,7 @@ def solve(  # noqa: PLR0913
         filters=filters,
         limit=limit,
         rerun_failed=rerun_failed,
+        check_health=check_health,
     )
+    if not outcome.ok:
+        raise typer.Exit(code=1)

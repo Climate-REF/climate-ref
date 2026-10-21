@@ -292,7 +292,7 @@ class TestListGroupsFiltering:
         result = invoke_cli(["executions", "list-groups", "--filter", "source_id=NONEXISTENT"])
         assert "No execution groups match the specified filters." in result.stderr
         assert "Total execution groups in database:" in result.stderr
-        assert "Applied filters: facet filters: ['source_id=NONEXISTENT']" in result.stderr
+        assert "Applied filters: selector filters: ['source_id=NONEXISTENT']" in result.stderr
         assert "id" in result.stdout  # Ensure empty table headers are still printed
 
     def test_facet_multiple_same_key_returns_both(self, db_with_groups, invoke_cli):

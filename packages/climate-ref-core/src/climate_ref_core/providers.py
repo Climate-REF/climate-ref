@@ -287,9 +287,9 @@ class DiagnosticProvider:
         """
         Describe the fetched data that needs ingesting into the database.
 
-        The application ingests each request after fetch_data,
+        `ref providers setup` ingests each request after fetch_data,
+        using `climate_ref.datasets.ingest_provider_data`,
         so the solver can find provider-specific datasets such as the PMP climatologies.
-        Ingestion lives in the application because it needs the database and dataset adapters.
 
         Default implementation returns no requests.
         Override in subclasses that have data to ingest.

@@ -1,0 +1,201 @@
+{
+  "catalog_hash": "fcadf51d663bdd186da737aa8ad77c14ec223173",
+  "committed": {
+    "diagnostic.json": "6773a430175bafa4be7a5e7077eb993a83a05f2d79ca4eded60e2d8a5a38be81",
+    "output.json": "f4e5689e245cf6258b6a06a1ba529e3fe2f0cbd67850adc5075d0b3937f0833c",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "diagnostic_version": 2,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "8326a12db7fbc936f732154069b4ad2c8eed753aad3a18d4f179c6afcf652c06",
+      "size": 1041
+    },
+    "executions/recipe/index.html": {
+      "sha256": "54629b2bb004573965837dd9dedf1f3f9e24187692bf59e59d80acda2072feb7",
+      "size": 51614
+    },
+    "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/CanESM5_14duration_divedown.png": {
+      "sha256": "a273b1bd6e6dde85ce65e9d0ebf69d6178a65127eba4107fd4bc94eae7884b2d",
+      "size": 122697
+    },
+    "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/CanESM5_15diversity_divedown.png": {
+      "sha256": "7ba58e371a83625cdde9f513083cbb7a982009810b27c161233aabeccf475a39",
+      "size": 210792
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_2.png": {
+      "sha256": "7b484f3d6266530da346502c4a9b37e980900e06f03300b300bb2a75c11a53a3",
+      "size": 123905
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_3.png": {
+      "sha256": "0ebbbf5978a287061e68aba451c8c3fcd6bfeb95a5d5ec8053fdb62bebdecdcd",
+      "size": 180472
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_4.png": {
+      "sha256": "7aee186a3d11ae78a191381dd023fb6193259e33fe53cdae6ad6796b012f47ca",
+      "size": 267192
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_09pattern.png": {
+      "sha256": "890ecd44742420ee7e4370eaa8f5b125ed5cf605cf3485148e8ce4d97e5e4e42",
+      "size": 188406
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_10lifecycle.png": {
+      "sha256": "5640618daf97cda7bb2c8b3b7462338b8c335eac5be9fa3852ca9b95087a62d1",
+      "size": 148946
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_11amplitude.png": {
+      "sha256": "4b2501685c6b542d8a0df5a91a047c4eb90d44d069f53772bdff9e4cb7797c07",
+      "size": 90487
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_12seasonality.png": {
+      "sha256": "939cbd7e7fb83b5bfe0b5c0cca69b00c9d08809964028ad6917379a2f1f3f11d",
+      "size": 82326
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_13asymmetry.png": {
+      "sha256": "c70fe48dd37011431cd7e31c10483db4cec9c0d870ce445014f23ee5a987b2d7",
+      "size": 99333
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_14duration.png": {
+      "sha256": "02d538640b1b8ee3ed95ccbd0c56aa75cc784db28f1db9074e03b7a2b292aba9",
+      "size": 81930
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_15diversity.png": {
+      "sha256": "141c6c27ba45bf0d3a4dd21c0bc8a11efad540e6de293b7e2bd691985123cab8",
+      "size": 86510
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_2.png": {
+      "sha256": "ae45f2dfc924c5ea3aff2c034ffeb88298d17e3284d0b22a061a0205c0be4716",
+      "size": 546732
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_3.png": {
+      "sha256": "d218feee308a5e220aa78c8aff98356418c157f74263b954c35fb9b8719eed43",
+      "size": 230770
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_4.png": {
+      "sha256": "2b7fbcef70a42e91037ecefc74714af2976540cddbdda80af2e0af727001f729",
+      "size": 1172774
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_2.png": {
+      "sha256": "4013cb5665e9c0077763b8bcb36fc4b955eb5d5a5b31474348b32d80cb774a15",
+      "size": 173688
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_3.png": {
+      "sha256": "2892285a02e067ff6c321150858a2d654fedf070c159323aa64b3b6da944edc8",
+      "size": 528145
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_2.png": {
+      "sha256": "86e89d81bb4d73696b2c39e419f62aea71221c60b67e99b44ac6643009d94ed1",
+      "size": 147693
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_3.png": {
+      "sha256": "4b70224db178a777f9e03e23915db455c80e6e1fa72a4ad9f014e6843e1bacfa",
+      "size": 475895
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_4.png": {
+      "sha256": "56def1f507c23633659c39e8853f182d110516052b16cda3bbfd0694e526b760",
+      "size": 272168
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_5.png": {
+      "sha256": "99ec3e6f5d00d4db184cedc37b73be3f2539be30f82a88f39ebe20706a1690d3",
+      "size": 928332
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_2.png": {
+      "sha256": "89ca9a5cd712aaa1e074506728854850ba16209903afa22d9769d7fc77cdbd6f",
+      "size": 183917
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_3.png": {
+      "sha256": "89a110f7108ce5b0c186e3276f3a852a8474d5e304065fd4181bba575b9c1626",
+      "size": 904626
+    },
+    "executions/recipe/run/diagnostic_metrics/durationdiversity_script/diagnostic_provenance.yml": {
+      "sha256": "e8d3b6a27fe626212deaf7344ae561038173cc33b4765f08370071244de3e535",
+      "size": 1883
+    },
+    "executions/recipe/run/diagnostic_metrics/lifecycle_script/diagnostic_provenance.yml": {
+      "sha256": "18e9a4e741871049f1923383bdc1ee2f5a65fd2d3d3b3b73fb0e4aaab154215c",
+      "size": 3118
+    },
+    "executions/recipe/run/diagnostic_metrics/metrics_script/diagnostic_provenance.yml": {
+      "sha256": "14853180a6e31da429765db39db6b17d447759961db9af49f4e8471207cda76e",
+      "size": 28475
+    },
+    "executions/recipe/run/diagnostic_metrics/pattern_script/diagnostic_provenance.yml": {
+      "sha256": "43710b523830967d7b799e2c50d3d1f93f8c90f7a268424425c6149c71f338d3",
+      "size": 3748
+    },
+    "executions/recipe/run/diagnostic_seas_skew_amp/seas_asym_amp_script/diagnostic_provenance.yml": {
+      "sha256": "652a4b469de4f453bed31e84544f2a5a45393a6c254af25381cb51aa84a7a55a",
+      "size": 10177
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_09pattern.nc": {
+      "sha256": "619ea03df9f8bb2356e729a9503955d834d6dba69022ebd974cb47201054e182",
+      "size": 13318
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_10lifecycle.nc": {
+      "sha256": "6838d8bfcc4dd9877bf0681d1c876cbc693bb144c24daab7da1155dd5f192992",
+      "size": 7196
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_11amplitude.nc": {
+      "sha256": "f1caad39aafd0e8a172087bdb108ac5d5759568f2c5432c673dd5f2a9964e87a",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_12seasonality.nc": {
+      "sha256": "d9ea85c077a4b379f2eee3fff1f97f77c174ac1f3e34f5a99831739ba3bd8220",
+      "size": 2951
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_13asymmetry.nc": {
+      "sha256": "a509f52f2a65b8fb11c6cdcafd0a307c66b632f8140b66c036dbc4409f312d01",
+      "size": 3012
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_14duration.nc": {
+      "sha256": "4ed7b60bb72d74427d2c401e7509a36ba098a83305cabad320e6d21c97aa24b1",
+      "size": 2896
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_15diversity.nc": {
+      "sha256": "cc7426a32377b92f5f2bf57bf7fd4aa5991d4faed71184ca07df2a5e540c5519",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_09pattern.nc": {
+      "sha256": "1d186c4de523b04f31b467d857dc92908fbd64e13679d12e575df855a4b6f006",
+      "size": 13318
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_10lifecycle.nc": {
+      "sha256": "1f280d22d2080449a044c2163e8b653fdc284cf9864ded2be14a7a3d75c1fe5b",
+      "size": 7196
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_11amplitude.nc": {
+      "sha256": "d2544b3cfc02008141866e7fc0ca3f3dd6111d2db098af7e6145c2c7858fefff",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_12seasonality.nc": {
+      "sha256": "70b962ebd754fd0f422812fad9a63226a36ea714a5d4b9ceb4e502cd779db355",
+      "size": 2951
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_13asymmetry.nc": {
+      "sha256": "7a58c9059af640bb485f0c958df5f497bb73c238c629353a1f3ede7270bcfc48",
+      "size": 3012
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_14duration.nc": {
+      "sha256": "5cec28fa7b8c0b9830e4d55a47891a9c8945f6e1ba3456745db0fd0d4a782e83",
+      "size": 2896
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_15diversity.nc": {
+      "sha256": "ff8ff65ee1f20d2ad06fcb156abf348fd2d9ec0dd1a84d653ad6abc27f5855f8",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/matrix.csv": {
+      "sha256": "a875eda197497adffffb30dd83b890aaf7c74c1af5a4900d262aa3e2e1c409f0",
+      "size": 270
+    },
+    "output.json": {
+      "sha256": "90cc64e3ac47483de632416dc195e15759e98e0eaea24a64c81526a37fc02aab",
+      "size": 17106
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 2,
+  "test_case_version": 1
+}

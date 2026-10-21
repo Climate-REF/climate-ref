@@ -475,7 +475,7 @@ class TestDeleteGroups:
         def _boom(*args, **kwargs):
             raise RuntimeError("db exploded")
 
-        with patch("climate_ref.cli.executions.get_execution_group_and_latest_filtered", _boom):
+        with patch("climate_ref.results.executions.get_execution_group_and_latest_filtered", _boom):
             result = invoke_cli(
                 ["executions", "delete-groups", "--diagnostic", "enso", "--force"],
                 expected_exit_code=1,

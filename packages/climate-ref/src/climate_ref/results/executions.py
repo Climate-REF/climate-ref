@@ -8,13 +8,9 @@ It wraps the group+latest query
 and the per-(provider, diagnostic) status aggregate mapping ORM rows to frozen DTOs (Data Transfer Objects).
 These DTOs are detached from the database so outlive the database session.
 
-Two write/recovery paths deliberately stay on the ORM helper instead of this reader:
-
-- ``cli/executions.py::delete_groups``
-    (needs live ORM objects to cascade-delete related rows and remove output directories)
-- ``executor/reingest.py::get_executions_for_reingest``
-    (needs ``include_superseded=True`` plus the *oldest* execution in a group,
-    not this reader's "latest" definition).
+Write and recovery paths that need live ORM rows, such as ``cli/executions.py::delete_groups``,
+``cli/executions.py::requeue`` and ``executor/reingest.py::get_executions_for_reingest``,
+use [group_rows][climate_ref.results.executions.ExecutionsReader.group_rows] instead of the DTO methods.
 
 A common set of ordering (``created_at DESC, id DESC``) is used to ensure consistent ordering and tie breaks.
 
@@ -452,6 +448,34 @@ class ExecutionsReader:
             latest=self._to_execution_view(latest) if latest is not None else None,
         )
 
+    def group_rows(
+        self, filters: ExecutionGroupFilter | None = None
+    ) -> list[tuple[ExecutionGroup, Execution | None]]:
+        """
+        Query execution groups with their latest execution as live ORM rows, ordered by group id.
+
+        For callers that mutate the groups, such as deleting or requeuing them.
+        Read-only callers should use [groups][climate_ref.results.executions.ExecutionsReader.groups],
+        which returns detached views.
+        """
+        filters = filters or ExecutionGroupFilter()
+
+        group_conditions = []
+        if filters.input_datasets:
+            group_conditions.append(filters.input_datasets.execution_group_clause())
+        return get_execution_group_and_latest_filtered(
+            self.session,
+            diagnostic_filters=list(filters.diagnostic_contains) if filters.diagnostic_contains else None,
+            provider_filters=list(filters.provider_contains) if filters.provider_contains else None,
+            facet_filters={k: list(v) for k, v in filters.facets.items()} if filters.facets else None,
+            dirty=filters.dirty,
+            successful=filters.successful,
+            latest_successful=filters.latest_successful,
+            include_superseded=filters.include_superseded,
+            failure_reasons=filters.failure_reasons,
+            group_conditions=group_conditions,
+        )
+
     def groups(
         self,
         filters: ExecutionGroupFilter | None = None,
@@ -475,23 +499,7 @@ class ExecutionsReader:
         """
         # Pushing SQL pagination through the helper would be wrong whenever ``facets`` is set,
         # since the Python facet filter runs after the SQL query.
-        filters = filters or ExecutionGroupFilter()
-
-        group_conditions = []
-        if filters.input_datasets:
-            group_conditions.append(filters.input_datasets.execution_group_clause())
-        all_results = get_execution_group_and_latest_filtered(
-            self.session,
-            diagnostic_filters=list(filters.diagnostic_contains) if filters.diagnostic_contains else None,
-            provider_filters=list(filters.provider_contains) if filters.provider_contains else None,
-            facet_filters={k: list(v) for k, v in filters.facets.items()} if filters.facets else None,
-            dirty=filters.dirty,
-            successful=filters.successful,
-            latest_successful=filters.latest_successful,
-            include_superseded=filters.include_superseded,
-            failure_reasons=filters.failure_reasons,
-            group_conditions=group_conditions,
-        )
+        all_results = self.group_rows(filters)
 
         total_count = len(all_results)
         page = all_results[offset : offset + limit] if limit is not None else all_results[offset:]

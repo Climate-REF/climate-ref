@@ -287,6 +287,30 @@ class TestGroupsLatestSuccessful:
         assert view.latest.output_fragment == "key3-ok"
 
 
+class TestGroupRows:
+    def test_matches_groups(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        filters = ExecutionGroupFilter(provider_contains=["pmp"])
+        rows = reader.executions.group_rows(filters)
+        views = reader.executions.groups(filters)
+        assert [eg.id for eg, _ in rows] == [g.id for g in views]
+        assert [latest.id if latest else None for _, latest in rows] == [
+            g.latest.id if g.latest else None for g in views
+        ]
+
+    def test_returns_live_orm_rows(self, db_with_groups):
+        rows = Reader(db_with_groups).executions.group_rows()
+        assert rows
+        for eg, latest in rows:
+            assert isinstance(eg, ExecutionGroup)
+            assert latest is None or isinstance(latest, Execution)
+            assert eg in db_with_groups.session
+
+    def test_ordered_by_group_id(self, db_with_groups):
+        ids = [eg.id for eg, _ in Reader(db_with_groups).executions.group_rows()]
+        assert ids == sorted(ids)
+
+
 class TestGroupAndExecutionById:
     def test_group_hit_resolves_latest(self, db_with_groups):
         reader = Reader(db_with_groups)

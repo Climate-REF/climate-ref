@@ -197,7 +197,7 @@ def list_groups(  # noqa: PLR0913
         ExecutionGroupFilter(
             diagnostic_contains=diagnostic,
             provider_contains=provider,
-            facets=facet_filters or None,
+            selectors=facet_filters or None,
             successful=successful,
             dirty=dirty,
             failure_reasons=failure_reason,
@@ -317,7 +317,7 @@ def delete_groups(  # noqa: PLR0912, PLR0913
         ExecutionGroupFilter(
             diagnostic_contains=filters.diagnostic,
             provider_contains=filters.provider,
-            facets=filters.facets,
+            selectors=filters.facets,
             successful=successful,
             dirty=dirty,
         )
@@ -1441,7 +1441,7 @@ def requeue(  # noqa: PLR0913
             ExecutionGroupFilter(
                 diagnostic_contains=diagnostic,
                 provider_contains=provider,
-                facets=facet_filters or None,
+                selectors=facet_filters or None,
                 dirty=False,
                 successful=False,
                 failure_reasons=failure_reason,

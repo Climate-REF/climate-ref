@@ -479,3 +479,66 @@ class TestSummary:
         summary = reader.summary(ResourceFilter(provider_slug="pmp"))
         assert summary is not None
         assert summary.timed_execution_count == 15
+
+    def test_latest_only_counts_each_groups_latest_execution(self, db_with_resources):
+        reader = Reader(db_with_resources).resources
+
+        nao = reader.summary(ResourceFilter(diagnostic_slug="extratropical-modes-of-variability-nao"))
+        latest_nao = reader.summary(
+            ResourceFilter(diagnostic_slug="extratropical-modes-of-variability-nao", latest_only=True)
+        )
+        assert nao is not None
+        assert nao.timed_execution_count == 3
+        assert latest_nao is not None
+        assert latest_nao.timed_execution_count == 1
+        assert latest_nao.wall_seconds_total == pytest.approx(3000.0)
+        assert (
+            len(
+                reader.measurements(
+                    ResourceFilter(diagnostic_slug="extratropical-modes-of-variability-nao", latest_only=True)
+                )
+            )
+            == 1
+        )
+
+        # The latest enso_tel execution is the unmeasured failure, so nothing is timed.
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", latest_only=True)) is None
+
+    def test_latest_only_prefers_newer_created_at_over_higher_id(self, db_seeded):
+        now = datetime.datetime(2026, 1, 1)
+        with db_seeded.session.begin():
+            _register_provider(db_seeded, pmp_provider)
+            diagnostic = db_seeded.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            group = ExecutionGroup(key="retry", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+            _add_execution(db_seeded.session, group.id, 0, created_at=now, **_sample(wall_seconds=50.0))
+            _add_execution(
+                db_seeded.session,
+                group.id,
+                1,
+                created_at=now - datetime.timedelta(days=1),
+                **_sample(wall_seconds=900.0),
+            )
+
+        summary = Reader(db_seeded).resources.summary(ResourceFilter(latest_only=True))
+
+        assert summary is not None
+        assert summary.timed_execution_count == 1
+        assert summary.wall_seconds_total == pytest.approx(50.0)
+
+    def test_latest_only_grouped(self, db_with_resources):
+        reader = Reader(db_with_resources).resources
+
+        per_diagnostic = reader.summaries(ResourceFilter(latest_only=True))
+        assert [(s.diagnostic_slug, s.timed_execution_count) for s in per_diagnostic] == [
+            ("enso-characteristics", 1),
+            ("extratropical-modes-of-variability-nao", 1),
+        ]
+        assert per_diagnostic[0].peak_memory_bytes_max == 100 * GIB
+
+        per_provider = {
+            s.provider_slug: s.timed_execution_count
+            for s in reader.summaries(ResourceFilter(latest_only=True), group_by="provider")
+        }
+        assert per_provider == {"esmvaltool": 1, "pmp": 1}

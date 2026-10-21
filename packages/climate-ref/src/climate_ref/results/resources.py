@@ -28,7 +28,7 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
-from climate_ref.results._query import count_values
+from climate_ref.results._query import count_values, select_latest_executions
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -106,6 +106,9 @@ class ResourceFilter:
 
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
+
+    latest_only: bool = False
+    """Keep only each group's latest execution, as picked by ``select_latest_executions``."""
 
 
 @attrs.frozen(kw_only=True)
@@ -465,6 +468,9 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
         stmt = stmt.where(Provider.slug == filters.provider_slug)
     if filters.since is not None:
         stmt = stmt.where(Execution.created_at >= filters.since)
+    if filters.latest_only:
+        latest = select_latest_executions().subquery()
+        stmt = stmt.where(Execution.id.in_(select(latest.c.execution_id)))
     return stmt
 
 

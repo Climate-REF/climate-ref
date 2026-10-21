@@ -8,6 +8,7 @@ import pytest
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models import execution as models_execution
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.metric_value import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.results import (
@@ -394,6 +395,28 @@ class TestSelectLatestExecutions:
         group_ids = [r.execution_group_id for r in rows]
         assert len(group_ids) == len(set(group_ids))
         assert dal_db.execution_group_id in group_ids
+
+    def test_among_executions_picks_newest_matching(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            older_success = _add_execution(session, group_id, "older-ok", datetime.datetime(2030, 1, 1))
+            newer = _add_execution(session, group_id, "newer-failed", datetime.datetime(2031, 1, 1))
+            session.get(Execution, newer).successful = False
+        all_rows = dict(session.execute(select_latest_executions()).all())
+        successful_rows = dict(
+            session.execute(select_latest_executions([Execution.successful.is_(True)])).all()
+        )
+        assert all_rows[group_id] == newer
+        assert successful_rows[group_id] == older_success
+
+    def test_among_executions_drops_groups_without_a_match(self, dal_db):
+        session = dal_db.session
+        rows = session.execute(select_latest_executions([Execution.output_fragment == "no-such"])).all()
+        assert rows == []
+
+    def test_results_re_exports_the_models_builder(self):
+        assert select_latest_executions is models_execution.select_latest_executions
 
 
 class TestLatestOnly:

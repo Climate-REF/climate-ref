@@ -450,16 +450,24 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
         .join(Provider, Diagnostic.provider_id == Provider.id)
     )
+    clauses = []
     if filters.diagnostic_contains:
-        stmt = stmt.where(
-            or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains))
-        )
+        clauses.append(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains)))
     if filters.provider_contains:
-        stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
+        clauses.append(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
     if filters.diagnostic_slug is not None:
-        stmt = stmt.where(Diagnostic.slug == filters.diagnostic_slug)
+        clauses.append(Diagnostic.slug == filters.diagnostic_slug)
     if filters.provider_slug is not None:
-        stmt = stmt.where(Provider.slug == filters.provider_slug)
+        clauses.append(Provider.slug == filters.provider_slug)
+    if clauses:
+        # Resolved to group ids first, so SQLite reaches executions by index rather than scanning them.
+        scoped_groups = (
+            select(ExecutionGroup.id)
+            .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+            .join(Provider, Diagnostic.provider_id == Provider.id)
+            .where(*clauses)
+        )
+        stmt = stmt.where(Execution.execution_group_id.in_(scoped_groups))
     if filters.since is not None:
         stmt = stmt.where(Execution.created_at >= filters.since)
     if not filters.include_superseded:
@@ -754,21 +762,8 @@ class ResourcesReader:
         return self._session if self._session is not None else self._db.session
 
     def _to_view(self, row: Any) -> ResourceMeasurementView:
-        return ResourceMeasurementView(
-            execution_id=row.execution_id,
-            provider_slug=row.provider_slug,
-            diagnostic_slug=row.diagnostic_slug,
-            successful=row.successful,
-            wall_seconds=row.wall_seconds,
-            cpu_seconds=row.cpu_seconds,
-            peak_memory_bytes=row.peak_memory_bytes,
-            memory_source=row.memory_source,
-            memory_limit_bytes=row.memory_limit_bytes,
-            cpu_limit=row.cpu_limit,
-            resources_exclusive=row.resources_exclusive,
-            queue_seconds=row.queue_seconds,
-            created_at=row.created_at,
-        )
+        # The labels in ``select_execution_resources`` are the view's field names.
+        return ResourceMeasurementView(**row._mapping)
 
     def measurements(
         self,
@@ -908,7 +903,9 @@ class ResourcesReader:
             )
         elif diagnostic_contains or provider_contains or since is not None:
             raise ValueError("Pass either filters or diagnostic_contains/provider_contains/since, not both")
-        rows = [self._to_view(row) for row in self.session.execute(select_execution_resources(filters)).all()]
+        # Sorting here is cheaper than SQLite's unindexed sort, and ``limit_seen`` needs this order.
+        unordered = self.session.execute(select_execution_resources(filters).order_by(None)).all()
+        rows = sorted(map(self._to_view, unordered), key=lambda row: (row.created_at, row.execution_id))
 
         grouped: dict[tuple[str, str], list[ResourceMeasurementView]] = {}
         for row in rows:

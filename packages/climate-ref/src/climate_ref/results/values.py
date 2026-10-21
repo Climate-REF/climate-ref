@@ -20,13 +20,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import attrs
+import numpy as np
 import pandas as pd
+from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
-from climate_ref.models.metric_value import ScalarMetricValue, SeriesMetricValue
+from climate_ref.models.metric_value import MetricValue, MetricValueType, ScalarMetricValue, SeriesMetricValue
+from climate_ref.models.provider import Provider
 from climate_ref.results._page import Page
 from climate_ref.results._query import (
     MetricValueFilter,
@@ -34,16 +37,21 @@ from climate_ref.results._query import (
     paginate,
     select_scalar_values,
     select_series_values,
+    select_value_ids,
 )
 from climate_ref.results.executions import ExecutionsReader
 from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
-from climate_ref.results.outliers import OutlierPolicy, detect_scalar_outliers
+from climate_ref.results.outliers import OutlierPolicy, flag_outliers
 
 if TYPE_CHECKING:
     from climate_ref.results.artifacts import ArtifactsReader
     from climate_ref.results.datasets import DatasetsReader
     from climate_ref.results.diagnostics import DiagnosticsReader
     from climate_ref.results.resources import ResourcesReader
+
+
+_ID_CHUNK = 10_000
+"""Ids per ``IN`` lookup, below SQLite's bound-parameter limit."""
 
 
 def _kind_of(dimensions: Mapping[str, str]) -> str:
@@ -203,6 +211,17 @@ class SeriesValueCollection(Page[SeriesValue]):
         return series_values_to_frame(self.items, explode=explode)
 
 
+def _facets_from_columns(dims: Sequence[str], columns: Sequence[Sequence[Any]]) -> tuple[Facet, ...]:
+    """Build the facets ``collect_facets`` would return, from dimension columns already loaded."""
+    facets = []
+    for key, column in zip(dims, columns):
+        values = set(column)
+        values.discard(None)
+        if values:
+            facets.append(Facet(key=key, values=tuple(sorted(values))))
+    return tuple(facets)
+
+
 class ValuesReader:
     """
     Metric-value read domain: scalar/series values and their facets.
@@ -223,8 +242,8 @@ class ValuesReader:
         """The underlying database session."""
         return self._session if self._session is not None else self._db.session
 
-    def _facets(self, base_stmt: Any, entity: Any) -> tuple[Facet, ...]:
-        facet_map = collect_facets(self.session, base_stmt, entity)
+    def _facets(self, value_ids: Any) -> tuple[Facet, ...]:
+        facet_map = collect_facets(self.session, value_ids, MetricValue)
         return tuple(Facet(key=k, values=tuple(v)) for k, v in facet_map.items())
 
     def scalar_values(  # noqa: PLR0913
@@ -252,44 +271,27 @@ class ValuesReader:
         filters = filters or MetricValueFilter()
         policy = outliers or OutlierPolicy(method="off")
 
-        base_stmt = select_scalar_values(filters)
-        facets = self._facets(base_stmt, ScalarMetricValue) if with_facets else ()
-
-        if not policy.enabled:
-            # No detection: page and count in SQL so we never materialise the whole table.
-            total_count = count_values(self.session, base_stmt) if with_count else None
-            load_stmt = paginate(base_stmt.options(self._scalar_loader(include_context)), offset, limit)
-            rows = list(self.session.execute(load_stmt).scalars().all())
-            items = tuple(
-                self._to_scalar_dto(r, False, "verified", include_context, detection_ran=False) for r in rows
-            )
-            return ScalarValueCollection(
-                items=items,
-                total_count=total_count,
-                facets=facets,
+        if policy.enabled:
+            return self._scalar_values_with_outliers(
+                filters,
+                policy,
+                include_unverified=include_unverified,
                 offset=offset,
                 limit=limit,
-                had_outliers=False,
-                outlier_count=0,
+                with_facets=with_facets,
+                with_count=with_count,
+                include_context=include_context,
             )
 
-        # Detection enabled: materialise the full filtered set so IQR bounds are globally
-        # consistent, then filter and paginate in Python.
-        load_stmt = base_stmt.options(self._scalar_loader(include_context))
+        # No detection: page and count in SQL so we never materialise the whole table.
+        base_stmt = select_scalar_values(filters)
+        value_ids = select_value_ids(MetricValueType.SCALAR, filters)
+        facets = self._facets(value_ids) if with_facets else ()
+        total_count = count_values(self.session, value_ids) if with_count else None
+        load_stmt = paginate(base_stmt.options(self._scalar_loader(include_context)), offset, limit)
         rows = list(self.session.execute(load_stmt).scalars().all())
-
-        annotated, outlier_count = detect_scalar_outliers(rows, policy)
-        had_outliers = outlier_count > 0
-        if not include_unverified:
-            annotated = [a for a in annotated if not a.is_outlier]
-
-        total_count = len(annotated) if with_count else None
-        page = annotated[offset : offset + limit] if limit is not None else annotated[offset:]
         items = tuple(
-            self._to_scalar_dto(
-                a.value, a.is_outlier, a.verification_status, include_context, detection_ran=True
-            )
-            for a in page
+            self._to_scalar_dto(r, False, "verified", include_context, detection_ran=False) for r in rows
         )
         return ScalarValueCollection(
             items=items,
@@ -297,9 +299,113 @@ class ValuesReader:
             facets=facets,
             offset=offset,
             limit=limit,
-            had_outliers=had_outliers,
+            had_outliers=False,
+            outlier_count=0,
+        )
+
+    def _scalar_values_with_outliers(  # noqa: PLR0913
+        self,
+        filters: MetricValueFilter,
+        policy: OutlierPolicy,
+        *,
+        include_unverified: bool,
+        offset: int,
+        limit: int | None,
+        with_facets: bool,
+        with_count: bool,
+        include_context: bool,
+    ) -> ScalarValueCollection:
+        """
+        Run detection over the full filtered set so IQR bounds are globally consistent, then filter and page.
+
+        Only the columns detection needs are loaded for every row, and only the returned page becomes DTOs.
+        """
+        dims = ScalarMetricValue._cv_dimensions
+        table = MetricValue.__table__.c
+        detect_stmt = (
+            select_value_ids(MetricValueType.SCALAR, filters)
+            .with_only_columns(table.id, table.execution_id, table.value, *(table[d] for d in dims))
+            .order_by(table.id)
+        )
+        # Core execution, because the ORM result layer adds a third to this fetch.
+        scalar_rows = self.session.connection().execute(detect_stmt).tuples().all()
+        _, _, values, *dim_columns = zip(*scalar_rows) if scalar_rows else [()] * (3 + len(dims))
+        facets = _facets_from_columns(dims, dim_columns) if with_facets else ()
+        detection_dims = {*policy.group_by, "source_id"}
+        frame = pd.DataFrame(
+            {
+                "value": values,
+                **{k: column for k, column in zip(dims, dim_columns) if k in detection_dims},
+            }
+        )
+
+        is_outlier = flag_outliers(frame, policy)
+        outlier_count = int(is_outlier.sum())
+        kept = np.arange(len(scalar_rows)) if include_unverified else np.flatnonzero(~is_outlier)
+
+        total_count = len(kept) if with_count else None
+        page = kept[offset : offset + limit] if limit is not None else kept[offset:]
+        items = self._scalar_page(scalar_rows, is_outlier, page.tolist(), include_context)
+        return ScalarValueCollection(
+            items=items,
+            total_count=total_count,
+            facets=facets,
+            offset=offset,
+            limit=limit,
+            had_outliers=outlier_count > 0,
             outlier_count=outlier_count,
         )
+
+    def _scalar_page(
+        self, rows: Sequence[Any], is_outlier: np.ndarray, positions: list[int], include_context: bool
+    ) -> tuple[ScalarValue, ...]:
+        """DTOs for the detection rows at ``positions``, fetching the columns detection did not need."""
+        dims = ScalarMetricValue._cv_dimensions
+        columns: list[Any] = [
+            ScalarMetricValue.id,
+            Execution.execution_group_id,
+            ScalarMetricValue.attributes,
+        ]
+        if include_context:
+            columns += [Diagnostic.slug, Provider.slug]
+        extra_stmt = select(*columns).join(Execution, ScalarMetricValue.execution_id == Execution.id)
+        if include_context:
+            extra_stmt = (
+                extra_stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
+                .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+                .join(Provider, Diagnostic.provider_id == Provider.id)
+            )
+        extras: dict[int, Any] = {}
+        ids = [rows[i][0] for i in positions]
+        for start in range(0, len(ids), _ID_CHUNK):
+            chunk = ids[start : start + _ID_CHUNK]
+            for extra in self.session.execute(extra_stmt.where(ScalarMetricValue.id.in_(chunk))):
+                extras[extra[0]] = extra
+
+        items = []
+        for i in positions:
+            row_id, execution_id, value, *dim_values = rows[i]
+            extra = extras[row_id]
+            dimensions = {k: v for k, v in zip(dims, dim_values) if v is not None}
+            kind = _kind_of(dimensions)
+            dimensions.pop("kind", None)
+            flagged = bool(is_outlier[i])
+            items.append(
+                ScalarValue(
+                    id=row_id,
+                    execution_id=execution_id,
+                    execution_group_id=extra[1],
+                    value=value,
+                    kind=kind,
+                    dimensions=dimensions,
+                    attributes=dict(extra[2] or {}),
+                    is_outlier=flagged,
+                    verification_status="unverified" if flagged else "verified",
+                    diagnostic_slug=extra[3] if include_context else None,
+                    provider_slug=extra[4] if include_context else None,
+                )
+            )
+        return tuple(items)
 
     def series_values(  # noqa: PLR0913
         self,
@@ -320,8 +426,9 @@ class ValuesReader:
         filters = filters or MetricValueFilter()
 
         base_stmt = select_series_values(filters)
-        facets = self._facets(base_stmt, SeriesMetricValue) if with_facets else ()
-        total_count = count_values(self.session, base_stmt) if with_count else None
+        value_ids = select_value_ids(MetricValueType.SERIES, filters)
+        facets = self._facets(value_ids) if with_facets else ()
+        total_count = count_values(self.session, value_ids) if with_count else None
 
         load_stmt = paginate(base_stmt.options(self._series_loader(include_context)), offset, limit)
         rows = list(self.session.execute(load_stmt).scalars().unique().all())

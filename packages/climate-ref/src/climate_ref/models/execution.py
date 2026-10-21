@@ -22,7 +22,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
-from sqlalchemy.orm.query import RowReturningQuery
+from sqlalchemy.orm.query import Query, RowReturningQuery
 
 from climate_ref.models.base import Base
 from climate_ref.models.dataset import Dataset
@@ -635,6 +635,7 @@ class ExecutionOutput(DimensionMixin, CreatedUpdatedMixin, Base):
 
 def select_latest_executions(
     among_executions: Sequence[ColumnElement[bool]] = (),
+    execution_group_ids: Sequence[int] | None = None,
 ) -> Select[tuple[int, int]]:
     """
     Build a ``Select`` of the latest execution in each execution group.
@@ -651,6 +652,8 @@ def select_latest_executions(
         For example ``[Execution.successful.is_(True)]`` picks each group's latest successful execution.
         Group-level filters (diagnostic, provider, dirty, version) belong on the outer query instead,
         where they narrow which groups are returned without changing which execution wins.
+    execution_group_ids
+        Optional groups to restrict the result to, so a scoped read does not rank every group.
 
     Returns
     -------
@@ -658,6 +661,8 @@ def select_latest_executions(
         one row per group that has at least one matching execution.
         Call ``.subquery()`` to join or filter against it.
     """
+    if execution_group_ids is not None:
+        among_executions = [*among_executions, Execution.execution_group_id.in_(list(execution_group_ids))]
     # Grouped max rather than row_number: with a predicate, SQLite 3.40 rescans a filtered window
     # subquery for every outer row when it is left-joined to execution_group.
     newest = (
@@ -681,6 +686,44 @@ def select_latest_executions(
         )
         .where(*among_executions)
         .group_by(Execution.execution_group_id)
+    )
+
+
+def _latest_execution_id(among_executions: Sequence[Any] | None = None) -> Any:
+    """
+    Correlated scalar subquery selecting the id of the latest execution in the outer ``ExecutionGroup``.
+
+    It picks the same execution as
+    [select_latest_executions][climate_ref.models.execution.select_latest_executions].
+
+    "Latest" is the execution with the greatest ``created_at``,
+    breaking ties deterministically by greatest ``id`` so that exactly one execution wins per group.
+
+    Parameters
+    ----------
+    among_executions
+        Optional predicates on ``Execution`` applied *before* ranking.
+        These change which execution is considered "latest" for each group -- the
+        winner is the newest execution *among those matching the predicates*.
+
+        For example ``[Execution.successful.is_(True)]`` selects each group's
+        latest **successful** execution rather than its latest execution.
+        Group-level filters (diagnostic, provider, dirty, version) do not belong here
+        Apply them to the outer query,
+        where they narrow which groups are returned without changing which execution wins.
+
+    Returns
+    -------
+        A scalar subquery that is ``NULL`` for a group with no matching execution.
+        Being correlated, it only reads the executions of the groups the outer query visits.
+    """
+    return (
+        select(Execution.id)
+        .where(Execution.execution_group_id == ExecutionGroup.id, *(among_executions or ()))
+        .order_by(Execution.created_at.desc(), Execution.id.desc())
+        .limit(1)
+        .correlate(ExecutionGroup)
+        .scalar_subquery()
     )
 
 
@@ -712,7 +755,7 @@ def get_execution_group_and_latest(
         The database session to use for the query.
     among_executions
         Optional predicates on ``Execution`` applied *before* the latest-per-group ranking,
-        so "latest" is chosen from that filtered population (see :func:`select_latest_executions`).
+        so "latest" is chosen from that filtered population (see :func:`_latest_execution_id`).
         Defaults to ranking over all executions.
 
     Returns
@@ -721,8 +764,6 @@ def get_execution_group_and_latest(
         The result is a tuple of the execution group and the most recent result,
         which can be None.
     """
-    latest = select_latest_executions(among_executions or ()).subquery()
-
     # Groups with no matching execution still appear (outer join, Execution=None).
     # Every known caller (`cli/executions.py::delete_groups`, `ExecutionsReader.groups()`,
     # `executor/reingest.py`) reads `eg.diagnostic.slug`/`eg.diagnostic.provider.slug` off the
@@ -730,8 +771,7 @@ def get_execution_group_and_latest(
     query = (
         session.query(ExecutionGroup, Execution)
         .options(joinedload(ExecutionGroup.diagnostic).joinedload(Diagnostic.provider))
-        .outerjoin(latest, latest.c.execution_group_id == ExecutionGroup.id)
-        .outerjoin(Execution, Execution.id == latest.c.execution_id)
+        .outerjoin(Execution, Execution.id == _latest_execution_id(among_executions))
     )
 
     return query  # type: ignore
@@ -822,6 +862,127 @@ def _resolve_selector_filters(
         stacklevel=3,
     )
     return facet_filters
+
+
+def query_execution_group_and_latest_filtered(  # noqa: PLR0913
+    session: Session,
+    diagnostic_filters: list[str] | None = None,
+    provider_filters: list[str] | None = None,
+    dirty: bool | None = None,
+    successful: bool | None = None,
+    latest_successful: bool | None = None,
+    include_superseded: bool = False,
+    failure_reasons: Sequence[ExecutionFailureReason] | None = None,
+    group_conditions: Sequence[ColumnElement[bool]] | None = None,
+) -> RowReturningQuery[tuple[ExecutionGroup, Execution | None]]:
+    """
+    Build the unmaterialised query behind ``get_execution_group_and_latest_filtered``, ordered by group id.
+
+    Every filter except ``selector_filters`` is applied in SQL,
+    so callers can add pagination before running it.
+    The parameters match that function.
+    """
+    # Pre-rank population filter: restrict which executions "latest" is chosen from.
+    among_executions = None if latest_successful is None else [_successful_predicate(latest_successful)]
+
+    query = get_execution_group_and_latest(session, among_executions=among_executions)
+    query = _filter_execution_groups(
+        query, diagnostic_filters, provider_filters, dirty, include_superseded, group_conditions
+    )
+
+    if successful is not None:
+        query = query.filter(_successful_predicate(successful))
+
+    if failure_reasons:
+        query = query.filter(Execution.failure_reason.in_([reason.value for reason in failure_reasons]))
+
+    return query.order_by(ExecutionGroup.id)
+
+
+def count_execution_group_and_latest_filtered(  # noqa: PLR0913
+    session: Session,
+    diagnostic_filters: list[str] | None = None,
+    provider_filters: list[str] | None = None,
+    dirty: bool | None = None,
+    successful: bool | None = None,
+    latest_successful: bool | None = None,
+    include_superseded: bool = False,
+    failure_reasons: Sequence[ExecutionFailureReason] | None = None,
+    group_conditions: Sequence[ColumnElement[bool]] | None = None,
+) -> int:
+    """
+    Count the rows ``query_execution_group_and_latest_filtered`` returns.
+
+    Each group yields exactly one row, so the latest execution is only resolved
+    when a filter on it (``successful`` or ``failure_reasons``) can drop the group.
+    """
+    if successful is not None or failure_reasons:
+        query = query_execution_group_and_latest_filtered(
+            session,
+            diagnostic_filters=diagnostic_filters,
+            provider_filters=provider_filters,
+            dirty=dirty,
+            successful=successful,
+            latest_successful=latest_successful,
+            include_superseded=include_superseded,
+            failure_reasons=failure_reasons,
+            group_conditions=group_conditions,
+        )
+        return query.order_by(None).count()
+    groups = _filter_execution_groups(
+        session.query(func.count(ExecutionGroup.id)).select_from(ExecutionGroup),
+        diagnostic_filters,
+        provider_filters,
+        dirty,
+        include_superseded,
+        group_conditions,
+    )
+    return groups.scalar() or 0
+
+
+def _filter_execution_groups[GroupQuery: Query[Any]](  # noqa: PLR0913
+    query: GroupQuery,
+    diagnostic_filters: list[str] | None,
+    provider_filters: list[str] | None,
+    dirty: bool | None,
+    include_superseded: bool,
+    group_conditions: Sequence[ColumnElement[bool]] | None,
+) -> GroupQuery:
+    """Apply the group-level filters, which never depend on which execution is latest."""
+    if not include_superseded:
+        query = query.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+        query = query.filter(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
+
+    # Matched against diagnostics first, so SQLite reaches the groups by index rather than scanning them.
+    if diagnostic_filters or provider_filters:
+        diagnostics = select(Diagnostic.id)
+        # Apply diagnostic filter (OR logic for multiple values)
+        if diagnostic_filters:
+            diagnostic_conditions = [
+                Diagnostic.slug.ilike(f"%{filter_value.lower()}%") for filter_value in diagnostic_filters
+            ]
+            diagnostics = diagnostics.where(or_(*diagnostic_conditions))
+
+        # Apply provider filter (OR logic for multiple values)
+        if provider_filters:
+            provider_conditions = [
+                Provider.slug.ilike(f"%{filter_value.lower()}%") for filter_value in provider_filters
+            ]
+            diagnostics = diagnostics.join(Provider, Diagnostic.provider_id == Provider.id).where(
+                or_(*provider_conditions)
+            )
+        query = query.filter(ExecutionGroup.diagnostic_id.in_(diagnostics))
+
+    if dirty is not None:
+        if dirty:
+            query = query.filter(ExecutionGroup.dirty.is_(True))
+        else:
+            query = query.filter(or_(ExecutionGroup.dirty.is_(False), ExecutionGroup.dirty.is_(None)))
+
+    for condition in group_conditions or ():
+        query = query.filter(condition)
+
+    return query
 
 
 def get_execution_group_and_latest_filtered(  # noqa: PLR0913
@@ -928,53 +1089,17 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     """
     selector_filters = _resolve_selector_filters(selector_filters, facet_filters)
 
-    # Pre-rank population filter: restrict which executions "latest" is chosen from.
-    among_executions = None if latest_successful is None else [_successful_predicate(latest_successful)]
-
-    # Start with base query
-    query = get_execution_group_and_latest(session, among_executions=among_executions)
-
-    # Join Diagnostic when needed for filtering (by name or by promoted version).
-    needs_diagnostic_join = bool(diagnostic_filters or provider_filters) or not include_superseded
-    if needs_diagnostic_join:
-        query = query.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-
-    if not include_superseded:
-        query = query.filter(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
-
-    # Apply diagnostic filter (OR logic for multiple values)
-    if diagnostic_filters:
-        diagnostic_conditions = [
-            Diagnostic.slug.ilike(f"%{filter_value.lower()}%") for filter_value in diagnostic_filters
-        ]
-        query = query.filter(or_(*diagnostic_conditions))
-
-    # Apply provider filter (OR logic for multiple values)
-    if provider_filters:
-        # Need to join through Diagnostic to Provider
-        query = query.join(Provider, Diagnostic.provider_id == Provider.id)
-
-        provider_conditions = [
-            Provider.slug.ilike(f"%{filter_value.lower()}%") for filter_value in provider_filters
-        ]
-        query = query.filter(or_(*provider_conditions))
-
-    if successful is not None:
-        query = query.filter(_successful_predicate(successful))
-
-    if failure_reasons:
-        query = query.filter(Execution.failure_reason.in_([reason.value for reason in failure_reasons]))
-
-    if dirty is not None:
-        if dirty:
-            query = query.filter(ExecutionGroup.dirty.is_(True))
-        else:
-            query = query.filter(or_(ExecutionGroup.dirty.is_(False), ExecutionGroup.dirty.is_(None)))
-
-    for condition in group_conditions or ():
-        query = query.filter(condition)
-
-    query = query.order_by(ExecutionGroup.id)
+    query = query_execution_group_and_latest_filtered(
+        session,
+        diagnostic_filters=diagnostic_filters,
+        provider_filters=provider_filters,
+        dirty=dirty,
+        successful=successful,
+        latest_successful=latest_successful,
+        include_superseded=include_superseded,
+        failure_reasons=failure_reasons,
+        group_conditions=group_conditions,
+    )
 
     if selector_filters:
         # Load all results into memory for Python-based filtering

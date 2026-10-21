@@ -635,7 +635,6 @@ class ExecutionOutput(DimensionMixin, CreatedUpdatedMixin, Base):
 
 def select_latest_executions(
     among_executions: Sequence[ColumnElement[bool]] = (),
-    execution_group_ids: Sequence[int] | None = None,
 ) -> Select[tuple[int, int]]:
     """
     Build a ``Select`` of the latest execution in each execution group.
@@ -652,8 +651,6 @@ def select_latest_executions(
         For example ``[Execution.successful.is_(True)]`` picks each group's latest successful execution.
         Group-level filters (diagnostic, provider, dirty, version) belong on the outer query instead,
         where they narrow which groups are returned without changing which execution wins.
-    execution_group_ids
-        Optional groups to restrict the result to, so a scoped read does not rank every group.
 
     Returns
     -------
@@ -661,8 +658,6 @@ def select_latest_executions(
         one row per group that has at least one matching execution.
         Call ``.subquery()`` to join or filter against it.
     """
-    if execution_group_ids is not None:
-        among_executions = [*among_executions, Execution.execution_group_id.in_(list(execution_group_ids))]
     # Grouped max rather than row_number: with a predicate, SQLite 3.40 rescans a filtered window
     # subquery for every outer row when it is left-joined to execution_group.
     newest = (
@@ -691,31 +686,11 @@ def select_latest_executions(
 
 def _latest_execution_id(among_executions: Sequence[Any] | None = None) -> Any:
     """
-    Correlated scalar subquery selecting the id of the latest execution in the outer ``ExecutionGroup``.
+    Correlated scalar subquery of the outer ``ExecutionGroup``'s latest execution id, or ``NULL`` if none.
 
     It picks the same execution as
-    [select_latest_executions][climate_ref.models.execution.select_latest_executions].
-
-    "Latest" is the execution with the greatest ``created_at``,
-    breaking ties deterministically by greatest ``id`` so that exactly one execution wins per group.
-
-    Parameters
-    ----------
-    among_executions
-        Optional predicates on ``Execution`` applied *before* ranking.
-        These change which execution is considered "latest" for each group -- the
-        winner is the newest execution *among those matching the predicates*.
-
-        For example ``[Execution.successful.is_(True)]`` selects each group's
-        latest **successful** execution rather than its latest execution.
-        Group-level filters (diagnostic, provider, dirty, version) do not belong here
-        Apply them to the outer query,
-        where they narrow which groups are returned without changing which execution wins.
-
-    Returns
-    -------
-        A scalar subquery that is ``NULL`` for a group with no matching execution.
-        Being correlated, it only reads the executions of the groups the outer query visits.
+    [select_latest_executions][climate_ref.models.execution.select_latest_executions],
+    and ``among_executions`` means the same there.
     """
     return (
         select(Execution.id)

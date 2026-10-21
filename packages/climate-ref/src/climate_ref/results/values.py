@@ -290,9 +290,7 @@ class ValuesReader:
         total_count = count_values(self.session, value_ids) if with_count else None
         load_stmt = paginate(base_stmt.options(self._scalar_loader(include_context)), offset, limit)
         rows = list(self.session.execute(load_stmt).scalars().all())
-        items = tuple(
-            self._to_scalar_dto(r, False, "verified", include_context, detection_ran=False) for r in rows
-        )
+        items = tuple(self._to_scalar_dto(r, include_context) for r in rows)
         return ScalarValueCollection(
             items=items,
             total_count=total_count,
@@ -468,14 +466,7 @@ class ValuesReader:
         diagnostic = execution.execution_group.diagnostic
         return diagnostic.slug, diagnostic.provider.slug
 
-    def _to_scalar_dto(
-        self,
-        row: ScalarMetricValue,
-        is_outlier: bool,
-        verification_status: str,
-        include_context: bool,
-        detection_ran: bool,
-    ) -> ScalarValue:
+    def _to_scalar_dto(self, row: ScalarMetricValue, include_context: bool) -> ScalarValue:
         diagnostic_slug, provider_slug = self._context_slugs(row.execution, include_context)
         dims = dict(row.dimensions)
         kind = _kind_of(dims)
@@ -488,8 +479,6 @@ class ValuesReader:
             kind=kind,
             dimensions=dims,
             attributes=dict(row.attributes or {}),
-            is_outlier=is_outlier if detection_ran else None,
-            verification_status=verification_status if detection_ran else None,
             diagnostic_slug=diagnostic_slug,
             provider_slug=provider_slug,
         )

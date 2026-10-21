@@ -130,7 +130,8 @@ def apply_execution_scope(
     if not scope.include_retracted:
         stmt = stmt.where(Execution.retracted.is_(False))
     if scope.latest_only:
-        latest = select_latest_executions(execution_group_ids=execution_group_ids or None).subquery()
+        among = [Execution.execution_group_id.in_(list(execution_group_ids))] if execution_group_ids else []
+        latest = select_latest_executions(among).subquery()
         stmt = stmt.where(Execution.id.in_(select(latest.c.execution_id)))
     return stmt
 

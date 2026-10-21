@@ -17,7 +17,7 @@ A common set of ordering (``created_at DESC, id DESC``) is used to ensure consis
 """
 
 import warnings
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
@@ -37,6 +37,7 @@ from climate_ref.models.execution import (
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_failure_reasons, _as_str_tuple
+from climate_ref.results._page import Page
 from climate_ref.results._query import (
     InputDatasetFilter,
     latest_execution_for_group,
@@ -279,26 +280,8 @@ class OutputView:
 
 
 @attrs.frozen(kw_only=True)
-class ExecutionGroupCollection:
+class ExecutionGroupCollection(Page[ExecutionGroupView]):
     """An immutable page of execution groups plus collection-level metadata."""
-
-    items: tuple[ExecutionGroupView, ...]
-    """The execution groups on this page."""
-
-    total_count: int
-    """Total execution groups matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[ExecutionGroupView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -504,6 +487,7 @@ class ExecutionsReader:
         *,
         offset: int = 0,
         limit: int | None = None,
+        with_count: bool = True,
     ) -> ExecutionGroupCollection:
         """
         Query execution groups with their per-group latest execution.
@@ -523,7 +507,7 @@ class ExecutionsReader:
         # since the Python facet filter runs after the SQL query.
         all_results = self.group_rows(filters)
 
-        total_count = len(all_results)
+        total_count = len(all_results) if with_count else None
         page = all_results[offset : offset + limit] if limit is not None else all_results[offset:]
         items = tuple(self._to_group_view(eg, latest) for eg, latest in page)
 

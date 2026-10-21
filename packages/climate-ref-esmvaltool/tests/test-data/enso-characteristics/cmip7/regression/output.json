@@ -1,0 +1,265 @@
+{
+  "data": {
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_09pattern.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_09pattern.nc",
+      "long_name": "Zonal structure of sea surface temperature anomalies in the equatorial Pacific (averaged between 5°S and 5°N)."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_10lifecycle.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_10lifecycle.nc",
+      "long_name": "Temporal evolution of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), illustrating the ENSO-associated variability."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_11amplitude.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_11amplitude.nc",
+      "long_name": "Standard deviation of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), representing the amplitude of variability."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_12seasonality.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_12seasonality.nc",
+      "long_name": "Ratio of winter to spring standard deviation of sea surface temperature anomalies in the central equatorial Pacific, illustrating the seasonal timing of SSTA."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_13asymmetry.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_13asymmetry.nc",
+      "long_name": "Skewness of sea surface temperature anomalies in the central equatorial Pacific, illustrating the expected asymmetry where positive SSTA values should typically be larger than negative SSTA values (usually close to 0). "
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_14duration.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_14duration.nc",
+      "long_name": "Duration of the ENSO life cycle where SSTA exceeds 0.25, illustrating the 'duration' of the SSTA event."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_15diversity.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_15diversity.nc",
+      "long_name": "Width of the zonal location of maximum (minimum) SSTA during all El Niño (La Niña) events, illustrating the 'diversity' of ENSO events."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_09pattern.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_09pattern.nc",
+      "long_name": "Zonal structure of sea surface temperature anomalies in the equatorial Pacific (averaged between 5°S and 5°N)."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_10lifecycle.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_10lifecycle.nc",
+      "long_name": "Temporal evolution of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), illustrating the ENSO-associated variability."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_11amplitude.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_11amplitude.nc",
+      "long_name": "Standard deviation of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), representing the amplitude of variability."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_12seasonality.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_12seasonality.nc",
+      "long_name": "Ratio of winter to spring standard deviation of sea surface temperature anomalies in the central equatorial Pacific, illustrating the seasonal timing of SSTA."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_13asymmetry.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_13asymmetry.nc",
+      "long_name": "Skewness of sea surface temperature anomalies in the central equatorial Pacific, illustrating the expected asymmetry where positive SSTA values should typically be larger than negative SSTA values (usually close to 0). "
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_14duration.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_14duration.nc",
+      "long_name": "Duration of the ENSO life cycle where SSTA exceeds 0.25, illustrating the 'duration' of the SSTA event."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_15diversity.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_15diversity.nc",
+      "long_name": "Width of the zonal location of maximum (minimum) SSTA during all El Niño (La Niña) events, illustrating the 'diversity' of ENSO events."
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/matrix.csv": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/metrics_script/matrix.csv",
+      "long_name": "List of metric values."
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null,
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "metrics": null,
+  "plots": {
+    "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/CanESM5_14duration_divedown.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/CanESM5_14duration_divedown.png",
+      "long_name": "Distributions of durations of ENSO events The black and blue boxplots show respectively the reference and the model, the left and right panels show respectively La Niña distributions and the El Niño distributions "
+    },
+    "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/CanESM5_15diversity_divedown.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/CanESM5_15diversity_divedown.png",
+      "long_name": "Distributions of the zonal location of the maximum SSTA during La Niña events (top left), El Niño events (top right)  and all ENSO events (bottom)."
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_2.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_2.png",
+      "long_name": "Spatial-temporal structure of sea surface temperature anomalies (SSTA) associated with ENSO in the equatorial Pacific (5°S-5°N average)"
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_3.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_3.png",
+      "long_name": "Temporal lifecycle of sea surface temperature anomalies (SSTA) during La Niña and El Niño in the central equatorial Pacific (Niño3.4 averaged)"
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_4.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_4.png",
+      "long_name": "Spatial-temporal structure of sea surface temperature anomalies (SSTA) during La Niña and El Niño in the equatorial Pacific (5°S-5°N average)"
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_09pattern.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "09pattern"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_09pattern.png",
+      "long_name": "Zonal structure of sea surface temperature anomalies in the equatorial Pacific (averaged between 5°S and 5°N)."
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_10lifecycle.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "10lifecycle"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_10lifecycle.png",
+      "long_name": "Temporal evolution of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), illustrating the ENSO-associated variability."
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_11amplitude.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "11amplitude"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_11amplitude.png",
+      "long_name": "Standard deviation of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), representing the amplitude of variability."
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_12seasonality.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "12seasonality"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_12seasonality.png",
+      "long_name": "Ratio of winter to spring standard deviation of sea surface temperature anomalies in the central equatorial Pacific, illustrating the seasonal timing of SSTA."
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_13asymmetry.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "13asymmetry"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_13asymmetry.png",
+      "long_name": "Skewness of sea surface temperature anomalies in the central equatorial Pacific, illustrating the expected asymmetry where positive SSTA values should typically be larger than negative SSTA values (usually close to 0). "
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_14duration.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "14duration"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_14duration.png",
+      "long_name": "Duration of the ENSO life cycle where SSTA exceeds 0.25, illustrating the 'duration' of the SSTA event."
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_15diversity.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "15diversity"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_15diversity.png",
+      "long_name": "Width of the zonal location of maximum (minimum) SSTA during all El Niño (La Niña) events, illustrating the 'diversity' of ENSO events."
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_2.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_2.png",
+      "long_name": "Sea surface temperature anomalies (SSTA) associated with ENSO in the equatorial Pacific"
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_3.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_3.png",
+      "long_name": "Sea surface temperature anomalies (SSTA) during La Niña and El Niño in the equatorial Pacific"
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_4.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_4.png",
+      "long_name": "Composite SSTA patterns for El Niño and La Niña in the equatorial Pacific"
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_2.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_2.png",
+      "long_name": "Zonal structure of the standard deviation of SSTA in the equatorial Pacific (averaged between 5°S and 5°N)"
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_3.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_3.png",
+      "long_name": "Spatial structure of the standard deviation of SSTA in the equatorial Pacific"
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_2.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_2.png",
+      "long_name": "Seasonality level 2: Mean annual structure of the standard deviation of SSTA in the central equatorial Pacific (Niño 3.4 region average), illustrating the seasonal variability."
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_3.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_3.png",
+      "long_name": "Seasonality level 3: Spatio-mean annual structure of the standard deviation of SSTA in the equatorial Pacific (averaged between 5°S and 5°N)."
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_4.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_4.png",
+      "long_name": "Seasonality level 4: Zonal structure of the standard deviation of SSTA in the equatorial Pacific (averaged between 5°S and 5°N) during winter (red curves) and spring (blue curves)."
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_5.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_5.png",
+      "long_name": "Seasonality level 5: Spatial structure of the standard deviation of SSTA in the equatorial Pacific during winter (NDJ) and spring (MAM)."
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_2.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_2.png",
+      "long_name": "Zonal structure of the skewness of SSTA in the equatorial Pacific (averaged between 5°S and 5°N)."
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_3.png": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_3.png",
+      "long_name": "Spatial structure of the skewness of SSTA in the equatorial Pacific."
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

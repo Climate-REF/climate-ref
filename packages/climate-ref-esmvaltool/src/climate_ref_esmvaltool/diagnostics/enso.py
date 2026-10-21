@@ -28,8 +28,8 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
 
     name = "ENSO Basic Climatology"
     slug = "enso-basic-climatology"
-    base_recipe = "ref/recipe_enso_basicclimatology.yml"
-    version = 2
+    base_recipe = "ref/recipe_enso_basicclimatology_CMIP7.yml"
+    version = 3
 
     data_requirements = (
         (
@@ -151,7 +151,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
         )
         + tuple(
             FileDefinition(
-                file_pattern=f"plots/diagnostic_level2/plot_script/png/*_{var_name}_map_*.png",
+                file_pattern=f"plots/diagnostic_divedowns/plotlevel2_script/png/*_{var_name}_map_*.png",
                 dimensions={
                     "variable_id": "tos" if var_name == "tos" else var_name,
                 },
@@ -177,11 +177,11 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                 attributes=[],
             )
             for var_name in ("pr", "sst", "tauu")
-            for source_id in ("{source_id}", "GPCP-V2.3", "TROPFLUX")
+            for source_id in ("{source_id}", "GPCP-V3.3", "TROPFLUX")
         )
         + tuple(
             SeriesDefinition(
-                file_pattern=f"diagnostic_metrics/plot_script/{{source_id}}_eq_{var_name}_seacycle.nc",
+                file_pattern=f"diagnostic_metrics/plot_script/{source_id}_eq_{var_name}_seacycle.nc",
                 dimensions=(
                     {
                         "statistic": (
@@ -196,11 +196,11 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                 attributes=[],
             )
             for var_name in ("pr", "sst", "tauu")
-            for source_id in ("{source_id}", "GPCP-V2.3", "TROPFLUX")
+            for source_id in ("{source_id}", "GPCP-V3.3", "TROPFLUX")
         )
         + tuple(
             SeriesDefinition(
-                file_pattern="diagnostic_metrics/plot_script/{source_id}_pr_double.nc",
+                file_pattern=f"diagnostic_metrics/plot_script/{source_id}_pr_double.nc",
                 dimensions=(
                     {
                         "statistic": (
@@ -213,11 +213,11 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                 index_name="lat",
                 attributes=[],
             )
-            for source_id in ("{source_id}", "GPCP-V2.3")
+            for source_id in ("{source_id}", "GPCP-V3.3")
         )
         + tuple(
             SeriesDefinition(
-                file_pattern="diagnostic_metrics/plot_script/*_pr_double_seacycle.nc",
+                file_pattern=f"diagnostic_metrics/plot_script/{source_id}_pr_double_seacycle.nc",
                 dimensions=(
                     {
                         "statistic": (
@@ -231,7 +231,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                 index_name="lat",
                 attributes=[],
             )
-            for source_id in ("{source_id}", "GPCP-V2.3")
+            for source_id in ("{source_id}", "GPCP-V3.3")
         )
     )
 
@@ -289,6 +289,10 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
         recipe.pop("datasets")
         for diagnostic in recipe["diagnostics"].values():
             for variable in diagnostic["variables"].values():
+                # CMIP6 has no branding suffix, so keep it on the observations only.
+                branding_suffix = variable.pop("branding_suffix")
+                for dataset in variable["additional_datasets"]:
+                    dataset.setdefault("branding_suffix", branding_suffix)
                 variable["additional_datasets"].extend(
                     recipe_variables[variable["short_name"]]["additional_datasets"]
                 )
@@ -301,8 +305,8 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
 
     name = "ENSO Characteristics"
     slug = "enso-characteristics"
-    base_recipe = "ref/recipe_enso_characteristics.yml"
-    version = 2
+    base_recipe = "ref/recipe_enso_characteristics_CMIP7.yml"
+    version = 3
 
     data_requirements = (
         (
@@ -355,7 +359,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     series = tuple()
     files = tuple(
         FileDefinition(
-            file_pattern=f"plots/diagnostic_metrics/plot_script/png/*_{metric}.png",
+            file_pattern=f"plots/*/*/png/*_{metric}.png",
             dimensions={"metric": metric},
         )
         for metric in (
@@ -419,26 +423,8 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
-        recipe["datasets"] = recipe_variables["tos"]["additional_datasets"]
-        # TODO: update the observational data requirement once available on ESGF.
-        # Observations - use only one per run
-        recipe["datasets"].append(
-            # {
-            #     "dataset": "NOAA-ERSSTv5",
-            #     "version": "v5",
-            #     "project": "OBS6",
-            #     "type": "reanaly",
-            #     "tier": 2,
-            # }
-            {
-                "dataset": "TROPFLUX",
-                "version": "v1",
-                "project": "OBS6",
-                "type": "reanaly",
-                "tier": 2,
-                "mip": "Omon",
-            }
-        )
+        observations = [dataset for dataset in recipe["datasets"] if dataset["project"] == "OBS6"]
+        recipe["datasets"] = recipe_variables["tos"]["additional_datasets"] + observations
 
     @staticmethod
     def format_result(
@@ -449,7 +435,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     ) -> tuple[CMECMetric, CMECOutput]:
         """Format the result."""
         metrics = pd.read_csv(
-            result_dir / "work" / "diagnostic_metrics" / "plot_script" / "matrix.csv",
+            result_dir / "work" / "diagnostic_metrics" / "metrics_script" / "matrix.csv",
             names=["dataset", "metric_name", "metric_value"],
         )
 

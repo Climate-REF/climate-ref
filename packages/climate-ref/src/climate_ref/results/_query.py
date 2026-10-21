@@ -43,6 +43,8 @@ class InputDatasetFilter:
     and satisfies every facet in ``facets`` (values for one facet are OR-combined).
     A source type whose dataset table lacks a requested facet cannot match,
     so a CMIP7-only facet does not pull in all of CMIP6.
+    With ``or_no_model_input`` an execution with no model-simulation input dataset also matches,
+    which keeps observation-only executions when scoping to one era.
 
     Raises
     ------
@@ -55,6 +57,9 @@ class InputDatasetFilter:
 
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     """Dataset columns to match, e.g. ``{"source_id": ("ACCESS-CM2",)}``. ``None`` matches any dataset."""
+
+    or_no_model_input: bool = False
+    """Also match executions with no model-simulation input dataset, such as observation-only ones."""
 
     def __attrs_post_init__(self) -> None:
         if not self.source_types:
@@ -74,6 +79,10 @@ class InputDatasetFilter:
                 continue
             conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
             branches.append(Execution.datasets.of_type(entity).any(and_(*conditions)))
+        if self.or_no_model_input:
+            model_types = (t for t in SourceDatasetType if t.is_model_output)
+            absent = (~Execution.datasets.of_type(_entity_for(t)).any() for t in model_types)
+            branches.append(and_(*absent))
         # An empty or_() emits no predicate, which would match every execution.
         return or_(*branches) if branches else false()
 
@@ -120,8 +129,9 @@ class MetricValueFilter(ExecutionScope):
     """
     Declarative filter over metric values.
 
-    ``None``/empty means "do not constrain on this axis",
+    ``None`` means "do not constrain on this axis",
     except ``include_retracted`` and ``include_superseded``, which constrain by default.
+    An empty id sequence matches nothing, and an empty ``exclude_ids`` excludes nothing.
     The same object drives scalar and series queries, frame conversion and facet collection,
     so a filter is written once and reused across output shapes.
 
@@ -231,8 +241,8 @@ def _apply_common(  # noqa: PLR0912
         or not f.include_superseded
     )
     needs_exec = bool(
-        f.execution_ids
-        or f.execution_group_ids
+        f.execution_ids is not None
+        or f.execution_group_ids is not None
         or f.input_datasets
         or needs_diag
         or not f.include_retracted
@@ -242,9 +252,9 @@ def _apply_common(  # noqa: PLR0912
     if needs_exec:
         stmt = stmt.join(Execution, entity.execution_id == Execution.id)
         stmt = apply_execution_scope(stmt, f)
-    if f.execution_ids:
+    if f.execution_ids is not None:
         stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
-    if f.execution_group_ids:
+    if f.execution_group_ids is not None:
         stmt = stmt.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
     if f.input_datasets:
         stmt = stmt.where(f.input_datasets.execution_clause())
@@ -268,7 +278,7 @@ def _apply_common(  # noqa: PLR0912
     for clause in f.dimension_clauses(entity):
         stmt = stmt.where(clause)
 
-    if f.isolate_ids:
+    if f.isolate_ids is not None:
         stmt = stmt.where(entity.id.in_(list(f.isolate_ids)))
     elif f.exclude_ids:
         stmt = stmt.where(~entity.id.in_(list(f.exclude_ids)))

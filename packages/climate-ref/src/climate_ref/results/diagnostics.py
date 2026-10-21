@@ -206,11 +206,13 @@ def select_diagnostics_with_values(
     filters: DiagnosticFilter | None = None,
     *,
     execution_group_where: ColumnElement[bool] | None = None,
+    scope: ExecutionScope = ExecutionScope(include_retracted=False),
 ) -> Select[Any]:
     """
     Build the ``Select`` for diagnostics with at least one value of ``value_type`` at the promoted version.
 
-    Values from retracted executions do not count, matching
+    ``scope`` picks which executions count.
+    By default retracted executions do not count, matching
     [Reader.values][climate_ref.results.values.Reader.values].
 
     Selects ``id``, ``provider_slug`` and ``slug``, ordered like
@@ -231,7 +233,7 @@ def select_diagnostics_with_values(
             _Unindexed(MetricValue.type.expression) == value_type,
         )
     )
-    has_values = apply_execution_scope(has_values, ExecutionScope(include_retracted=False))
+    has_values = apply_execution_scope(has_values, scope)
     if execution_group_where is not None:
         has_values = has_values.where(execution_group_where)
     if filters.input_datasets:
@@ -317,14 +319,18 @@ class DiagnosticsReader:
         return DiagnosticCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
     def with_values(
-        self, value_type: MetricValueType, filters: DiagnosticFilter | None = None
+        self,
+        value_type: MetricValueType,
+        filters: DiagnosticFilter | None = None,
+        *,
+        scope: ExecutionScope = ExecutionScope(include_retracted=False),
     ) -> frozenset[tuple[str, str]]:
         """
         Find the ``(provider, diagnostic)`` pairs with a value of ``value_type`` at the promoted version.
 
         See [select_diagnostics_with_values][climate_ref.results.diagnostics.select_diagnostics_with_values].
         """
-        rows = self.session.execute(select_diagnostics_with_values(value_type, filters)).all()
+        rows = self.session.execute(select_diagnostics_with_values(value_type, filters, scope=scope)).all()
         return frozenset((row.provider_slug, row.slug) for row in rows)
 
     def stats(

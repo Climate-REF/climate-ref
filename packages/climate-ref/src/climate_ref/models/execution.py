@@ -823,6 +823,8 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     """
     Query execution groups with filtering capabilities.
 
+    New callers should build an ``ExecutionGroupFilter`` and use ``ExecutionsReader.group_rows`` instead.
+
     By default, returns only execution groups whose ``diagnostic_version`` matches
     the parent diagnostic's ``promoted_version`` so consumers see exactly one
     version's worth of results.

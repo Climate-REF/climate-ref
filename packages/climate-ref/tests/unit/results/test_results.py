@@ -211,6 +211,18 @@ class TestScalarValues:
         assert coll.total_count == 2
         assert {v.dimensions["source_id"] for v in coll} == {"ACCESS-CM2", "CESM3"}
 
+    @pytest.mark.parametrize("field", ["execution_ids", "execution_group_ids", "isolate_ids"])
+    def test_empty_id_sequence_matches_nothing(self, dal_db, field):
+        ref = Reader(dal_db)
+        assert ref.values.scalar_values(MetricValueFilter(**{field: []})).total_count == 0
+        assert ref.values.series_values(MetricValueFilter(**{field: []})).total_count == 0
+
+    def test_empty_exclude_ids_is_a_no_op(self, dal_db):
+        ref = Reader(dal_db)
+        assert ref.values.scalar_values(MetricValueFilter(exclude_ids=[])).total_count == (
+            ref.values.scalar_values(MetricValueFilter()).total_count
+        )
+
     def test_unknown_dimension_raises(self, dal_db):
         ref = Reader(dal_db)
         with pytest.raises(KeyError, match="not_a_dim"):

@@ -10,6 +10,7 @@ from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
 from climate_ref.results import DiagnosticFilter, Reader
+from climate_ref.results._query import ExecutionScope
 from climate_ref.results.diagnostics import select_diagnostics, select_diagnostics_with_values
 
 
@@ -345,6 +346,14 @@ class TestDiagnosticsWithValues:
             MetricValueType.SCALAR, execution_group_where=ExecutionGroup.key == "key2"
         )
         assert db_with_values.session.execute(stmt).all() == []
+
+    def test_scope_includes_retracted(self, db_with_values):
+        reader = Reader(db_with_values).diagnostics
+        assert {slug for _, slug in reader.with_values(MetricValueType.SERIES)} == {
+            "extratropical-modes-of-variability-nao"
+        }
+        retracted = reader.with_values(MetricValueType.SERIES, scope=ExecutionScope(include_retracted=True))
+        assert "enso-characteristics" in {slug for _, slug in retracted}
 
     def test_sqlite_plan_reads_only_the_composite_index(self, db_with_values):
         session = db_with_values.session

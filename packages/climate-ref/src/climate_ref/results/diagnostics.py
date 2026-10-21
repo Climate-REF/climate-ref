@@ -13,12 +13,16 @@ from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import ColumnElement, Select, func, literal, or_, select
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.compiler import SQLCompiler
+from sqlalchemy.sql.functions import FunctionElement
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import ExecutionGroup
+from climate_ref.models.execution import Execution, ExecutionGroup
+from climate_ref.models.metric_value import MetricValue, MetricValueType
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
 from climate_ref.results._stats import rows_to_execution_stats
@@ -174,14 +178,80 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
 
+    return _apply_filters(stmt, filters)
+
+
+def _apply_filters(stmt: Select[Any], filters: DiagnosticFilter) -> Select[Any]:
     if filters.provider_contains:
         stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
     if filters.diagnostic_contains:
         stmt = stmt.where(
             or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains))
         )
-
     return stmt
+
+
+class _Unindexed(FunctionElement[Any]):
+    """A column that SQLite must not use an index on, written ``+column`` in SQLite."""
+
+    inherit_cache = True
+
+    def __init__(self, column: ColumnElement[Any]) -> None:
+        super().__init__(column)
+        self.type = column.type
+
+
+@compiles(_Unindexed)
+def _compile_unindexed(element: _Unindexed, compiler: SQLCompiler, **kw: Any) -> str:
+    prefix = "+" if compiler.dialect.name == "sqlite" else ""
+    return prefix + compiler.process(element.clauses, **kw)
+
+
+def select_diagnostics_with_values(
+    value_type: MetricValueType,
+    filters: DiagnosticFilter | None = None,
+    *,
+    execution_group_where: ColumnElement[bool] | None = None,
+) -> Select[Any]:
+    """
+    Build the ``Select`` for diagnostics with at least one value of ``value_type`` at the promoted version.
+
+    Values from retracted executions do not count, matching
+    [Reader.values][climate_ref.results.values.Reader.values].
+
+    Selects ``id``, ``provider_slug`` and ``slug``, ordered like
+    [select_diagnostics][climate_ref.results.diagnostics.select_diagnostics].
+    ``execution_group_where`` further restricts which execution groups count.
+    """
+    filters = filters or DiagnosticFilter()
+
+    has_values = (
+        select(literal(1))
+        .select_from(ExecutionGroup)
+        .join(Execution, Execution.execution_group_id == ExecutionGroup.id)
+        .join(MetricValue, MetricValue.execution_id == Execution.id)
+        .where(
+            ExecutionGroup.diagnostic_id == Diagnostic.id,
+            ExecutionGroup.diagnostic_version == Diagnostic.promoted_version,
+            Execution.retracted.is_(False),
+            # Without table statistics SQLite picks ix_metric_value_type and reads every series row.
+            _Unindexed(MetricValue.type.expression) == value_type,
+        )
+    )
+    if execution_group_where is not None:
+        has_values = has_values.where(execution_group_where)
+
+    stmt = (
+        select(
+            Diagnostic.id.label("id"),
+            Provider.slug.label("provider_slug"),
+            Diagnostic.slug.label("slug"),
+        )
+        .join(Provider, Diagnostic.provider_id == Provider.id)
+        .where(has_values.exists())
+        .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
+    )
+    return _apply_filters(stmt, filters)
 
 
 class DiagnosticsReader:
@@ -254,6 +324,17 @@ class DiagnosticsReader:
         items = tuple(self._to_view(row, stats_by_key) for row in rows)
 
         return DiagnosticCollection(items=items, total_count=total_count, offset=offset, limit=limit)
+
+    def with_values(
+        self, value_type: MetricValueType, filters: DiagnosticFilter | None = None
+    ) -> frozenset[tuple[str, str]]:
+        """
+        Find the ``(provider, diagnostic)`` pairs with a value of ``value_type`` at the promoted version.
+
+        See [select_diagnostics_with_values][climate_ref.results.diagnostics.select_diagnostics_with_values].
+        """
+        rows = self.session.execute(select_diagnostics_with_values(value_type, filters)).all()
+        return frozenset((row.provider_slug, row.slug) for row in rows)
 
     def stats(
         self,

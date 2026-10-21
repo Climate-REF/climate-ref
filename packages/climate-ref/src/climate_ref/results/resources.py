@@ -107,6 +107,9 @@ class ResourceFilter(ExecutionScope):
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
 
+    include_retracted: bool = True
+    """Include retracted executions, on by default because a retracted result still used real compute."""
+
 
 @attrs.frozen(kw_only=True)
 class ResourceMeasurementView:
@@ -833,9 +836,7 @@ class ResourcesReader:
         Returns ``None`` when no execution has that id,
         or when the execution neither recorded a measurement nor failed.
         """
-        stmt = select_execution_resources(ResourceFilter(include_retracted=True)).where(
-            Execution.id == execution_id
-        )
+        stmt = select_execution_resources().where(Execution.id == execution_id)
         row = self.session.execute(stmt).one_or_none()
         return self._to_view(row) if row is not None else None
 
@@ -890,12 +891,10 @@ class ResourcesReader:
         :
             One profile per group, ordered by provider then diagnostic slug.
         """
-        # Sizing wants every sample, and a retracted result still measured real resource use.
         filters = ResourceFilter(
             diagnostic_contains=diagnostic_contains,
             provider_contains=provider_contains,
             since=since,
-            include_retracted=True,
         )
         rows = [self._to_view(row) for row in self.session.execute(select_execution_resources(filters)).all()]
 

@@ -34,6 +34,10 @@ from climate_ref.results._converters import _as_str_tuple
 from climate_ref_core.source_types import SourceDatasetType
 
 
+def _as_source_types(value: SourceDatasetType | Sequence[SourceDatasetType]) -> tuple[SourceDatasetType, ...]:
+    return (value,) if isinstance(value, SourceDatasetType) else tuple(value)
+
+
 @attrs.frozen(kw_only=True)
 class InputDatasetFilter:
     """
@@ -43,9 +47,8 @@ class InputDatasetFilter:
     and satisfies every facet in ``facets`` (values for one facet are OR-combined).
     A source type whose dataset table lacks a requested facet cannot match,
     so a CMIP7-only facet does not pull in all of CMIP6.
-    With ``include_without_input`` an execution with no model-simulation input also matches,
+    With ``include_without_input_of`` an execution with no input dataset of any of those types also matches,
     which keeps observation-only executions when scoping to one era.
-    Model-simulation inputs are those of ``source_types`` plus CMIP6 and CMIP7.
 
     Raises
     ------
@@ -59,8 +62,10 @@ class InputDatasetFilter:
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     """Dataset columns to match, e.g. ``{"source_id": ("ACCESS-CM2",)}``. ``None`` matches any dataset."""
 
-    include_without_input: bool = False
-    """Also match executions that have no CMIP6, CMIP7 or ``source_types`` input dataset."""
+    include_without_input_of: tuple[SourceDatasetType, ...] = attrs.field(
+        default=(), converter=_as_source_types
+    )
+    """Also match executions with no input dataset of any of these types. Empty is off."""
 
     def __attrs_post_init__(self) -> None:
         if not self.source_types:
@@ -80,9 +85,11 @@ class InputDatasetFilter:
                 continue
             conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
             branches.append(Execution.datasets.of_type(entity).any(and_(*conditions)))
-        if self.include_without_input:
-            absent = {*self.source_types, SourceDatasetType.CMIP6, SourceDatasetType.CMIP7}
-            branches.append(and_(*(~Execution.datasets.of_type(_entity_for(t)).any() for t in absent)))
+        if self.include_without_input_of:
+            absent = (
+                ~Execution.datasets.of_type(_entity_for(t)).any() for t in self.include_without_input_of
+            )
+            branches.append(and_(*absent))
         # An empty or_() emits no predicate, which would match every execution.
         return or_(*branches) if branches else false()
 
@@ -253,13 +260,9 @@ def _apply_common(  # noqa: PLR0912
         stmt = stmt.join(Execution, entity.execution_id == Execution.id)
         stmt = apply_execution_scope(stmt, f)
     if f.execution_ids is not None:
-        stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)) if f.execution_ids else false())
+        stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
     if f.execution_group_ids is not None:
-        stmt = stmt.where(
-            Execution.execution_group_id.in_(list(f.execution_group_ids))
-            if f.execution_group_ids
-            else false()
-        )
+        stmt = stmt.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
     if f.input_datasets:
         stmt = stmt.where(f.input_datasets.execution_clause())
 
@@ -283,7 +286,7 @@ def _apply_common(  # noqa: PLR0912
         stmt = stmt.where(clause)
 
     if f.isolate_ids is not None:
-        stmt = stmt.where(entity.id.in_(list(f.isolate_ids)) if f.isolate_ids else false())
+        stmt = stmt.where(entity.id.in_(list(f.isolate_ids)))
     elif f.exclude_ids:
         stmt = stmt.where(~entity.id.in_(list(f.exclude_ids)))
 

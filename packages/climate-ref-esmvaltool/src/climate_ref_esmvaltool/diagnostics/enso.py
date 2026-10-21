@@ -289,6 +289,10 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
         recipe.pop("datasets")
         for diagnostic in recipe["diagnostics"].values():
             for variable in diagnostic["variables"].values():
+                # CMIP6 has no branding suffix, so keep it on the observations only.
+                branding_suffix = variable.pop("branding_suffix")
+                for dataset in variable["additional_datasets"]:
+                    dataset.setdefault("branding_suffix", branding_suffix)
                 variable["additional_datasets"].extend(
                     recipe_variables[variable["short_name"]]["additional_datasets"]
                 )

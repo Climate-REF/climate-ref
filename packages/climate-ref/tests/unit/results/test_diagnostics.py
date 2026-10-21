@@ -235,7 +235,11 @@ class TestDiagnosticsReaderStats:
 
 @pytest.fixture
 def db_with_values(db_with_diagnostics):
-    """enso_tel has a scalar value, the NAO diagnostic a series value, and a superseded version a scalar."""
+    """
+    enso_tel has a scalar value and the NAO diagnostic a series value.
+
+    enso-characteristics has a scalar only at a superseded version, and a retracted series value.
+    """
     session = db_with_diagnostics.session
 
     def add_execution(group):
@@ -280,6 +284,21 @@ def db_with_values(db_with_diagnostics):
                 value=1.0,
                 attributes=None,
                 dimensions={"metric": "tas"},
+            )
+        )
+
+        promoted = ExecutionGroup(key="retracted", diagnostic_id=characteristics.id, selectors={})
+        session.add(promoted)
+        session.flush()
+        retracted = add_execution(promoted)
+        retracted.retracted = True
+        session.add(
+            SeriesMetricValue.build(
+                execution_id=retracted.id,
+                values=[1.0, 2.0],
+                index_axis=SeriesIndex.get_or_create(session, "time", [0, 1]),
+                dimensions={"metric": "tas"},
+                attributes=None,
             )
         )
 

@@ -216,6 +216,9 @@ def select_diagnostics_with_values(
     """
     Build the ``Select`` for diagnostics with at least one value of ``value_type`` at the promoted version.
 
+    Values from retracted executions do not count, matching
+    [Reader.values][climate_ref.results.values.Reader.values].
+
     Selects ``id``, ``provider_slug`` and ``slug``, ordered like
     [select_diagnostics][climate_ref.results.diagnostics.select_diagnostics].
     ``execution_group_where`` further restricts which execution groups count.
@@ -230,6 +233,7 @@ def select_diagnostics_with_values(
         .where(
             ExecutionGroup.diagnostic_id == Diagnostic.id,
             ExecutionGroup.diagnostic_version == Diagnostic.promoted_version,
+            Execution.retracted.is_(False),
             # Without table statistics SQLite picks ix_metric_value_type and reads every series row.
             _Unindexed(MetricValue.type.expression) == value_type,
         )

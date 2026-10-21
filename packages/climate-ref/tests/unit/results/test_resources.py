@@ -431,3 +431,51 @@ class TestMeasurements:
 
     def test_get_by_id_missing(self, db_with_resources):
         assert Reader(db_with_resources).resources.measurement(-1) is None
+
+
+class TestSummary:
+    def test_aggregates_one_diagnostic(self, db_with_resources):
+        summary = Reader(db_with_resources).resources.summary(ResourceFilter(diagnostic_slug="enso_tel"))
+
+        assert summary is not None
+        assert (summary.provider_slug, summary.diagnostic_slug) == (None, None)
+        # The unmeasured failure has no wall time, so 12 of the 13 executions are timed.
+        assert summary.timed_execution_count == 12
+        assert summary.wall_seconds_total == pytest.approx(1200.0)
+        assert summary.wall_seconds_mean == pytest.approx(100.0)
+        assert summary.wall_seconds_max == pytest.approx(100.0)
+        assert summary.cpu_seconds_total == pytest.approx(10 * 110.0 + 100.0)
+        assert summary.cpu_seconds_mean == pytest.approx((10 * 110.0 + 100.0) / 11)
+        assert summary.peak_memory_bytes_min == GIB
+        assert summary.peak_memory_bytes_max == 40 * GIB
+
+    def test_no_timed_executions(self, db_with_resources):
+        reader = Reader(db_with_resources).resources
+
+        assert reader.summary(ResourceFilter(diagnostic_slug="sea-ice-area-basic")) is None
+        assert reader.summary(ResourceFilter(diagnostic_slug="no-such-diagnostic")) is None
+
+    def test_per_diagnostic(self, db_with_resources):
+        summaries = Reader(db_with_resources).resources.summaries(ResourceFilter(provider_contains=["pmp"]))
+
+        assert [(s.provider_slug, s.diagnostic_slug, s.timed_execution_count) for s in summaries] == [
+            ("pmp", "enso_tel", 12),
+            ("pmp", "extratropical-modes-of-variability-nao", 3),
+        ]
+
+    def test_per_provider(self, db_with_resources):
+        summaries = Reader(db_with_resources).resources.summaries(group_by="provider")
+
+        by_provider = {s.provider_slug: s for s in summaries}
+        assert by_provider["esmvaltool"].diagnostic_slug is None
+        assert by_provider["esmvaltool"].timed_execution_count == 4
+        assert by_provider["pmp"].timed_execution_count == 15
+        assert by_provider["pmp"].peak_memory_bytes_max == 40 * GIB
+
+    def test_exact_provider_slug(self, db_with_resources):
+        reader = Reader(db_with_resources).resources
+
+        assert reader.summary(ResourceFilter(provider_slug="pm")) is None
+        summary = reader.summary(ResourceFilter(provider_slug="pmp"))
+        assert summary is not None
+        assert summary.timed_execution_count == 15

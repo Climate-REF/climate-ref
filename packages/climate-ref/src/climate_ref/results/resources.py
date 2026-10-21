@@ -20,7 +20,7 @@ from typing import Any, Literal
 
 import attrs
 import pandas as pd
-from sqlalchemy import Select, or_, select
+from sqlalchemy import Select, func, null, or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
@@ -98,6 +98,12 @@ class ResourceFilter:
     provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on provider slug (OR-combined)."""
 
+    diagnostic_slug: str | None = None
+    """Exact-match diagnostic slug."""
+
+    provider_slug: str | None = None
+    """Exact-match provider slug."""
+
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
 
@@ -151,6 +157,50 @@ class ResourceMeasurementView:
         if self.cpu_seconds is None or not self.wall_seconds:
             return None
         return self.cpu_seconds / self.wall_seconds
+
+
+@attrs.frozen(kw_only=True)
+class ResourceSummary:
+    """
+    Totals and extremes of the resource usage recorded across a set of executions.
+
+    Only executions that recorded a wall time are counted in ``timed_execution_count``.
+    CPU time and peak memory are optional, so they may be missing even when wall time is present.
+    """
+
+    provider_slug: str | None
+    """Provider the summary covers, or ``None`` when it is not grouped by provider."""
+
+    diagnostic_slug: str | None
+    """Diagnostic the summary covers, or ``None`` when it is not grouped by diagnostic."""
+
+    timed_execution_count: int
+    """Number of executions that recorded a wall time."""
+
+    wall_seconds_total: float
+    """
+    Sum of wall clock time across the timed executions, in seconds.
+
+    Executions often run in parallel, so this can be more than the elapsed time of the run.
+    """
+
+    wall_seconds_mean: float
+    """Mean wall clock time per timed execution, in seconds."""
+
+    wall_seconds_max: float
+    """Longest wall clock time of any timed execution, in seconds."""
+
+    cpu_seconds_total: float | None
+    """Sum of CPU time across the executions that recorded it, in seconds."""
+
+    cpu_seconds_mean: float | None
+    """Mean CPU time per execution that recorded it, in seconds."""
+
+    peak_memory_bytes_min: int | None
+    """Smallest peak resident memory of any execution that recorded it, in bytes."""
+
+    peak_memory_bytes_max: int | None
+    """Largest peak resident memory of any execution that recorded it, in bytes."""
 
 
 @attrs.frozen(kw_only=True)
@@ -384,9 +434,6 @@ def select_execution_resources(filters: ResourceFilter | None = None) -> Select[
             Execution.queue_seconds,
             Execution.created_at,
         )
-        .join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-        .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-        .join(Provider, Diagnostic.provider_id == Provider.id)
         .where(
             or_(
                 Execution.wall_seconds.is_not(None),
@@ -396,16 +443,74 @@ def select_execution_resources(filters: ResourceFilter | None = None) -> Select[
         )
         .order_by(Execution.created_at, Execution.id)
     )
+    return _apply_resource_filters(stmt, filters)
 
+
+def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Select[Any]:
+    """Join an ``Execution`` select through to its provider and apply the filter."""
+    stmt = (
+        stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
+        .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+        .join(Provider, Diagnostic.provider_id == Provider.id)
+    )
     if filters.diagnostic_contains:
         stmt = stmt.where(
             or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains))
         )
     if filters.provider_contains:
         stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
+    if filters.diagnostic_slug is not None:
+        stmt = stmt.where(Diagnostic.slug == filters.diagnostic_slug)
+    if filters.provider_slug is not None:
+        stmt = stmt.where(Provider.slug == filters.provider_slug)
     if filters.since is not None:
         stmt = stmt.where(Execution.created_at >= filters.since)
+    return stmt
 
+
+_SUMMARY_AGGREGATES = (
+    func.count(Execution.wall_seconds).label("timed_execution_count"),
+    func.sum(Execution.wall_seconds).label("wall_seconds_total"),
+    func.avg(Execution.wall_seconds).label("wall_seconds_mean"),
+    func.max(Execution.wall_seconds).label("wall_seconds_max"),
+    func.sum(Execution.cpu_seconds).label("cpu_seconds_total"),
+    func.avg(Execution.cpu_seconds).label("cpu_seconds_mean"),
+    func.min(Execution.peak_memory_bytes).label("peak_memory_bytes_min"),
+    func.max(Execution.peak_memory_bytes).label("peak_memory_bytes_max"),
+)
+
+
+def select_resource_summary(
+    filters: ResourceFilter | None = None, *, group_by: GroupBy | None = None
+) -> Select[Any]:
+    """
+    Build the ``Select`` that aggregates resource usage in SQL.
+
+    Every execution matching ``filters`` is aggregated, including ones without a measurement,
+    because the aggregates skip missing values.
+
+    Parameters
+    ----------
+    filters
+        Restricts the executions considered. ``None`` means no restriction.
+    group_by
+        ``diagnostic`` or ``provider`` for one row per group, ordered by slug.
+        ``None`` for a single row over every matching execution.
+
+    Returns
+    -------
+    :
+        A ``Select`` yielding ``provider_slug``, ``diagnostic_slug`` and the aggregate columns.
+    """
+    provider: Any = Provider.slug if group_by is not None else null()
+    diagnostic: Any = Diagnostic.slug if group_by == "diagnostic" else null()
+    stmt = select(
+        provider.label("provider_slug"), diagnostic.label("diagnostic_slug"), *_SUMMARY_AGGREGATES
+    ).select_from(Execution)
+    stmt = _apply_resource_filters(stmt, filters or ResourceFilter())
+    if group_by is not None:
+        keys = [provider, diagnostic] if group_by == "diagnostic" else [provider]
+        stmt = stmt.group_by(*keys).order_by(*keys)
     return stmt
 
 
@@ -699,6 +804,27 @@ class ResourcesReader:
 
         items = tuple(self._to_view(row) for row in self.session.execute(page).all())
         return ResourceMeasurementCollection(items=items, total_count=total_count, offset=offset, limit=limit)
+
+    def summary(self, filters: ResourceFilter | None = None) -> ResourceSummary | None:
+        """
+        Aggregate resource usage across every execution matching ``filters``, in SQL.
+
+        Returns ``None`` when no matching execution recorded a wall time.
+        """
+        row = self.session.execute(select_resource_summary(filters)).one()
+        return ResourceSummary(**row._asdict()) if row.timed_execution_count else None
+
+    def summaries(
+        self, filters: ResourceFilter | None = None, *, group_by: GroupBy = "diagnostic"
+    ) -> tuple[ResourceSummary, ...]:
+        """
+        Aggregate resource usage per diagnostic or per provider, in SQL.
+
+        Groups with no execution that recorded a wall time are left out.
+        Ordered by provider then diagnostic slug.
+        """
+        rows = self.session.execute(select_resource_summary(filters, group_by=group_by)).all()
+        return tuple(ResourceSummary(**row._asdict()) for row in rows if row.timed_execution_count)
 
     def measurement(self, execution_id: int) -> ResourceMeasurementView | None:
         """

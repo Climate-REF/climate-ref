@@ -34,10 +34,6 @@ from climate_ref.results._converters import _as_str_tuple
 from climate_ref_core.source_types import SourceDatasetType
 
 
-def _as_source_types(value: SourceDatasetType | Sequence[SourceDatasetType]) -> tuple[SourceDatasetType, ...]:
-    return (value,) if isinstance(value, SourceDatasetType) else tuple(value)
-
-
 @attrs.frozen(kw_only=True)
 class InputDatasetFilter:
     """
@@ -47,7 +43,7 @@ class InputDatasetFilter:
     and satisfies every facet in ``facets`` (values for one facet are OR-combined).
     A source type whose dataset table lacks a requested facet cannot match,
     so a CMIP7-only facet does not pull in all of CMIP6.
-    With ``include_without_input_of`` an execution with no input dataset of any of those types also matches,
+    With ``or_no_model_input`` an execution with no model-simulation input dataset also matches,
     which keeps observation-only executions when scoping to one era.
 
     Raises
@@ -62,10 +58,8 @@ class InputDatasetFilter:
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     """Dataset columns to match, e.g. ``{"source_id": ("ACCESS-CM2",)}``. ``None`` matches any dataset."""
 
-    include_without_input_of: tuple[SourceDatasetType, ...] = attrs.field(
-        default=(), converter=_as_source_types
-    )
-    """Also match executions with no input dataset of any of these types. Empty is off."""
+    or_no_model_input: bool = False
+    """Also match executions with no model-simulation input dataset, such as observation-only ones."""
 
     def __attrs_post_init__(self) -> None:
         if not self.source_types:
@@ -85,10 +79,9 @@ class InputDatasetFilter:
                 continue
             conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
             branches.append(Execution.datasets.of_type(entity).any(and_(*conditions)))
-        if self.include_without_input_of:
-            absent = (
-                ~Execution.datasets.of_type(_entity_for(t)).any() for t in self.include_without_input_of
-            )
+        if self.or_no_model_input:
+            model_types = (t for t in SourceDatasetType if t.is_model_output)
+            absent = (~Execution.datasets.of_type(_entity_for(t)).any() for t in model_types)
             branches.append(and_(*absent))
         # An empty or_() emits no predicate, which would match every execution.
         return or_(*branches) if branches else false()

@@ -224,7 +224,7 @@ def select_diagnostics_with_values(
     filters: DiagnosticFilter | None = None,
     *,
     execution_group_where: ColumnElement[bool] | None = None,
-    scope: ExecutionScope = ExecutionScope(),
+    scope: ExecutionScope = ExecutionScope(include_retracted=False),
 ) -> Select[Any]:
     """
     Build the ``Select`` for diagnostics with at least one value of ``value_type`` at the promoted version.
@@ -347,7 +347,7 @@ class DiagnosticsReader:
         value_type: MetricValueType,
         filters: DiagnosticFilter | None = None,
         *,
-        scope: ExecutionScope = ExecutionScope(),
+        scope: ExecutionScope = ExecutionScope(include_retracted=False),
     ) -> frozenset[tuple[str, str]]:
         """
         Find the ``(provider, diagnostic)`` pairs with a value of ``value_type`` at the promoted version.

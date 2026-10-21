@@ -130,6 +130,22 @@ def db_with_obs_only(db_with_inputs):
             )
         )
         db_with_inputs.ids["obs-only"] = group.id
+
+        mixed = ExecutionGroup(key="mixed", diagnostic_id=diag_2.id, selectors={})
+        session.add(mixed)
+        session.flush()
+        execution = Execution(
+            execution_group_id=mixed.id, output_fragment="mixed", dataset_hash="mixed", successful=True
+        )
+        execution.datasets = [session.query(CMIP6Dataset).first(), session.query(CMIP7Dataset).first()]
+        session.add(execution)
+        session.flush()
+        session.add(
+            ScalarMetricValue.build(
+                execution_id=execution.id, value=0.0, attributes=None, dimensions={"source_id": "mixed"}
+            )
+        )
+        db_with_inputs.ids["mixed"] = mixed.id
     return db_with_inputs
 
 
@@ -203,40 +219,45 @@ class TestExecutionGroups:
 class TestIncludeWithoutInput:
     def test_groups(self, db_with_obs_only):
         ids = db_with_obs_only.ids
-        f = InputDatasetFilter(
-            source_types=[CMIP7], facets={"source_id": "FACET-A"}, include_without_input_of=BOTH_ERAS
-        )
+        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"}, or_no_model_input=True)
         # cmip6-b-old matches through its newer execution, which has no inputs.
-        assert _group_ids(db_with_obs_only, f) == {ids["cmip7-a"], ids["cmip6-b-old"], ids["obs-only"]}
-
-    def test_literal_types_only(self, db_with_obs_only):
-        ids = db_with_obs_only.ids
-        f = InputDatasetFilter(
-            source_types=[CMIP7], facets={"source_id": "FACET-A"}, include_without_input_of=CMIP7
-        )
-        # A CMIP6-only execution has no CMIP7 input, so it matches.
         assert _group_ids(db_with_obs_only, f) == {
             ids["cmip7-a"],
-            ids["cmip6-a"],
             ids["cmip6-b-old"],
-            ids["other-b"],
             ids["obs-only"],
+            ids["mixed"],
         }
+
+    def test_drops_cmip6_only_and_keeps_mixed(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        f = InputDatasetFilter(source_types=[CMIP7], or_no_model_input=True)
+        assert _group_ids(db_with_obs_only, f) == {
+            ids["cmip7-a"],
+            ids["cmip6-b-old"],
+            ids["obs-only"],
+            ids["mixed"],
+        }
+
+    def test_mixed_without_a_facet_match_stays_out(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        f = InputDatasetFilter(
+            source_types=[CMIP7], facets={"source_id": "NO-SUCH-MODEL"}, or_no_model_input=True
+        )
+        assert _group_ids(db_with_obs_only, f) == {ids["cmip6-b-old"], ids["obs-only"]}
 
     def test_default_excludes_executions_without_input(self, db_with_obs_only):
         ids = db_with_obs_only.ids
         f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"})
-        assert _group_ids(db_with_obs_only, f) == {ids["cmip7-a"]}
+        assert _group_ids(db_with_obs_only, f) == {ids["cmip7-a"], ids["mixed"]}
 
     def test_values_are_per_execution(self, db_with_obs_only):
-        f = InputDatasetFilter(
-            source_types=[CMIP7], facets={"source_id": "FACET-A"}, include_without_input_of=BOTH_ERAS
-        )
+        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"}, or_no_model_input=True)
         values = Reader(db_with_obs_only).values.scalar_values(MetricValueFilter(input_datasets=f))
         # The older cmip6-b-old execution ran against CMIP6, so it stays out.
         assert sorted((v.dimensions["source_id"], v.value) for v in values) == [
             ("cmip6-b-old", 1.0),
             ("cmip7-a", 0.0),
+            ("mixed", 0.0),
             ("obs-only", 0.0),
         ]
 

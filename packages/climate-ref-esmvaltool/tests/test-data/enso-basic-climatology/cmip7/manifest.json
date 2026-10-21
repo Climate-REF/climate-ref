@@ -3,9 +3,9 @@
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "07f77b37f94c64bc2a1efc567c321b0738e7f3c07a305a86fd57f11e7635d251",
-    "series.json": "be740cf3f939a9d4b3175ad491d0bcd760fe244afd0cd8aebff7a458504d983a"
+    "series.json": "8ee9e1b232012ea59b8d39fdad88173190bff0f9a44d933d416a630ad091fadb"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -204,8 +204,8 @@
       "size": 21835
     },
     "series.json": {
-      "sha256": "ed82a27c91c9d024728123b321a1246ddf1fe942cba55002b89026576c53e8a3",
-      "size": 66085
+      "sha256": "c3e7291819d9a3f096cc49711c32d33654051b428f4c4f50d4fa8afb963491cc",
+      "size": 66677
     }
   },
   "schema": 2,

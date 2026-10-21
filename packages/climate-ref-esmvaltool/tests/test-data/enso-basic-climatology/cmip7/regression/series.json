@@ -11,6 +11,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "GPCP-V3.3",
       "source_id": "CanESM5",
@@ -96,6 +97,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "GPCP-V3.3",
       "source_id": "CanESM5",
@@ -181,6 +183,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "GPCP-V3.3",
       "source_id": "CanESM5",
@@ -446,6 +449,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "GPCP-V3.3",
       "source_id": "CanESM5",
@@ -711,6 +715,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "TROPFLUX",
       "source_id": "CanESM5",
@@ -976,6 +981,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "TROPFLUX",
       "source_id": "CanESM5",
@@ -1241,6 +1247,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "TROPFLUX",
       "source_id": "CanESM5",
@@ -1506,6 +1513,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "reference_source_id": "TROPFLUX",
       "source_id": "CanESM5",
@@ -1771,6 +1779,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "meridional bias in the amplitude of the mean seasonal pr cycle in the eastern Pacific",
@@ -1854,6 +1863,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "meridional bias in the time-mean pr structure across the eastern Pacific",
@@ -1937,6 +1947,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "zonal bias in the amplitude of the mean seasonal cycle of pr in the equatorial Pacific",
@@ -2200,6 +2211,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "zonal bias in the amplitude of the mean seasonal cycle of sst in the equatorial Pacific",
@@ -2463,6 +2475,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "zonal bias in the amplitude of the mean seasonal cycle of tauu in the equatorial Pacific",
@@ -2726,6 +2739,7 @@
       "values_name": "pr"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "zonal bias in the time-mean pr structure across the equatorial Pacific",
@@ -2989,6 +3003,7 @@
       "values_name": "tos"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "zonal bias in the time-mean sst structure across the equatorial Pacific",
@@ -3252,6 +3267,7 @@
       "values_name": "tauu"
     },
     "dimensions": {
+      "experiment_id": "historical",
       "grid_label": "gn",
       "source_id": "CanESM5",
       "statistic": "zonal bias in the time-mean tauu structure across the equatorial Pacific",

@@ -3,6 +3,7 @@
 import datetime
 import math
 
+import attrs
 import pytest
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
@@ -487,8 +488,8 @@ class TestPromotedOnly:
         assert superseded_execution not in {v.execution_id for v in values.items}
         assert len(values) == 8
 
-    def test_promoted_only_false_keeps_every_version(self, dal_db, superseded_execution):
-        values = Reader(dal_db).values.scalar_values(MetricValueFilter(promoted_only=False))
+    def test_include_superseded_keeps_every_version(self, dal_db, superseded_execution):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter(include_superseded=True))
         assert len(values) == 9
 
     def test_latest_only_is_per_group_across_versions(self, dal_db, superseded_execution):
@@ -496,8 +497,28 @@ class TestPromotedOnly:
         promoted = reader.scalar_values(MetricValueFilter(latest_only=True))
         assert superseded_execution not in {v.execution_id for v in promoted.items}
         assert len(promoted) == 8
-        every_version = reader.scalar_values(MetricValueFilter(latest_only=True, promoted_only=False))
+        every_version = reader.scalar_values(MetricValueFilter(latest_only=True, include_superseded=True))
         assert len(every_version) == 9
+
+
+class TestPromotedOnlyAlias:
+    def test_default_excludes_superseded(self):
+        assert MetricValueFilter().include_superseded is False
+
+    @pytest.mark.parametrize(("promoted_only", "include_superseded"), [(True, False), (False, True)])
+    def test_maps_onto_include_superseded(self, promoted_only, include_superseded):
+        with pytest.warns(DeprecationWarning, match="include_superseded"):
+            f = MetricValueFilter(promoted_only=promoted_only)
+        assert f.include_superseded is include_superseded
+        assert f == MetricValueFilter(include_superseded=include_superseded)
+
+    def test_both_raises(self):
+        with pytest.raises(ValueError, match="not both"):
+            MetricValueFilter(promoted_only=True, include_superseded=False)
+
+    def test_evolve_keeps_resolved_value(self):
+        f = attrs.evolve(MetricValueFilter(include_superseded=True), latest_only=True)
+        assert f.include_superseded is True
 
 
 class _FakeScalar:

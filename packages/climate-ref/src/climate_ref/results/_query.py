@@ -12,6 +12,7 @@ The functions return a SQLAlchemy ``Select`` and never touch a ``Session`` -- ca
 their own pagination, wrap in ``exists()``, or hand them to the facade to materialise.
 """
 
+import warnings
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -119,7 +120,7 @@ class MetricValueFilter(ExecutionScope):
     Declarative filter over metric values.
 
     ``None``/empty means "do not constrain on this axis",
-    except ``include_retracted`` and ``promoted_only``, which constrain by default.
+    except ``include_retracted`` and ``include_superseded``, which constrain by default.
     The same object drives scalar and series queries, frame conversion and facet collection,
     so a filter is written once and reused across output shapes.
 
@@ -164,11 +165,32 @@ class MetricValueFilter(ExecutionScope):
     reference_only: bool | None = None
     """Series-only: ``True`` for observation/reference series, ``False`` for model series."""
 
-    promoted_only: bool = True
-    """Restrict to execution groups at the diagnostic's currently promoted version."""
+    include_superseded: bool | None = None
+    """
+    Include execution groups at superseded diagnostic versions, matching ``ExecutionGroupFilter``.
+
+    Unset or ``False`` keeps only groups at the diagnostic's currently promoted version.
+    """
+
+    promoted_only: bool | None = attrs.field(default=None, repr=False, eq=False)
+    """Deprecated alias for ``not include_superseded``, kept for one release."""
 
     input_datasets: InputDatasetFilter | None = None
     """Restrict to values produced by executions that ran against matching datasets."""
+
+    def __attrs_post_init__(self) -> None:
+        if self.promoted_only is not None:
+            if self.include_superseded is not None:
+                raise ValueError("Pass include_superseded or the deprecated promoted_only, not both")
+            warnings.warn(
+                "MetricValueFilter(promoted_only=...) is deprecated. Use include_superseded instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            object.__setattr__(self, "include_superseded", not self.promoted_only)
+            object.__setattr__(self, "promoted_only", None)
+        elif self.include_superseded is None:
+            object.__setattr__(self, "include_superseded", False)
 
     def dimension_clauses(self, entity: type[MetricValue]) -> list[Any]:
         """
@@ -205,7 +227,7 @@ def _apply_common(  # noqa: PLR0912
         f.diagnostic_slug is not None
         or f.provider_slug is not None
         or bool(f.diagnostic_contains or f.provider_contains)
-        or f.promoted_only
+        or not f.include_superseded
     )
     needs_exec = bool(
         f.execution_ids
@@ -229,7 +251,7 @@ def _apply_common(  # noqa: PLR0912
     if needs_diag:
         stmt = stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
         stmt = stmt.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-    if f.promoted_only:
+    if not f.include_superseded:
         stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
     if f.diagnostic_slug is not None:
         stmt = stmt.where(Diagnostic.slug == f.diagnostic_slug)

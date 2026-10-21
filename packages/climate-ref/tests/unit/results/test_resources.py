@@ -684,3 +684,16 @@ class TestRetracted:
             Reader(db_with_retracted).resources.profiles(
                 ResourceFilter(), since=datetime.datetime(2020, 1, 1)
             )
+
+
+class TestWithCount:
+    def test_without_count(self, db_with_resources, count_queries):
+        reader = Reader(db_with_resources).resources
+        with count_queries(db_with_resources) as counted:
+            full = reader.measurements(limit=3)
+        with count_queries(db_with_resources) as uncounted:
+            page = reader.measurements(limit=3, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1

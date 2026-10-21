@@ -283,6 +283,42 @@ class TestSeriesValues:
             assert col in df.columns
 
 
+class TestWithCount:
+    def test_scalar_without_count(self, dal_db, count_queries):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        with count_queries(dal_db) as counted:
+            full = values.scalar_values(filters, limit=3, with_facets=False)
+        with count_queries(dal_db) as uncounted:
+            page = values.scalar_values(filters, limit=3, with_facets=False, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1
+
+    def test_scalar_outliers_without_count(self, dal_db):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        policy = OutlierPolicy(method="iqr")
+        full = values.scalar_values(filters, outliers=policy)
+        page = values.scalar_values(filters, outliers=policy, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+
+    def test_series_without_count(self, dal_db, count_queries):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        with count_queries(dal_db) as counted:
+            full = values.series_values(filters, limit=1, with_facets=False)
+        with count_queries(dal_db) as uncounted:
+            page = values.series_values(filters, limit=1, with_facets=False, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1
+
+
 class TestFrameParity:
     """Both frame doors -- the frames.py builders and the collections' ``to_pandas()`` -- must emit
     identical columns and rows for the same DTOs, so no consumer sees a different scalar/series

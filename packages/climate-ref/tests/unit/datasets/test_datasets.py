@@ -5,13 +5,21 @@ import pandas as pd
 import pytest
 
 from climate_ref.database import ModelState
-from climate_ref.datasets import IngestionStats, get_dataset_adapter, get_slug_column, ingest_datasets
+from climate_ref.datasets import (
+    IngestionStats,
+    get_dataset_adapter,
+    get_slug_column,
+    ingest_datasets,
+    ingest_provider_data,
+)
 from climate_ref.datasets import base as base_module
 from climate_ref.datasets.base import DatasetAdapter, _is_na
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
+from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
 from climate_ref.models.dataset import CMIP6Dataset, Dataset, DatasetFile, _sync_version_key
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.exceptions import RefException
+from climate_ref_core.providers import DataIngestRequest, DiagnosticProvider
 
 
 class MockDatasetAdapter(DatasetAdapter):
@@ -1307,3 +1315,47 @@ class TestIsNa:
 
     def test_empty_string(self):
         assert _is_na("") is False
+
+
+class TestIngestProviderData:
+    """Tests for ingesting the data a provider requests."""
+
+    def test_no_requests(self, mocker):
+        mock_ingest = mocker.patch("climate_ref.datasets.ingest_datasets")
+
+        ingest_provider_data(DiagnosticProvider("test", "1.0"), mocker.Mock(), mocker.Mock())
+
+        mock_ingest.assert_not_called()
+
+    def test_ingests_each_request(self, mocker, tmp_path):
+        provider = DiagnosticProvider("test", "1.0")
+        mocker.patch.object(
+            provider,
+            "data_to_ingest",
+            return_value=[DataIngestRequest(SourceDatasetType.PMPClimatology, tmp_path)],
+        )
+        mock_ingest = mocker.patch("climate_ref.datasets.ingest_datasets")
+        db = mocker.Mock()
+
+        ingest_provider_data(provider, mocker.Mock(), db)
+
+        adapter, directory, ingest_db = mock_ingest.call_args.args
+        assert isinstance(adapter, PMPClimatologyDatasetAdapter)
+        assert directory == tmp_path
+        assert ingest_db is db
+        mock_ingest.return_value.log_summary.assert_called_once()
+
+    def test_no_valid_datasets_is_reported(self, mocker, tmp_path, caplog):
+        provider = DiagnosticProvider("test", "1.0")
+        mocker.patch.object(
+            provider,
+            "data_to_ingest",
+            return_value=[DataIngestRequest(SourceDatasetType.PMPClimatology, tmp_path)],
+        )
+        mocker.patch(
+            "climate_ref.datasets.ingest_datasets", side_effect=ValueError("No valid datasets found")
+        )
+
+        ingest_provider_data(provider, mocker.Mock(), mocker.Mock())
+
+        assert "No valid pmp-climatology datasets found for test" in caplog.text

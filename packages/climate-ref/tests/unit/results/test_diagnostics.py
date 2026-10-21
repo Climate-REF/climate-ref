@@ -372,3 +372,16 @@ class TestDiagnosticsWithValues:
         )
         assert "+metric_value.type" not in compiled
         assert "metric_value.type" in compiled
+
+
+class TestWithCount:
+    def test_without_count(self, db_with_diagnostics, count_queries):
+        reader = Reader(db_with_diagnostics)
+        with count_queries(db_with_diagnostics) as counted:
+            full = reader.diagnostics.list(limit=2)
+        with count_queries(db_with_diagnostics) as uncounted:
+            page = reader.diagnostics.list(limit=2, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1

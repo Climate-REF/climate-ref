@@ -8,7 +8,7 @@ It executes the [select_diagnostics][climate_ref.results.diagnostics.select_diag
 and maps the rows into detached DTOs that outlive the session.
 """
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
@@ -25,7 +25,14 @@ from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, MetricValueType
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
-from climate_ref.results._query import ExecutionScope, InputDatasetFilter, apply_execution_scope
+from climate_ref.results._page import Page
+from climate_ref.results._query import (
+    ExecutionScope,
+    InputDatasetFilter,
+    apply_execution_scope,
+    count_values,
+    paginate,
+)
 from climate_ref.results._stats import rows_to_execution_stats
 from climate_ref.results.executions import ExecutionStats, select_execution_statistics
 
@@ -90,33 +97,8 @@ class DiagnosticView:
 
 
 @attrs.frozen(kw_only=True)
-class DiagnosticCollection:
-    """
-    An immutable page of diagnostics plus collection-level metadata.
-
-    ``total_count`` is the number of diagnostics matching the filter *before* pagination, so a
-    caller can tell there are more rows than the returned page. ``offset``/``limit`` echo back the
-    pagination applied to produce ``items`` (``limit`` is ``None`` when the whole result was
-    returned).
-    """
-
-    items: tuple[DiagnosticView, ...]
-    """The diagnostics on this page."""
-
-    total_count: int
-    """Total diagnostics matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[DiagnosticView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
+class DiagnosticCollection(Page[DiagnosticView]):
+    """An immutable page of diagnostics plus collection-level metadata."""
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -306,6 +288,7 @@ class DiagnosticsReader:
         *,
         offset: int = 0,
         limit: int | None = None,
+        with_count: bool = True,
     ) -> DiagnosticCollection:
         """
         Query diagnostics, with their provider, execution-group count, and promoted-version stats.
@@ -321,16 +304,9 @@ class DiagnosticsReader:
         filters = filters or DiagnosticFilter()
 
         base_stmt = select_diagnostics(filters)
-        count_stmt = select(func.count()).select_from(base_stmt.subquery())
-        total_count = self.session.execute(count_stmt).scalar_one()
+        total_count = count_values(self.session, base_stmt) if with_count else None
 
-        stmt = base_stmt
-        if limit is not None:
-            stmt = stmt.offset(offset).limit(limit)
-        elif offset:
-            stmt = stmt.offset(offset)
-
-        rows = self.session.execute(stmt).all()
+        rows = self.session.execute(paginate(base_stmt, offset, limit)).all()
 
         stats = self.stats(
             provider_contains=filters.provider_contains,

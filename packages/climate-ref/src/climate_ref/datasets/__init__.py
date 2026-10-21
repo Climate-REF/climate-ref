@@ -21,6 +21,7 @@ from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, Obs4REFDataset
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.providers import DiagnosticProvider
 
 # Pre-computed slug column lookup by source type.
 # TODO: This could be replaced with a constant at the moment
@@ -348,6 +349,29 @@ def get_dataset_adapter(source_type: str, **kwargs: Any) -> DatasetAdapter:
         raise ValueError(f"Unknown source type: {source_type}")
 
 
+def ingest_provider_data(provider: DiagnosticProvider, config: Any, db: Database) -> None:
+    """
+    Ingest the data a provider fetched during setup.
+
+    Parameters
+    ----------
+    provider
+        Provider whose `data_to_ingest` requests are ingested
+    config
+        The application configuration
+    db
+        Database instance
+    """
+    for request in provider.data_to_ingest(config):
+        adapter = get_dataset_adapter(request.source_type.value)
+        try:
+            stats = ingest_datasets(adapter, request.path, db)
+        except ValueError as e:
+            logger.warning(f"No valid {request.source_type.value} datasets found for {provider.slug}: {e}")
+            continue
+        stats.log_summary(f"{provider.slug} {request.source_type.value} ingestion complete:")
+
+
 __all__ = [
     "SLUG_COLUMN_BY_SOURCE_TYPE",
     "CMIP6DatasetAdapter",
@@ -361,5 +385,6 @@ __all__ = [
     "get_dataset_adapter",
     "get_slug_column",
     "ingest_datasets",
+    "ingest_provider_data",
     "log_deferred_finalisation",
 ]

@@ -319,6 +319,15 @@ def count_values(session: Session, stmt: Select[Any]) -> int:
     return session.execute(select(func.count()).select_from(stmt.order_by(None).subquery())).scalar_one()
 
 
+def paginate(stmt: Select[Any], offset: int, limit: int | None) -> Select[Any]:
+    """Apply ``offset``/``limit`` to a ``Select``, leaving it untouched when neither is set."""
+    if limit is not None:
+        return stmt.offset(offset).limit(limit)
+    if offset:
+        return stmt.offset(offset)
+    return stmt
+
+
 def latest_execution_for_group(session: Session, execution_group_id: int) -> Execution | None:
     """
     Return the most recent [Execution][climate_ref.models.execution.Execution] for a group.

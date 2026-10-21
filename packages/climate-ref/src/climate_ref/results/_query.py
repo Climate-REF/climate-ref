@@ -1,7 +1,8 @@
 """
-Filter and ``Select`` builders for metric-value queries.
+Filter and ``Select`` builders for metric-value queries, and the execution scope they share.
 
 This module is the single source of truth for *how* metric values are filtered and joined.
+``ExecutionScope`` and ``apply_execution_scope`` also decide which executions resource queries consider.
 Both the typed facade ([climate_ref.results.values.Reader][]) and any power-user / API
 caller build on the ``select_*`` functions here, so the filter/join semantics live in exactly
 one place. This mirrors the existing house style of module-level query functions that take a
@@ -11,14 +12,16 @@ The functions return a SQLAlchemy ``Select`` and never touch a ``Session`` -- ca
 their own pagination, wrap in ``exists()``, or hand them to the facade to materialise.
 """
 
+import warnings
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import ColumnElement, Select, and_, false, func, or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.dataset_query import _as_facets, _entity_for
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.metric_value import (
     MetricValue,
@@ -27,16 +30,99 @@ from climate_ref.models.metric_value import (
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
+from climate_ref_core.source_types import SourceDatasetType
 
 
 @attrs.frozen(kw_only=True)
-class MetricValueFilter:
+class InputDatasetFilter:
+    """
+    Match executions by the datasets they ran against.
+
+    An execution matches when one of its input datasets has one of ``source_types``
+    and satisfies every facet in ``facets`` (values for one facet are OR-combined).
+    A source type whose dataset table lacks a requested facet cannot match,
+    so a CMIP7-only facet does not pull in all of CMIP6.
+
+    Raises
+    ------
+    ValueError
+        If ``source_types`` is empty, or a facet is a column on none of the ``source_types``.
+    """
+
+    source_types: tuple[SourceDatasetType, ...] = attrs.field(converter=tuple)
+    """Dataset types to match against, e.g. ``(SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)``."""
+
+    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
+    """Dataset columns to match, e.g. ``{"source_id": ("ACCESS-CM2",)}``. ``None`` matches any dataset."""
+
+    def __attrs_post_init__(self) -> None:
+        if not self.source_types:
+            raise ValueError("`source_types` must name at least one dataset type")
+        for facet in self.facets or {}:
+            if not any(facet in _entity_for(t).__mapper__.columns for t in self.source_types):
+                names = ", ".join(t.value for t in self.source_types)
+                raise ValueError(f"Unknown facet {facet!r} for {names}")
+
+    def execution_clause(self) -> ColumnElement[bool]:
+        """Clause over ``Execution`` that is true when the execution ran against a matching dataset."""
+        facets = self.facets or {}
+        branches = []
+        for source_type in self.source_types:
+            entity = _entity_for(source_type)
+            if any(facet not in entity.__mapper__.columns for facet in facets):
+                continue
+            conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
+            branches.append(Execution.datasets.of_type(entity).any(and_(*conditions)))
+        # An empty or_() emits no predicate, which would match every execution.
+        return or_(*branches) if branches else false()
+
+    def execution_group_clause(self) -> ColumnElement[bool]:
+        """Clause over ``ExecutionGroup`` that is true when any of its executions matches."""
+        return ExecutionGroup.executions.any(self.execution_clause())
+
+
+@attrs.frozen(kw_only=True)
+class ExecutionScope:
+    """
+    Which executions a filter considers, shared by every filter over execution outputs.
+
+    Apply it with [apply_execution_scope][climate_ref.results._query.apply_execution_scope].
+    """
+
+    include_retracted: bool = False
+    """Include retracted executions."""
+
+    latest_only: bool = False
+    """
+    Keep only each group's latest execution, as picked by ``select_latest_executions``.
+
+    The latest is picked before retracted executions are dropped.
+    So if a group's newest execution is retracted, that group contributes nothing
+    unless ``include_retracted=True``.
+    It never falls back to an older execution, because the newer one superseded it.
+    ``DatasetFilter`` drops retracted rows first instead, because an older dataset version is still valid.
+    """
+
+
+def apply_execution_scope(stmt: Select[Any], scope: ExecutionScope) -> Select[Any]:
+    """Apply an ``ExecutionScope`` to a select already joined to ``Execution``."""
+    if not scope.include_retracted:
+        stmt = stmt.where(Execution.retracted.is_(False))
+    if scope.latest_only:
+        latest = select_latest_executions().subquery()
+        stmt = stmt.where(Execution.id.in_(select(latest.c.execution_id)))
+    return stmt
+
+
+@attrs.frozen(kw_only=True)
+class MetricValueFilter(ExecutionScope):
     """
     Declarative filter over metric values.
 
-    Every field is optional; ``None``/empty means "do not constrain on this axis". The same
-    object drives scalar and series queries, frame conversion and facet collection, so a filter
-    is written once and reused across output shapes.
+    ``None``/empty means "do not constrain on this axis",
+    except ``include_retracted`` and ``include_superseded``, which constrain by default.
+    The same object drives scalar and series queries, frame conversion and facet collection,
+    so a filter is written once and reused across output shapes.
 
     Two styles of diagnostic/provider filtering are offered deliberately:
 
@@ -61,10 +147,10 @@ class MetricValueFilter:
     provider_slug: str | None = None
     """Exact-match provider slug, for API path-scoped queries."""
 
-    diagnostic_contains: Sequence[str] | None = attrs.field(default=None, converter=_as_str_tuple)
+    diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on diagnostic slug (OR-combined), for CLI-style search."""
 
-    provider_contains: Sequence[str] | None = attrs.field(default=None, converter=_as_str_tuple)
+    provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
 
     dimensions: Mapping[str, str | Sequence[str]] | None = None
@@ -79,11 +165,32 @@ class MetricValueFilter:
     reference_only: bool | None = None
     """Series-only: ``True`` for observation/reference series, ``False`` for model series."""
 
-    promoted_only: bool = True
-    """Restrict to execution groups at the diagnostic's currently promoted version."""
+    include_superseded: bool | None = attrs.field(default=None, eq=bool)
+    """
+    Include execution groups at superseded diagnostic versions, matching ``ExecutionGroupFilter``.
 
-    include_retracted: bool = False
-    """Include values produced by retracted executions."""
+    ``None`` (unset) or ``False`` keeps only groups at the diagnostic's currently promoted version.
+    """
+
+    promoted_only: bool | None = attrs.field(default=None, repr=False, eq=False)
+    """Deprecated alias for ``not include_superseded``, kept for one release."""
+
+    input_datasets: InputDatasetFilter | None = None
+    """Restrict to values produced by executions that ran against matching datasets."""
+
+    def __attrs_post_init__(self) -> None:
+        if self.promoted_only is None:
+            return
+        # Unset stays None so attrs.evolve can still apply the alias to an existing filter.
+        if self.include_superseded is not None and self.include_superseded == self.promoted_only:
+            raise ValueError("include_superseded and the deprecated promoted_only disagree")
+        warnings.warn(
+            "MetricValueFilter(promoted_only=...) is deprecated. Use include_superseded instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        object.__setattr__(self, "include_superseded", not self.promoted_only)
+        object.__setattr__(self, "promoted_only", None)
 
     def dimension_clauses(self, entity: type[MetricValue]) -> list[Any]:
         """
@@ -116,32 +223,43 @@ def _apply_common(  # noqa: PLR0912
     This is the ONLY place provenance, version, retraction, dimension and id filtering is
     expressed, so scalar and series can never diverge.
     """
-    needs_diag = bool(
-        f.diagnostic_slug or f.provider_slug or f.diagnostic_contains or f.provider_contains
-    ) or (f.promoted_only)
-    needs_exec = bool(f.execution_ids or f.execution_group_ids or needs_diag or not f.include_retracted)
+    needs_diag = (
+        f.diagnostic_slug is not None
+        or f.provider_slug is not None
+        or bool(f.diagnostic_contains or f.provider_contains)
+        or not f.include_superseded
+    )
+    needs_exec = bool(
+        f.execution_ids
+        or f.execution_group_ids
+        or f.input_datasets
+        or needs_diag
+        or not f.include_retracted
+        or f.latest_only
+    )
 
     if needs_exec:
         stmt = stmt.join(Execution, entity.execution_id == Execution.id)
-    if not f.include_retracted:
-        stmt = stmt.where(Execution.retracted.is_(False))
+        stmt = apply_execution_scope(stmt, f)
     if f.execution_ids:
         stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
     if f.execution_group_ids:
         stmt = stmt.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
+    if f.input_datasets:
+        stmt = stmt.where(f.input_datasets.execution_clause())
 
     if needs_diag:
         stmt = stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
         stmt = stmt.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-    if f.promoted_only:
+    if not f.include_superseded:
         stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
-    if f.diagnostic_slug:
+    if f.diagnostic_slug is not None:
         stmt = stmt.where(Diagnostic.slug == f.diagnostic_slug)
     if f.diagnostic_contains:
         stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in f.diagnostic_contains)))
-    if f.provider_slug or f.provider_contains:
+    if f.provider_slug is not None or f.provider_contains:
         stmt = stmt.join(Provider, Diagnostic.provider_id == Provider.id)
-        if f.provider_slug:
+        if f.provider_slug is not None:
             stmt = stmt.where(Provider.slug == f.provider_slug)
         if f.provider_contains:
             stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in f.provider_contains)))
@@ -188,6 +306,41 @@ def select_series_values(f: MetricValueFilter | None = None) -> Select[tuple[Ser
 def count_values(session: Session, stmt: Select[Any]) -> int:
     """Total row count for a builder's ``Select``, ignoring any offset/limit. For pagination."""
     return session.execute(select(func.count()).select_from(stmt.order_by(None).subquery())).scalar_one()
+
+
+def select_latest_executions() -> Select[tuple[int, int]]:
+    """
+    Build a ``Select`` of the latest execution in each execution group.
+
+    "Latest" is the greatest ``created_at``, with the greatest ``id`` breaking a tie,
+    the same ordering as [latest_execution_for_group][climate_ref.results._query.latest_execution_for_group].
+    Retracted executions are not skipped, so a retracted latest execution still wins its group.
+
+    Returns
+    -------
+        A ``Select`` with ``execution_group_id`` and ``execution_id`` columns, one row per group
+        that has at least one execution. Call ``.subquery()`` to join or filter against it.
+    """
+    newest = (
+        select(
+            Execution.execution_group_id,
+            func.max(Execution.created_at).label("created_at"),
+        )
+        .group_by(Execution.execution_group_id)
+        .subquery()
+    )
+    return (
+        select(
+            Execution.execution_group_id.label("execution_group_id"),
+            func.max(Execution.id).label("execution_id"),
+        )
+        .join(
+            newest,
+            (Execution.execution_group_id == newest.c.execution_group_id)
+            & (Execution.created_at == newest.c.created_at),
+        )
+        .group_by(Execution.execution_group_id)
+    )
 
 
 def latest_execution_for_group(session: Session, execution_group_id: int) -> Execution | None:

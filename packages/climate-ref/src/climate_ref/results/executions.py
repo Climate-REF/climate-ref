@@ -8,18 +8,15 @@ It wraps the group+latest query
 and the per-(provider, diagnostic) status aggregate mapping ORM rows to frozen DTOs (Data Transfer Objects).
 These DTOs are detached from the database so outlive the database session.
 
-Two write/recovery paths deliberately stay on the ORM helper instead of this reader:
-
-- ``cli/executions.py::delete_groups``
-    (needs live ORM objects to cascade-delete related rows and remove output directories)
-- ``executor/reingest.py::get_executions_for_reingest``
-    (needs ``include_superseded=True`` plus the *oldest* execution in a group,
-    not this reader's "latest" definition).
+Write and recovery paths that need live ORM rows, such as ``cli/executions.py::delete_groups``,
+``cli/executions.py::requeue`` and ``executor/reingest.py::get_executions_for_reingest``,
+use [group_rows][climate_ref.results.executions.ExecutionsReader.group_rows] instead of the DTO methods.
 
 A common set of ordering (``created_at DESC, id DESC``) is used to ensure consistent ordering and tie breaks.
 
 """
 
+import warnings
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
@@ -40,7 +37,11 @@ from climate_ref.models.execution import (
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_failure_reasons, _as_str_tuple
-from climate_ref.results._query import latest_execution_for_group
+from climate_ref.results._query import (
+    InputDatasetFilter,
+    latest_execution_for_group,
+    select_latest_executions,
+)
 from climate_ref.results._stats import rows_to_execution_stats
 
 
@@ -53,7 +54,7 @@ class ExecutionGroupFilter:
     This mirrors exactly what [get_execution_group_and_latest_filtered]
     [climate_ref.models.execution.get_execution_group_and_latest_filtered] supports --
     ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches (OR-combined),
-    ``facets`` is the selector-facet map consumed by the helper's Python-side matching,
+    ``selectors`` is the map matched against each group's ``selectors`` in Python,
     and ``successful`` vs ``latest_successful`` expose the helper's post-rank / pre-rank success filters.
 
     Exact-match ``diagnostic_slug``/``provider_slug`` are a documented follow-up,
@@ -92,8 +93,18 @@ class ExecutionGroupFilter:
     Composes with ``successful`` but answers a different question.
     """
 
-    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
-    """Selector-facet map matched against each group's ``selectors``."""
+    selectors: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
+    """
+    Facet map matched against each group's ``ExecutionGroup.selectors``, in Python.
+
+    A key is a bare facet such as ``source_id``, or ``<dataset_type>.<facet>`` for one dataset type.
+    Unlike ``input_datasets``, this checks how the group was selected, not the datasets its executions used.
+    """
+
+    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(
+        default=None, converter=_as_facets, repr=False, eq=False
+    )
+    """Deprecated alias for ``selectors``, kept for one release."""
 
     include_superseded: bool = False
     """Include execution groups whose ``diagnostic_version`` is not the diagnostic's promoted version."""
@@ -102,6 +113,26 @@ class ExecutionGroupFilter:
         default=None, converter=_as_failure_reasons
     )
     """Keep a group only if its latest execution failed for one of these reasons."""
+
+    input_datasets: InputDatasetFilter | None = None
+    """
+    Keep a group only if one of its executions ran against matching datasets, in SQL.
+
+    Unlike ``selectors``, this checks the datasets executions used, not how the group was selected.
+    """
+
+    def __attrs_post_init__(self) -> None:
+        if self.facets is None:
+            return
+        if self.selectors is not None and self.selectors != self.facets:
+            raise ValueError("selectors and the deprecated facets disagree")
+        warnings.warn(
+            "ExecutionGroupFilter(facets=...) is deprecated. Use selectors instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        object.__setattr__(self, "selectors", self.facets)
+        object.__setattr__(self, "facets", None)
 
 
 @attrs.frozen(kw_only=True)
@@ -311,12 +342,13 @@ def select_execution_statistics(
     *,
     diagnostic_contains: Sequence[str] | None = None,
     provider_contains: Sequence[str] | None = None,
+    input_datasets: InputDatasetFilter | None = None,
 ) -> Select[Any]:
     """
     Build the per-(provider, diagnostic) status-count aggregate ``Select``.
 
     Moved out of ``cli/executions.py::stats`` so the aggregate is reusable plumbing.
-    Only ``diagnostic_contains``/``provider_contains`` are accepted
+    Only ``diagnostic_contains``/``provider_contains``/``input_datasets`` are accepted
     (not the full [ExecutionGroupFilter][climate_ref.results.executions.ExecutionGroupFilter])
     so ``dirty`` / ``successful`` / ``facets`` are never silently ignored
     on an aggregate that cannot honour them.
@@ -329,33 +361,13 @@ def select_execution_statistics(
     * ``not_started`` -- no execution exists for the group.
     * ``dirty`` -- the group's ``dirty`` flag is set.
 
+    Retraction is ignored, so a retracted latest execution still sets its group's status.
+
     Only execution groups whose ``diagnostic_version`` matches the diagnostic's
     ``promoted_version`` are counted (same promoted-version gate as
     [get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered]).
     """
-    # Resolve to a single latest execution id per group, tie-broken by max id (matching the
-    # created_at DESC, id DESC tie-break used elsewhere -- see `_query.latest_execution_for_group`).
-    # Joining on `execution_group_id` + `created_at` alone (without this tie-break) can match two
-    # rows for a group whose executions share an exact `created_at`, double-counting that group in
-    # every aggregate column below.
-    latest_exec_subquery = (
-        select(
-            Execution.execution_group_id,
-            func.max(Execution.created_at).label("latest_created_at"),
-        )
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
-    latest_exec_id_subquery = (
-        select(func.max(Execution.id).label("latest_execution_id"))
-        .join(
-            latest_exec_subquery,
-            (Execution.execution_group_id == latest_exec_subquery.c.execution_group_id)
-            & (Execution.created_at == latest_exec_subquery.c.latest_created_at),
-        )
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
+    latest = select_latest_executions().subquery()
 
     stmt = (
         select(
@@ -378,7 +390,7 @@ def select_execution_statistics(
         .join(Provider, Diagnostic.provider_id == Provider.id)
         .outerjoin(
             Execution,
-            Execution.id.in_(select(latest_exec_id_subquery.c.latest_execution_id))
+            Execution.id.in_(select(latest.c.execution_id))
             & (Execution.execution_group_id == ExecutionGroup.id),
         )
         .group_by(Provider.slug, Diagnostic.slug)
@@ -389,6 +401,8 @@ def select_execution_statistics(
         stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in diagnostic_contains)))
     if provider_contains:
         stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in provider_contains)))
+    if input_datasets:
+        stmt = stmt.where(input_datasets.execution_group_clause())
 
     return stmt
 
@@ -454,6 +468,36 @@ class ExecutionsReader:
             latest=self._to_execution_view(latest) if latest is not None else None,
         )
 
+    def group_rows(
+        self, filters: ExecutionGroupFilter | None = None
+    ) -> list[tuple[ExecutionGroup, Execution | None]]:
+        """
+        Query execution groups with their latest execution as live ORM rows, ordered by group id.
+
+        For callers that mutate the groups, such as deleting or requeuing them.
+        Read-only callers should use [groups][climate_ref.results.executions.ExecutionsReader.groups],
+        which returns detached views.
+        """
+        filters = filters or ExecutionGroupFilter()
+
+        group_conditions = []
+        if filters.input_datasets:
+            group_conditions.append(filters.input_datasets.execution_group_clause())
+        return get_execution_group_and_latest_filtered(
+            self.session,
+            diagnostic_filters=list(filters.diagnostic_contains) if filters.diagnostic_contains else None,
+            provider_filters=list(filters.provider_contains) if filters.provider_contains else None,
+            selector_filters={k: list(v) for k, v in filters.selectors.items()}
+            if filters.selectors
+            else None,
+            dirty=filters.dirty,
+            successful=filters.successful,
+            latest_successful=filters.latest_successful,
+            include_superseded=filters.include_superseded,
+            failure_reasons=filters.failure_reasons,
+            group_conditions=group_conditions,
+        )
+
     def groups(
         self,
         filters: ExecutionGroupFilter | None = None,
@@ -477,20 +521,7 @@ class ExecutionsReader:
         """
         # Pushing SQL pagination through the helper would be wrong whenever ``facets`` is set,
         # since the Python facet filter runs after the SQL query.
-        filters = filters or ExecutionGroupFilter()
-
-        all_results = get_execution_group_and_latest_filtered(
-            self.session,
-            diagnostic_filters=list(filters.diagnostic_contains) if filters.diagnostic_contains else None,
-            provider_filters=list(filters.provider_contains) if filters.provider_contains else None,
-            facet_filters={k: list(v) for k, v in filters.facets.items()} if filters.facets else None,
-            dirty=filters.dirty,
-            successful=filters.successful,
-            latest_successful=filters.latest_successful,
-            include_superseded=filters.include_superseded,
-            failure_reasons=filters.failure_reasons,
-        )
-        all_results = sorted(all_results, key=lambda pair: pair[0].id)
+        all_results = self.group_rows(filters)
 
         total_count = len(all_results)
         page = all_results[offset : offset + limit] if limit is not None else all_results[offset:]
@@ -503,10 +534,13 @@ class ExecutionsReader:
         *,
         diagnostic_contains: Sequence[str] | None = None,
         provider_contains: Sequence[str] | None = None,
+        input_datasets: InputDatasetFilter | None = None,
     ) -> tuple[ExecutionStats, ...]:
         """Execute the ``select_execution_statistics`` builder and map rows to ``ExecutionStats``."""
         stmt = select_execution_statistics(
-            diagnostic_contains=diagnostic_contains, provider_contains=provider_contains
+            diagnostic_contains=diagnostic_contains,
+            provider_contains=provider_contains,
+            input_datasets=input_datasets,
         )
         return rows_to_execution_stats(self.session.execute(stmt).all())
 

@@ -53,6 +53,13 @@ class DatasetFilter:
     finalised: bool | None = None
     execution_id: int | None = None
     diagnostic_slug: str | None = None
+    slug_contains: str | None = None
+    """
+    Case-insensitive substring match on the dataset slug.
+
+    Applied after the ``latest_only`` window,
+    so it narrows the latest versions rather than picking a new latest.
+    """
     latest_only: bool = True
     include_retracted: bool = False
     """
@@ -156,5 +163,8 @@ def select_datasets(
         # The id membership already encodes every filter/join from above,
         # so the outer select only needs the entity and the id predicate.
         stmt = select(entity).where(entity.id.in_(latest_ids))
+
+    if filter.slug_contains:
+        stmt = stmt.where(entity.slug.ilike(f"%{filter.slug_contains}%"))
 
     return stmt.order_by(entity.updated_at.desc())

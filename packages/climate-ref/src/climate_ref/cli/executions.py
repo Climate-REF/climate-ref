@@ -36,7 +36,6 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
     ExecutionFailureReason,
     execution_datasets,
-    get_execution_group_and_latest_filtered,
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results import (
@@ -64,8 +63,8 @@ class ListGroupsFilterOptions:
     provider: list[str] | None = None
     """Filter by provider slug (substring, case-insensitive)"""
 
-    facets: dict[str, list[str]] | None = None
-    """Filter by facet key-value pairs (AND across keys, OR within key)"""
+    selectors: dict[str, list[str]] | None = None
+    """Filter by execution group selector key-value pairs (AND across keys, OR within key)"""
 
     failure_reasons: list[ExecutionFailureReason] | None = None
     """Filter by the latest execution's failure reason"""
@@ -124,7 +123,7 @@ def list_groups(  # noqa: PLR0913
         list[str] | None,
         typer.Option(
             "--filter",
-            help="Filter by facet key=value pairs (exact match). Multiple filters can be provided.",
+            help="Filter by group selector key=value pairs (exact match). Multiple filters can be provided.",
         ),
     ] = None,
     successful: Annotated[
@@ -174,9 +173,9 @@ def list_groups(  # noqa: PLR0913
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
 
-    # Parse facet filters
+    # Parse selector filters
     try:
-        facet_filters = parse_facet_filters(filter)
+        selector_filters = parse_facet_filters(filter)
     except ValueError as e:
         logger.error(str(e))
         raise typer.Exit(code=1)
@@ -185,7 +184,7 @@ def list_groups(  # noqa: PLR0913
     filters = ListGroupsFilterOptions(
         diagnostic=diagnostic,
         provider=provider,
-        facets=facet_filters if facet_filters else None,
+        selectors=selector_filters or None,
         failure_reasons=failure_reason,
     )
     logger.debug(f"Applying filters: {filters}")
@@ -198,7 +197,7 @@ def list_groups(  # noqa: PLR0913
         ExecutionGroupFilter(
             diagnostic_contains=diagnostic,
             provider_contains=provider,
-            facets=facet_filters or None,
+            selectors=selector_filters or None,
             successful=successful,
             dirty=dirty,
             failure_reasons=failure_reason,
@@ -234,8 +233,6 @@ def list_groups(  # noqa: PLR0913
         )
 
 
-# Stays on `get_execution_group_and_latest_filtered` rather than `reader.executions.groups()` by design.
-# Revisit once a mutable query surface exists.
 @app.command()
 def delete_groups(  # noqa: PLR0912, PLR0913
     ctx: typer.Context,
@@ -257,7 +254,7 @@ def delete_groups(  # noqa: PLR0912, PLR0913
         list[str] | None,
         typer.Option(
             "--filter",
-            help="Filter by facet key=value pairs (exact match). Multiple filters can be provided.",
+            help="Filter by group selector key=value pairs (exact match). Multiple filters can be provided.",
         ),
     ] = None,
     successful: Annotated[
@@ -296,14 +293,14 @@ def delete_groups(  # noqa: PLR0912, PLR0913
     session = ctx.obj.database.session
     console = ctx.obj.console
 
-    # Parse facet filters
+    # Parse selector filters
     try:
-        facet_filters = parse_facet_filters(filter)
+        selector_filters = parse_facet_filters(filter)
     except ValueError as e:
         logger.error(str(e))
         raise typer.Exit(code=1)
 
-    if not any([diagnostic, provider, facet_filters, successful is not None, dirty is not None]):
+    if not any([diagnostic, provider, selector_filters, successful is not None, dirty is not None]):
         logger.warning("THIS WILL DELETE ALL EXECUTION GROUPS IN THE DATABASE")
         raise typer.Exit(code=1)
 
@@ -311,18 +308,19 @@ def delete_groups(  # noqa: PLR0912, PLR0913
     filters = ListGroupsFilterOptions(
         diagnostic=diagnostic,
         provider=provider,
-        facets=facet_filters if facet_filters else None,
+        selectors=selector_filters or None,
     )
     logger.debug(f"Applying filters: {filters}")
 
     # Apply filters to query
-    all_filtered_results = get_execution_group_and_latest_filtered(
-        session,
-        diagnostic_filters=filters.diagnostic,
-        provider_filters=filters.provider,
-        facet_filters=filters.facets,
-        successful=successful,
-        dirty=dirty,
+    all_filtered_results = Reader(ctx.obj.database).executions.group_rows(
+        ExecutionGroupFilter(
+            diagnostic_contains=filters.diagnostic,
+            provider_contains=filters.provider,
+            selectors=filters.selectors,
+            successful=successful,
+            dirty=dirty,
+        )
     )
 
     # Check if any results found
@@ -560,12 +558,12 @@ def emit_no_results_warning(
         filter_parts.append(f"diagnostic filters: {filters.diagnostic}")
     if filters.provider:
         filter_parts.append(f"provider filters: {filters.provider}")
-    if filters.facets:
-        facet_strs = [
+    if filters.selectors:
+        selector_strs = [
             f"{k}={','.join(values)}" if len(values) > 1 else f"{k}={values[0]}"
-            for k, values in filters.facets.items()
+            for k, values in filters.selectors.items()
         ]
-        filter_parts.append(f"facet filters: {facet_strs}")
+        filter_parts.append(f"selector filters: {selector_strs}")
     if filters.failure_reasons:
         filter_parts.append(f"failure reasons: {[reason.value for reason in filters.failure_reasons]}")
 
@@ -699,7 +697,7 @@ def values(  # noqa: PLR0913
     filters = MetricValueFilter(
         execution_ids=[execution_id],
         dimensions=dimensions or None,
-        promoted_only=False,
+        include_superseded=True,
         include_retracted=True,
     )
 
@@ -1375,7 +1373,6 @@ def flag_dirty(ctx: typer.Context, execution_id: int) -> None:
         console.print(_execution_panel(execution_group))
 
 
-# Stays on `get_execution_group_and_latest_filtered` because it mutates the returned groups.
 @app.command()
 def requeue(  # noqa: PLR0913
     ctx: typer.Context,
@@ -1404,7 +1401,7 @@ def requeue(  # noqa: PLR0913
         list[str] | None,
         typer.Option(
             "--filter",
-            help="Filter by facet key=value pairs (exact match). Multiple filters can be provided.",
+            help="Filter by group selector key=value pairs (exact match). Multiple filters can be provided.",
         ),
     ] = None,
     dry_run: Annotated[
@@ -1426,12 +1423,12 @@ def requeue(  # noqa: PLR0913
     console = ctx.obj.console
 
     try:
-        facet_filters = parse_facet_filters(filter)
+        selector_filters = parse_facet_filters(filter)
     except ValueError as e:
         logger.error(str(e))
         raise typer.Exit(code=1)
 
-    if not any([failure_reason, diagnostic, provider, facet_filters]):
+    if not any([failure_reason, diagnostic, provider, selector_filters]):
         logger.error(
             "At least one filter is required (--failure-reason, --diagnostic, --provider or --filter). "
             "This prevents accidentally requeuing every failed execution."
@@ -1440,14 +1437,15 @@ def requeue(  # noqa: PLR0913
 
     results = [
         (eg, execution)
-        for eg, execution in get_execution_group_and_latest_filtered(
-            session,
-            diagnostic_filters=diagnostic,
-            provider_filters=provider,
-            facet_filters=facet_filters or None,
-            dirty=False,
-            successful=False,
-            failure_reasons=failure_reason,
+        for eg, execution in Reader(ctx.obj.database).executions.group_rows(
+            ExecutionGroupFilter(
+                diagnostic_contains=diagnostic,
+                provider_contains=provider,
+                selectors=selector_filters or None,
+                dirty=False,
+                successful=False,
+                failure_reasons=failure_reason,
+            )
         )
         # Drops in-progress and never-run groups, which `successful=False` also matches
         if execution is not None and execution.successful is False

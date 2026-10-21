@@ -292,7 +292,7 @@ class TestListGroupsFiltering:
         result = invoke_cli(["executions", "list-groups", "--filter", "source_id=NONEXISTENT"])
         assert "No execution groups match the specified filters." in result.stderr
         assert "Total execution groups in database:" in result.stderr
-        assert "Applied filters: facet filters: ['source_id=NONEXISTENT']" in result.stderr
+        assert "Applied filters: selector filters: ['source_id=NONEXISTENT']" in result.stderr
         assert "id" in result.stdout  # Ensure empty table headers are still printed
 
     def test_facet_multiple_same_key_returns_both(self, db_with_groups, invoke_cli):
@@ -475,7 +475,7 @@ class TestDeleteGroups:
         def _boom(*args, **kwargs):
             raise RuntimeError("db exploded")
 
-        with patch("climate_ref.cli.executions.get_execution_group_and_latest_filtered", _boom):
+        with patch("climate_ref.results.executions.get_execution_group_and_latest_filtered", _boom):
             result = invoke_cli(
                 ["executions", "delete-groups", "--diagnostic", "enso", "--force"],
                 expected_exit_code=1,

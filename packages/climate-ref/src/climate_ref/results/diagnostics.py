@@ -238,7 +238,7 @@ def select_diagnostics_with_values(
             _Unindexed(MetricValue.type.expression) == value_type,
         )
     )
-    has_values = apply_execution_scope(has_values, ExecutionScope())
+    has_values = apply_execution_scope(has_values, ExecutionScope(include_retracted=False))
     if execution_group_where is not None:
         has_values = has_values.where(execution_group_where)
 

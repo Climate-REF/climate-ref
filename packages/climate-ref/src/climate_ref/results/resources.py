@@ -86,6 +86,7 @@ class ResourceFilter(ExecutionScope):
     Declarative filter over the executions considered for a resource profile.
 
     Every field is optional, and ``None`` means "do not constrain on this axis".
+    Every diagnostic version is counted, because there is no promoted-version scoping here.
     ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches
     (OR-combined within each field),
     matching the semantics used by
@@ -106,9 +107,6 @@ class ResourceFilter(ExecutionScope):
 
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
-
-    include_retracted: bool = True
-    """Include retracted executions, on by default because a retracted result still used real compute."""
 
 
 @attrs.frozen(kw_only=True)
@@ -836,12 +834,16 @@ class ResourcesReader:
         Returns ``None`` when no execution has that id,
         or when the execution neither recorded a measurement nor failed.
         """
-        stmt = select_execution_resources().where(Execution.id == execution_id)
+        # A lookup by id names the execution, so retraction does not hide it.
+        stmt = select_execution_resources(ResourceFilter(include_retracted=True)).where(
+            Execution.id == execution_id
+        )
         row = self.session.execute(stmt).one_or_none()
         return self._to_view(row) if row is not None else None
 
     def profiles(  # noqa: PLR0913
         self,
+        filters: ResourceFilter | None = None,
         *,
         diagnostic_contains: Sequence[str] | None = None,
         provider_contains: Sequence[str] | None = None,
@@ -872,6 +874,9 @@ class ResourcesReader:
 
         Parameters
         ----------
+        filters
+            Which executions to aggregate.
+            Cannot be combined with ``diagnostic_contains``, ``provider_contains`` or ``since``.
         diagnostic_contains
             Case-insensitive substring matches on diagnostic slug (OR-combined).
         provider_contains
@@ -890,12 +895,20 @@ class ResourcesReader:
         -------
         :
             One profile per group, ordered by provider then diagnostic slug.
+
+        Raises
+        ------
+        ValueError
+            If ``filters`` is given together with ``diagnostic_contains``, ``provider_contains`` or ``since``.
         """
-        filters = ResourceFilter(
-            diagnostic_contains=diagnostic_contains,
-            provider_contains=provider_contains,
-            since=since,
-        )
+        if filters is None:
+            filters = ResourceFilter(
+                diagnostic_contains=diagnostic_contains,
+                provider_contains=provider_contains,
+                since=since,
+            )
+        elif diagnostic_contains or provider_contains or since is not None:
+            raise ValueError("Pass either filters or diagnostic_contains/provider_contains/since, not both")
         rows = [self._to_view(row) for row in self.session.execute(select_execution_resources(filters)).all()]
 
         grouped: dict[tuple[str, str], list[ResourceMeasurementView]] = {}

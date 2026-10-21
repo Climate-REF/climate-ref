@@ -1,7 +1,8 @@
 """
-Filter and ``Select`` builders for metric-value queries.
+Filter and ``Select`` builders for metric-value queries, and the execution scope they share.
 
 This module is the single source of truth for *how* metric values are filtered and joined.
+``ExecutionScope`` and ``apply_execution_scope`` also decide which executions resource queries consider.
 Both the typed facade ([climate_ref.results.values.Reader][]) and any power-user / API
 caller build on the ``select_*`` functions here, so the filter/join semantics live in exactly
 one place. This mirrors the existing house style of module-level query functions that take a
@@ -46,6 +47,7 @@ class ExecutionScope:
 
     A retracted latest execution still wins its group,
     so with ``include_retracted=False`` that group contributes nothing.
+    This differs on purpose from ``DatasetFilter``, which drops retracted rows before picking the latest.
     """
 
 
@@ -64,9 +66,10 @@ class MetricValueFilter(ExecutionScope):
     """
     Declarative filter over metric values.
 
-    Every field is optional; ``None``/empty means "do not constrain on this axis". The same
-    object drives scalar and series queries, frame conversion and facet collection, so a filter
-    is written once and reused across output shapes.
+    ``None``/empty means "do not constrain on this axis",
+    except ``include_retracted`` and ``promoted_only``, which constrain by default.
+    The same object drives scalar and series queries, frame conversion and facet collection,
+    so a filter is written once and reused across output shapes.
 
     Two styles of diagnostic/provider filtering are offered deliberately:
 
@@ -91,10 +94,10 @@ class MetricValueFilter(ExecutionScope):
     provider_slug: str | None = None
     """Exact-match provider slug, for API path-scoped queries."""
 
-    diagnostic_contains: Sequence[str] | None = attrs.field(default=None, converter=_as_str_tuple)
+    diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on diagnostic slug (OR-combined), for CLI-style search."""
 
-    provider_contains: Sequence[str] | None = attrs.field(default=None, converter=_as_str_tuple)
+    provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
 
     dimensions: Mapping[str, str | Sequence[str]] | None = None
@@ -143,9 +146,12 @@ def _apply_common(  # noqa: PLR0912
     This is the ONLY place provenance, version, retraction, dimension and id filtering is
     expressed, so scalar and series can never diverge.
     """
-    needs_diag = bool(
-        f.diagnostic_slug or f.provider_slug or f.diagnostic_contains or f.provider_contains
-    ) or (f.promoted_only)
+    needs_diag = (
+        f.diagnostic_slug is not None
+        or f.provider_slug is not None
+        or bool(f.diagnostic_contains or f.provider_contains)
+        or f.promoted_only
+    )
     needs_exec = bool(
         f.execution_ids or f.execution_group_ids or needs_diag or not f.include_retracted or f.latest_only
     )
@@ -163,13 +169,13 @@ def _apply_common(  # noqa: PLR0912
         stmt = stmt.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
     if f.promoted_only:
         stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
-    if f.diagnostic_slug:
+    if f.diagnostic_slug is not None:
         stmt = stmt.where(Diagnostic.slug == f.diagnostic_slug)
     if f.diagnostic_contains:
         stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in f.diagnostic_contains)))
-    if f.provider_slug or f.provider_contains:
+    if f.provider_slug is not None or f.provider_contains:
         stmt = stmt.join(Provider, Diagnostic.provider_id == Provider.id)
-        if f.provider_slug:
+        if f.provider_slug is not None:
             stmt = stmt.where(Provider.slug == f.provider_slug)
         if f.provider_contains:
             stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in f.provider_contains)))

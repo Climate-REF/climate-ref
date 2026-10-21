@@ -459,6 +459,47 @@ class TestRetracted:
         assert {v.execution_id for v in latest.items} == {retracted_latest}
 
 
+class TestPromotedOnly:
+    @pytest.fixture
+    def superseded_execution(self, dal_db):
+        """A group at version 2 holds one value, while the diagnostic stays promoted at version 1."""
+        session = dal_db.session
+        with session.begin():
+            original = session.get(ExecutionGroup, dal_db.execution_group_id)
+            group = ExecutionGroup(
+                key=original.key, diagnostic_id=original.diagnostic_id, selectors={}, diagnostic_version=2
+            )
+            session.add(group)
+            session.flush()
+            execution_id = _add_execution(session, group.id, "superseded", datetime.datetime(2030, 1, 1))
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution_id,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        return execution_id
+
+    def test_default_drops_unpromoted_versions(self, dal_db, superseded_execution):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter())
+        assert superseded_execution not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_promoted_only_false_keeps_every_version(self, dal_db, superseded_execution):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter(promoted_only=False))
+        assert len(values) == 9
+
+    def test_latest_only_is_per_group_across_versions(self, dal_db, superseded_execution):
+        reader = Reader(dal_db).values
+        promoted = reader.scalar_values(MetricValueFilter(latest_only=True))
+        assert superseded_execution not in {v.execution_id for v in promoted.items}
+        assert len(promoted) == 8
+        every_version = reader.scalar_values(MetricValueFilter(latest_only=True, promoted_only=False))
+        assert len(every_version) == 9
+
+
 class _FakeScalar:
     """Minimal stand-in exposing the attributes ``detect_scalar_outliers`` reads."""
 

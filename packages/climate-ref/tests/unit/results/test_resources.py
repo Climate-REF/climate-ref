@@ -563,33 +563,48 @@ class TestRetracted:
             )
         return db_seeded
 
-    def test_included_by_default(self, db_with_retracted):
+    def test_excluded_by_default(self, db_with_retracted):
         reader = Reader(db_with_retracted).resources
         summary = reader.summary()
         assert summary is not None
-        assert summary.timed_execution_count == 2
-        assert len(reader.measurements()) == 2
-
-    def test_exclude_retracted(self, db_with_retracted):
-        reader = Reader(db_with_retracted).resources
-        summary = reader.summary(ResourceFilter(include_retracted=False))
-        assert summary is not None
         assert summary.timed_execution_count == 1
         assert summary.wall_seconds_total == pytest.approx(100.0)
-        assert len(reader.measurements(ResourceFilter(include_retracted=False))) == 1
+        assert len(reader.measurements()) == 1
+
+    def test_include_retracted(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        summary = reader.summary(ResourceFilter(include_retracted=True))
+        assert summary is not None
+        assert summary.timed_execution_count == 2
+        assert len(reader.measurements(ResourceFilter(include_retracted=True))) == 2
 
     def test_retracted_latest_execution_still_wins_its_group(self, db_with_retracted):
         reader = Reader(db_with_retracted).resources
-        summary = reader.summary(ResourceFilter(latest_only=True))
+        assert reader.summary(ResourceFilter(latest_only=True)) is None
+        summary = reader.summary(ResourceFilter(latest_only=True, include_retracted=True))
         assert summary is not None
         assert summary.wall_seconds_total == pytest.approx(900.0)
-        assert reader.summary(ResourceFilter(latest_only=True, include_retracted=False)) is None
 
     def test_measurement_by_id_finds_a_retracted_execution(self, db_with_retracted):
         reader = Reader(db_with_retracted).resources
-        retracted = [m for m in reader.measurements() if m.wall_seconds == 900.0]
+        retracted = [
+            m for m in reader.measurements(ResourceFilter(include_retracted=True)) if m.wall_seconds == 900.0
+        ]
         assert reader.measurement(retracted[0].execution_id) is not None
 
-    def test_profiles_keep_retracted_samples(self, db_with_retracted):
+    def test_profiles_exclude_retracted_samples_by_default(self, db_with_retracted):
         (profile,) = Reader(db_with_retracted).resources.profiles()
+        assert profile.n_samples == 1
+
+    def test_profiles_take_a_filter(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        (profile,) = reader.profiles(ResourceFilter(include_retracted=True))
         assert profile.n_samples == 2
+        (latest,) = reader.profiles(ResourceFilter(latest_only=True, include_retracted=True))
+        assert latest.n_samples == 1
+
+    def test_profiles_reject_a_filter_with_loose_kwargs(self, db_with_retracted):
+        with pytest.raises(ValueError, match="not both"):
+            Reader(db_with_retracted).resources.profiles(
+                ResourceFilter(), since=datetime.datetime(2020, 1, 1)
+            )

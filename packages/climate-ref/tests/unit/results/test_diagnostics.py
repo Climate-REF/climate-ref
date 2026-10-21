@@ -232,6 +232,25 @@ class TestDiagnosticsReaderStats:
         diagnostics = {s.diagnostic for s in stats}
         assert diagnostics == {"enso_tel"}
 
+    def test_retracted_latest_execution_still_counts(self, db_with_diagnostics):
+        session = db_with_diagnostics.session
+        with session.begin():
+            group = session.query(ExecutionGroup).filter_by(key="key1").one()
+            session.add(
+                Execution(
+                    execution_group_id=group.id,
+                    output_fragment="retracted",
+                    dataset_hash="retracted",
+                    successful=True,
+                    retracted=True,
+                )
+            )
+        reader = Reader(db_with_diagnostics)
+        by_diag = {s.diagnostic: s for s in reader.diagnostics.stats()}
+        assert by_diag["enso_tel"].successful == 1
+        assert by_diag["enso_tel"].not_started == 1
+        assert reader.diagnostics.stats() == reader.executions.statistics()
+
 
 @pytest.fixture
 def db_with_values(db_with_diagnostics):

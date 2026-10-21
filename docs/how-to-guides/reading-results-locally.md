@@ -99,7 +99,7 @@ with Database.from_config(config, read_only=True) as db:
     # (Facet(key="source_id", values=("ACCESS-ESM1-5", ...)), ...)
 ```
 
-Pass `value_type=MetricValueType.SERIES` to read the facets of series values instead.
+Pass `value_type=MetricValueType.SERIES` (from `climate_ref.models.metric_value`) to read the facets of series values instead.
 Passing `with_facets=True` to `scalar_values()` or `series_values()` attaches them to the collection.
 Leaving `with_facets` unset still does that for now, but emits a `FutureWarning`
 because facets will default to off in a future release.

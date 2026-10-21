@@ -410,6 +410,65 @@ class TestSelectLatestExecutions:
         assert all_rows[group_id] == newer
         assert successful_rows[group_id] == older_success
 
+    def test_each_group_and_version_gets_its_own_latest(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            diagnostic_id = session.get(ExecutionGroup, dal_db.execution_group_id).diagnostic_id
+            groups = {}
+            for key, version in [("multi", 1), ("multi", 2), ("other", 1)]:
+                group = ExecutionGroup(
+                    key=key, diagnostic_id=diagnostic_id, diagnostic_version=version, selectors={}
+                )
+                session.add(group)
+                session.flush()
+                groups[key, version] = group.id
+            # Interleaved so the newest execution overall belongs to one group only.
+            expected = {}
+            for (key, version), group_id in groups.items():
+                for year in (2030, 2032, 2031):
+                    execution_id = _add_execution(
+                        session,
+                        group_id,
+                        f"{key}-v{version}-{year}",
+                        datetime.datetime(year, 1, 1, version),
+                    )
+                    if year == 2032:
+                        expected[group_id] = execution_id
+        rows = dict(session.execute(select_latest_executions()).all())
+        assert {group_id: rows[group_id] for group_id in groups.values()} == expected
+
+    def test_latest_only_follows_the_promoted_version(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            diagnostic = session.get(ExecutionGroup, dal_db.execution_group_id).diagnostic
+            latest = {}
+            for version in (1, 2):
+                group = ExecutionGroup(
+                    key="versioned", diagnostic_id=diagnostic.id, diagnostic_version=version, selectors={}
+                )
+                session.add(group)
+                session.flush()
+                for year in (2030, 2031):
+                    execution_id = _add_execution(
+                        session, group.id, f"versioned-v{version}-{year}", datetime.datetime(year, 1, 1)
+                    )
+                    session.add(
+                        ScalarMetricValue.build(
+                            execution_id=execution_id,
+                            value=float(version),
+                            attributes=None,
+                            dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                        )
+                    )
+                latest[version] = execution_id
+            diagnostic.promoted_version = 2
+
+        values = Reader(dal_db).values
+        promoted = values.scalar_values(MetricValueFilter(latest_only=True))
+        assert {v.execution_id for v in promoted.items} == {latest[2]}
+        every_version = values.scalar_values(MetricValueFilter(latest_only=True, include_superseded=True))
+        assert {latest[1], latest[2]} <= {v.execution_id for v in every_version.items}
+
     def test_among_executions_drops_groups_without_a_match(self, dal_db):
         session = dal_db.session
         rows = session.execute(select_latest_executions([Execution.output_fragment == "no-such"])).all()

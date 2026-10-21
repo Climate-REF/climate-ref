@@ -15,6 +15,7 @@ import hashlib
 import importlib.metadata
 import importlib.resources
 import os
+import signal
 import stat
 import subprocess
 from abc import abstractmethod
@@ -34,6 +35,7 @@ from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import (
     CondaCommandError,
+    CondaCommandTimeoutError,
     InvalidDiagnosticException,
     InvalidProviderException,
 )
@@ -504,8 +506,18 @@ MICROMAMBA_MAX_AGE = datetime.timedelta(days=7)
 COMMAND_OUTPUT_TAIL_LINES = 50
 """Lines of a failed command's output that are logged to the console."""
 
+KILL_GRACE_SECONDS = 10
+"""Time a timed-out command gets to exit after SIGTERM before it is sent SIGKILL."""
+
 MICROMAMBA_FAILURE_PREFIX = "critical libmamba"
 """Output line prefix written when micromamba itself fails, before the wrapped command runs."""
+
+
+def _killpg(pgid: int, sig: signal.Signals) -> None:
+    try:
+        os.killpg(pgid, sig)
+    except ProcessLookupError:
+        pass
 
 
 HEALTH_CHECK_TIMEOUT_SECONDS = 300
@@ -569,6 +581,9 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     pip_packages
         Pip packages to install (as URLs) with ``--no-deps --force-reinstall``
         after creating the conda environment.
+    run_timeout
+        Longest time, in seconds, that `run` lets a command take before killing it.
+        None means no limit.
 
     """
 
@@ -583,6 +598,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         self._prefix: Path | None = None
         self.pip_packages: list[str] = []
         self.env_overrides: dict[str, str] = {}
+        self.run_timeout: float | None = None
 
     @property
     def prefix(self) -> Path:
@@ -638,6 +654,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         """Configure the provider."""
         super().configure(config)
         self.prefix = config.paths.software / "conda"
+        self.run_timeout = config.executor.execution_timeout
 
     def _is_stale(self, path: Path) -> bool:
         """Check if a file is older than `MICROMAMBA_MAX_AGE`.
@@ -770,6 +787,8 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         ------
         subprocess.CalledProcessError
             If the command fails
+        CondaCommandTimeoutError
+            If the command exceeds `run_timeout`
 
         """
         env_path = self.env_path
@@ -802,21 +821,54 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 stderr=e.stderr,
                 launch_failed=any(line.startswith(MICROMAMBA_FAILURE_PREFIX) for line in output.splitlines()),
             ) from e
+        except subprocess.TimeoutExpired as e:
+            output = e.stdout if isinstance(e.stdout, str) else ""
+            message = f"Command exceeded the time limit of {self.run_timeout:g}s and was killed: {cmd}"
+            execution_log_only().error("Command output: \n" + output)
+            tail = "\n".join(output.splitlines()[-COMMAND_OUTPUT_TAIL_LINES:])
+            logger.error(f"{message}\nLast lines of output:\n{tail}")
+            raise CondaCommandTimeoutError(message, stdout=output) from e
 
     @staticmethod
     def _run_command(conda_exe: Path, env_path: Path, cmd: Iterable[str]) -> list[str]:
         return [str(conda_exe), "run", "--prefix", str(env_path), *cmd]
 
     def _launch(self, cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
-        return subprocess.run(  # noqa: S603
+        if self.run_timeout is None:
+            return subprocess.run(  # noqa: S603
+                cmd,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                env=self._launch_env(use_lockfiles=False),
+                **kwargs,
+            )
+
+        # A session of its own lets the whole process tree be killed, not just micromamba
+        with subprocess.Popen(  # noqa: S603
             cmd,
-            check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
             env=self._launch_env(use_lockfiles=False),
+            start_new_session=True,
             **kwargs,
-        )
+        ) as proc:
+            try:
+                stdout, _ = proc.communicate(timeout=self.run_timeout)
+            except subprocess.TimeoutExpired as e:
+                _killpg(proc.pid, signal.SIGTERM)
+                try:
+                    stdout, _ = proc.communicate(timeout=KILL_GRACE_SECONDS)
+                except subprocess.TimeoutExpired:
+                    pass
+                _killpg(proc.pid, signal.SIGKILL)
+                stdout, _ = proc.communicate()
+                raise subprocess.TimeoutExpired(cmd, self.run_timeout, output=stdout) from e
+            if proc.returncode:
+                raise subprocess.CalledProcessError(proc.returncode, cmd, output=stdout)
+        return subprocess.CompletedProcess(cmd, proc.returncode, stdout)
 
     def setup_environment(self, config: Any) -> None:
         """Set up the conda environment."""

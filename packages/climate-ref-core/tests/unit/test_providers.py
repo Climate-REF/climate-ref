@@ -1,8 +1,12 @@
 import importlib.metadata
 import io
 import logging
+import os
+import signal
 import subprocess
+import sys
 import textwrap
+import time
 from contextlib import contextmanager
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
@@ -17,6 +21,7 @@ from climate_ref_core.data import DataResourceError, LayeredResource, PackagedRe
 from climate_ref_core.diagnostics import CommandLineDiagnostic, Diagnostic
 from climate_ref_core.exceptions import (
     CondaCommandError,
+    CondaCommandTimeoutError,
     InvalidDiagnosticException,
     InvalidProviderException,
 )
@@ -626,6 +631,63 @@ class TestCondaDiagnosticProvider:
         assert "exited with code 1" in exc_info.value.short_message
         assert "Last lines of output:\nerror output" in caplog.text
         assert not exc_info.value.launch_failed
+
+    def test_run_timeout_kills_process_tree(
+        self, mocker: pytest_mock.MockerFixture, tmp_path, provider, caplog
+    ):
+        pidfile = tmp_path / "child.pid"
+        script = (
+            "import subprocess, sys, time\n"
+            "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'])\n"
+            f"open({str(pidfile)!r}, 'w').write(str(child.pid))\n"
+            "print('started', flush=True)\n"
+            "time.sleep(60)\n"
+        )
+        mocker.patch.object(CondaDiagnosticProvider, "get_conda_exe", return_value=Path("unused"))
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "env_path",
+            new_callable=mocker.PropertyMock,
+            return_value=mocker.Mock(spec=Path, exists=lambda: True),
+        )
+        mocker.patch.object(
+            CondaDiagnosticProvider, "_run_command", return_value=[sys.executable, "-c", script]
+        )
+        mocker.patch.object(climate_ref_core.providers, "KILL_GRACE_SECONDS", 1)
+        provider.run_timeout = 2
+
+        with pytest.raises(CondaCommandTimeoutError) as exc_info:
+            provider.run(["mock-command"])
+
+        assert "time limit of 2s" in exc_info.value.short_message
+        assert "started" in exc_info.value.stdout
+        assert not exc_info.value.launch_failed
+        grandchild = int(pidfile.read_text())
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            try:
+                os.kill(grandchild, 0)
+            except ProcessLookupError:
+                break
+            time.sleep(0.1)
+        else:
+            os.kill(grandchild, signal.SIGKILL)
+            pytest.fail("Grandchild process survived the timeout")
+
+    def test_run_within_timeout(self, mocker: pytest_mock.MockerFixture, provider):
+        mocker.patch.object(CondaDiagnosticProvider, "get_conda_exe", return_value=Path("unused"))
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "env_path",
+            new_callable=mocker.PropertyMock,
+            return_value=mocker.Mock(spec=Path, exists=lambda: True),
+        )
+        mocker.patch.object(
+            CondaDiagnosticProvider, "_run_command", return_value=[sys.executable, "-c", "pass"]
+        )
+        provider.run_timeout = 30
+
+        provider.run(["mock-command"])
 
     def test_run_micromamba_fails_to_start(self, mocker: pytest_mock.MockerFixture, provider):
         mocker.patch.object(CondaDiagnosticProvider, "get_conda_exe", return_value=Path("micromamba"))

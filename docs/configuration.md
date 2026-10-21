@@ -161,6 +161,22 @@ so turning it off leaves that command without new samples.
 Set it to `false` where the sampling thread is unwelcome,
 for example in a memory-constrained container or a profiling run.
 
+### `REF_EXECUTOR_EXECUTION_TIMEOUT`
+
+The longest time, in seconds, that a diagnostic run through a conda environment may take.
+This applies to the ESMValTool and PMP providers, and also sets `executor.execution_timeout` in `ref.toml`.
+
+A diagnostic that exceeds the limit is killed together with all of its child processes,
+and the execution is marked as failed.
+It is not retried on the next solve.
+By default there is no limit, so only the walltime of the surrounding job applies.
+Set it below the job walltime to stop a deadlocked diagnostic from holding a worker slot.
+
+```toml
+[executor]
+execution_timeout = 7200
+```
+
 ### `REF_TEST_DATA_DIR`
 
 Override the location of the test data directory.

@@ -32,7 +32,7 @@ The typical notebook entry point::
     from climate_ref.results import Reader
 
     with Database.from_config(Config.default(), read_only=True) as db:
-        df = Reader(db).values.scalar_values().to_pandas()
+        df = Reader(db).values.scalar_frame()
 
 Public surface convention
 -------------------------

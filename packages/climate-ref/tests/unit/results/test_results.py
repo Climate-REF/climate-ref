@@ -380,6 +380,66 @@ class TestFrameParity:
             pd_assert_frame_equal(via_collection, via_helper)
 
 
+class TestFrameMethods:
+    """``scalar_frame``/``series_frame`` hold what ``to_pandas()`` holds, with dimensions in CV order."""
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {},
+            {"include_context": True},
+            {"outliers": OutlierPolicy()},
+            {"outliers": OutlierPolicy(), "include_unverified": True, "include_context": True},
+        ],
+    )
+    def test_scalar_matches_to_pandas(self, scoped_db, kwargs):
+        values = Reader(scoped_db).values
+        filters = MetricValueFilter(diagnostic_slug=scoped_db.scope.diagnostic_slug)
+        expected = values.scalar_values(filters, **kwargs).to_pandas()
+
+        frame = values.scalar_frame(filters, **kwargs)
+
+        pd_assert_frame_equal(frame, expected, check_like=True)
+
+    @pytest.mark.parametrize("explode", [True, False])
+    @pytest.mark.parametrize("include_context", [True, False])
+    def test_series_matches_to_pandas(self, scoped_db, explode, include_context):
+        values = Reader(scoped_db).values
+        filters = MetricValueFilter(include_retracted=True)
+        expected = values.series_values(filters, include_context=include_context).to_pandas(explode=explode)
+
+        frame = values.series_frame(filters, explode=explode, include_context=include_context)
+
+        pd_assert_frame_equal(frame, expected, check_like=True)
+
+    def test_dimensions_lead_in_cv_order(self, dal_db):
+        frame = Reader(dal_db).values.scalar_frame()
+
+        dims = [c for c in ScalarMetricValue._cv_dimensions if c in frame.columns and c != "kind"]
+        assert list(frame.columns[: len(dims)]) == dims
+        assert list(frame.columns[len(dims) :]) == [
+            "id",
+            "execution_id",
+            "execution_group_id",
+            "kind",
+            "value",
+        ]
+
+    def test_series_cells_do_not_share_the_axis(self, dal_db):
+        frame = Reader(dal_db).values.series_frame(explode=False)
+
+        frame["index"].iloc[0].append(99)
+
+        assert all(99 not in cell for cell in frame["index"].iloc[1:])
+
+    def test_empty(self, dal_db):
+        filters = MetricValueFilter(execution_group_ids=[-1])
+        values = Reader(dal_db).values
+
+        assert values.scalar_frame(filters).empty
+        assert values.series_frame(filters).empty
+
+
 class TestKindSeparation:
     def test_kind_promoted_out_of_dimensions(self, db_seeded):
         # kind is a registered CV dimension, so it has its own column; the read layer promotes it

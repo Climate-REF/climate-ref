@@ -33,7 +33,7 @@ config = Config.default()
 
 with Database.from_config(config, read_only=True) as db:
     reader = Reader(db)
-    df = reader.values.scalar_values().to_pandas()
+    df = reader.values.scalar_frame()
 
 # `df` is a plain DataFrame and remains valid out here, after the session has closed.
 ```
@@ -108,7 +108,7 @@ filters = MetricValueFilter(
 )
 
 with Database.from_config(config, read_only=True) as db:
-    df = Reader(db).values.scalar_values(filters=filters).to_pandas()
+    df = Reader(db).values.scalar_frame(filters=filters)
 ```
 
 An unknown dimension key raises `KeyError` rather than silently returning the wrong data.
@@ -154,6 +154,24 @@ with Database.from_config(config, read_only=True) as db:
 
 `reference_only` is a series-only axis:
 `True` selects observation/reference series, `False` selects model series.
+
+### Whole sets as a DataFrame
+
+`scalar_frame()` and `series_frame()` read every value matching a filter straight into a DataFrame.
+They hold the same rows and columns as `to_pandas()` on the matching collection,
+but skip building a Python object per value, so they are several times faster on a large diagnostic.
+The CV dimension columns come first, in registration order.
+
+```python
+with Database.from_config(config, read_only=True) as db:
+    values = Reader(db).values
+    scalars = values.scalar_frame(filters, outliers=OutlierPolicy(method="iqr"))
+    wide_df = values.series_frame(filters, explode=False)
+```
+
+They take the same filter, outlier and `include_context` options as the collection reads,
+but have no `offset`/`limit`, `total_count` or facets.
+Use the collection reads when you need those, or the individual value objects.
 
 ### Pagination
 

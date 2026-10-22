@@ -14,8 +14,11 @@ Everything here is a thin layer over [climate_ref.results._query][]
 power users who need the raw ``Select`` or ORM rows use those modules directly.
 """
 
+import contextlib
 import functools
-from collections.abc import Iterable, Mapping, Sequence
+import gc
+import itertools
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -41,6 +44,7 @@ from climate_ref.results.executions import ExecutionsReader
 from climate_ref.results.frames import (
     collect_facets,
     facets_from_columns,
+    finish_value_frame,
     scalar_values_to_frame,
     series_values_to_frame,
 )
@@ -81,6 +85,24 @@ def _series_columns() -> list[Any]:
         table.attributes,
         *(table[d] for d in MetricValue._cv_dimensions),
     ]
+
+
+@contextlib.contextmanager
+def _gc_paused() -> Iterator[None]:
+    """Pause the cyclic garbage collector, which otherwise rescans every row object a large read creates."""
+    enabled = gc.isenabled()
+    gc.disable()
+    try:
+        yield
+    finally:
+        if enabled:
+            gc.enable()
+
+
+def _detection_dims(policy: OutlierPolicy) -> list[str]:
+    """Return the CV dimensions outlier detection reads: the policy's groups plus ``source_id``."""
+    keys = {*policy.group_by, "source_id"}
+    return [d for d in MetricValue._cv_dimensions if d in keys]
 
 
 def _split_kind(dimensions: Mapping[str, str]) -> tuple[str, dict[str, str]]:
@@ -340,16 +362,10 @@ class ValuesReader:
         Only the columns detection needs are loaded for every row, and only the returned page becomes DTOs.
         """
         dims = MetricValue._cv_dimensions
-        table = MetricValue.__table__.c
-        detect_stmt = (
-            select_value_ids(MetricValueType.SCALAR, filters)
-            .with_only_columns(table.id, table.execution_id, table.value, *(table[d] for d in dims))
-            .order_by(table.id)
-        )
-        scalar_rows = self._fetch(detect_stmt)
+        scalar_rows = self._whole_set(MetricValueType.SCALAR, filters, ["id", "execution_id", "value", *dims])
         _, _, values, *dim_columns = zip(*scalar_rows) if scalar_rows else [()] * (3 + len(dims))
         facets = _to_facets(facets_from_columns(dims, dim_columns)) if with_facets else ()
-        detection_dims = {*policy.group_by, "source_id"}
+        detection_dims = _detection_dims(policy)
         frame = pd.DataFrame(
             {
                 "value": values,
@@ -404,6 +420,114 @@ class ValuesReader:
         return SeriesValueCollection(
             items=items, total_count=total_count, facets=facets, offset=offset, limit=limit
         )
+
+    # -- frames ----------------------------------------------------------------
+    # Whole-set reads for notebooks, built straight from columns without a value object per row.
+    @_gc_paused()
+    def scalar_frame(
+        self,
+        filters: MetricValueFilter | None = None,
+        *,
+        outliers: OutlierPolicy | None = None,
+        include_unverified: bool = False,
+        include_context: bool = False,
+    ) -> pd.DataFrame:
+        """
+        Every scalar value matching ``filters`` as a DataFrame, ordered by id.
+
+        Holds the same rows and columns as ``scalar_values(...).to_pandas()`` for the same arguments,
+        but is several times faster on a large set because no ``ScalarValue`` is built.
+        The CV dimension columns come first, in registration order.
+        """
+        filters = filters or MetricValueFilter()
+        policy = outliers or OutlierPolicy(method="off")
+        names = ["id", "execution_id", "value", *MetricValue._cv_dimensions]
+        frame = pd.DataFrame.from_records(
+            self._whole_set(MetricValueType.SCALAR, filters, names), columns=names
+        )
+
+        outlier_columns = []
+        if policy.enabled:
+            is_outlier = flag_outliers(frame[["value", *_detection_dims(policy)]], policy)
+            frame["is_outlier"] = is_outlier
+            frame["verification_status"] = np.where(is_outlier, "unverified", "verified")
+            if not include_unverified:
+                frame = frame[~is_outlier]
+            outlier_columns = ["is_outlier", "verification_status"]
+
+        frame = self._add_context(frame, include_context)
+        return finish_value_frame(frame, ["value", *outlier_columns])
+
+    @_gc_paused()
+    def series_frame(
+        self,
+        filters: MetricValueFilter | None = None,
+        *,
+        explode: bool = True,
+        include_context: bool = False,
+    ) -> pd.DataFrame:
+        """
+        Every series value matching ``filters`` as a DataFrame, ordered by id.
+
+        Holds the same rows and columns as ``series_values(...).to_pandas(explode=explode)``,
+        but is several times faster on a large set because no ``SeriesValue`` is built.
+        The CV dimension columns come first, in registration order.
+        """
+        filters = filters or MetricValueFilter()
+        names = ["id", "execution_id", "values", "index_id", "reference_id", *MetricValue._cv_dimensions]
+        frame = pd.DataFrame.from_records(
+            self._whole_set(MetricValueType.SERIES, filters, names), columns=names
+        )
+        if explode:
+            # A series with no points has no exploded rows, so it must not keep a dimension column.
+            frame = frame.loc[np.array([bool(v) for v in frame["values"]], dtype=bool)]
+        frame = self._add_context(frame, include_context)
+
+        axes = self._index_axes(frame["index_id"].dropna().astype(int).tolist())
+        frame["index_name"] = [(axes[i][0] if i in axes else None) or "index" for i in frame["index_id"]]
+        index = [axes[i][1] if i in axes else None for i in frame.pop("index_id")]
+        values = [v or [] for v in frame.pop("values")]
+        # Finish before exploding, so it works on one row per series rather than one per point.
+        frame = finish_value_frame(frame, ["index_name", "reference_id"])
+        if not explode:
+            frame["values"] = values
+            # A fresh list per row, so editing one cell cannot change the others sharing the axis.
+            frame["index"] = pd.Series([None if idx is None else list(idx) for idx in index], dtype=object)
+            return frame
+
+        lengths = [len(v) for v in values]
+        frame = frame.iloc[np.repeat(np.arange(len(frame)), lengths)].reset_index(drop=True)
+        frame["value"] = list(itertools.chain.from_iterable(values))
+        # Points past the end of the axis fall back to their position, as ``to_pandas`` does.
+        frame["index"] = list(
+            itertools.chain.from_iterable(
+                range(n) if idx is None else idx if len(idx) == n else [*idx[:n], *range(len(idx), n)]
+                for idx, n in zip(index, lengths)
+            )
+        )
+        return frame
+
+    def _whole_set(
+        self, value_type: MetricValueType, filters: MetricValueFilter, names: Sequence[str]
+    ) -> list[tuple[Any, ...]]:
+        """Fetch the named ``metric_value`` columns of every value of ``value_type`` matching ``filters``."""
+        table = MetricValue.__table__.c
+        return self._fetch(
+            select_value_ids(value_type, filters)
+            .with_only_columns(*(table[name] for name in names))
+            .order_by(table.id)
+        )
+
+    def _add_context(self, frame: pd.DataFrame, include_context: bool) -> pd.DataFrame:
+        """Join ``execution_group_id`` (and the slugs) by execution, dropping rows whose execution is gone."""
+        names = ["execution_group_id", "diagnostic_slug", "provider_slug"][: 3 if include_context else 1]
+        context = self._execution_context(frame["execution_id"].unique().tolist(), include_context)
+        by_execution = pd.DataFrame.from_dict(
+            {execution_id: row[: len(names)] for execution_id, row in context.items()},
+            orient="index",
+            columns=names,
+        )
+        return frame.join(by_execution, on="execution_id", how="inner").reset_index(drop=True)
 
     # -- materialisers ---------------------------------------------------------
     # Rows are fetched as plain columns, because building ORM objects dominates a whole-diagnostic read.

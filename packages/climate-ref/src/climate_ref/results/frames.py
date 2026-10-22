@@ -4,8 +4,9 @@ DataFrame conversion and facet collection for metric values.
 These pure helpers are the single source of truth for the column layout of a metric-value frame.
 Both the collections' ``to_pandas()`` and any other consumer build their frames here,
 so a scalar (or series) frame has identical columns.
-The builders take detached DTOs (from [climate_ref.results.values][]) rather than ORM rows,
+The ``*_to_frame`` builders take detached DTOs (from [climate_ref.results.values][]) rather than ORM rows,
 so they never touch a session and are portable.
+``finish_value_frame`` lays out a frame read straight from columns the same way.
 """
 
 from collections.abc import Sequence
@@ -92,6 +93,25 @@ def series_values_to_frame(values: "Sequence[SeriesValue]", *, explode: bool = T
             rec.update(values=list(v.values), index=list(v.index) if v.index is not None else None)
             records.append(rec)
     return pd.DataFrame.from_records(records)
+
+
+def finish_value_frame(
+    frame: pd.DataFrame, before_context: Sequence[str], after_context: Sequence[str] = ()
+) -> pd.DataFrame:
+    """
+    Lay out a metric-value frame read straight from columns, with the columns ``*_to_frame`` gives.
+
+    ``kind`` is promoted out of the dimensions (defaulting to ``"model"``)
+    and dimension columns null in every row are dropped.
+    The present dimensions lead in registration order, followed by the shared metadata,
+    ``before_context``, the context slugs when present and ``after_context``.
+    """
+    dims = [d for d in MetricValue._cv_dimensions if d != "kind"]
+    frame["kind"] = frame.pop("kind").fillna("model").astype(str) if "kind" in frame else "model"
+    present = [d for d in dims if frame[d].notna().any()]
+    context = [c for c in ("diagnostic_slug", "provider_slug") if c in frame]
+    shared = ["id", "execution_id", "execution_group_id", "kind"]
+    return frame.reindex(columns=[*present, *shared, *before_context, *context, *after_context])
 
 
 class _DistinctValues(FunctionElement[Any]):

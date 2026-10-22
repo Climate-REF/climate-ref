@@ -116,6 +116,13 @@
   summary: esmvaltool/climate-drivers-for-fire has no executions
 - check: unsolvable-diagnostics
   command: ''
+  detail: 'Unmet: no cmip6 datasets match experiment_id=historical|esm-hist, table_id=Amon,
+    variable_id=o3. nothing is ingested as cmip7.'
+  remedy: Ingest the data the unmet requirement names, then run the solver again.
+  severity: warning
+  summary: esmvaltool/ozone-zonal has no executions
+- check: unsolvable-diagnostics
+  command: ''
   detail: 'Unmet: no cmip6 datasets match experiment_id=historical|esm-hist|land-hist,
     frequency=mon, table_id=AERmonZ|Amon|CFmon|Emon|EmonZ|LImon|Lmon|Omon|SImon, variable_id=emp|evspsbl.
     nothing is ingested as cmip7.'

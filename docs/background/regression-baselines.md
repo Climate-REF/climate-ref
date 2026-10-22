@@ -1,213 +1,130 @@
 # Regression baselines and the CI coupling gate
 
 Climate REF pins each test case to a **regression baseline**:
-a recorded, known-good output that a pull request is checked against
-so that an unintended change in a diagnostic's results cannot land unnoticed.
+a recorded, known-good output that a pull request is checked against.
+This stops an unintended change in a diagnostic's results from landing unnoticed.
 
-This page explains the two-layer baseline model,
-the lifecycle commands that produce and verify it,
-and the CI coupling gate that decides *how* each test case is verified in a pull request.
+This page covers the baseline model, the commands that produce and verify it,
+and the CI coupling gate that decides how each test case is verified in a pull request.
+
+For the day-to-day workflow see [Testing diagnostics](../how-to-guides/testing-diagnostics.md#regression-baselines).
+
+## Why do we need baselines?
+
+Diagnostics produce the numbers and figures that people use to evaluate climate models.
+A change to a provider package, a dependency or the REF itself can shift those results
+without any unit test failing.
+Running every diagnostic on every change is too expensive to catch this directly.
+A shifted result looks just as plausible as a correct one, so nobody notices until it has been published.
+Regression testing catches this by running each test case and comparing it to a known-good output.
+
+Doing this in CI (and in the open) is hard:
+
+- The input data is large, far more than a runner should download on every pull request.
+- Some diagnostics need more memory than GitHub-hosted runners provide.
+- The outputs are large too. NetCDF files and plots are too big to keep in git.
+
+We first tried committing decimated outputs to git.
+This did not scale as the number of test cases grew and required multiple PRs to add a diagnostic.
+
+Our testing infrastructure has to meet these requirements:
+
+- A change to a diagnostic's results cannot land unnoticed.
+- The check runs on every pull request, including from forks, without credentials or input data.
+- Heavy outputs live outside git, but each baseline still records exactly which ones it expects.
+- Input data is cached between runs.
+- Results are machine independent and reproducible.
+- A reviewer can see what changed between runs without running the diagnostic.
+  Diagnostic authors and maintainers often review changes to packages they do not know well,
+  so the diff has to be readable on its own.
 
 ## The two-layer baseline model
 
-A baseline is split into two layers with very different trust and portability properties.
+- The **committed bundle** is the small CMEC output (`series.json`, `diagnostic.json`, `output.json`)
+  in the test case's `regression/` directory, tracked in git.
+  Absolute paths are rewritten to placeholders (`<OUTPUT_DIR>`, `<TEST_DATA_DIR>`),
+  so the bytes are machine independent.
+  This bundle is the gate signal, and it is what review sees in the diff.
+- The **native bundle** is the heavy output (`.nc`, `.png`, ...) that the committed bundle references.
+  Native files are stored by sha256 digest in an object store and fetched anonymously.
+  Only `mint` writes them, and they are never required to be present.
 
-- The **committed bundle** is the small, text-only CMEC output
-  (`series.json`, `diagnostic.json`, `output.json`)
-  written into the test case's `regression/` directory and tracked in git.
-  Absolute paths are rewritten to portable placeholders
-  (`<OUTPUT_DIR>`, `<TEST_DATA_DIR>`) so the bytes are machine independent.
-  This bundle is **the gate signal**: it is what review actually sees in the diff.
+A `manifest.json` beside the bundle binds the two layers:
 
-- The **native bundle** is the heavy binary output
-  (`.nc`, `.png`, ...) that the committed bundle references.
-  Native files are content-addressed by their sha256 digest in an object store,
-  fetched anonymously, and are **never required to be present**.
-  They are written only by the credentialed `mint` step.
+| Field                | Meaning                                                                                  |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `schema`             | Manifest format version (currently `2`). A mismatch is rejected rather than misread.     |
+| `test_case_version`  | Per-case integer that authorises a new committed baseline. `mint` bumps it.              |
+| `diagnostic_version` | The `Diagnostic.version` captured at mint time. The author bumps it when results change. |
+| `committed`          | sha256 of each committed JSON file, over the placeholder-substituted bytes on disk.      |
+| `native`             | sha256 and size of each curated native file. Empty `{}` until minted.                    |
+| `catalog_hash`       | Hash of the input `catalog.yaml`, coupling the baseline to its inputs.                   |
 
-The two layers are bound by a **`manifest.json`** alongside the bundle, which records:
+Both version fields are monotonic and may never decrease.
 
-- `schema` — integer schema version for the manifest format itself (currently `2`).
-  The loader rejects manifests whose `schema` does not match the current `SCHEMA_VERSION`,
-  so format migrations are detected immediately rather than silently misread.
-- `test_case_version` — a monotonic, author-bumped integer that *authorises* a new baseline.
-- `diagnostic_version` — the author-declared `Diagnostic.version` captured at mint time,
-  coupling the baseline to the diagnostic code that produced it.
-- `committed` — sha256 digests of the committed JSON artefacts, over the exact placeholder-substituted bytes on disk.
-- `native` — sha256 + size of each curated native file (empty `{}` until minted).
-- `catalog_hash` — the hash of the test case's input `catalog.yaml`, coupling the baseline to the inputs that produced it.
-
-These give the manifest **two orthogonal version axes**:
-`test_case_version` is per-case and mint-authored (it authorises a new committed baseline),
-while `diagnostic_version` is per-diagnostic and author-authored (it declares that the
-diagnostic's *results* changed). Both remain monotonic.
-
-!!! note "An empty native set is a permanent, valid state"
-    Fork contributors cannot mint
-    (minting needs object-store write credentials that never run on untrusted pull-request code).
-    A baseline with `native: {}` is fully gated by its committed JSON bundle;
-    the native layer is **opt-in extra verification** that only runs when the blobs exist.
+!!! note "An empty native set is a valid state"
+    Fork contributors cannot mint, because minting needs object-store write credentials.
+    A baseline with `native: {}` is still gated by its committed bundle.
+    The native layer adds replay verification when the blobs exist.
 
 ## Lifecycle commands
 
 The `ref test-cases` verbs produce and verify baselines.
-Only `mint` needs write credentials; everything else is anonymous and safe on untrusted code.
-
-```mermaid
-flowchart LR
-    run["run<br/>(no creds)"] -->|"seed committed bundle<br/>+ manifest, native = {}"| repo[("regression/<br/>+ manifest.json")]
-    repo --> mint["mint<br/>(write creds, CI)"]
-    mint -->|"upload blobs to store<br/>populate manifest.native"| store[("native object<br/>store (sha256)")]
-    store --> replay["replay<br/>(public read)"]
-    replay -->|"materialise native +<br/>re-run build_execution_result +<br/>tolerant compare"| verdict{matches<br/>committed?}
-    verdict -->|yes| ok([pass])
-    verdict -->|no| bad([fail])
-```
+Only `mint` needs write credentials, so everything else is safe on untrusted code.
 
 | Verb | Credentials | What it does |
 | --- | --- | --- |
-| `run` | none | Execute the diagnostic (or, with `--from-slot`, reuse the native already in the output slot instead of executing), curate its native into the output slot `output/<label>/`, rebuild the committed bundle, and, when seeding or `--force-regen`, promote it to `regression/` and update `manifest.json`. The first seed uses `native = {}`, and existing manifests keep their native block. |
-| `mint` | write | Execute (or, with `--from-replay`, replay the stored native), upload the curated native to the object store, and populate `manifest.native`. Generally run by CI. |
-| `replay` | public read | Materialise the native baseline into a slot, re-run only `build_execution_result`, and tolerantly compare to the committed bundle. |
+| `run` | none | Executes the diagnostic (or reuses the slot's native with `--from-slot`) and rebuilds the committed bundle. Promotes it to `regression/` only on first seed or with `--force-regen`, keeping the existing `test_case_version` and native block. |
+| `mint` | write | Executes (or replays the stored native with `--from-replay`), uploads changed native blobs and rewrites the manifest. Bumps `test_case_version` when the committed bundle changed. Usually run by CI. |
+| `replay` | public read | Fetches the native baseline, re-runs only `build_execution_result` and compares the result to the committed bundle. |
+
+`run` warns, but never blocks, when a promoted bundle's native digests differ from the minted baseline.
+This means a re-mint is needed.
 
 ### Output slots
 
-Every `run`, `replay`, and `mint` materialises what it produced into a gitignored
-*output slot*, so a developer can actually see and diff what a run or replay generated:
+Every `run`, `replay` and `mint` writes what it produced into a gitignored output slot
+at `<test case>/output/<label>/`.
+The slot holds the curated native files, and the rebuilt committed bundle under `regression/`.
 
-```text
-<test case>/output/<label>/
-├── diagnostic.json     # the curated native set, flat at manifest-relative paths
-├── output.json
-├── series.json
-├── ...                 # plus any referenced plots/data/html and native .nc files
-└── regression/         # the committed bundle rebuilt from this slot
-    ├── diagnostic.json
-    ├── output.json
-    └── series.json
-```
+`--label` names the slot.
+The default `latest` is overwritten each time, but named slots persist,
+so `run --label before`, a code change, then `run --label after` gives two slots to diff.
 
-Slots are never committed — the whole `**/test-data/**/output/` tree is gitignored —
-they exist purely for local inspection.
+## Comparing results
 
-The `--label` option names a slot (default `latest`, overwritten on every run).
-Named slots persist, so two runs can be compared side by side:
-for example `run --label fresh` then `replay --label fromstore`,
-or `run --label before`, edit the diagnostic, then `run --label after`.
+Floats in the committed bundle are rounded to 7 significant figures when written.
+This keeps the bytes stable across machines, so a local run and a CI mint produce the same diff.
 
-`run` writes the slot on every invocation,
-but it only *promotes* the rebuilt bundle to the tracked `regression/` baseline
-when `--force-regen` is given or no baseline exists yet,
-so a labelled run never silently clobbers a committed baseline.
-`mint` always promotes and uploads.
-When a promoted bundle's underlying native digests differ from the minted baseline,
-`run` warns (it never blocks) that a re-mint is needed.
-`mint --from-replay` re-authors the manifest from the stored native instead of re-executing,
-and uploads only blobs whose digest actually changed.
-
-## CMIP7 test data
-
-CMIP7 data is now available on ESGF as of September 2026.
-
-### Published CMIP7 data
-
-`CMIP7Request` downloads CMIP7 data that is published on ESGF via `intake-esgf`.
-
-```python
-from climate_ref_core.esgf import CMIP7Request
-
-CMIP7Request(
-    slug="cmip7-tas",
-    facets={
-        "source_id": "UKESM1-3-LL",
-        "experiment_id": "historical",
-        "variable_id": "tas",
-        "branding_suffix": "tavg-h2m-hxy-u",
-        "frequency": "mon",
-    },
-    remove_ensembles=True,
-)
-```
-
-CMIP7 data is only published to the ESGF STAC indices (`discovery.east.esgf.io` and `discovery.west.esgf.io`).
-Recent intake-esgf releases enable them by default,
-but an older `~/.config/intake-esgf/conf.yaml` may not list them in which case a warning is shown.
-
-### Converted CMIP6 data
-
-Not every model and variable has CMIP7 data on ESGF yet so for some test cases we fabricate it from CMIP6 datasets.
-`ConvertedCMIP7Request` maps CMIP7 facets to their CMIP6 equivalents (e.g. `variant_label` -> `member_id`),
-fetches the corresponding CMIP6 files, and converts them to CMIP7 format on the fly.
-This functionality will be removed once every test case can use published data.
-
-Converted files are cached in `cmip7-converted/` under `$REF_DATASET_CACHE_DIR` when that variable is set,
-otherwise under the user cache directory at `climate_ref/cmip7-converted/` (resolved by `platformdirs`).
-The cache is not version-controlled. Clear it manually if a conversion produces stale output.
-
-```python
-from climate_ref_core.esgf import ConvertedCMIP7Request
-
-ConvertedCMIP7Request(
-    slug="cmip7-tas",
-    facets={
-        "source_id": "ACCESS-ESM1-5",
-        "experiment_id": "historical",
-        "variable_id": "tas",
-        "variant_label": "r1i1p1f1",   # CMIP7 name, mapped to member_id internally
-        "table_id": "Amon",
-    },
-)
-```
-
-### Moving a test case to published data
-
-Swap its `ConvertedCMIP7Request` for a `CMIP7Request` that selects published data.
-The existing catalog records the converted datasets, which ESGF does not know,
-so run `ref test-cases fetch --regen` to resolve the new request from its facets.
-Then mint new baselines, because the inputs have changed.
-
-## Committed-bundle float precision
-
-Floats written into the committed bundle (`series.json`, `diagnostic.json`, `output.json`)
-are rounded to **7 significant figures** at write time.
-This keeps the committed bytes stable and human-reviewable across machines (local developer run vs. CI mint),
-where tiny floating-point differences would otherwise produce noisy diffs on every baseline update.
-
-Seven significant figures is deliberately two digits finer than the `rtol=1e-5`
-tolerance used by the coupling gate's tolerant comparison,
-so rounding at write time can never flip a gate verdict:
-a value that rounds identically on all machines will always compare within tolerance.
-
-## Tolerant comparison
-
-`replay` does not require byte-equality of the regenerated JSON.
-A byte-equal fast path short-circuits the common case;
-otherwise values are compared with a small relative/absolute tolerance
-(`math.isclose`), and volatile keys/values are sanitised to placeholders before comparison.
-This absorbs platform-level floating-point noise without masking a real change in results.
+`replay` takes a byte-equal fast path first.
+Otherwise it sanitises volatile values to placeholders and compares numbers with `math.isclose` at `rtol=1e-5`.
+That tolerance is two digits coarser than the rounding, so rounding can never flip a verdict.
 
 ## The CI coupling gate
 
-For every test case, CI must decide *how* to verify the baseline in a pull request,
-purely from what changed relative to the base branch.
-`decide_coupling` is a pure function over the head and base manifests
-plus three on-disk facts the caller supplies —
-whether the diagnostic's extraction code changed,
-whether the committed bundle still matches its manifest digests,
-and whether the input catalog still matches its manifest hash.
+`decide_coupling` decides how to verify each test case from the head and base manifests,
+plus three on-disk facts:
 
-The gate **fails closed**:
-any state it cannot positively verify is a failure, not a silent skip.
-The single exception is the native layer —
-because an empty native set is legitimate, a missing native baseline downgrades to `skip` (with a warning), never `fail`.
+- `extraction_changed`: any file under the diagnostic's provider package or the core regression package changed.
+  This is a path heuristic, so it cannot tell an execution change from an extraction change.
+- `committed_integrity_ok`: the committed bundle on disk still matches `manifest.committed`.
+- `catalog_integrity_ok`: the input catalog still matches `manifest.catalog_hash`.
 
-### Actions
+Changed files come from `base...HEAD`, so churn on the base branch is ignored.
 
-- **`skip`**: nothing relevant to this case changed, the case is not under regression management, or the committed bundle changed (e.g. a `test_case_version` bump) with no native baseline to replay against, so the diff review is the only signal.
-- **`replay`**: cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
-- **`fail`**: an unauthorised or unverifiable change: the committed bundle or catalog changed without a version bump, a version moved backwards, the bundle drifted from its manifest, or the in-code `Diagnostic.version` no longer matches the recorded `diagnostic_version`.
+`diagnostic_version` covers the gap that `extraction_changed` leaves.
+An execution change with no extraction-path edit (the [#671](https://github.com/Climate-REF/climate-ref/issues/671) ECS case) would otherwise replay green against a stale bundle.
+The gate fails any baseline whose `diagnostic_version` no longer matches the in-code `Diagnostic.version`.
 
-### Decision flow
+The gate returns one of three actions:
+
+- **`skip`**: nothing relevant changed, the case is not under regression management,
+  or the committed bundle changed with no native baseline to replay against, so review of the diff is the only check.
+- **`replay`**: re-check against the cached native baseline. Only chosen when native blobs exist.
+- **`fail`**: an unauthorised or unverifiable change.
+
+The gate fails closed: any state it cannot verify is a `fail`.
+The only exception is a missing native baseline, which is legitimate and downgrades to `skip` with a warning.
 
 ```mermaid
 flowchart TD
@@ -225,7 +142,7 @@ flowchart TD
 
     catalogOk -->|yes| staleVersion{code Diagnostic.version<br/>vs baseline<br/>diagnostic_version}
     staleVersion -->|"code &gt; baseline"| failStale[["FAIL<br/>stale baseline<br/>re-mint required"]]
-    staleVersion -->|"code &lt; baseline"| failDowngrade[["FAIL<br/>illegal downgrade<br/>lower code AND re-mint"]]
+    staleVersion -->|"code &lt; baseline"| failDowngrade[["FAIL<br/>code below baseline<br/>re-mint required"]]
 
     staleVersion -->|equal| seeding{newly added<br/>this branch?}
     seeding -->|yes| seedNative{native<br/>non-empty?}
@@ -251,163 +168,96 @@ flowchart TD
     triggerNative -->|no| skipTrigger[["SKIP<br/>no native to replay"]]
 ```
 
-### How changed files map to the signals
-
-The gate diffs `base...HEAD` (against the merge base, so unrelated base-branch churn is excluded)
-and maps the changed-file list onto each case:
-
-- **`extraction_changed`** is coarse and errs toward `replay` (cheap, credential-free):
-  any change under the diagnostic's provider package,
-  or under the core regression package, counts for every case in that provider.
-  It is a *path-based* heuristic, so it cannot tell an execution change from an extraction change.
-- **`diagnostic_version`** is the *author-declared* execution-change signal: when a diagnostic's
-  results change the author bumps `Diagnostic.version`, and the gate fails any baseline whose
-  recorded `diagnostic_version` no longer matches the in-code value until it is re-minted.
-  This closes the **replay blind-spot** that `extraction_changed` alone leaves open:
-  an execution-affecting change with no extraction-path edit (the #671 ECS case) would otherwise
-  route to a green replay against a stale bundle.
-  `diagnostic_version` is monotonic, like `test_case_version`: it may never decrease.
-- **`committed_integrity_ok`** recomputes the committed digests from the working tree
-  and compares them to `manifest.committed`.
-- **`catalog_integrity_ok`** recomputes the input catalog hash
-  and compares it to `manifest.catalog_hash`,
-  catching an input change that was not accompanied by a regenerated baseline.
-
-The gate exits non-zero if any case is gated `fail`;
-the `--json` output drives CI's dispatch of the `replay` jobs.
-
-!!! warning "Credentials never cross the trust boundary"
-    `replay`, `run`, and the gate itself are anonymous and safe to run on untrusted pull-request code.
-    Only `mint` holds object-store write credentials,
-    and it runs exclusively on the trusted-tier runner — never on fork pull-request code.
+`ref test-cases ci-gate` exits non-zero if any case is `fail`.
+Its `--json` output drives the `replay` jobs in CI.
 
 ## Continuous integration
 
-The lifecycle commands are wired into four GitHub Action workflows.
-The minting process requires credentials to upload data.
-Since this is a public project we have to be careful about when this is run to not leak these credentials.
+Four workflows run the lifecycle.
+Minting needs credentials, and this is a public repository,
+so `mint` runs only on a trusted runner and never on fork pull-request code.
 
 | Workflow | Trigger | Credentials | What it does |
 | --- | --- | --- | --- |
-| `regression-pr-gate.yaml` | every pull request | none | Runs the coupling gate, then `replay`s every case it routes to `replay`. |
-| `regression-mint.yaml` | manual dispatch | R2 write (baselines bucket) | `mint`s native baselines and commits the regenerated manifest back to the branch. |
-| `regression-diff-report.yaml` | called by the mint + manual | R2 write (reports bucket) | Builds the HTML diff of the changed baselines and posts comment to a PR. |
-| `regression-drift.yaml` | nightly + manual | none | `replay`s every baseline to catch silent drift. |
+| `regression-pr-gate.yaml` | every pull request | none | Runs the gate, then `replay`s every case it routes to `replay`. |
+| `regression-mint.yaml` | manual dispatch | R2 write (baselines bucket) | `mint`s baselines and commits the result back to the branch. |
+| `regression-diff-report.yaml` | called by mint, or manual | R2 write (reports bucket) | Builds an HTML diff of the changed baselines and links it on the PR. |
+| `regression-drift.yaml` | nightly, or manual | none | `replay`s every baseline to catch silent drift, eg. after a dependency upgrade. |
 
-### PR gate (`regression-pr-gate.yaml`)
+### PR gate
 
-On every pull request, the gate runs `ref test-cases ci-gate --json` against the base
-branch and acts on each decision:
+The gate job runs `ref test-cases ci-gate --json` against the base branch on `ubuntu-latest` with no secrets.
+`fail` aborts the job, `replay` cases are verified against the public native baseline,
+and `skip` cases are left to review of the diff.
+It downloads no input datasets, only the native blobs for the cases it replays.
 
-- **`fail`** aborts the job with the offending cases and their reasons.
-- **`replay`** is verified in place against the public native baseline.
-- **`skip`** cases with no native baseline to replay against (e.g. a `test_case_version` bump with
-  nothing minted yet) are not verified further here.
-  The committed bundle is gated by review in the diff, and minting enables replay verification later.
-
-The job runs on the public `ubuntu-latest` runner with no secrets, so it is safe on fork pull requests.
-The decision-to-replay fan-out lives in `scripts/ci/regression-pr-gate.sh`.
-
-Neither stage downloads input datasets:
-`ci-gate` reads only manifests and the git diff,
-and `replay` rebuilds the committed bundle from the public native blobs plus the committed `catalog.yaml`/`manifest.json`
-(`build_execution_result` reads only its output directory).
-The gate therefore fetches no sample data or ESGF inputs — only the small native blobs for the cases it actually replays.
-
-#### Running the gate locally
-
-The same script is the local entry point, so you can reproduce a pull request's verdict before pushing:
+Reproduce a pull request's verdict locally with the same script:
 
 ```bash
-make regression-gate                          # gate + replay against origin/main
-bash scripts/ci/regression-pr-gate.sh main    # or pass any base ref
+make regression-gate                          # against origin/main
+bash scripts/ci/regression-pr-gate.sh main    # or any base ref
 ```
 
-The base ref defaults to `origin/${GITHUB_BASE_REF:-main}`.
-Under GitHub Actions the script emits log groups and `::error::`/`::warning::` annotations;
-run locally it prints plain output instead.
+### Gated mint
 
-### Gated mint (`regression-mint.yaml`)
+The mint workflow is dispatched by hand on the feature branch that should receive the new baseline,
+and is gated behind the `native-baselines` GitHub Environment.
+It refuses to run on the default branch.
+It commits the regenerated bundle and `manifest.json` back to the branch,
+so the change is reviewed in its pull request and no developer needs write credentials.
 
-Minting is the only step that writes to the object store,
-so it is **manually dispatched** and gated behind the `native-baselines` GitHub Environment.
-Dispatch it on the feature branch that should receive the new baseline:
-the job runs `mint`, and commits the regenerated `manifest.json` (and committed bundle) back to that branch,
-so the change is reviewed through its pull request and no developer ever needs write credentials.
-A `dry_run` input previews without uploading or committing, and the job refuses to run on the default branch.
+| Input          | Meaning                                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| `provider`     | Provider slug to mint.                                                                                     |
+| `diagnostic`   | One or more diagnostic slugs, separated by commas or spaces. Blank mints every diagnostic of the provider. |
+| `test_case`    | A single test case. Rejected when more than one diagnostic is given.                                       |
+| `bump_version` | Always bump `test_case_version`, even if the committed bundle did not change.                              |
+| `dry_run`      | Preview without uploading or committing.                                                                   |
 
-The workflow takes these inputs:
-
-- `provider`: the provider slug to mint.
-- `diagnostic`: one or more diagnostic slugs, separated by commas or spaces.
-  A blank value mints every diagnostic of the provider.
-- `test_case`: a single test case name.
-  This is rejected when more than one diagnostic is given.
-- `bump_version`: always increment `test_case_version`.
-  `mint` already bumps it when the committed bundle changed versus the previous manifest, so this is only needed to force a bump.
-- `dry_run`: preview without uploading or committing.
-
-Several diagnostics are minted by one job, so a single approval of the `native-baselines` environment covers all of them.
-The provider is set up once, then each diagnostic is fetched and minted in turn.
-The fetches are serial because the runners share an `intake-esgf` cache whose download database is SQLite.
-A failing diagnostic does not stop the others, and the successful ones are still committed in a single commit.
-The job then fails and names the diagnostics that did not mint.
-Once the commit is pushed, the mint calls `regression-diff-report.yaml` to publish the diff of what it changed.
+One job mints all the requested diagnostics, so a single environment approval covers them.
+Fetches run serially, because the runners share an `intake-esgf` cache backed by SQLite.
+A failing diagnostic does not stop the others.
+The successful ones are committed together, then the job fails and names the ones that did not mint.
+After pushing, the job calls `regression-diff-report.yaml`.
 
 !!! warning "The mint commit does not re-trigger the PR gate"
-    The mint job pushes with the default `GITHUB_TOKEN`, and GitHub deliberately does not start new workflow runs for such pushes.
-    So the freshly minted manifest is *not* automatically `replay`-verified by `regression-pr-gate.yaml`.
-    After minting, push a follow-up commit (or re-run the PR gate from the Actions tab) to verify the new native baseline reproduces the committed bundle.
+    The push uses `GITHUB_TOKEN`, and GitHub does not start workflows for those pushes.
+    Push a follow-up commit, or re-run the PR gate from the Actions tab, to replay-verify the new baseline.
 
 !!! note "Required repository configuration"
-    Create a `native-baselines` Environment (Settings -> Environments) with **required reviewers**,
-    and add two secrets to it holding an object-scoped R2 token:
+    Create a `native-baselines` Environment with required reviewers,
+    holding an object-scoped R2 token as two secrets:
 
     - `R2_ACCESS_KEY_ID` -> `REF_NATIVE_STORE_ACCESS_KEY_ID`
     - `R2_SECRET_ACCESS_KEY` -> `REF_NATIVE_STORE_SECRET_ACCESS_KEY`
 
-    The endpoint and bucket default to the production R2 account
-    (`REF_NATIVE_STORE_S3_ENDPOINT_URL` / `REF_NATIVE_STORE_BUCKET` override them).
+    `REF_NATIVE_STORE_S3_ENDPOINT_URL` and `REF_NATIVE_STORE_BUCKET` override the production defaults.
 
-### Diff report (`regression-diff-report.yaml`)
+### Diff report
 
-To aid in the review process, we generate an HTML report of every test case whose baseline changed against the base branch with:
+The diff report covers every test case whose baseline changed against the base branch:
 
-- Images are shown two-up, the old beside the new.
-- Text outputs get a coloured line diff.
-- A changed NetCDF gets a header diff plus one row of statistics per variable, shaded only where the values moved.
-- Committed bundle artefacts get the same line diff,
-  marked with an "in PR" pill because those bytes are also in the pull request's own file list.
-- Each case page lists the folder structure of its captured baseline, including the files that did not move.
+- Images are shown old beside new.
+- Text files and committed bundle files get a coloured line diff.
+  Committed files are marked "in PR", because they also appear in the pull request's file list.
+- A changed NetCDF gets a header diff and per-variable statistics, shaded where values moved.
+- Each case page lists its full baseline folder, including unchanged files.
 
-The report is uploaded to the public reports bucket and served at
-`https://reports.baselines.climate-ref.org/<pr>/<sha>/index.html`.
-The workflow then posts a short comment on the branch's open pull request linking to it.
-If the branch doesn't have an open PR, the summary is written to the job log instead.
+The report is served at `https://reports.baselines.climate-ref.org/<pr>/<sha>/index.html`
+and linked in a comment on the branch's open pull request, or in the job log if there is none.
 
-The mint workflow calls this automatically.
-After minting on a workstation and pushing the result by hand, dispatch it yourself:
+After minting locally and pushing by hand, dispatch the report yourself.
+It can also be built locally without credentials:
 
 ```bash
 gh workflow run regression-diff-report.yaml --ref <branch>
-```
-
-The same report can be built locally, without any credentials:
-
-```bash
 uv run ref test-cases diff --base origin/main --html-dir out/
 ```
 
 !!! note "Required repository configuration"
-    This workflow requires a R2 user with read/write permissions to the bucket.
+    The workflow needs an R2 user with read/write access to the reports bucket:
 
     - `R2_REPORTS_ACCESS_KEY_ID` -> `REF_REPORT_STORE_ACCESS_KEY_ID`
     - `R2_REPORTS_SECRET_ACCESS_KEY` -> `REF_REPORT_STORE_SECRET_ACCESS_KEY`
 
-    The endpoint, bucket and public URL default to a separate bucket from the baselines
-    (`REF_REPORT_STORE_S3_ENDPOINT_URL` / `REF_REPORT_STORE_BUCKET` / `REF_REPORT_STORE_URL` override them).
-
-### Nightly drift (`regression-drift.yaml`)
-
-A scheduled (and manually dispatchable) job `replay`s every referenced native blob against the committed bundle.
-This catches a baseline that no longer reproduce the committed results within tolerance — for example after a dependency upgrade. It is read-only and credential-free.
+    `REF_REPORT_STORE_S3_ENDPOINT_URL`, `REF_REPORT_STORE_BUCKET` and `REF_REPORT_STORE_URL` override the defaults.

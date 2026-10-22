@@ -7,7 +7,9 @@ in future, the ref-app API (which can reuse the shared ``Select`` builders direc
 
 Layers:
 
-* [_query][climate_ref.results._query] -- ``MetricValueFilter`` + ``select_*`` builders
+* [filters][climate_ref.results.filters] -- every reader filter, built from ``BaseFilter`` and
+  one mixin per axis.
+* [_query][climate_ref.results._query] -- ``select_*`` builders
   (return a ``Select``; the source of truth for filter/join logic) + ``count_values`` +
   ``latest_execution_for_group`` + ``select_latest_executions``.
 * [frames][climate_ref.results.frames] -- ``*_to_frame`` + ``collect_facets``.
@@ -53,12 +55,15 @@ The ``Select`` builders and other plumbing stay in ``climate_ref.results._query`
 and are not part of the public surface.
 """
 
-from climate_ref.results._query import InputDatasetFilter, MetricValueFilter
 from climate_ref.results.datasets import DatasetFilter
-from climate_ref.results.diagnostics import DiagnosticFilter
-from climate_ref.results.executions import ExecutionGroupFilter
+from climate_ref.results.filters import (
+    DiagnosticFilter,
+    ExecutionGroupFilter,
+    InputDatasetFilter,
+    MetricValueFilter,
+    ResourceFilter,
+)
 from climate_ref.results.outliers import OutlierPolicy
-from climate_ref.results.resources import ResourceFilter
 from climate_ref.results.values import Reader
 
 __all__ = [

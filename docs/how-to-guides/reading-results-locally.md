@@ -211,8 +211,10 @@ all agree on which execution is "latest" for a group
 `statistics()` returns per-`(provider, diagnostic)` status counts as `ExecutionStats` objects:
 
 ```python
+from climate_ref.results import DiagnosticFilter
+
 with Database.from_config(config, read_only=True) as db:
-    stats = Reader(db).executions.statistics(provider_contains=["esmvaltool"])
+    stats = Reader(db).executions.statistics(DiagnosticFilter(provider_contains=["esmvaltool"]))
     for row in stats:
         print(row.provider, row.diagnostic, row.successful, row.failed, row.running)
 ```

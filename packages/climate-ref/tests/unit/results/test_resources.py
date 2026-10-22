@@ -287,18 +287,18 @@ class TestProfiles:
     def test_filters(self, db_with_resources):
         reader = Reader(db_with_resources).resources
 
-        assert {p.diagnostic_slug for p in reader.profiles(provider_contains=["pmp"])} == {
+        assert {p.diagnostic_slug for p in reader.profiles(ResourceFilter(provider_contains=["pmp"]))} == {
             "enso_tel",
             "extratropical-modes-of-variability-nao",
         }
-        assert {p.diagnostic_slug for p in reader.profiles(diagnostic_contains=["nao"])} == {
+        assert {p.diagnostic_slug for p in reader.profiles(ResourceFilter(diagnostic_contains=["nao"]))} == {
             "extratropical-modes-of-variability-nao"
         }
 
     def test_since_excludes_older_rows(self, db_with_resources):
         future = datetime.datetime.now(tz=datetime.UTC).replace(tzinfo=None) + datetime.timedelta(days=1)
 
-        assert Reader(db_with_resources).resources.profiles(since=future) == ()
+        assert Reader(db_with_resources).resources.profiles(ResourceFilter(created_after=future)) == ()
 
     def test_empty_database(self, db_seeded):
         assert Reader(db_seeded).resources.profiles() == ()
@@ -555,15 +555,16 @@ class TestSuperseded:
             diagnostic.promoted_version = 2
         return db_with_resources
 
-    def test_counted_by_default(self, db_superseded):
+    def test_counted_when_asked(self, db_superseded):
         reader = Reader(db_superseded).resources
-        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel")) is not None
-        assert "enso_tel" in _by_slug(reader.profiles())
+        f = ResourceFilter(include_superseded=True)
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", include_superseded=True)) is not None
+        assert "enso_tel" in _by_slug(reader.profiles(f))
 
-    def test_excluded_when_asked(self, db_superseded):
+    def test_excluded_by_default(self, db_superseded):
         reader = Reader(db_superseded).resources
-        f = ResourceFilter(include_superseded=False)
-        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", include_superseded=False)) is None
+        f = ResourceFilter()
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel")) is None
         assert {m.diagnostic_slug for m in reader.measurements(f)} == {
             "extratropical-modes-of-variability-nao",
             "enso-characteristics",
@@ -678,12 +679,6 @@ class TestRetracted:
         assert profile.n_samples == 2
         (latest,) = reader.profiles(ResourceFilter(latest_only=True, include_retracted=True))
         assert latest.n_samples == 1
-
-    def test_profiles_reject_a_filter_with_loose_kwargs(self, db_with_retracted):
-        with pytest.raises(ValueError, match="not both"):
-            Reader(db_with_retracted).resources.profiles(
-                ResourceFilter(), since=datetime.datetime(2020, 1, 1)
-            )
 
 
 class TestWithCount:

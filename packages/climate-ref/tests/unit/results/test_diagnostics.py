@@ -10,8 +10,8 @@ from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
 from climate_ref.results import DiagnosticFilter, Reader
-from climate_ref.results._query import ExecutionScope
 from climate_ref.results.diagnostics import select_diagnostics, select_diagnostics_with_values
+from climate_ref.results.filters import ExecutionScope
 
 
 def test_import_smoke() -> None:
@@ -232,21 +232,21 @@ class TestDiagnosticsReaderStats:
 
     def test_provider_filter(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats(provider_contains=["pmp"])
+        stats = reader.diagnostics.stats(DiagnosticFilter(provider_contains=["pmp"]))
         providers = {s.provider for s in stats}
         assert providers == {"pmp"}
 
     def test_diagnostic_filter(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats(diagnostic_contains=["enso_tel"])
+        stats = reader.diagnostics.stats(DiagnosticFilter(diagnostic_contains=["enso_tel"]))
         diagnostics = {s.diagnostic for s in stats}
         assert diagnostics == {"enso_tel"}
 
     def test_exact_slug_filter(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats(provider_slug="pmp", diagnostic_slug="enso_tel")
+        stats = reader.diagnostics.stats(DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel"))
         assert {(s.provider, s.diagnostic) for s in stats} == {("pmp", "enso_tel")}
-        assert reader.diagnostics.stats(diagnostic_slug="enso") == ()
+        assert reader.diagnostics.stats(DiagnosticFilter(diagnostic_slug="enso")) == ()
 
     def test_retracted_latest_execution_still_counts(self, db_with_diagnostics):
         session = db_with_diagnostics.session

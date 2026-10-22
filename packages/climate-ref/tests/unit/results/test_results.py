@@ -587,6 +587,39 @@ class TestLatestOnly:
         assert len(reader.values.series_values(MetricValueFilter(latest_only=True))) == 2
 
 
+class TestCreatedWindow:
+    @pytest.fixture
+    def newer_execution(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            newer = _add_execution(session, dal_db.execution_group_id, "newer", datetime.datetime(2030, 1, 1))
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=newer,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        return newer
+
+    def test_created_after(self, dal_db, newer_execution):
+        f = MetricValueFilter(created_after=datetime.datetime(2029, 1, 1))
+        assert {v.execution_id for v in Reader(dal_db).values.scalar_values(f).items} == {newer_execution}
+
+    def test_created_before(self, dal_db, newer_execution):
+        f = MetricValueFilter(created_before=datetime.datetime(2029, 1, 1))
+        values = Reader(dal_db).values.scalar_values(f)
+        assert newer_execution not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_latest_only_picks_latest_inside_the_window(self, dal_db, newer_execution):
+        f = MetricValueFilter(latest_only=True, created_before=datetime.datetime(2029, 1, 1))
+        values = Reader(dal_db).values.scalar_values(f)
+        assert newer_execution not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+
 class TestRetracted:
     @pytest.fixture
     def retracted_latest(self, dal_db):
@@ -663,31 +696,10 @@ class TestPromotedOnly:
         assert len(every_version) == 9
 
 
-class TestPromotedOnlyAlias:
+class TestIncludeSupersededDefault:
     def test_default_excludes_superseded(self):
         assert not MetricValueFilter().include_superseded
         assert MetricValueFilter() == MetricValueFilter(include_superseded=False)
-
-    @pytest.mark.parametrize(("promoted_only", "include_superseded"), [(True, False), (False, True)])
-    def test_maps_onto_include_superseded(self, promoted_only, include_superseded):
-        with pytest.warns(DeprecationWarning, match="include_superseded"):
-            f = MetricValueFilter(promoted_only=promoted_only)
-        assert f.include_superseded is include_superseded
-        assert f == MetricValueFilter(include_superseded=include_superseded)
-
-    def test_disagreeing_values_raise(self):
-        with pytest.raises(ValueError, match="disagree"):
-            MetricValueFilter(promoted_only=True, include_superseded=True)
-
-    def test_agreeing_values_are_accepted(self):
-        with pytest.warns(DeprecationWarning):
-            assert MetricValueFilter(promoted_only=False, include_superseded=True).include_superseded
-
-    @pytest.mark.parametrize(("promoted_only", "include_superseded"), [(True, False), (False, True)])
-    def test_evolve_applies_alias(self, promoted_only, include_superseded):
-        with pytest.warns(DeprecationWarning):
-            f = attrs.evolve(MetricValueFilter(), promoted_only=promoted_only)
-        assert bool(f.include_superseded) is include_superseded
 
     def test_evolve_keeps_resolved_value(self):
         f = attrs.evolve(MetricValueFilter(include_superseded=True), latest_only=True)

@@ -32,7 +32,6 @@ from climate_ref.models.metric_value import MetricValue, MetricValueType, Scalar
 from climate_ref.models.provider import Provider
 from climate_ref.results._page import Page
 from climate_ref.results._query import (
-    MetricValueFilter,
     count_values,
     paginate,
     select_scalar_values,
@@ -40,6 +39,7 @@ from climate_ref.results._query import (
     select_value_ids,
 )
 from climate_ref.results.executions import ExecutionsReader
+from climate_ref.results.filters import MetricValueFilter
 from climate_ref.results.frames import (
     collect_facets,
     facets_from_columns,

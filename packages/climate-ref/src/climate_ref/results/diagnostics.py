@@ -8,7 +8,7 @@ It executes the [select_diagnostics][climate_ref.results.diagnostics.select_diag
 and maps the rows into detached DTOs that outlive the session.
 """
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
 import attrs
@@ -23,9 +23,6 @@ from climate_ref.models.metric_value import MetricValue, MetricValueType
 from climate_ref.models.provider import Provider
 from climate_ref.results._page import Page
 from climate_ref.results._query import (
-    ExecutionScope,
-    InputDatasetFilter,
-    SlugFilter,
     _Unindexed,
     apply_execution_scope,
     count_values,
@@ -33,23 +30,7 @@ from climate_ref.results._query import (
 )
 from climate_ref.results._stats import rows_to_execution_stats
 from climate_ref.results.executions import ExecutionStats, select_execution_statistics
-
-
-@attrs.frozen(kw_only=True)
-class DiagnosticFilter(SlugFilter):
-    """
-    Declarative filter over diagnostics.
-
-    Every field is optional; ``None`` means "do not constrain on this axis".
-    Diagnostic and provider matching comes from [SlugFilter][climate_ref.results._query.SlugFilter].
-    """
-
-    input_datasets: InputDatasetFilter | None = None
-    """
-    Keep only execution groups with an execution that ran against matching datasets.
-
-    This scopes the counts as well, and drops diagnostics left with no groups.
-    """
+from climate_ref.results.filters import DiagnosticFilter, ExecutionScope, promoted_version_clause
 
 
 @attrs.frozen(kw_only=True)
@@ -192,7 +173,7 @@ def select_diagnostics_with_values(
         .join(MetricValue, MetricValue.execution_id == Execution.id)
         .where(
             ExecutionGroup.diagnostic_id == Diagnostic.id,
-            ExecutionGroup.diagnostic_version == Diagnostic.promoted_version,
+            promoted_version_clause(),
             # Without table statistics SQLite picks ix_metric_value_type and reads every series row.
             _Unindexed(MetricValue.type.expression) == value_type,
         )
@@ -272,13 +253,7 @@ class DiagnosticsReader:
 
         rows = self.session.execute(paginate(base_stmt, offset, limit)).all()
 
-        stats = self.stats(
-            diagnostic_slug=filters.diagnostic_slug,
-            provider_slug=filters.provider_slug,
-            provider_contains=filters.provider_contains,
-            diagnostic_contains=filters.diagnostic_contains,
-            input_datasets=filters.input_datasets,
-        )
+        stats = self.stats(filters)
         stats_by_key = {(s.provider, s.diagnostic): s for s in stats}
         items = tuple(self._to_view(row, stats_by_key) for row in rows)
 
@@ -299,15 +274,7 @@ class DiagnosticsReader:
         rows = self.session.execute(select_diagnostics_with_values(value_type, filters, scope=scope)).all()
         return frozenset((row.provider_slug, row.slug) for row in rows)
 
-    def stats(
-        self,
-        *,
-        diagnostic_slug: str | None = None,
-        provider_slug: str | None = None,
-        diagnostic_contains: Sequence[str] | None = None,
-        provider_contains: Sequence[str] | None = None,
-        input_datasets: InputDatasetFilter | None = None,
-    ) -> tuple[ExecutionStats, ...]:
+    def stats(self, filters: DiagnosticFilter | None = None) -> tuple[ExecutionStats, ...]:
         """
         Per-(provider, diagnostic) execution status counts.
 
@@ -317,11 +284,5 @@ class DiagnosticsReader:
         [ExecutionsReader.statistics][climate_ref.results.executions.ExecutionsReader.statistics],
         just reachable under the diagnostics domain.
         """
-        stmt = select_execution_statistics(
-            diagnostic_slug=diagnostic_slug,
-            provider_slug=provider_slug,
-            diagnostic_contains=diagnostic_contains,
-            provider_contains=provider_contains,
-            input_datasets=input_datasets,
-        )
+        stmt = select_execution_statistics(filters)
         return rows_to_execution_stats(self.session.execute(stmt).all())

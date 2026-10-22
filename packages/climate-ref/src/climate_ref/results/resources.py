@@ -12,7 +12,6 @@ per diagnostic or per provider, which is the number a maintainer needs when sizi
 Not all executions have resource data.
 """
 
-import datetime
 import math
 import statistics
 from collections.abc import Sequence
@@ -28,14 +27,8 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.results._page import Page
-from climate_ref.results._query import (
-    ExecutionScope,
-    InputDatasetFilter,
-    SlugFilter,
-    apply_execution_scope,
-    count_values,
-    paginate,
-)
+from climate_ref.results._query import apply_execution_scope, count_values, paginate
+from climate_ref.results.filters import ResourceFilter
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -85,27 +78,6 @@ def _percentile(values: Sequence[float], quantile: float) -> float:
 
     cut_points = statistics.quantiles(values, n=100, method="inclusive")
     return float(cut_points[round(quantile * 100) - 1])
-
-
-@attrs.frozen(kw_only=True)
-class ResourceFilter(ExecutionScope, SlugFilter):
-    """
-    Declarative filter over the executions considered for a resource profile.
-
-    Every field is optional, and ``None`` means "do not constrain on this axis".
-    Every diagnostic version is counted by default, so ``profiles()`` sees the full history.
-    This differs from ``MetricValueFilter``, which keeps only the promoted version unless told otherwise.
-    Diagnostic and provider matching comes from [SlugFilter][climate_ref.results._query.SlugFilter].
-    """
-
-    since: datetime.datetime | None = None
-    """Keep only executions created at or after this naive UTC timestamp."""
-
-    include_superseded: bool = True
-    """Include groups at superseded diagnostic versions. ``False`` keeps the promoted version only."""
-
-    input_datasets: InputDatasetFilter | None = None
-    """Restrict to executions that ran against matching datasets."""
 
 
 @attrs.frozen(kw_only=True)
@@ -445,10 +417,7 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
             .where(*clauses)
         )
         stmt = stmt.where(Execution.execution_group_id.in_(scoped_groups))
-    if filters.since is not None:
-        stmt = stmt.where(Execution.created_at >= filters.since)
-    if not filters.include_superseded:
-        stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
+    stmt = stmt.where(*filters.version_clauses())
     if filters.input_datasets:
         stmt = stmt.where(filters.input_datasets.execution_clause())
     return apply_execution_scope(stmt, filters)
@@ -812,13 +781,10 @@ class ResourcesReader:
         row = self.session.execute(stmt).one_or_none()
         return self._to_view(row) if row is not None else None
 
-    def profiles(  # noqa: PLR0913
+    def profiles(
         self,
         filters: ResourceFilter | None = None,
         *,
-        diagnostic_contains: Sequence[str] | None = None,
-        provider_contains: Sequence[str] | None = None,
-        since: datetime.datetime | None = None,
         group_by: GroupBy = "diagnostic",
         exclusive_only: bool = True,
         safety_factor: float = 1.3,
@@ -846,14 +812,7 @@ class ResourcesReader:
         Parameters
         ----------
         filters
-            Which executions to aggregate.
-            Cannot be combined with ``diagnostic_contains``, ``provider_contains`` or ``since``.
-        diagnostic_contains
-            Case-insensitive substring matches on diagnostic slug (OR-combined).
-        provider_contains
-            Case-insensitive substring matches on provider slug (OR-combined).
-        since
-            Keep only executions created at or after this naive UTC timestamp.
+            Which executions to aggregate. ``None`` means no restriction.
         group_by
             ``diagnostic`` for one profile per diagnostic,
             or ``provider`` for the worker-sizing roll-up across a provider's diagnostics.
@@ -867,19 +826,8 @@ class ResourcesReader:
         :
             One profile per group, ordered by provider then diagnostic slug.
 
-        Raises
-        ------
-        ValueError
-            If ``filters`` is given together with ``diagnostic_contains``, ``provider_contains`` or ``since``.
         """
-        if filters is None:
-            filters = ResourceFilter(
-                diagnostic_contains=diagnostic_contains,
-                provider_contains=provider_contains,
-                since=since,
-            )
-        elif diagnostic_contains or provider_contains or since is not None:
-            raise ValueError("Pass either filters or diagnostic_contains/provider_contains/since, not both")
+        filters = filters or ResourceFilter()
         # Sorting here is cheaper than SQLite's unindexed sort, and ``limit_seen`` needs this order.
         unordered = self.session.execute(select_execution_resources(filters).order_by(None)).all()
         rows = sorted(map(self._to_view, unordered), key=lambda row: (row.created_at, row.execution_id))

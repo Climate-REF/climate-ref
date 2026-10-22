@@ -205,12 +205,29 @@ class TestExecutionGroups:
     def test_multi_value_is_or(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": ["FACET-A", "FACET-B"]})
-        assert _group_ids(db_with_inputs, f) == {ids["cmip6-a"], ids["cmip6-b-old"], ids["other-b"]}
+        assert _group_ids(db_with_inputs, f) == {ids["cmip6-a"], ids["other-b"]}
 
-    def test_any_execution_matches_not_only_latest(self, db_with_inputs):
+    def test_only_the_latest_execution_counts(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
-        assert ids["cmip6-b-old"] in _group_ids(db_with_inputs, f)
+        groups = Reader(db_with_inputs).executions.groups(ExecutionGroupFilter(input_datasets=f))
+        assert {g.id for g in groups} == {ids["other-b"]}
+        assert groups.total_count == 1
+
+    def test_latest_follows_latest_successful(self, db_with_inputs):
+        ids = db_with_inputs.ids
+        session = db_with_inputs.session
+        with session.begin():
+            newest = (
+                session.query(Execution)
+                .filter_by(execution_group_id=ids["cmip6-b-old"])
+                .order_by(Execution.id.desc())
+                .first()
+            )
+            newest.successful = False
+        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
+        assert ids["cmip6-b-old"] not in _group_ids(db_with_inputs, f)
+        assert ids["cmip6-b-old"] in _group_ids(db_with_inputs, f, latest_successful=True)
 
     def test_facet_missing_from_one_era_excludes_it(self, db_with_inputs):
         ids = db_with_inputs.ids
@@ -237,7 +254,7 @@ class TestDatasetIds:
     def test_matches_executions_that_used_the_dataset(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(dataset_ids=[self._dataset_id(db_with_inputs, CMIP6Dataset, "FACET-B")])
-        assert _group_ids(db_with_inputs, f) == {ids["cmip6-b-old"], ids["other-b"]}
+        assert _group_ids(db_with_inputs, f) == {ids["other-b"]}
 
     def test_any_dataset_type(self, db_with_inputs):
         ids = db_with_inputs.ids
@@ -347,8 +364,8 @@ class TestDiagnostics:
     def test_stats_scoped(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
-        stats = Reader(db_with_inputs).diagnostics.stats(input_datasets=f)
-        assert {(s.provider, s.diagnostic): s.total for s in stats} == {ids["diag_1"]: 1, ids["diag_2"]: 1}
+        stats = Reader(db_with_inputs).diagnostics.stats(DiagnosticFilter(input_datasets=f))
+        assert {(s.provider, s.diagnostic): s.total for s in stats} == {ids["diag_2"]: 1}
 
     def test_with_values_scoped(self, db_with_inputs):
         ids = db_with_inputs.ids

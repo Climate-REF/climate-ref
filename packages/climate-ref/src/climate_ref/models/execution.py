@@ -1,7 +1,6 @@
 import datetime
 import enum
 import pathlib
-import warnings
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
@@ -823,22 +822,6 @@ def _filter_executions_by_selectors(
     ]
 
 
-def _resolve_selector_filters(
-    selector_filters: dict[str, list[str]] | None, facet_filters: dict[str, list[str]] | None
-) -> dict[str, list[str]] | None:
-    if facet_filters is None:
-        return selector_filters
-    if selector_filters is not None and selector_filters != facet_filters:
-        raise ValueError("selector_filters and the deprecated facet_filters disagree")
-    warnings.warn(
-        "get_execution_group_and_latest_filtered(facet_filters=...) is deprecated. "
-        "Use selector_filters instead.",
-        DeprecationWarning,
-        stacklevel=3,
-    )
-    return facet_filters
-
-
 def query_execution_group_and_latest_filtered(  # noqa: PLR0913
     session: Session,
     diagnostic_filters: list[str] | None = None,
@@ -849,6 +832,7 @@ def query_execution_group_and_latest_filtered(  # noqa: PLR0913
     include_superseded: bool = False,
     failure_reasons: Sequence[ExecutionFailureReason] | None = None,
     group_conditions: Sequence[ColumnElement[bool]] | None = None,
+    latest_conditions: Sequence[ColumnElement[bool]] | None = None,
 ) -> RowReturningQuery[tuple[ExecutionGroup, Execution | None]]:
     """
     Build the unmaterialised query behind ``get_execution_group_and_latest_filtered``, ordered by group id.
@@ -871,6 +855,9 @@ def query_execution_group_and_latest_filtered(  # noqa: PLR0913
     if failure_reasons:
         query = query.filter(Execution.failure_reason.in_([reason.value for reason in failure_reasons]))
 
+    for condition in latest_conditions or ():
+        query = query.filter(condition)
+
     return query.order_by(ExecutionGroup.id)
 
 
@@ -884,14 +871,15 @@ def count_execution_group_and_latest_filtered(  # noqa: PLR0913
     include_superseded: bool = False,
     failure_reasons: Sequence[ExecutionFailureReason] | None = None,
     group_conditions: Sequence[ColumnElement[bool]] | None = None,
+    latest_conditions: Sequence[ColumnElement[bool]] | None = None,
 ) -> int:
     """
     Count the rows ``query_execution_group_and_latest_filtered`` returns.
 
     Each group yields exactly one row, so the latest execution is only resolved
-    when a filter on it (``successful`` or ``failure_reasons``) can drop the group.
+    when a filter on it (``successful``, ``failure_reasons`` or ``latest_conditions``) can drop the group.
     """
-    if successful is not None or failure_reasons:
+    if successful is not None or failure_reasons or latest_conditions:
         query = query_execution_group_and_latest_filtered(
             session,
             diagnostic_filters=diagnostic_filters,
@@ -902,6 +890,7 @@ def count_execution_group_and_latest_filtered(  # noqa: PLR0913
             include_superseded=include_superseded,
             failure_reasons=failure_reasons,
             group_conditions=group_conditions,
+            latest_conditions=latest_conditions,
         )
         return query.order_by(None).count()
     groups = _filter_execution_groups(
@@ -971,8 +960,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     include_superseded: bool = False,
     failure_reasons: Sequence[ExecutionFailureReason] | None = None,
     group_conditions: Sequence[ColumnElement[bool]] | None = None,
-    *,
-    facet_filters: dict[str, list[str]] | None = None,
+    latest_conditions: Sequence[ColumnElement[bool]] | None = None,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
     Query execution groups with filtering capabilities.
@@ -1001,8 +989,8 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         Dictionary mapping facet keys to lists of allowed values.
         Different keys are ANDed; multiple values for the same key are ORed.
         These match each group's ``ExecutionGroup.selectors`` in Python.
-        To match the datasets an execution ran against in SQL, pass an
-        ``InputDatasetFilter`` clause through ``group_conditions`` instead.
+        To match the datasets the latest execution ran against in SQL, pass an
+        ``InputDatasetFilter`` clause through ``latest_conditions`` instead.
     dirty
         If True, only return dirty execution groups.
         If False, only return clean execution groups.
@@ -1031,17 +1019,18 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         If None, do not filter by failure reason.
     group_conditions
         Extra SQL conditions over ``ExecutionGroup``, ANDed with the other filters.
-        For example, to keep only groups that ran against ACCESS-ESM1-5 CMIP6 data:
+    latest_conditions
+        Extra SQL conditions over the latest ``Execution`` (as ranked under ``latest_successful``),
+        ANDed with the other filters. A group with no execution never matches one.
+        For example, to keep only groups whose latest execution ran against ACCESS-ESM1-5 CMIP6 data:
 
         ```python
         scope = InputDatasetFilter(
             source_types=(SourceDatasetType.CMIP6,),
             facets={"source_id": ("ACCESS-ESM1-5",)},
         )
-        get_execution_group_and_latest_filtered(session, group_conditions=[scope.execution_group_clause()])
+        get_execution_group_and_latest_filtered(session, latest_conditions=[scope.execution_clause()])
         ```
-    facet_filters
-        Deprecated alias for ``selector_filters``, kept for one release.
 
     Returns
     -------
@@ -1062,8 +1051,6 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
       Operational queries that must remain version-agnostic
       (e.g. ``mark_failed_running`` in the same module) intentionally do not use this helper at all.
     """
-    selector_filters = _resolve_selector_filters(selector_filters, facet_filters)
-
     query = query_execution_group_and_latest_filtered(
         session,
         diagnostic_filters=diagnostic_filters,
@@ -1074,6 +1061,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         include_superseded=include_superseded,
         failure_reasons=failure_reasons,
         group_conditions=group_conditions,
+        latest_conditions=latest_conditions,
     )
 
     if selector_filters:

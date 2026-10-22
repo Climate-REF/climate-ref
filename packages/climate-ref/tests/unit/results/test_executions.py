@@ -2,7 +2,6 @@
 
 import datetime
 
-import attrs
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
@@ -13,10 +12,15 @@ from climate_ref.models.execution import (
     ExecutionFailureReason,
     ExecutionOutput,
     ResultOutputType,
-    get_execution_group_and_latest_filtered,
 )
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import ExecutionGroupFilter, MetricValueFilter, OutlierPolicy, Reader
+from climate_ref.results import (
+    DiagnosticFilter,
+    ExecutionGroupFilter,
+    MetricValueFilter,
+    OutlierPolicy,
+    Reader,
+)
 from climate_ref.results.executions import select_execution_outputs, select_execution_statistics
 
 
@@ -222,59 +226,6 @@ class TestGroupsFilter:
     def test_bare_string_rejected_provider_contains(self):
         with pytest.raises(TypeError):
             ExecutionGroupFilter(provider_contains="pmp")
-
-
-class TestDeprecatedFacetsAlias:
-    def test_maps_onto_selectors(self):
-        with pytest.warns(DeprecationWarning, match="selectors"):
-            f = ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]})
-        assert f.selectors == {"source_id": ("GFDL-ESM4",)}
-        assert f == ExecutionGroupFilter(selectors={"source_id": ["GFDL-ESM4"]})
-
-    def test_filters_like_selectors(self, db_with_groups):
-        reader = Reader(db_with_groups)
-        with pytest.warns(DeprecationWarning):
-            f = ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]})
-        assert {g.key for g in reader.executions.groups(f)} == {"key1"}
-
-    def test_disagreeing_values_raise(self):
-        with pytest.raises(ValueError, match="disagree"):
-            ExecutionGroupFilter(selectors={"source_id": ["A"]}, facets={"source_id": ["B"]})
-
-    def test_agreeing_values_are_accepted(self):
-        with pytest.warns(DeprecationWarning):
-            f = ExecutionGroupFilter(selectors={"source_id": ["A"]}, facets={"source_id": ["A"]})
-        assert f.selectors == {"source_id": ("A",)}
-
-    def test_evolve_applies_alias(self):
-        with pytest.warns(DeprecationWarning):
-            f = attrs.evolve(ExecutionGroupFilter(), facets={"source_id": ["A"]})
-        assert f.selectors == {"source_id": ("A",)}
-
-    def test_evolve_keeps_resolved_value(self):
-        f = attrs.evolve(ExecutionGroupFilter(selectors={"source_id": ["A"]}), dirty=True)
-        assert f.selectors == {"source_id": ("A",)}
-
-
-class TestDeprecatedFacetFiltersKwarg:
-    def test_maps_onto_selector_filters(self, db_with_groups):
-        session = db_with_groups.session
-        expected = get_execution_group_and_latest_filtered(
-            session, selector_filters={"source_id": ["GFDL-ESM4"]}
-        )
-        with pytest.warns(DeprecationWarning, match="selector_filters"):
-            actual = get_execution_group_and_latest_filtered(
-                session, facet_filters={"source_id": ["GFDL-ESM4"]}
-            )
-        assert [eg.key for eg, _ in actual] == [eg.key for eg, _ in expected] == ["key1"]
-
-    def test_disagreeing_values_raise(self, db_with_groups):
-        with pytest.raises(ValueError, match="disagree"):
-            get_execution_group_and_latest_filtered(
-                db_with_groups.session,
-                selector_filters={"source_id": ["A"]},
-                facet_filters={"source_id": ["B"]},
-            )
 
 
 class TestGroupsPromotedVersion:
@@ -595,13 +546,13 @@ class TestSelectExecutionStatistics:
         assert row.not_started == 0
 
     def test_raw_rows_provider_filter(self, db_with_groups):
-        stmt = select_execution_statistics(provider_contains=["pmp"])
+        stmt = select_execution_statistics(DiagnosticFilter(provider_contains=["pmp"]))
         rows = db_with_groups.session.execute(stmt).all()
         providers = {row.provider for row in rows}
         assert providers == {"pmp"}
 
     def test_raw_rows_diagnostic_filter(self, db_with_groups):
-        stmt = select_execution_statistics(diagnostic_contains=["enso"])
+        stmt = select_execution_statistics(DiagnosticFilter(diagnostic_contains=["enso"]))
         rows = db_with_groups.session.execute(stmt).all()
         diagnostics = {row.diagnostic for row in rows}
         assert diagnostics == {"enso_tel", "enso-characteristics"}
@@ -636,7 +587,7 @@ class TestSelectExecutionStatistics:
                 )
             )
 
-        stmt = select_execution_statistics(diagnostic_contains=["enso_tel"])
+        stmt = select_execution_statistics(DiagnosticFilter(diagnostic_contains=["enso_tel"]))
         rows = db_with_groups.session.execute(stmt).all()
         by_diag = {row.diagnostic: row for row in rows}
         row = by_diag["enso_tel"]
@@ -663,21 +614,23 @@ class TestStatistics:
 
     def test_provider_substring_filter(self, db_with_groups):
         reader = Reader(db_with_groups)
-        stats = reader.executions.statistics(provider_contains=["esmvaltool"])
+        stats = reader.executions.statistics(DiagnosticFilter(provider_contains=["esmvaltool"]))
         providers = {s.provider for s in stats}
         assert providers == {"esmvaltool"}
 
     def test_diagnostic_substring_filter(self, db_with_groups):
         reader = Reader(db_with_groups)
-        stats = reader.executions.statistics(diagnostic_contains=["enso"])
+        stats = reader.executions.statistics(DiagnosticFilter(diagnostic_contains=["enso"]))
         diagnostics = {s.diagnostic for s in stats}
         assert diagnostics == {"enso_tel", "enso-characteristics"}
 
     def test_exact_slug_filter(self, db_with_groups):
         reader = Reader(db_with_groups)
-        stats = reader.executions.statistics(provider_slug="pmp", diagnostic_slug="enso_tel")
+        stats = reader.executions.statistics(
+            DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel")
+        )
         assert {(s.provider, s.diagnostic) for s in stats} == {("pmp", "enso_tel")}
-        assert reader.executions.statistics(diagnostic_slug="enso") == ()
+        assert reader.executions.statistics(DiagnosticFilter(diagnostic_slug="enso")) == ()
 
 
 class TestLatestExecution:

@@ -16,8 +16,7 @@ A common set of ordering (``created_at DESC, id DESC``) is used to ensure consis
 
 """
 
-import warnings
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
 import attrs
@@ -26,11 +25,9 @@ from sqlalchemy import ColumnElement, Select, case, func, select
 from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
-from climate_ref.models.dataset_query import _as_facets
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
     Execution,
-    ExecutionFailureReason,
     ExecutionGroup,
     ExecutionOutput,
     count_execution_group_and_latest_filtered,
@@ -38,95 +35,10 @@ from climate_ref.models.execution import (
     query_execution_group_and_latest_filtered,
 )
 from climate_ref.models.provider import Provider
-from climate_ref.results._converters import _as_failure_reasons
 from climate_ref.results._page import Page
-from climate_ref.results._query import (
-    InputDatasetFilter,
-    SlugFilter,
-    latest_execution_for_group,
-    select_latest_executions,
-)
+from climate_ref.results._query import latest_execution_for_group, select_latest_executions
 from climate_ref.results._stats import rows_to_execution_stats
-
-
-@attrs.frozen(kw_only=True)
-class ExecutionGroupFilter(SlugFilter):
-    """
-    Declarative filter over execution groups.
-
-    Every field is optional; ``None`` means "do not constrain on this axis".
-    Diagnostic and provider matching comes from [SlugFilter][climate_ref.results._query.SlugFilter].
-    ``selectors`` is the map matched against each group's ``selectors`` in Python,
-    and ``successful`` vs ``latest_successful`` expose the
-    [get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered]
-    post-rank / pre-rank success filters.
-    """
-
-    dirty: bool | None = None
-    """Constrain on the group's ``dirty`` flag."""
-
-    successful: bool | None = None
-    """
-    Post-rank filter on the *winning* execution: keep a group only if its latest execution matches.
-
-    ``True`` keeps groups whose latest execution succeeded.
-    ``False`` keeps groups whose latest execution failed, is in progress, or does not exist yet.
-    This does not change which execution is considered latest -- contrast ``latest_successful``.
-    """
-
-    latest_successful: bool | None = None
-    """
-    Pre-rank population filter: change which execution is chosen as "latest" before ranking.
-
-    ``True`` ranks only over successful executions,
-    so a group's ``latest`` becomes its most recent *successful* run
-    (surfacing an earlier success even when a later run failed).
-    ``False`` ranks only over unsuccessful / in-progress runs.
-
-    ``None`` (default) ranks over all executions.
-    Composes with ``successful`` but answers a different question.
-    """
-
-    selectors: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
-    """
-    Facet map matched against each group's ``ExecutionGroup.selectors``, in Python.
-
-    A key is a bare facet such as ``source_id``, or ``<dataset_type>.<facet>`` for one dataset type.
-    Unlike ``input_datasets``, this checks how the group was selected, not the datasets its executions used.
-    """
-
-    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(
-        default=None, converter=_as_facets, repr=False, eq=False
-    )
-    """Deprecated alias for ``selectors``, kept for one release."""
-
-    include_superseded: bool = False
-    """Include execution groups whose ``diagnostic_version`` is not the diagnostic's promoted version."""
-
-    failure_reasons: tuple[ExecutionFailureReason, ...] | None = attrs.field(
-        default=None, converter=_as_failure_reasons
-    )
-    """Keep a group only if its latest execution failed for one of these reasons."""
-
-    input_datasets: InputDatasetFilter | None = None
-    """
-    Keep a group only if one of its executions ran against matching datasets, in SQL.
-
-    Unlike ``selectors``, this checks the datasets executions used, not how the group was selected.
-    """
-
-    def __attrs_post_init__(self) -> None:
-        if self.facets is None:
-            return
-        if self.selectors is not None and self.selectors != self.facets:
-            raise ValueError("selectors and the deprecated facets disagree")
-        warnings.warn(
-            "ExecutionGroupFilter(facets=...) is deprecated. Use selectors instead.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
-        object.__setattr__(self, "selectors", self.facets)
-        object.__setattr__(self, "facets", None)
+from climate_ref.results.filters import DiagnosticFilter, ExecutionGroupFilter, promoted_version_clause
 
 
 @attrs.frozen(kw_only=True)
@@ -314,22 +226,16 @@ class ExecutionGroupCollection(Page[ExecutionGroupView]):
         return pd.DataFrame.from_records(records, columns=columns)
 
 
-def select_execution_statistics(
-    *,
-    diagnostic_slug: str | None = None,
-    provider_slug: str | None = None,
-    diagnostic_contains: Sequence[str] | None = None,
-    provider_contains: Sequence[str] | None = None,
-    input_datasets: InputDatasetFilter | None = None,
-) -> Select[Any]:
+def select_execution_statistics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     """
     Build the per-(provider, diagnostic) status-count aggregate ``Select``.
 
     Moved out of ``cli/executions.py::stats`` so the aggregate is reusable plumbing.
-    Only the [SlugFilter][climate_ref.results._query.SlugFilter] axes and ``input_datasets`` are accepted
-    (not the full [ExecutionGroupFilter][climate_ref.results.executions.ExecutionGroupFilter])
-    so ``dirty`` / ``successful`` / ``facets`` are never silently ignored
+    It takes a [DiagnosticFilter][climate_ref.results.filters.DiagnosticFilter]
+    (not the full [ExecutionGroupFilter][climate_ref.results.filters.ExecutionGroupFilter])
+    so ``dirty`` / ``successful`` / ``selectors`` are never silently ignored
     on an aggregate that cannot honour them.
+    With ``filters.input_datasets`` only groups whose latest execution matches are counted.
 
     Status definitions (unchanged from the CLI):
 
@@ -345,6 +251,7 @@ def select_execution_statistics(
     ``promoted_version`` are counted (same promoted-version gate as
     [get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered]).
     """
+    filters = filters or DiagnosticFilter()
     latest = select_latest_executions().subquery()
 
     stmt = (
@@ -364,7 +271,7 @@ def select_execution_statistics(
             func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0)).label("dirty"),
         )
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-        .where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
+        .where(promoted_version_clause())
         .join(Provider, Diagnostic.provider_id == Provider.id)
         .outerjoin(latest, latest.c.execution_group_id == ExecutionGroup.id)
         .outerjoin(Execution, Execution.id == latest.c.execution_id)
@@ -372,15 +279,10 @@ def select_execution_statistics(
         .order_by(Provider.slug, Diagnostic.slug)
     )
 
-    slugs = SlugFilter(
-        diagnostic_slug=diagnostic_slug,
-        provider_slug=provider_slug,
-        diagnostic_contains=diagnostic_contains,
-        provider_contains=provider_contains,
-    )
-    stmt = stmt.where(*slugs.slug_clauses())
-    if input_datasets:
-        stmt = stmt.where(input_datasets.execution_group_clause())
+    stmt = stmt.where(*filters.slug_clauses())
+    if filters.input_datasets:
+        # The outer-joined Execution is each group's latest.
+        stmt = stmt.where(filters.input_datasets.execution_clause())
 
     return stmt
 
@@ -452,8 +354,7 @@ class ExecutionsReader:
         group_conditions: list[ColumnElement[bool]] = []
         if filters.matches_any:
             group_conditions.append(ExecutionGroup.diagnostic_id.in_(filters.diagnostic_ids()))
-        if filters.input_datasets:
-            group_conditions.append(filters.input_datasets.execution_group_clause())
+        latest_conditions = [filters.input_datasets.execution_clause()] if filters.input_datasets else []
         return dict(
             dirty=filters.dirty,
             successful=filters.successful,
@@ -461,6 +362,7 @@ class ExecutionsReader:
             include_superseded=filters.include_superseded,
             failure_reasons=filters.failure_reasons,
             group_conditions=group_conditions,
+            latest_conditions=latest_conditions,
         )
 
     def group_rows(
@@ -519,23 +421,9 @@ class ExecutionsReader:
 
         return ExecutionGroupCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
-    def statistics(
-        self,
-        *,
-        diagnostic_slug: str | None = None,
-        provider_slug: str | None = None,
-        diagnostic_contains: Sequence[str] | None = None,
-        provider_contains: Sequence[str] | None = None,
-        input_datasets: InputDatasetFilter | None = None,
-    ) -> tuple[ExecutionStats, ...]:
+    def statistics(self, filters: DiagnosticFilter | None = None) -> tuple[ExecutionStats, ...]:
         """Execute the ``select_execution_statistics`` builder and map rows to ``ExecutionStats``."""
-        stmt = select_execution_statistics(
-            diagnostic_slug=diagnostic_slug,
-            provider_slug=provider_slug,
-            diagnostic_contains=diagnostic_contains,
-            provider_contains=provider_contains,
-            input_datasets=input_datasets,
-        )
+        stmt = select_execution_statistics(filters)
         return rows_to_execution_stats(self.session.execute(stmt).all())
 
     def latest_execution(self, execution_group_id: int) -> ExecutionView | None:

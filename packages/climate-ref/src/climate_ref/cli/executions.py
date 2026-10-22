@@ -39,10 +39,12 @@ from climate_ref.models.execution import (
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results import (
+    DiagnosticFilter,
     ExecutionGroupFilter,
     MetricValueFilter,
     OutlierPolicy,
     Reader,
+    ResourceFilter,
 )
 from climate_ref.results.executions import OutputView
 from climate_ref.results.resources import ResourceProfile
@@ -946,7 +948,9 @@ def stats(
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
 
-    stats_rows = reader.executions.statistics(diagnostic_contains=diagnostic, provider_contains=provider)
+    stats_rows = reader.executions.statistics(
+        DiagnosticFilter(diagnostic_contains=diagnostic, provider_contains=provider)
+    )
 
     if not stats_rows:
         console.print("No execution groups found.")
@@ -1181,9 +1185,13 @@ def resources(  # noqa: PLR0913
             raise typer.Exit(code=1)
 
     profiles = reader.resources.profiles(
-        diagnostic_contains=diagnostic,
-        provider_contains=provider,
-        since=cutoff,
+        ResourceFilter(
+            diagnostic_contains=diagnostic,
+            provider_contains=provider,
+            created_after=cutoff,
+            # Sizing draws on every diagnostic version, not only the promoted one.
+            include_superseded=True,
+        ),
         group_by=by.value,
         exclusive_only=not include_shared,
         safety_factor=safety,

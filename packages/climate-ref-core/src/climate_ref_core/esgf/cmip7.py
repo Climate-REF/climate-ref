@@ -28,7 +28,7 @@ class CMIP7Request(IntakeESGFMixin):
 
     source_type = "CMIP7"
     project = "CMIP7"
-    facet_names: ClassVar[Mapping[str, str]] = {"branding_suffix": "variable_branding_suffix"}
+    facet_renames: ClassVar[Mapping[str, str]] = {"branding_suffix": "variable_branding_suffix"}
 
     def _pinned_facets(self, instance_ids: tuple[str, ...]) -> dict[str, Any]:
         # The STAC indices cannot be searched by id, only by the id without its version
@@ -38,7 +38,9 @@ class CMIP7Request(IntakeESGFMixin):
     def _select_pinned(self, results: pd.DataFrame) -> pd.DataFrame:
         wanted = {_esgf_id(instance_id) for instance_id in self.pinned_instance_ids or ()}
         found = results["id"].map(lambda ids: {str(i).split("|")[0] for i in ids} & wanted)
+
         # intake-esgf keeps only the newest version it finds of each dataset
+        # TODO: fix this upstream in intake-esgf as ESGF has the information
         missing = wanted - set().union(*found)
         if missing:
             raise DatasetResolutionError(

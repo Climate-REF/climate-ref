@@ -4,6 +4,9 @@ Obs4MIPs dataset request implementation.
 
 from __future__ import annotations
 
+import intake_esgf
+import pandas as pd
+
 from climate_ref_core.esgf.base import IntakeESGFMixin
 
 
@@ -42,6 +45,12 @@ class Obs4MIPsRequest(IntakeESGFMixin):
         "data_node",
         "project",
     )
+
+    def fetch_datasets(self) -> pd.DataFrame:
+        """Fetch dataset metadata from ESGF, also searching the CEDA Solr index."""
+        # C3S-GTO-ECV-9-0 (the ozone reference) is missing from the default index but CEDA still serves it
+        with intake_esgf.conf.set(indices={"esgf.ceda.ac.uk": True}):
+            return super().fetch_datasets()
 
     def __repr__(self) -> str:
         return f"Obs4MIPsRequest(slug={self.slug!r}, facets={self.facets!r})"

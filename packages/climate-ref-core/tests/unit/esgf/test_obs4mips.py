@@ -1,6 +1,28 @@
 """Tests for climate_ref_core.esgf.obs4mips module."""
 
-from climate_ref_core.esgf import ESGFRequest, Obs4MIPsRequest
+from unittest.mock import MagicMock, patch
+
+import intake_esgf
+import pandas as pd
+import pytest
+
+from climate_ref_core.esgf import CMIP6Request, ESGFRequest, Obs4MIPsRequest
+
+
+def _catalog_recording_ceda(seen):
+    def make_catalog():
+        seen.append(intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"])
+        cat = MagicMock()
+        cat.df = pd.DataFrame({"key": ["ds1"]})
+        cat.to_path_dict.return_value = {"ds1": ["/ds1.nc"]}
+        return cat
+
+    return make_catalog
+
+
+@pytest.fixture
+def ceda_disabled(monkeypatch):
+    monkeypatch.setitem(intake_esgf.conf["solr_indices"], "esgf.ceda.ac.uk", False)
 
 
 class TestObs4MIPsRequest:
@@ -56,3 +78,24 @@ class TestObs4MIPsRequest:
         """Test that all filename path items are in available facets."""
         for item in Obs4MIPsRequest.obs4mips_filename_paths:
             assert item in Obs4MIPsRequest.avail_facets
+
+    @pytest.mark.usefixtures("ceda_disabled")
+    def test_fetch_searches_ceda_only_while_fetching(self):
+        request = Obs4MIPsRequest(slug="test-obs", facets={"source_id": "C3S-GTO-ECV-9-0"})
+        seen = []
+
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", side_effect=_catalog_recording_ceda(seen)):
+            request.fetch_datasets()
+
+        assert seen == [True]
+        assert intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"] is False
+
+    @pytest.mark.usefixtures("ceda_disabled")
+    def test_cmip6_fetch_does_not_search_ceda(self):
+        request = CMIP6Request(slug="test", facets={"source_id": "ACCESS-ESM1-5"})
+        seen = []
+
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", side_effect=_catalog_recording_ceda(seen)):
+            request.fetch_datasets()
+
+        assert seen == [False]

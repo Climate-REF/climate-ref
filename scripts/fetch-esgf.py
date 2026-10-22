@@ -9,6 +9,7 @@ This fetches about 3TB of datasets into the default location for intake esgf.
 This can be adjusted via `~/.config/intake-esgf/config.yaml`.
 """
 
+import copy
 import enum
 import time
 from typing import Any
@@ -537,6 +538,7 @@ def main(
         logger.info(f"Running {len(selected)} '{kind}' requests...")
     if not remove_ensembles:
         logger.info("Fetching all ensemble members")
+        selected = [copy.copy(request) for request in selected]
         for request in selected:
             request.remove_ensembles = False
 

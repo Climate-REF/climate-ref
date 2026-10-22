@@ -189,6 +189,12 @@ class TestExecutionGroups:
         f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "NO-SUCH-MODEL"})
         assert _group_ids(db_with_inputs, f) == set()
 
+    @pytest.mark.filterwarnings("error::sqlalchemy.exc.SADeprecationWarning")
+    def test_no_facets_matches_any_dataset_of_the_type(self, db_with_inputs):
+        ids = db_with_inputs.ids
+        f = InputDatasetFilter(source_types=[CMIP7])
+        assert _group_ids(db_with_inputs, f) == {ids["cmip7-a"]}
+
     def test_multi_value_is_or(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": ["FACET-A", "FACET-B"]})

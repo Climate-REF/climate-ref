@@ -101,7 +101,7 @@ for unique_id, dataset_files in data_catalog.groupby(adapter.slug_column):
 #
 # Each group that passes the constraints is a valid group for the diagnostic to be executed.
 #
-# [extract_covered_datasets](api/climate_ref/solver/#climate_ref.solver.extract_covered_datasets)
+# [extract_covered_datasets](../../api/climate_ref/solver/#climate_ref.solver.extract_covered_datasets)
 # extracts the different groups
 # of datasets within the data catalog that match the requirements.
 # Below are some examples showing different data requests

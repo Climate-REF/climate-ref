@@ -135,7 +135,7 @@ so it is recommended to set this to a directory on a scratch filesystem
 rather than a directory on your home filesystem.
 
 This is used to cache the datasets so that they are not downloaded multiple times.
-It is not recommended to ingest datasets from this directory (see `--output-dir` argument for `ref datasets fetch-data`).
+It is not recommended to ingest datasets from this directory (see `--output-directory` argument for `ref datasets fetch-data`).
 
 This defaults to the following locations:
 
@@ -205,11 +205,13 @@ datasets that are known to cause problems for particular diagnostics
 and should be excluded from solving until the underlying issues are resolved.
 The grey list is a YAML file listing facets to exclude per provider, diagnostic and source type.
 
-!!! note "Naming"
+/// note | Naming
 
-    The configuration values below are currently named `ignore_datasets_*` for historical reasons.
-    They will be renamed to `grey_list_*` in a future release.
-    The old names will continue to work for a deprecation period.
+The configuration values below are currently named `ignore_datasets_*` for historical reasons.
+They will be renamed to `grey_list_*` in a future release.
+The old names will continue to work for a deprecation period.
+
+///
 
 The grey list is resolved from the first of three layers that is available:
 

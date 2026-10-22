@@ -131,6 +131,7 @@ write_module_page("climate_ref")
 write_module_page("climate_ref_core")
 write_module_page("climate_ref_celery")
 write_module_page("climate_ref_esmvaltool")
+write_module_page("climate_ref_example")
 write_module_page("climate_ref_ilamb")
 write_module_page("climate_ref_pmp")
 

@@ -71,7 +71,7 @@ The REF can be configured using a configuration file or environment variables.
 See the [configuration documentation](https://climate-ref.readthedocs.io/en/latest/configuration/) for more information.
 
 Before we can run the REF, we need to fetch some reference datasets used by the diagnostics.
-These datasets can be fetched using the REF CLI tool. See the [required datasets](https://climate-ref.readthedocs.io/en/latest/introduction/requery_datasets/) for more information.
+These datasets can be fetched using the REF CLI tool. See [Download datasets](https://climate-ref.readthedocs.io/en/latest/getting-started/02-download-datasets/) for more information.
 
 The next step is to ingest the local datasets into the REF.
 These datasets must be CMOR-compliant, follow the CMIP6 data structure and expected attributes.

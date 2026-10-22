@@ -406,7 +406,7 @@ Once complete, run:
 ref solve --provider myprovider
 ```
 
-and inspect results with `ref executions list-group` and `ref executions inspect <group_id>`.
+and inspect results with `ref executions list-groups` and `ref executions inspect <group_id>`.
 
 ---
 

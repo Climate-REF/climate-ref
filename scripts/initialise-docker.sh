@@ -9,5 +9,4 @@ docker compose build
 docker compose run --rm climate-ref config list
 
 # Initialise the conda containers
-docker compose run --rm climate-ref providers create-env --provider pmp
-docker compose run --rm climate-ref providers create-env --provider esmvaltool
+docker compose run --rm climate-ref providers setup --skip-data

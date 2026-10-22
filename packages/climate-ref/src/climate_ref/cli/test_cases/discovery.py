@@ -6,9 +6,11 @@ Commands for discovering test cases and fetching their input data from ESGF.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated
+from pathlib import Path
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
+import yaml
 from loguru import logger
 from rich.table import Table
 
@@ -16,10 +18,32 @@ from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import _fetch_and_build_catalog
 from climate_ref.cli.test_cases._common import _validate_provider_in_registry, _validate_requested_filters
 from climate_ref_core.exceptions import DatasetResolutionError, InvalidDiagnosticException
-from climate_ref_core.testing import TestCasePaths, is_test_case_excluded
+from climate_ref_core.testing import TestCasePaths, is_test_case_excluded, validate_catalog_paths
 
 if TYPE_CHECKING:
     from climate_ref_core.diagnostics import Diagnostic
+
+
+def _catalog_content(path: Path) -> dict[str, Any]:
+    """Load the catalog content that a downstream checkout must reproduce."""
+    with open(path) as f:
+        data = yaml.safe_load(f) or {}
+    content = {key: value for key, value in data.items() if key != "_metadata"}
+    for source_data in content.values():
+        datasets = source_data.get("datasets", [])
+        source_data["datasets"] = sorted(datasets, key=lambda row: yaml.safe_dump(row, sort_keys=True))
+    return content
+
+
+def _existing_catalog_error(paths: TestCasePaths | None) -> str | None:
+    """Return why a committed catalog cannot be used as-is, or ``None`` if it can."""
+    if paths is None or not paths.catalog.exists():
+        return "Test case has no fetch requests and no committed catalog"
+    try:
+        validate_catalog_paths(paths.catalog, paths.catalog_paths)
+    except DatasetResolutionError as e:
+        return str(e)
+    return None
 
 
 @app.command(name="fetch")
@@ -49,6 +73,17 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
         bool,
         typer.Option(help="Force overwrite catalog even if unchanged"),
     ] = False,
+    strict: Annotated[
+        bool,
+        typer.Option(help="Exit with an error if any requested test case cannot be fetched"),
+    ] = False,
+    regen: Annotated[
+        bool,
+        typer.Option(
+            help="Resolve the requests from their declared facets instead of the datasets an "
+            "existing catalog records. This may change which datasets the tests use."
+        ),
+    ] = False,
 ) -> None:
     """
     Fetch test data from ESGF for running diagnostic tests.
@@ -56,12 +91,17 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
     Downloads full-resolution ESGF data based on diagnostic test_data_spec.
     Use --provider or --diagnostic to limit scope.
 
+    A test case that already has a catalog is fetched by the datasets that catalog
+    records, so it keeps the inputs its regression baseline was built from. Use --regen to
+    resolve the requests from their declared facets instead.
+
     Examples
     --------
         ref test-cases fetch                   # Fetch all test data
         ref test-cases fetch --provider ilamb  # Fetch ILAMB test data only
         ref test-cases fetch --diagnostic ecs  # Fetch ECS diagnostic data
         ref test-cases fetch --only-missing    # Skip test cases with existing catalogs
+        ref test-cases fetch --regen           # Re-resolve datasets from the declared facets
     """
     from climate_ref.provider_registry import ProviderRegistry
 
@@ -104,59 +144,80 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
 
     logger.info(f"Found {len(diagnostics_to_process)} diagnostics with test data specifications")
 
-    if dry_run:  # pragma: no cover
-        for diag in diagnostics_to_process:
-            logger.info(f"Would fetch data for: {diag.provider.slug}/{diag.slug}")
-            if diag.test_data_spec:
-                for tc in diag.test_data_spec.test_cases:
-                    if test_case and tc.name != test_case:
-                        continue
-                    # Check if catalog exists when using --only-missing
-                    if only_missing:
-                        paths = TestCasePaths.from_diagnostic(diag, tc.name)
-                        if paths and paths.catalog.exists():
-                            logger.info(f"  Test case: {tc.name} - [SKIP: catalog exists]")
-                            continue
-                    logger.info(f"  Test case: {tc.name} - {tc.description}")
-                    if tc.requests:
-                        for req in tc.requests:
-                            logger.info(f"    Request: {req.slug} ({req.source_type})")
-        return
-
     # Process each diagnostic test case.
     # A failure for one test case must not abort the loop,
     # because later diagnostics would be left without catalogs and paths sidecars.
     failed_cases: list[str] = []
     for diag in diagnostics_to_process:  # pragma: no cover
-        logger.info(f"Fetching data for: {diag.provider.slug}/{diag.slug}")
+        logger.info(f"Checking data for: {diag.provider.slug}/{diag.slug}")
         if diag.test_data_spec:
             for tc in diag.test_data_spec.test_cases:
                 if test_case and tc.name != test_case:
                     continue
                 paths = TestCasePaths.from_diagnostic(diag, tc.name)
-                # Skip if catalog exists when using --only-missing
-                if only_missing and paths and paths.catalog.exists():
-                    logger.info(f"  Skipping test case: {tc.name} (catalog exists)")
+                case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
+                existing_catalog = paths.catalog if paths is not None and paths.catalog.exists() else None
+                if not tc.requests or (only_missing and existing_catalog is not None):
+                    if strict and (error := _existing_catalog_error(paths)):
+                        failed_cases.append(case_id)
+                        logger.warning(f"  Existing catalog is not usable for {tc.name}: {error}")
+                    if tc.requests:
+                        logger.debug(f"  Skipping test case: {tc.name} (catalog exists)")
                     continue
-                if tc.requests:
-                    if paths and paths.catalog.exists() and not force:
-                        logger.info(
-                            f"  Refreshing existing catalog for {tc.name} "
-                            "(use --only-missing to skip existing catalogs)"
-                        )
-                    logger.info(f"  Processing test case: {tc.name}")
+                catalog_before = None
+                if strict and existing_catalog is not None:
                     try:
-                        _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force)
-                        if not catalog_written:
-                            logger.info(f"  Catalog unchanged for {tc.name}")
-                    except (DatasetResolutionError, InvalidDiagnosticException, ValueError) as e:
-                        failed_cases.append(f"{diag.provider.slug}/{diag.slug}/{tc.name}")
-                        logger.warning(f"  Could not build catalog for {tc.name}: {e}")
+                        catalog_before = _catalog_content(existing_catalog)
+                    except (OSError, AttributeError, yaml.YAMLError):
+                        # A ``None`` snapshot still reports the committed input as changed.
+                        pass
+                if existing_catalog is not None and not force:
+                    logger.info(
+                        f"  Refreshing existing catalog for {tc.name} "
+                        "(use --only-missing to skip existing catalogs)"
+                    )
+                logger.info(f"  Processing test case: {tc.name} - {tc.description}")
+                if dry_run:
+                    # continue to next iteration before the actual work would be done.
+                    # report what the rest would do though
+                    for req in tc.requests:
+                        logger.info(f"    Would request: {req.slug} ({req.source_type})")
+                    continue
+                try:
+                    _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force, regen=regen)
+                    if paths is None:
+                        if strict:
+                            raise ValueError("Could not determine where to write the test-case catalog")
+                    else:
+                        validate_catalog_paths(paths.catalog, paths.catalog_paths)
+                        # An unchanged save leaves the file untouched, so only a rewrite needs comparing.
+                        if strict and (
+                            catalog_before is None
+                            or (catalog_written and _catalog_content(paths.catalog) != catalog_before)
+                        ):
+                            raise ValueError(
+                                "Catalog metadata is new or changed after fetch. Commit the updated "
+                                f"catalog before running downstream jobs: {paths.catalog}"
+                            )
+                    if not catalog_written:
+                        logger.info(f"  Catalog unchanged for {tc.name}")
+                except (
+                    OSError,
+                    AttributeError,
+                    yaml.YAMLError,
+                    DatasetResolutionError,
+                    InvalidDiagnosticException,
+                    ValueError,
+                ) as e:
+                    failed_cases.append(case_id)
+                    logger.warning(f"  Could not build catalog for {tc.name}: {e}")
 
     if failed_cases:  # pragma: no cover
         logger.warning(
             f"Could not build catalogs for {len(failed_cases)} test case(s): {', '.join(failed_cases)}"
         )
+        if strict:
+            raise typer.Exit(code=1)
 
 
 @app.command(name="list")

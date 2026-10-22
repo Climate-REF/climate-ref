@@ -3,7 +3,8 @@
 `ref doctor` looks for the problems that a solve hides rather than reports.
 
 - Reference data is missing, so its diagnostics quietly plan no executions.
-- Data is ingested under a source type no diagnostic requires, so nothing selects it.
+- Data is ingested under a source type no diagnostic requires or declares as a fallback,
+  so nothing selects it.
 - obs4REF data is ingested as `obs4mips`, so the catalog cannot say where it came from.
 - An obs4REF dataset has since been published to obs4MIPs, so the registry copy is no longer used.
 - A dataset's files cover the same period twice, so a diagnostic reads that period more than once.

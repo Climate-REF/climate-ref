@@ -4,7 +4,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from sqlalchemy import ForeignKey, event, insert, select
+from sqlalchemy import ForeignKey, Index, event, insert, select
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from climate_ref.models.base import Base
@@ -57,6 +57,8 @@ class MetricValue(DimensionMixin, CreatedUpdatedMixin, Base):
     """
 
     __tablename__ = "metric_value"
+    # Covers "does this execution have values of this type" without reading the (large) series rows.
+    __table_args__ = (Index("ix_metric_value_execution_id_type", "execution_id", "type"),)
 
     __mapper_args__: ClassVar[Mapping[str, str]] = {  # type: ignore
         "polymorphic_on": "type",

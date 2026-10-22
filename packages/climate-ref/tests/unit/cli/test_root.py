@@ -239,3 +239,13 @@ def test_cli_database_access_migrates_fresh_database(invoke_cli_unmigrated):
     result = invoke_cli_unmigrated(["datasets", "list"])
 
     assert result.exit_code == 0
+
+
+def test_uncaught_exception_is_logged_to_file(invoke_cli, config, mocker):
+    mocker.patch("climate_ref.solver.solve_required_executions", side_effect=RuntimeError("solve blew up"))
+
+    invoke_cli(["solve"], expected_exit_code=1)
+
+    log_text = "".join(path.read_text() for path in Path(config.paths.log).glob("climate-ref_*.log"))
+    assert "RuntimeError: solve blew up" in log_text
+    assert "Traceback" in log_text

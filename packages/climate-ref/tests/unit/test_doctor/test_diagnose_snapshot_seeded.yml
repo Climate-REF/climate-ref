@@ -107,17 +107,17 @@
   summary: HadISST-1-1 is carried by 2 registries
 - check: unsolvable-diagnostics
   command: ''
-  detail: 'Unmet: no cmip6 datasets match experiment_id=historical, table_id=Amon,
-    variable_id=hurs|pr|tas|tasmax and experiment_id=historical, table_id=Lmon, variable_id=cVeg|treeFrac
-    and experiment_id=historical, table_id=Emon, variable_id=vegFrac. nothing is ingested
-    as cmip7.'
+  detail: 'Unmet: no cmip6 datasets match experiment_id=historical|esm-hist, table_id=Amon,
+    variable_id=hurs|pr|tas|tasmax and experiment_id=historical|esm-hist, table_id=Lmon,
+    variable_id=cVeg|treeFrac and experiment_id=historical|esm-hist, table_id=Emon,
+    variable_id=vegFrac. nothing is ingested as cmip7.'
   remedy: Ingest the data the unmet requirement names, then run the solver again.
   severity: warning
   summary: esmvaltool/climate-drivers-for-fire has no executions
 - check: unsolvable-diagnostics
   command: ''
-  detail: 'Unmet: no cmip6 datasets match experiment_id=historical|land-hist, frequency=mon,
-    table_id=AERmonZ|Amon|CFmon|Emon|EmonZ|LImon|Lmon|Omon|SImon, variable_id=emp|evspsbl.
+  detail: 'Unmet: no cmip6 datasets match experiment_id=historical|esm-hist|land-hist,
+    frequency=mon, table_id=AERmonZ|Amon|CFmon|Emon|EmonZ|LImon|Lmon|Omon|SImon, variable_id=emp|evspsbl.
     nothing is ingested as cmip7.'
   remedy: Ingest the data the unmet requirement names, then run the solver again.
   severity: warning

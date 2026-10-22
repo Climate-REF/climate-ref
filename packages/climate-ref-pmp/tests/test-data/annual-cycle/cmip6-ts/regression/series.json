@@ -1,1 +1,371 @@
-[]
+[
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "bias_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      0.830241,
+      0.888938,
+      0.940329,
+      0.876511,
+      0.886283,
+      0.915831,
+      0.835711,
+      0.748402,
+      0.716891,
+      0.857496,
+      0.989865,
+      0.880751
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "cor_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      0.991933,
+      0.991889,
+      0.992892,
+      0.993243,
+      0.993426,
+      0.992663,
+      0.992672,
+      0.992923,
+      0.993154,
+      0.992912,
+      0.992009,
+      0.991992
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mae_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      1.64074,
+      1.67958,
+      1.61997,
+      1.5052,
+      1.42585,
+      1.5183,
+      1.5149,
+      1.45399,
+      1.41104,
+      1.43857,
+      1.52491,
+      1.58091
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mean-obs_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      286.032,
+      286.343,
+      287.059,
+      288.054,
+      288.994,
+      289.716,
+      289.972,
+      289.852,
+      289.161,
+      288.065,
+      286.946,
+      286.262
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "mean_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      286.862,
+      287.232,
+      287.999,
+      288.93,
+      289.881,
+      290.632,
+      290.807,
+      290.6,
+      289.878,
+      288.923,
+      287.936,
+      287.143
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "rms_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      2.32144,
+      2.36309,
+      2.20611,
+      2.0496,
+      1.95071,
+      2.08718,
+      2.08804,
+      1.9934,
+      1.94187,
+      2.00253,
+      2.20757,
+      2.24545
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "rmsc_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      2.1679,
+      2.18952,
+      1.99567,
+      1.85272,
+      1.73775,
+      1.87552,
+      1.91351,
+      1.84757,
+      1.8047,
+      1.80964,
+      1.97321,
+      2.06551
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "std-obs_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      16.9381,
+      16.9814,
+      16.6268,
+      15.8006,
+      14.9922,
+      14.5438,
+      14.7454,
+      14.8528,
+      14.8922,
+      15.0683,
+      15.6284,
+      16.3403
+    ]
+  },
+  {
+    "attributes": null,
+    "dimensions": {
+      "experiment_id": "historical",
+      "member_id": "r1i1p1f1",
+      "reference_source_id": "ERA-5",
+      "region": "global",
+      "source_id": "ACCESS-ESM1-5",
+      "statistic": "std_xy",
+      "variable_id": "ts"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month_number",
+    "values": [
+      17.1005,
+      17.2109,
+      16.7665,
+      15.9588,
+      15.1658,
+      15.0891,
+      15.335,
+      15.2974,
+      15.2708,
+      15.2209,
+      15.4301,
+      16.2932
+    ]
+  }
+]

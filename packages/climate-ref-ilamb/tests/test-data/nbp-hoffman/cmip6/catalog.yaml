@@ -1,5 +1,5 @@
 _metadata:
-  hash: c64856a4599edc7799e3a85abd9e01071924fe94
+  hash: d945e165e2fcdce202c3bd230c7adb330e86e2f3
 cmip6:
   slug_column: instance_id
   selector:
@@ -137,14 +137,14 @@ obs4mips:
     variable_id: nbp
     version: v20251117
   datasets:
-  - activity_id: obs4REF
+  - activity_id: obs4MIPs
     end_time: '2010-05-24 12:00:00'
     filename: nbp_yr_Hoffman-1-0_REF_gm_1850-2010.nc
     finalised: true
     frequency: yr
     grid: global mean data
     grid_label: gm
-    instance_id: obs4REF.obs4REF.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+    instance_id: obs4REF.UCI-ORNL.Hoffman-1-0.yr.nbp.gm.v20251117
     institution_id: UCI-ORNL
     long_name: Carbon Mass Flux out of Atmosphere Due to Net Biospheric Production
       on Land

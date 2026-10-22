@@ -47,7 +47,12 @@ def _context(catalogs=None, providers=None):
     return DoctorContext.from_catalogs(catalogs or {}, providers or [])
 
 
-def _provider_requiring(source_type: SourceDatasetType, source_id: str, variable_id: str):
+def _provider_requiring(
+    source_type: SourceDatasetType,
+    source_id: str,
+    variable_id: str,
+    fallback_source_types: tuple[SourceDatasetType, ...] = (),
+):
     """A provider with one diagnostic requiring a single reference dataset."""
 
     class _Diagnostic(Diagnostic):
@@ -57,6 +62,7 @@ def _provider_requiring(source_type: SourceDatasetType, source_id: str, variable
         data_requirements = (
             DataRequirement(
                 source_type=source_type,
+                fallback_source_types=fallback_source_types,
                 filters=(FacetFilter(facets={"source_id": source_id, "variable_id": variable_id}),),
                 group_by=None,
             ),
@@ -167,8 +173,13 @@ class TestMissingReferenceData:
         assert "ERA-5" in findings[0].summary
 
     def test_obs4mips_requirement_is_met_by_obs4ref_data(self):
-        # obs4REF fills in what obs4MIPs has not published, so this is not missing.
-        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp")
+        # The requirement declares obs4REF as a fallback, so this is not missing.
+        provider = _provider_requiring(
+            SourceDatasetType.obs4MIPs,
+            "WECANN-1-0",
+            "gpp",
+            fallback_source_types=(SourceDatasetType.obs4REF,),
+        )
         catalog = _catalog(
             [("obs4REF.WECANN-1-0.gpp", "WECANN-1-0", "gpp", "2007-01-01", "2015-12-01", "/d/gpp.nc")]
         )
@@ -197,7 +208,12 @@ class TestUnreachableSourceTypes:
         assert check_unreachable_source_types(context) == []
 
     def test_obs4ref_data_is_reachable_through_obs4mips_requirements(self):
-        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp")
+        provider = _provider_requiring(
+            SourceDatasetType.obs4MIPs,
+            "WECANN-1-0",
+            "gpp",
+            fallback_source_types=(SourceDatasetType.obs4REF,),
+        )
         catalog = _catalog(
             [("obs4REF.WECANN-1-0.gpp", "WECANN-1-0", "gpp", "2007-01-01", "2015-12-01", "/d/gpp.nc")]
         )
@@ -413,7 +429,12 @@ class TestUnsolvableDiagnostics:
         assert check_unsolvable_diagnostics(context) == []
 
     def test_obs4mips_requirement_solves_from_obs4ref_data(self):
-        provider = _provider_requiring(SourceDatasetType.obs4MIPs, "WECANN-1-0", "gpp")
+        provider = _provider_requiring(
+            SourceDatasetType.obs4MIPs,
+            "WECANN-1-0",
+            "gpp",
+            fallback_source_types=(SourceDatasetType.obs4REF,),
+        )
         catalog = _catalog(
             [("obs4REF.WECANN-1-0.gpp", "WECANN-1-0", "gpp", "2007-01-01", "2015-12-01", "/d/gpp.nc")]
         )

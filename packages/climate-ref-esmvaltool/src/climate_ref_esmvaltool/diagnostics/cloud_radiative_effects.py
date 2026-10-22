@@ -28,6 +28,7 @@ _TIMERANGES = {
 def _reference_data_requirement(start_year: int, end_year: int) -> DataRequirement:
     return DataRequirement(
         source_type=SourceDatasetType.obs4MIPs,
+        fallback_source_types=(SourceDatasetType.obs4REF,),
         filters=(
             FacetFilter(
                 facets={
@@ -61,7 +62,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     name = "Climatologies and zonal mean profiles of cloud radiative effects"
     slug = "cloud-radiative-effects"
     base_recipe = "ref/recipe_ref_cre_cmip7.yml"
-    version = 2
+    version = 4
 
     variables = (
         "rlut",
@@ -77,12 +78,12 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         }
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -108,13 +109,13 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                                 "rsut_tavg-u-hxy-u",
                                 "rsutcs_tavg-u-hxy-u",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         }
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -157,7 +158,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     series = tuple(
         SeriesDefinition(
             file_pattern=f"plot_profiles/plot/variable_vs_lat_{var_name}_*.nc",
-            sel={"dim0": 0},  # Select the model.
+            sel={"dataset": "{source_id}"},  # Select the model by its label.
             dimensions={"variable_id": var_name, "statistic": "zonal mean"},
             values_name=var_name,
             index_name="lat",
@@ -167,7 +168,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     ) + tuple(
         SeriesDefinition(
             file_pattern=f"plot_profiles/plot/variable_vs_lat_{var_name}_*.nc",
-            sel={"dim0": 1},  # Select the observation.
+            sel={"dataset": _REFERENCE_SOURCE_ID},  # Select the observation by its label.
             dimensions={
                 "variable_id": var_name,
                 "statistic": "zonal mean",

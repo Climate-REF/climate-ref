@@ -6,11 +6,11 @@ from concurrent.futures import ProcessPoolExecutor
 from typing import Any
 
 from loguru import logger
-from tqdm import tqdm
 
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.models import Execution
+from climate_ref.progress import LoggedProgress
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import ExecutionError
 from climate_ref_core.executor import execute_locally
@@ -18,7 +18,8 @@ from climate_ref_core.logging import initialise_logging
 
 from .result_handling import (
     ExecutionFuture,
-    mark_execution_failed,
+    fail_future,
+    fail_outstanding,
     process_result,
 )
 
@@ -40,11 +41,12 @@ def _process_initialiser() -> None:  # pragma: no cover
             level=config.log_level,
             format=config.log_format,
             log_directory=config.paths.log,
+            serialize=config.log_json,
         )
-    except Exception as e:
+    except Exception:
         # Don't raise an exception here as that would kill the process pool
         # We want to log the error and continue
-        logger.error(f"Failed to add log handler: {e}")
+        logger.opt(exception=True).error("Failed to add log handler")
 
 
 def _pool_is_serial(pool: concurrent.futures.Executor) -> bool:
@@ -88,6 +90,9 @@ class LocalExecutor:
     # Results are copied to the results directory and ingested only during ``join``,
     # so skipping ``join`` (queue-and-exit) would orphan completed work in scratch.
     collects_results_on_join = True
+
+    # Diagnostics run on the solving host, so a health check there reflects where they run.
+    runs_on_solve_host = True
 
     def __init__(
         self,
@@ -202,7 +207,7 @@ class LocalExecutor:
         refresh_time = 0.5  # Time to wait between checking for completed tasks in seconds
 
         results = self._results
-        t = tqdm(
+        t = LoggedProgress(
             total=len(results),
             desc="Waiting for executions to complete",
             unit="execution",
@@ -225,7 +230,7 @@ class LocalExecutor:
                         except Exception as e:
                             # Something went wrong when attempting to run the execution
                             # This is likely a failure in the execution itself not the diagnostic
-                            self._mark_failed(result, retryable=True)
+                            fail_future(self.database, self.config, result, detail=f"execution raised {e!r}")
                             results.remove(result)
                             raise ExecutionError(
                                 f"Failed to execute {result.definition.execution_slug()!r}"
@@ -272,7 +277,12 @@ class LocalExecutor:
                             f"timeout of {self.task_timeout}s; marking failed-retryable"
                         )
                         result.future.cancel()
-                        self._mark_failed(result, retryable=True)
+                        fail_future(
+                            self.database,
+                            self.config,
+                            result,
+                            detail=f"exceeded per-task timeout of {self.task_timeout}s",
+                        )
                         t.update(n=1)
                         results.remove(result)
 
@@ -284,7 +294,13 @@ class LocalExecutor:
 
                 # ``timeout <= 0`` means wait indefinitely (no overall deadline).
                 if timeout > 0 and elapsed_time > timeout:
-                    self._fail_outstanding(results, t)
+                    fail_outstanding(
+                        self.database,
+                        self.config,
+                        results,
+                        t,
+                        detail=f"overall timeout of {timeout}s reached",
+                    )
                     self.pool.shutdown(wait=False, cancel_futures=True)
                     raise TimeoutError("Not all tasks completed within the specified timeout")
 
@@ -292,29 +308,16 @@ class LocalExecutor:
                 time.sleep(refresh_time)
         except BaseException:
             # Handle Ctrl-C and SystemExit exceptions to mark in-flight executions as retryable
-            self._fail_outstanding(results, t)
+            fail_outstanding(
+                self.database,
+                self.config,
+                results,
+                t,
+                detail="execution was not collected (interrupted or crashed)",
+            )
             self.pool.shutdown(wait=False, cancel_futures=True)
             raise
         finally:
             t.close()
 
-        logger.info("All executions completed successfully")
-
-    def _mark_failed(self, result: ExecutionFuture, *, retryable: bool) -> None:
-        mark_execution_failed(
-            self.database,
-            self.config,
-            result.definition,
-            result.execution_id,
-            retryable=retryable,
-        )
-
-    def _fail_outstanding(self, results: list[ExecutionFuture], progress: Any) -> None:
-        for outstanding in list(results):
-            logger.warning(
-                f"Execution {outstanding.definition.execution_slug()} was not collected. "
-                "Marking it failed-retryable"
-            )
-            self._mark_failed(outstanding, retryable=True)
-            progress.update(n=1)
-            results.remove(outstanding)
+        logger.info("All executions finished")

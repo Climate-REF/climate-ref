@@ -726,6 +726,15 @@ class Config:
 
     Examples of the formatting options are available in the
     [loguru documentation](https://loguru.readthedocs.io/en/stable/api/logger.html#module-loguru._logger).
+    `{extra[execution_prefix]}` names the execution a record was logged during, if any.
+    """
+    log_json: bool = env_field("LOG_JSON", default=False, converter=_bool)
+    """
+    Write console log messages as JSON, one object per line
+
+    Use this when logs are collected by an aggregator such as Loki,
+    so a multi-line traceback stays a single entry and context such as the execution can be filtered on.
+    `log_format` still sets the `text` field of each record.
     """
 
     cmip6_parser: Literal["drs", "complete"] = env_field("CMIP6_PARSER", default="complete")

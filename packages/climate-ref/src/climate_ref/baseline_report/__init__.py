@@ -8,8 +8,9 @@ remain fetchable by digest, so the change can be reviewed without checking anyth
 
 The pipeline runs in three stages:
 
-- :mod:`~climate_ref.baseline_report.collect` reads the manifests either side of the base ref.
-- :mod:`~climate_ref.baseline_report.analyse` fetches text blobs and builds the diffs.
+- :mod:`~climate_ref.baseline_report.collect` reads the repository either side of the base ref,
+  both the manifests and the committed bundle they track.
+- :mod:`~climate_ref.baseline_report.analyse` fetches native blobs and builds the diffs.
 - :mod:`~climate_ref.baseline_report.render` writes the static site.
 
 Python decides and templates place, so no module here builds HTML.

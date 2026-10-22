@@ -8,10 +8,13 @@ a request class that fetches CMIP6 data and converts it to CMIP7 format.
 from __future__ import annotations
 
 import re
+import uuid
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, ClassVar, NamedTuple
 
 import cftime
+import dask
 import pandas as pd
 import xarray as xr
 from loguru import logger
@@ -29,6 +32,95 @@ from climate_ref_core.cmip6_to_cmip7 import (
 )
 from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.esgf.cmip6 import CMIP6Request
+
+_MANDATORY_CONVERTED_ATTRS = (
+    "activity_id",
+    "institution_id",
+    "source_id",
+    "experiment_id",
+    "variant_label",
+    "variable_id",
+    "grid_label",
+    "frequency",
+    "region",
+    "branding_suffix",
+    "branded_variable",
+    "mip_era",
+    "realm",
+    "nominal_resolution",
+    "license_id",
+    "tracking_id",
+)
+_LOSSY_DECIMAL_DIGITS = 3
+
+
+def _write_encoding(ds: xr.Dataset) -> dict[str, dict[str, Any]]:
+    """
+    Per-variable NetCDF encoding for a converted dataset.
+
+    Everything is compressed. Values are also rounded to :data:`_LOSSY_DECIMAL_DIGITS`,
+    except where that would quantise the data away: gpp and o3 magnitudes sit below the
+    rounding floor, and ozone additionally needs lossless hybrid-coordinate coefficients.
+    """
+    lossless_dataset = ds.attrs.get("variable_id") == "o3"
+
+    encoding: dict[str, dict[str, Any]] = {}
+    for var in ds.data_vars:
+        var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
+        if not lossless_dataset and str(var) != "gpp":
+            var_encoding["least_significant_digit"] = _LOSSY_DECIMAL_DIGITS
+        encoding[str(var)] = var_encoding
+    return encoding
+
+
+def _quantised_variables(ds: xr.Dataset) -> list[str]:
+    """Name the variables stored with the lossy decimal quantisation the writer applies."""
+    return [
+        str(name)
+        for name in ds.data_vars
+        if ds[name].encoding.get("least_significant_digit") == _LOSSY_DECIMAL_DIGITS
+    ]
+
+
+def _invalid_conversion_reason(path: Path) -> str | None:
+    """Return why a cached conversion cannot be reused, or ``None`` if it can."""
+    try:
+        with xr.open_dataset(path, decode_times=False) as ds:
+            return _conversion_defect(ds)
+    except (OSError, ValueError) as e:
+        return f"cannot read metadata: {e}"
+
+
+def _conversion_defect(ds: xr.Dataset) -> str | None:
+    """Return what is wrong with an opened cached conversion, or ``None`` if nothing is."""
+    missing = [name for name in _MANDATORY_CONVERTED_ATTRS if not ds.attrs.get(name)]
+    if missing:
+        return f"missing mandatory attributes: {', '.join(missing)}"
+
+    variable_id = str(ds.attrs["variable_id"])
+    if variable_id not in ds.variables:
+        return f"missing data variable: {variable_id}"
+    if variable_id == "o3" and (quantised := _quantised_variables(ds)):
+        return f"ozone dataset uses destructive decimal quantisation: {', '.join(quantised)}"
+
+    if "time" in ds.variables and ds.sizes.get("time", 0):
+        time = ds["time"]
+        if not time.attrs.get("units"):
+            return "time coordinate has no units"
+        # Reading both endpoints catches a truncated file.
+        time.isel(time=[0, -1]).load()
+    return None
+
+
+def _load_time_coordinates(ds: xr.Dataset) -> None:
+    """Materialise the small CF time variables before a Dask-backed NetCDF write."""
+    time_variables = {"time"}
+    if "time" in ds:
+        bounds_name = ds["time"].attrs.get("bounds")
+        if bounds_name:
+            time_variables.add(str(bounds_name))
+    for name in time_variables.intersection(ds.variables):
+        ds[name].load()
 
 
 def _get_cmip7_cache_dir() -> Path:
@@ -146,57 +238,57 @@ def _convert_file_to_cmip7(
     logger.info(f"Converting to CMIP7: {cmip6_path.name}")
 
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    with xr.open_dataset(cmip6_path, decode_times=time_coder) as ds:
-        # When fabricating extended historical coverage, pad the series first so both the
-        # filename time range and the written data reflect the added months.
-        source_ds = ds
-        if extend_historical_to is not None:
-            end_year, end_month = extend_historical_to
-            source_ds = repeat_final_year_to(ds, end_year=end_year, end_month=end_month)
+    # Some CMIP fields are several GiB, so bound chunk size and write concurrency.
+    with dask.config.set({"array.chunk-size": "64MiB", "scheduler": "single-threaded"}):
+        with xr.open_dataset(cmip6_path, decode_times=time_coder, chunks="auto") as ds:
+            # When fabricating extended historical coverage, pad the series first so both the
+            # filename time range and the written data reflect the added months.
+            source_ds = ds
+            if extend_historical_to is not None:
+                end_year, end_month = extend_historical_to
+                source_ds = repeat_final_year_to(ds, end_year=end_year, end_month=end_month)
 
-        frequency = str(cmip7_facets.get("frequency", "mon"))
-        time_range = format_cmip7_time_range(source_ds, frequency)
-        output_file = drs_path / create_cmip7_filename(cmip7_facets, time_range=time_range)
+            frequency = str(cmip7_facets.get("frequency", "mon"))
+            time_range = format_cmip7_time_range(source_ds, frequency)
+            output_file = drs_path / create_cmip7_filename(cmip7_facets, time_range=time_range)
 
-        if output_file.exists():
-            logger.debug(f"Using cached CMIP7 file: {output_file}")
-            return output_file
-
-        ds_cmip7 = convert_cmip6_dataset(source_ds)
-
-        # Ensure version and sanitized activity_id are in the file attributes
-        # so that parse_cmip7_file can extract them for instance_id construction
-        ds_cmip7.attrs["version"] = version
-        ds_cmip7.attrs["activity_id"] = activity_id
-
-        try:
-            logger.info(f"Writing translated CMIP7 file: {output_file}")
-            suppress_bounds_coordinates(ds_cmip7)
-
-            # Apply lossy compression - these are converted files used for
-            # verification only, so precision loss is acceptable.
-            # gpp magnitudes (~1e-8 kg m-2 s-1) sit far below the fixed
-            # least_significant_digit=3 (~1e-3) precision floor, which would round the entire field to zero.
-            # Keep gpp lossless; other variables tolerate it.
-            encoding: dict[str, dict[str, Any]] = {}
-            for var in ds_cmip7.data_vars:
-                var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
-
-                lossless_variables = {"gpp"}
-                if str(var) not in lossless_variables:
-                    var_encoding["least_significant_digit"] = 3
-                encoding[str(var)] = var_encoding
-
-            ds_cmip7.to_netcdf(output_file, encoding=encoding)
-        except PermissionError:
-            # If we can't write but file exists (race condition or permission issue), use it
             if output_file.exists():
-                logger.debug(f"Using existing CMIP7 file (could not overwrite): {output_file}")
-                return output_file
-            # Clear the cache directory hint for the user
-            logger.error(f"Permission denied writing to {output_file}")
-            logger.error(f"Try clearing the cache: rm -rf {_get_cmip7_cache_dir()}")
-            raise
+                invalid_reason = _invalid_conversion_reason(output_file)
+                if invalid_reason is None:
+                    logger.debug(f"Using cached CMIP7 file: {output_file}")
+                    return output_file
+                logger.info(f"Rebuilding invalid CMIP7 conversion ({invalid_reason}): {output_file}")
+
+            ds_cmip7 = convert_cmip6_dataset(source_ds, file_id=str(output_file.relative_to(cache_dir)))
+
+            # Ensure version and sanitized activity_id are in the file attributes
+            # so that parse_cmip7_file can extract them for instance_id construction
+            ds_cmip7.attrs["version"] = version
+            ds_cmip7.attrs["activity_id"] = activity_id
+
+            temporary_file = output_file.with_name(
+                f".{output_file.stem}.{uuid.uuid4().hex}.tmp{output_file.suffix}"
+            )
+
+            try:
+                logger.info(f"Writing translated CMIP7 file: {output_file}")
+                # Xarray cannot CF-encode a Dask-backed cftime bounds array.
+                _load_time_coordinates(ds_cmip7)
+                suppress_bounds_coordinates(ds_cmip7)
+
+                ds_cmip7.to_netcdf(temporary_file, encoding=_write_encoding(ds_cmip7))
+                temporary_file.replace(output_file)
+            except PermissionError:
+                # If we can't write but file exists (race condition or permission issue), use it
+                if output_file.exists() and _invalid_conversion_reason(output_file) is None:
+                    logger.debug(f"Using existing CMIP7 file (could not overwrite): {output_file}")
+                    return output_file
+                # Clear the cache directory hint for the user
+                logger.error(f"Permission denied writing to {output_file}")
+                logger.error(f"Try clearing the cache: rm -rf {_get_cmip7_cache_dir()}")
+                raise
+            finally:
+                temporary_file.unlink(missing_ok=True)
 
     return output_file
 
@@ -275,6 +367,24 @@ class CMIP7Request:
 
         # Create corresponding CMIP6 facets
         self._cmip6_facets = self._convert_to_cmip6_facets(facets)
+
+    def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> CMIP7Request:
+        """
+        Return this request unchanged: CMIP7 requests are not pinned yet.
+
+        CMIP7 data cannot be fetched from ESGF at the moment.
+
+        Parameters
+        ----------
+        datasets
+            The catalog records of the datasets recorded for this request's source type.
+
+        Returns
+        -------
+        :
+            This request, unchanged.
+        """
+        return self
 
     def _convert_to_cmip6_facets(self, cmip7_facets: dict[str, Any]) -> dict[str, Any]:
         """Convert CMIP7 facets to CMIP6 facets for fetching."""
@@ -392,6 +502,15 @@ class CMIP7Request:
             if converted_files:
                 cmip7_row["files"] = converted_files
                 converted_rows.append(cmip7_row)
+            elif paths:
+                # Every file failed to convert above, so this dataset drops out of the
+                # result. Say so here, while the reason is still next to it in the log:
+                # downstream all that can be seen is a dataset that never arrived.
+                dataset = row_dict.get("key") or cmip7_row.get("variable_id", "<unknown dataset>")
+                logger.error(
+                    f"None of the {len(paths)} file(s) for {dataset} could be converted, "
+                    f"so it is missing from the data fetched for {self.slug}"
+                )
 
         if not converted_rows:
             logger.warning(f"No files converted for request: {self.slug}")

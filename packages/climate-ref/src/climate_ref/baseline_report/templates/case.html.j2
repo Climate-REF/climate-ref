@@ -11,13 +11,20 @@
 {% endfor %}
 </ul>
 {% endif %}
-{% if case.change.committed %}
-<h3>Committed artefacts changed</h3>
-<ul class="committed">
-{% for name in case.change.committed %}
-<li><code>{{ name }}</code></li>
+{% if case.committed %}
+<details open>
+<summary>Committed artefacts</summary>
+{% for item in case.committed %}
+{{ m.committed_block(item) }}
 {% endfor %}
-</ul>
+</details>
+{% endif %}
+
+{% if case.tree %}
+<details>
+<summary>Captured baseline</summary>
+{{ m.tree_rows(case.tree) }}
+</details>
 {% endif %}
 
 {% if case.images %}

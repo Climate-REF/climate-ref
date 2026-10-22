@@ -215,6 +215,20 @@ class TestProvidersSetup:
         assert "validation failed" in result.stderr
         assert "Setup failed for providers" in result.stderr
 
+    def test_setup_ingests_provider_data(self, config, invoke_cli, mocker):
+        mock_ingest = mocker.patch("climate_ref.datasets.ingest_provider_data")
+
+        invoke_cli(["providers", "setup", "--skip-env", "--provider", "example"])
+
+        mock_ingest.assert_called_once()
+
+    def test_setup_skip_data_skips_ingest(self, config, invoke_cli, mocker):
+        mock_ingest = mocker.patch("climate_ref.datasets.ingest_provider_data")
+
+        invoke_cli(["providers", "setup", "--skip-data", "--provider", "example"])
+
+        mock_ingest.assert_not_called()
+
     def test_setup_exception_handling(self, config, invoke_cli, mocker):
         """Test setup handles exceptions from provider.setup()."""
         # Create a mock provider that raises an exception during setup
@@ -394,3 +408,17 @@ class TestProvidersShow:
             ],
             expected_exit_code=1,
         )
+
+
+class TestProvidersCheckHealth:
+    def test_healthy(self, config, invoke_cli):
+        result = invoke_cli(["providers", "check-health", "--provider", "example"])
+        assert "Provider example: healthy" in result.stdout
+
+    def test_unhealthy_exits_non_zero(self, config, invoke_cli, mocker):
+        from climate_ref_example import provider as example_provider
+
+        mocker.patch.object(example_provider, "check_health", return_value=["micromamba run failed"])
+
+        result = invoke_cli(["providers", "check-health", "--provider", "example"], expected_exit_code=1)
+        assert "Provider example: unhealthy" in result.stdout

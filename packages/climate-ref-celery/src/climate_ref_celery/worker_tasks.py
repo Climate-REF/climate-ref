@@ -10,7 +10,7 @@ from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.database import Database
-from climate_ref.executor import handle_execution_result
+from climate_ref.executor import handle_execution_result, record_lost_execution
 from climate_ref.models import Execution
 from climate_ref_core.diagnostics import ExecutionResult
 
@@ -84,8 +84,6 @@ def handle_result(result: ExecutionResult, execution_id: int) -> None:
     execution_id
         The unique identifier for the diagnostic execution
     """
-    logger.info(f"Handling result for execution {execution_id} + {result}")
-
     config = Config.default()
     db = _worker_database.get(config)
 
@@ -96,6 +94,7 @@ def handle_result(result: ExecutionResult, execution_id: int) -> None:
             logger.error(f"Execution {execution_id} not found")
             return
 
+        logger.info(f"Handling {result} for {execution}")
         handle_execution_result(config, db, execution, result)
 
 
@@ -136,7 +135,8 @@ def handle_failure(task_id: str, execution_id: int) -> None:
             logger.error(f"Execution {execution_id} not found")
             return
 
-        execution.mark_failed()
-        # Deliberately not clearing dirty - this is a system-level failure
-        # (worker killed, OOM, time limit) so the execution should be retried
+        # Dirty is left alone, so a system-level failure is retried on the next solve
+        record_lost_execution(
+            config, execution, f"celery task {task_id} failed (worker lost, killed or out of time)"
+        )
         logger.info(f"Marked execution {execution_id} as failed (retryable)")

@@ -1,11 +1,18 @@
 """Tests for the shared pytest plugin shipped with ``climate_ref``."""
 
+import os
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from climate_ref.config import BUNDLED_IGNORE_DATASETS, DEFAULT_IGNORE_DATASETS_FILENAME, Config
-from climate_ref.conftest_plugin import _use_local_ignore_datasets_file, packaged_ignore_datasets_file
+from climate_ref.conftest_plugin import (
+    _load_or_create_dataframe,
+    _run_once,
+    _use_local_ignore_datasets_file,
+    packaged_ignore_datasets_file,
+)
 from climate_ref_core.data import ResourceOrigin
 
 # The canonical copy, served over `DEFAULT_IGNORE_DATASETS_URL` from the default branch.
@@ -40,3 +47,40 @@ def test_use_local_ignore_datasets_file_disables_fetching():
     assert cfg.ignore_datasets_resource.origin == ResourceOrigin.override
     # An empty URL short-circuits `refresh_ignore_datasets_file`, keeping tests offline.
     assert cfg.ignore_datasets_url == ""
+
+
+def test_run_once_reuses_completion_marker(tmp_path):
+    calls = []
+
+    _run_once(tmp_path / "artifact.ready", lambda: calls.append("called"))
+    _run_once(tmp_path / "artifact.ready", lambda: calls.append("called"))
+
+    assert calls == ["called"]
+
+
+def test_run_once_retries_after_failure(tmp_path):
+    marker_path = tmp_path / "artifact.ready"
+
+    def fail():
+        raise RuntimeError("failed")
+
+    with pytest.raises(RuntimeError, match="failed"):
+        _run_once(marker_path, fail)
+
+    assert not marker_path.exists()
+
+
+def test_load_or_create_dataframe_reuses_cache(tmp_path):
+    calls = []
+    expected = pd.DataFrame({"value": [1, 2]})
+
+    def build():
+        calls.append(os.getpid())
+        return expected
+
+    first = _load_or_create_dataframe(tmp_path / "catalog.pkl", build)
+    second = _load_or_create_dataframe(tmp_path / "catalog.pkl", build)
+
+    pd.testing.assert_frame_equal(first, expected)
+    pd.testing.assert_frame_equal(second, expected)
+    assert calls == [os.getpid()]

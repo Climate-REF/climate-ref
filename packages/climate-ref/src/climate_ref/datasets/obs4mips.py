@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import traceback
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -8,8 +9,8 @@ import netCDF4
 import pandas as pd
 from loguru import logger
 
-from climate_ref.datasets.base import DatasetAdapter
-from climate_ref.datasets.catalog_builder import build_catalog
+from climate_ref.datasets.base import DatasetAdapter, SkipFunction
+from climate_ref.datasets.catalog_builder import build_catalog, iter_built_catalogs
 from climate_ref.datasets.netcdf_utils import (
     read_global_attrs,
     read_time_bounds,
@@ -164,21 +165,23 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
 
     file_specific_metadata = ("start_time", "end_time", "path")
     version_metadata = "version"
-    # See ODS2.5 at https://doi.org/10.5281/zenodo.11500474 under "Directory structure template"
+    # The facets ESGF publishes obs4MIPs datasets under, so that a dataset's ``instance_id``
+    # is the same one the ESGF index knows it by and can be searched for directly.
+    # The ODS2.5 directory template (https://doi.org/10.5281/zenodo.11500474) additionally
+    # nests data under ``nominal_resolution``, which is descriptive rather than identifying.
     dataset_id_metadata = (
         "activity_id",
         "institution_id",
         "source_id",
         "frequency",
         "variable_id",
-        "nominal_resolution",
         "grid_label",
     )
 
     def __init__(self, n_jobs: int = 1):
         self.n_jobs = n_jobs
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip: SkipFunction | None = None) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
 
@@ -189,6 +192,8 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         ----------
         file_or_directory
             File or directory containing the datasets
+        skip
+            Selects files to leave out of the catalog, such as files already in the database
 
         Returns
         -------
@@ -200,11 +205,56 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             parsing_func=parse_obs4mips,
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
+            skip=skip,
+            error_if_none_valid="No obs4MIPs-compliant datasets found",
         )
         if datasets.empty:
-            logger.error("No datasets found")
-            raise ValueError("No obs4MIPs-compliant datasets found")
+            return datasets
 
+        return self._enrich_parsed_catalog(datasets)
+
+    def iter_local_datasets(
+        self,
+        file_or_directory: Path,
+        chunk_size: int = 10_000,
+        skip: SkipFunction | None = None,
+    ) -> Iterator[pd.DataFrame]:
+        """
+        Stream the data catalog in chunks to bound peak memory.
+
+        Discovery walks the tree once, but parsing and DataFrame construction
+        happen ``chunk_size`` files at a time.
+        Chunks flush at directory boundaries so files belonging to the same dataset stay together.
+
+        Parameters
+        ----------
+        file_or_directory
+            Root of the archive (or a single file) to ingest.
+        chunk_size
+            Soft target for the number of files per chunk.
+        skip
+            Selects files to leave out of the catalog, such as files already in the database.
+
+        Yields
+        ------
+        :
+            Catalog DataFrames, each containing metadata for one chunk of files.
+            Empty chunks are skipped.
+        """
+        for raw_chunk in iter_built_catalogs(
+            paths=[str(file_or_directory)],
+            parsing_func=parse_obs4mips,
+            include_patterns=["*.nc"],
+            n_jobs=self.n_jobs,
+            chunk_size=chunk_size,
+            skip=skip,
+        ):
+            yield self._enrich_parsed_catalog(raw_chunk)
+
+    def _enrich_parsed_catalog(self, datasets: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply post-parse enrichment to a non-empty raw catalog DataFrame.
+        """
         self._warn_if_misfiled(datasets)
         datasets["activity_id"] = self.activity_id
 
@@ -217,10 +267,7 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             self.version_metadata,
         ]
 
-        def _transform(item: str, value: Any) -> str:
-            return str(value).replace(" ", "") if item == "nominal_resolution" else str(value)
-
-        datasets = build_instance_id(datasets, drs_items, prefix=self.activity_id, transform=_transform)
+        datasets = build_instance_id(datasets, drs_items)
         datasets["finalised"] = True
         return datasets
 

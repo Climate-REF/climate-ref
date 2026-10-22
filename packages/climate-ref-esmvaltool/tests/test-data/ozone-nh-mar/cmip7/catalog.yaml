@@ -1,8 +1,9 @@
 _metadata:
-  hash: 83717573c122607da3b482f4f058d7f4d4e8301c
+  hash: e92d132b6ec9c77e94b8f0d38e54e4318e13b359
 cmip7:
   slug_column: instance_id
   selector:
+    experiment_id: historical
     grid_label: gr1
     source_id: GFDL-ESM4
     variant_label: r1i1p1f1
@@ -39,7 +40,7 @@ cmip7:
     start_time: '1950-01-16 12:00:00'
     time_range: 1950-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/d43a3969-365f-49b9-bc9d-1aafdface5cd
+    tracking_id: hdl:21.14107/00ee3c72-fa8d-545f-929a-6b28350adc3c
     units: m
     variable_id: toz
     variant_label: r1i1p1f1
@@ -56,7 +57,7 @@ obs4mips:
     frequency: mon
     grid: data gridded to 1x1 degree lat x lon
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+    instance_id: obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.gn.v20231115
     institution_id: DLR-BIRA
     long_name: Total Column Ozone
     nominal_resolution: 1x1 degree

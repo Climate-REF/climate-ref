@@ -36,7 +36,7 @@ on:
         default: false
 
 # `contents` to commit the regenerated manifest/bundle back to the dispatched branch,
-# `pull-requests` so the called diff-report workflow can post on the branch's open pull request.
+# `pull-requests` so the diff-report workflow can post to the branch's PR.
 permissions:
   contents: write
   pull-requests: write
@@ -70,7 +70,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
         with:
-          # Full history so the mint can resolve the committed baselines against the default branch.
           fetch-depth: 0
       - uses: ./.github/actions/setup
         with:
@@ -134,9 +133,8 @@ jobs:
             exit 0
           fi
           git commit -m "chore(regression): mint native baselines for ${PROVIDER}"
-          # Pushed with GITHUB_TOKEN, so GitHub will NOT start new workflow runs for this
-          # commit: the PR gate does not auto-replay the freshly minted baseline. Push a
-          # follow-up commit (or re-run the PR gate) to verify it. See docs/background/regression-baselines.md.
+          # Pushed with GITHUB_TOKEN, so GitHub will NOT start new workflow runs for this commit.
+          # See docs/background/regression-baselines.md.
           #
           # The branch may have advanced (e.g. mint of another diagnostic).
           # Different diagnostics touch disjoint test-data paths, so the rebase does not conflict.

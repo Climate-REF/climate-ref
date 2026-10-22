@@ -113,6 +113,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     name = "Regional historical annual cycle of climate variables"
     slug = "regional-historical-annual-cycle"
     base_recipe = "ref/recipe_ref_annual_cycle_region.yml"
+    version = 2
 
     variables = (
         "hus",
@@ -130,12 +131,12 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -159,12 +160,12 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                                 "tas_tavg-h2m-hxy-u",
                                 "ua_tavg-p19-hxy-air",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -178,6 +179,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={
@@ -263,7 +265,6 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",
@@ -294,7 +295,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     series = tuple(
         SeriesDefinition(
             file_pattern=f"work/{diag_name}/figures/annual_cycle_*_{_region_to_filename(region)}.nc",
-            sel={"dim0": 0},  # Select the model and not the observation.
+            sel={"dim0": 0},  # Each file holds a single dataset (its label is in the filename).
             dimensions={
                 "region": region,
                 "variable_id": var_name,
@@ -383,6 +384,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
     name = "Regional historical mean and anomaly of climate variables"
     slug = "regional-historical-timeseries"
     base_recipe = "ref/recipe_ref_timeseries_region.yml"
+    version = 2
 
     variables = (
         "hus",
@@ -415,12 +417,12 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -444,13 +446,13 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                                 "tas_tavg-h2m-hxy-u",
                                 "ua_tavg-p19-hxy-air",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                             "region": "glb",
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -464,6 +466,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={
@@ -550,7 +553,6 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",
@@ -654,6 +656,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
     name = "Regional historical trend of climate variables"
     slug = "regional-historical-trend"
     base_recipe = "ref/recipe_ref_trend_regions.yml"
+    version = 2
 
     variables = (
         "hus",
@@ -671,12 +674,12 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "variable_id": variables,
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "table_id": "Amon",
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -700,12 +703,12 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                                 "tas_tavg-h2m-hxy-u",
                                 "ua_tavg-p19-hxy-air",
                             ),
-                            "experiment_id": "historical",
+                            "experiment_id": ("historical", "esm-hist"),
                             "frequency": "mon",
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -719,6 +722,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         (
             DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
+                fallback_source_types=(SourceDatasetType.obs4REF,),
                 filters=(
                     FacetFilter(
                         facets={
@@ -805,7 +809,6 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",
@@ -821,7 +824,16 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         ),
     )
 
-    facets = ("grid_label", "member_id", "variant_label", "source_id", "variable_id", "region", "metric")
+    facets = (
+        "experiment_id",
+        "grid_label",
+        "member_id",
+        "variant_label",
+        "source_id",
+        "variable_id",
+        "region",
+        "metric",
+    )
     files = tuple(
         FileDefinition(
             file_pattern=f"plots/{var_name}_trends/plot/seaborn_barplot.png",

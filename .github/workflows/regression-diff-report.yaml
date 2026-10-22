@@ -1,8 +1,6 @@
 # Build and host the HTML diff of the regression baselines changed on a branch.
 #
-# Called by the mint workflow after it pushes regenerated manifests, and dispatched by hand
-# after a manual mint. Reads native blobs from the public store and writes only to the
-# reports bucket, so it needs the reports token and nothing else.
+# Called by the mint workflow after it pushes regenerated manifests, or run by hand after a manual mint.
 name: Regression baselines (diff report)
 
 on:

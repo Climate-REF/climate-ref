@@ -2,7 +2,27 @@ import datetime
 
 import pytest
 
-from climate_ref.models.execution import Execution, ExecutionGroup, ExecutionOutput, ResultOutputType
+from climate_ref.models.execution import (
+    Execution,
+    ExecutionFailureReason,
+    ExecutionGroup,
+    ExecutionOutput,
+    ResultOutputType,
+    SkipReason,
+)
+
+
+def test_reprs_name_the_execution():
+    group = ExecutionGroup(id=3, diagnostic_id=5, key="cmip6_tas")
+    execution = Execution(id=7, execution_group_id=3, output_fragment="pmp/annual-cycle/abc")
+
+    assert repr(group) == "<ExecutionGroup id=3 diagnostic_id=5 key=cmip6_tas>"
+    assert repr(execution) == "<Execution id=7 group_id=3 output_fragment=pmp/annual-cycle/abc>"
+
+
+def test_reprs_do_not_load_missing_attributes():
+    assert repr(ExecutionGroup()) == "<ExecutionGroup id=None diagnostic_id=None key=None>"
+    assert repr(Execution()) == "<Execution id=None group_id=None output_fragment=None>"
 
 
 class TestMetricExecution:
@@ -226,3 +246,50 @@ class TestExecutionOutput:
 
         ExecutionOutput.register_cv_dimensions(cmip7_aft_cv)
         assert ExecutionOutput._cv_dimensions == [d.name for d in cmip7_aft_cv.dimensions]
+
+
+def test_mark_successful_clears_failure_reason():
+    execution = Execution(output_fragment="fragment", dataset_hash="hash")
+    execution.mark_failed(ExecutionFailureReason.Abandoned)
+
+    execution.mark_successful("bundle.json")
+
+    assert execution.successful is True
+    assert execution.failure_reason is None
+
+
+def test_mark_failed_defaults_to_unknown_reason():
+    execution = Execution(output_fragment="fragment", dataset_hash="hash")
+
+    execution.mark_failed()
+
+    assert execution.successful is False
+    assert execution.failure_reason == "unknown"
+
+
+class TestSkipReason:
+    @pytest.mark.parametrize(
+        ("successful", "dirty", "expected"),
+        [
+            (None, True, SkipReason.InProgress),
+            (False, False, SkipReason.FailedNotDirty),
+            (True, False, SkipReason.UpToDate),
+            (True, True, None),
+            (False, True, None),
+        ],
+    )
+    def test_skip_reason(self, mocker, successful, dirty, expected):
+        group = mocker.Mock(spec=ExecutionGroup)
+        last = mocker.Mock(spec=Execution)
+        last.dataset_hash = "dataset_hash"
+        last.successful = successful
+        group.executions = [last]
+        group.dirty = dirty
+
+        assert ExecutionGroup.skip_reason(group, "dataset_hash") == expected
+
+    def test_never_executed_is_not_skipped(self, mocker):
+        group = mocker.Mock(spec=ExecutionGroup)
+        group.executions = []
+
+        assert ExecutionGroup.skip_reason(group, "dataset_hash") is None

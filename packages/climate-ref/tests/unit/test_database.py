@@ -1,4 +1,5 @@
 import re
+import sqlite3
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -247,17 +248,32 @@ def test_database_cvs(config, mocker):
             assert dimension.name in existing_columns
 
 
+def _write_sqlite(db_path: Path, value: str) -> None:
+    with sqlite3.connect(db_path) as connection:
+        connection.execute("CREATE TABLE item (value TEXT)")
+        connection.execute("INSERT INTO item VALUES (?)", (value,))
+    connection.close()
+
+
+def _read_sqlite(db_path: Path) -> list[str]:
+    with sqlite3.connect(db_path) as connection:
+        values = [row[0] for row in connection.execute("SELECT value FROM item")]
+    connection.close()
+    return values
+
+
 def test_create_backup(tmp_path):
     # Create a test database file
     db_path = tmp_path / "test.db"
-    db_path.write_text("test data")
+    _write_sqlite(db_path, "test data")
 
     # Create a backup
     backup_path = _create_backup(db_path, max_backups=3)
 
     # Verify backup was created
     assert backup_path.exists()
-    assert backup_path.read_text() == "test data"
+    assert _read_sqlite(backup_path) == ["test data"]
+    assert not list(backup_path.parent.glob("*.tmp"))
 
     # Verify backup is in backups directory
     assert backup_path.parent == db_path.parent / "backups"
@@ -265,6 +281,34 @@ def test_create_backup(tmp_path):
     # Verify backup filename format
     timestamp = re.search(r"test_(.*)\.db", backup_path.name).group(1)
     datetime.strptime(timestamp, "%Y%m%d_%H%M%S")
+
+
+def test_create_backup_removes_partial_file_on_failure(tmp_path):
+    db_path = tmp_path / "test.db"
+    db_path.write_bytes(b"not a sqlite database")
+
+    with pytest.raises(sqlite3.DatabaseError):
+        _create_backup(db_path, max_backups=3)
+
+    assert not list((tmp_path / "backups").iterdir())
+
+
+def test_create_backup_includes_committed_wal_pages(tmp_path):
+    db_path = tmp_path / "test.db"
+    writer = sqlite3.connect(db_path)
+    writer.execute("PRAGMA journal_mode=WAL")
+    writer.execute("PRAGMA wal_autocheckpoint=0")
+    writer.execute("CREATE TABLE item (value TEXT)")
+    writer.execute("INSERT INTO item VALUES ('committed')")
+    writer.commit()
+
+    # The open writer keeps the committed rows in the -wal file, which a plain file copy misses.
+    try:
+        backup_path = _create_backup(db_path, max_backups=3)
+    finally:
+        writer.close()
+
+    assert _read_sqlite(backup_path) == ["committed"]
 
 
 def test_create_backup_nonexistent_file(tmp_path):
@@ -280,7 +324,7 @@ def test_create_backup_nonexistent_file(tmp_path):
 def test_create_backup_cleanup_old_backups(tmp_path):
     # Create a test database file
     db_path = tmp_path / "test.db"
-    db_path.write_text("test data")
+    _write_sqlite(db_path, "test data")
 
     # Create some old backups
     backup_dir = tmp_path / "backups"

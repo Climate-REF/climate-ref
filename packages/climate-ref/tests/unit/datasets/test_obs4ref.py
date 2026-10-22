@@ -59,7 +59,7 @@ class TestObs4REFDatasetAdapter:
 
         assert len(data_catalog) == 1
         assert data_catalog["activity_id"].iloc[0] == "obs4REF"
-        assert data_catalog["instance_id"].iloc[0] == "obs4REF.obs4REF.TESTORG.TEST-SRC.mon.ts.100km.gn.v1"
+        assert data_catalog["instance_id"].iloc[0] == "obs4REF.TESTORG.TEST-SRC.mon.ts.gn.v1"
 
     def test_same_file_gets_distinct_ids(self, obs4ref_style_dir):
         obs4mips_catalog = Obs4MIPsDatasetAdapter().find_local_datasets(obs4ref_style_dir)
@@ -67,9 +67,10 @@ class TestObs4REFDatasetAdapter:
 
         obs4mips_instance_id = obs4mips_catalog["instance_id"].iloc[0]
         ref_instance_id = ref_catalog["instance_id"].iloc[0]
-        assert obs4mips_instance_id.startswith("obs4MIPs.obs4MIPs.")
-        assert ref_instance_id.startswith("obs4REF.obs4REF.")
-        assert obs4mips_instance_id.split(".", 2)[2] == ref_instance_id.split(".", 2)[2]
+        # The collection leads the id, so the same file never collides across the two
+        assert obs4mips_instance_id.startswith("obs4MIPs.")
+        assert ref_instance_id.startswith("obs4REF.")
+        assert obs4mips_instance_id.split(".", 1)[1] == ref_instance_id.split(".", 1)[1]
 
     def test_obs4mips_adapter_warns_on_obs4ref_layout(self, obs4ref_style_dir, caplog):
         Obs4MIPsDatasetAdapter().find_local_datasets(obs4ref_style_dir)

@@ -58,10 +58,17 @@ class ExecutionError(RefException):
 class CondaCommandError(ExecutionError):
     """Exception raised when a conda command fails"""
 
-    def __init__(self, message: str, stdout: str = "", stderr: str = "") -> None:
+    def __init__(self, message: str, stdout: str = "", stderr: str = "", launch_failed: bool = False) -> None:
         self.short_message = message
         self.stdout = stdout
         self.stderr = stderr
+        self.launch_failed = launch_failed
+        """
+        Whether micromamba itself failed before the wrapped command ran
+
+        This is an environment problem (e.g. an unwritable cache directory)
+        rather than a failure of the diagnostic.
+        """
         complete_msg = f"{message}\nstdout: {stdout}\nstderr: {stderr}"
 
         super().__init__(complete_msg)

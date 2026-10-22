@@ -20,11 +20,13 @@ datasets:
   mip: Omon
   timerange: 18500116T120000/20141216T120000
 - dataset: TROPFLUX
-  version: v1
+  version: v2
   project: OBS6
   type: reanaly
   tier: 2
   mip: Omon
+  start_year: 1979
+  end_year: 2021
 preprocessors:
   ssta_enso:
     custom_order: true
@@ -164,34 +166,183 @@ preprocessors:
       period: monthly
     area_statistics:
       operator: mean
+  ssta_pattern_map:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+    rolling_window_statistics:
+      coordinate: time
+      operator: mean
+      window_length: 5
+    anomalies:
+      period: monthly
+    extract_month:
+      month: 12
+  ssta_seasamp:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 280.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    anomalies:
+      period: monthly
+  enso_amp3:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 120.0
+      end_longitude: 280.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+    anomalies:
+      period: monthly
+    climate_statistics:
+      operator: std_dev
+      period: full
+  enso_seas_2:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 190.0
+      end_longitude: 240.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    anomalies:
+      period: monthly
+    area_statistics:
+      operator: mean
+    climate_statistics:
+      operator: std_dev
+      period: monthly
+  enso_seas_3:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 130.0
+      end_longitude: 280.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    anomalies:
+      period: monthly
+    meridional_statistics:
+      operator: mean
+    climate_statistics:
+      operator: std_dev
+      period: monthly
+  enso_seas_4:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 280.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    anomalies:
+      period: monthly
+    meridional_statistics:
+      operator: mean
+  enso_asymmetry:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 120.0
+      end_longitude: 290.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+    anomalies:
+      period: monthly
 diagnostics:
   diagnostic_metrics:
     description: run preprocessors on variables for ENSO metrics
     variables:
       tos_seas_asym:
         short_name: tos
-        mip: Omon
         preprocessor: enso_seas_asym
       tos_amp:
         short_name: tos
-        mip: Omon
         preprocessor: enso_amplitude
       tos_patdiv1:
         short_name: tos
-        mip: Omon
         preprocessor: ssta_dec_area
       tos_lifdur1:
         short_name: tos
-        mip: Omon
         preprocessor: ssta_ninoarea
       tos_lifdurdiv2:
         short_name: tos
-        mip: Omon
         preprocessor: ssta_meridional
       tos_pat2:
         short_name: tos
-        mip: Omon
         preprocessor: ssta_pattern2
+      tos_pat_map:
+        short_name: tos
+        mip: Omon
+        preprocessor: ssta_pattern_map
     scripts:
-      plot_script:
+      metrics_script:
         script: enso_metrics/enso_diag1metrics.py
+      pattern_script:
+        script: enso_metrics/enso_divedowns/pattern_9.py
+      lifecycle_script:
+        script: enso_metrics/enso_divedowns/lifecycle_10.py
+      durationdiversity_script:
+        script: enso_metrics/enso_divedowns/durdiver_1415.py
+  diagnostic_seas_skew_amp:
+    description: Assymetry, amplitude, seasonality divedowns
+    variables:
+      tos_seas_area:
+        short_name: tos
+        mip: Omon
+        preprocessor: enso_seas_2
+      tos_seas_meri:
+        short_name: tos
+        mip: Omon
+        preprocessor: enso_seas_3
+      tos_seas_split:
+        short_name: tos
+        mip: Omon
+        preprocessor: enso_seas_4
+      tos_amp:
+        short_name: tos
+        mip: Omon
+        preprocessor: enso_amp3
+      tos_asym:
+        short_name: tos
+        mip: Omon
+        preprocessor: enso_asymmetry
+    scripts:
+      seas_asym_amp_script:
+        script: enso_metrics/enso_divedowns/ampseasskew_1113.py

@@ -207,6 +207,11 @@ class FinaliseableDatasetAdapterMixin:
         labels, paths = zip(*valid)
         parsed_results = parse_files(list(paths), parsing_func, n_jobs=n_jobs)
 
+        # A catalog loaded from the database types unparsed columns from their NaNs (float64),
+        # which rejects raw parser strings such as "488370". The adapter fixes coerce them afterwards.
+        parsed_columns = {key for parsed in parsed_results for key in parsed if key in chunk.columns}
+        chunk = chunk.astype(dict.fromkeys(parsed_columns, object))
+
         updated_labels = []
         for label, path, parsed in zip(labels, paths, parsed_results):
             if "INVALID_ASSET" in parsed:

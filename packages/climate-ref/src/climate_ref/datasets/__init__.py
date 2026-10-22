@@ -2,16 +2,18 @@
 Dataset handling utilities
 """
 
+import itertools
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 from attrs import define
 from loguru import logger
-from sqlalchemy import func
+from sqlalchemy import func, select
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.base import DatasetAdapter, SkipFunction
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 from climate_ref.datasets.esmvaltool_reference import ESMValToolReferenceDatasetAdapter
@@ -19,6 +21,7 @@ from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, Obs4REFDataset
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.providers import DiagnosticProvider
 
 # Pre-computed slug column lookup by source type.
 # TODO: This could be replaced with a constant at the moment
@@ -230,6 +233,58 @@ def ingest_datasets(  # noqa: PLR0913
     return _ingest_catalog(adapter, db, data_catalog)
 
 
+def get_ingested_paths(
+    db: Database, source_type: SourceDatasetType, paths: Iterable[str], batch_size: int = 900
+) -> set[str]:
+    """
+    Get the subset of ``paths`` that are already ingested as ``source_type``.
+
+    Paths are looked up ``batch_size`` at a time
+    so the query stays under the bound parameter limit of SQLite before 3.32 (999).
+
+    Parameters
+    ----------
+    db
+        Database instance
+    source_type
+        Type of dataset the files were ingested as
+    paths
+        File paths to look up
+    batch_size
+        Number of paths per query
+
+    Returns
+    -------
+    :
+        Paths from ``paths`` that are in the database
+    """
+    ingested: set[str] = set()
+    for batch in itertools.batched(paths, batch_size):
+        query = (
+            select(DatasetFile.path)
+            .join(Dataset, DatasetFile.dataset_id == Dataset.id)
+            .where(Dataset.dataset_type == source_type)
+            .where(DatasetFile.path.in_(batch))
+        )
+        ingested.update(db.session.scalars(query))
+    return ingested
+
+
+def skip_ingested(db: Database, source_type: SourceDatasetType) -> SkipFunction:
+    """
+    Build a skip function that selects files already ingested as ``source_type``.
+
+    Each call runs its lookup in its own transaction,
+    so it must not be called while ``db.session`` has one open.
+    """
+
+    def skip(paths: list[str]) -> set[str]:
+        with db.session.begin():
+            return get_ingested_paths(db, source_type, paths)
+
+    return skip
+
+
 def log_deferred_finalisation(db: Database, source_type: SourceDatasetType) -> None:
     """
     Report the metadata extraction that has been deferred to the next solve.
@@ -294,6 +349,29 @@ def get_dataset_adapter(source_type: str, **kwargs: Any) -> DatasetAdapter:
         raise ValueError(f"Unknown source type: {source_type}")
 
 
+def ingest_provider_data(provider: DiagnosticProvider, config: Any, db: Database) -> None:
+    """
+    Ingest the data a provider fetched during setup.
+
+    Parameters
+    ----------
+    provider
+        Provider whose `data_to_ingest` requests are ingested
+    config
+        The application configuration
+    db
+        Database instance
+    """
+    for request in provider.data_to_ingest(config):
+        adapter = get_dataset_adapter(request.source_type.value)
+        try:
+            stats = ingest_datasets(adapter, request.path, db)
+        except ValueError as e:
+            logger.warning(f"No valid {request.source_type.value} datasets found for {provider.slug}: {e}")
+            continue
+        stats.log_summary(f"{provider.slug} {request.source_type.value} ingestion complete:")
+
+
 __all__ = [
     "SLUG_COLUMN_BY_SOURCE_TYPE",
     "CMIP6DatasetAdapter",
@@ -307,5 +385,6 @@ __all__ = [
     "get_dataset_adapter",
     "get_slug_column",
     "ingest_datasets",
+    "ingest_provider_data",
     "log_deferred_finalisation",
 ]

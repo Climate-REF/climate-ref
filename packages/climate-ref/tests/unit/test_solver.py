@@ -15,6 +15,7 @@ from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
     DiagnosticExecution,
@@ -22,8 +23,8 @@ from climate_ref.solver import (
     SolveFilterOptions,
     _solve_from_data_requirements,
     apply_dataset_filters,
-    apply_obs4ref_fallback,
     catalog_for_requirement,
+    check_provider_health,
     extract_covered_datasets,
     matches_filter,
     solve_executions,
@@ -1318,6 +1319,7 @@ def test_solve_with_new_areacella(obs4ref_data_catalog, mock_diagnostic, provide
     mock_diagnostic.data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
+            fallback_source_types=(SourceDatasetType.obs4REF,),
             filters=(FacetFilter(facets={"variable_id": "ts", "source_id": "HadISST-1-1"}),),
             group_by=("variable_id", "source_id"),
         ),
@@ -1527,6 +1529,12 @@ class TestMatchesFilter:
     def test_partial_match_provider(self, mock_diagnostic):
         # "mock" is contained in "mock_provider"
         assert matches_filter(mock_diagnostic, SolveFilterOptions(provider=["mock"])) is True
+
+    def test_exclude_provider_is_exact(self, mock_diagnostic):
+        assert (
+            matches_filter(mock_diagnostic, SolveFilterOptions(exclude_provider=["Mock_Provider"])) is False
+        )
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(exclude_provider=["mock"])) is True
 
     def test_partial_match_diagnostic(self, mock_diagnostic):
         # "ock" is contained in "mock"
@@ -2077,22 +2085,6 @@ class TestObs4REFFallback:
         assert merged["activity_id"].tolist() == ["obs4MIPs"]
         assert merged["instance_id"].tolist() == obs4ref["instance_id"].tolist()
 
-    def test_only_the_obs4mips_catalog_is_extended(self):
-        catalogs = {
-            SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", []),
-            SourceDatasetType.obs4REF: self._frame("obs4REF", ["A"]),
-        }
-
-        applied = apply_obs4ref_fallback(catalogs)
-
-        assert len(applied[SourceDatasetType.obs4MIPs]) == 1
-        assert applied[SourceDatasetType.obs4REF] is catalogs[SourceDatasetType.obs4REF]
-
-    def test_untouched_without_an_obs4ref_catalog(self):
-        catalogs = {SourceDatasetType.obs4MIPs: self._frame("obs4MIPs", ["A"])}
-
-        assert apply_obs4ref_fallback(catalogs) is catalogs
-
 
 class TestDeclaredFallbacks:
     """A requirement names the collections that may stand in for its source type."""
@@ -2181,3 +2173,137 @@ class TestDeclaredFallbacks:
         pd.testing.assert_frame_equal(once, twice)
         assert once["source_id"].tolist() == ["A", "B"]
         assert once.index.tolist() == [0, 1]
+
+
+class TestProviderHealth:
+    @pytest.fixture
+    def solver(self, provider):
+        solver = mock.MagicMock(spec=ExecutionSolver)
+        solver.provider_registry = ProviderRegistry(providers=[provider])
+        return solver
+
+    def test_check_provider_health_only_checks_providers_in_scope(self, mocker, provider, config):
+        check_health = mocker.patch.object(provider, "check_health", return_value=["broken"])
+
+        assert check_provider_health([provider], config, SolveFilterOptions(provider=["other"])) == {}
+        check_health.assert_not_called()
+
+        assert check_provider_health([provider], config, SolveFilterOptions(provider=["mock"])) == {
+            provider.slug: ["broken"]
+        }
+
+    def test_check_provider_health_skips_providers_without_selected_diagnostics(
+        self, mocker, provider, config
+    ):
+        check_health = mocker.patch.object(provider, "check_health", return_value=["broken"])
+
+        assert check_provider_health([provider], config, SolveFilterOptions(diagnostic=["nonexistent"])) == {}
+        check_health.assert_not_called()
+
+    def test_solve_skips_unhealthy_provider(
+        self, mocker, mock_metric_execution, mock_executor, db_seeded, solver, provider
+    ):
+        mock_executor.return_value.runs_on_solve_host = True
+        mocker.patch.object(provider, "check_health", return_value=["micromamba run failed"])
+        solver.solve.return_value = []
+
+        outcome = solve_required_executions(db_seeded, solver=solver)
+
+        assert outcome.unhealthy_providers == [provider.slug]
+        assert solver.solve.call_args.args[0].exclude_provider == [provider.slug]
+
+    def test_solve_runs_healthy_provider(
+        self, mocker, mock_metric_execution, mock_executor, db_seeded, solver, provider
+    ):
+        mock_executor.return_value.runs_on_solve_host = True
+        mocker.patch.object(provider, "check_health", return_value=[])
+        solver.solve.return_value = [mock_metric_execution]
+
+        assert solve_required_executions(db_seeded, solver=solver).ok
+        assert mock_executor.return_value.run.call_count == 1
+
+    @pytest.mark.parametrize("runs_on_solve_host, check_health", [(False, True), (True, False)])
+    def test_solve_skips_health_check(
+        self, mocker, mock_executor, db_seeded, solver, provider, runs_on_solve_host, check_health
+    ):
+        mock_executor.return_value.runs_on_solve_host = runs_on_solve_host
+        provider_check = mocker.patch.object(provider, "check_health", return_value=["broken"])
+        solver.solve.return_value = []
+
+        assert solve_required_executions(db_seeded, solver=solver, check_health=check_health).ok
+        provider_check.assert_not_called()
+
+
+def test_solve_logs_skip_summary(db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    # The repeat is skipped as in progress, the third is skipped by the one-of check
+    solver.solve.return_value = [mock_metric_execution, mock_metric_execution, mock_execution_2]
+
+    with caplog.at_level("INFO"):
+        solve_required_executions(db_seeded, solver=solver, one_per_provider=True)
+
+    assert "Skipped 2 executions: 1 in progress, 1 one-of check" in caplog.text
+
+
+def test_solve_logs_diagnostics_skipped_during_solve(mocker, db_seeded, provider, caplog):
+    def fake_solve_executions(data_catalog, diagnostic, provider):
+        if diagnostic.slug == "mock":
+            raise InvalidDiagnosticException(diagnostic, "no data")
+        raise ValueError("constraint blew up")
+        yield
+
+    mocker.patch("climate_ref.solver.solve_executions", side_effect=fake_solve_executions)
+    solver = ExecutionSolver(provider_registry=ProviderRegistry(providers=[provider]), data_catalog={})
+
+    with caplog.at_level("INFO"):
+        assert not list(solver.solve())
+
+    assert "Skipped 2 diagnostics: 1 with no matching data, 1 errored" in caplog.text
+
+
+def test_solve_reports_outcomes_of_submitted_executions(
+    db_seeded, mock_metric_execution, mock_executor, caplog
+):
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+
+    def fail_all(timeout):
+        with db_seeded.session.begin():
+            for execution in db_seeded.session.query(Execution):
+                execution.mark_failed(ExecutionFailureReason.SystemError)
+
+    mock_executor.return_value.join.side_effect = fail_all
+
+    with caplog.at_level("INFO"):
+        outcome = solve_required_executions(db_seeded, solver=solver)
+
+    assert outcome.failed_executions == 1
+    assert "0 succeeded, 1 failed, 0 still in progress" in caplog.text
+    assert "All executions complete" not in caplog.text
+
+
+def test_solve_without_wait_reports_no_failures(db_seeded, mock_metric_execution, mock_executor, caplog):
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+
+    with caplog.at_level("INFO"):
+        outcome = solve_required_executions(db_seeded, solver=solver, wait=False)
+
+    assert outcome.failed_executions == 0
+    assert "still in progress" not in caplog.text
+
+
+def test_solve_warns_when_outcomes_are_still_being_recorded(
+    db_seeded, mock_metric_execution, mock_executor, caplog
+):
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+
+    with caplog.at_level("INFO"):
+        outcome = solve_required_executions(db_seeded, solver=solver)
+
+    assert outcome.failed_executions == 0
+    assert "1 still in progress" in caplog.text
+    assert "not reflected in the exit code" in caplog.text

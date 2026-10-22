@@ -17,8 +17,11 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
-from sqlalchemy import ColumnElement, Select, and_, false, func, or_, select
+from sqlalchemy import ColumnElement, Select, and_, cast, false, func, literal, or_, select, true, tuple_
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.compiler import SQLCompiler
+from sqlalchemy.sql.functions import FunctionElement
 
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.dataset_query import _as_facets, _entity_for
@@ -26,6 +29,7 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import select_latest_executions as select_latest_executions  # noqa: PLC0414
 from climate_ref.models.metric_value import (
     MetricValue,
+    MetricValueType,
     ScalarMetricValue,
     SeriesMetricValue,
 )
@@ -43,6 +47,8 @@ class InputDatasetFilter:
     and satisfies every facet in ``facets`` (values for one facet are OR-combined).
     A source type whose dataset table lacks a requested facet cannot match,
     so a CMIP7-only facet does not pull in all of CMIP6.
+    With ``or_no_model_input`` an execution with no model-simulation input dataset also matches,
+    which keeps observation-only executions when scoping to one era.
 
     Raises
     ------
@@ -55,6 +61,9 @@ class InputDatasetFilter:
 
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     """Dataset columns to match, e.g. ``{"source_id": ("ACCESS-CM2",)}``. ``None`` matches any dataset."""
+
+    or_no_model_input: bool = False
+    """Also match executions with no model-simulation input dataset, such as observation-only ones."""
 
     def __attrs_post_init__(self) -> None:
         if not self.source_types:
@@ -73,7 +82,11 @@ class InputDatasetFilter:
             if any(facet not in entity.__mapper__.columns for facet in facets):
                 continue
             conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
-            branches.append(Execution.datasets.of_type(entity).any(and_(*conditions)))
+            branches.append(Execution.datasets.of_type(entity).any(and_(true(), *conditions)))
+        if self.or_no_model_input:
+            model_types = (t for t in SourceDatasetType if t.is_model_output)
+            absent = (~Execution.datasets.of_type(_entity_for(t)).any() for t in model_types)
+            branches.append(and_(*absent))
         # An empty or_() emits no predicate, which would match every execution.
         return or_(*branches) if branches else false()
 
@@ -105,12 +118,20 @@ class ExecutionScope:
     """
 
 
-def apply_execution_scope(stmt: Select[Any], scope: ExecutionScope) -> Select[Any]:
-    """Apply an ``ExecutionScope`` to a select already joined to ``Execution``."""
+def apply_execution_scope(
+    stmt: Select[Any], scope: ExecutionScope, *, execution_group_ids: Sequence[int] | None = None
+) -> Select[Any]:
+    """
+    Apply an ``ExecutionScope`` to a select already joined to ``Execution``.
+
+    Pass ``execution_group_ids`` when the select is already limited to those groups,
+    so ``latest_only`` ranks only their executions.
+    """
     if not scope.include_retracted:
         stmt = stmt.where(Execution.retracted.is_(False))
     if scope.latest_only:
-        latest = select_latest_executions().subquery()
+        among = [Execution.execution_group_id.in_(list(execution_group_ids))] if execution_group_ids else []
+        latest = select_latest_executions(among).subquery()
         stmt = stmt.where(Execution.id.in_(select(latest.c.execution_id)))
     return stmt
 
@@ -120,8 +141,9 @@ class MetricValueFilter(ExecutionScope):
     """
     Declarative filter over metric values.
 
-    ``None``/empty means "do not constrain on this axis",
+    ``None`` means "do not constrain on this axis",
     except ``include_retracted`` and ``include_superseded``, which constrain by default.
+    An empty id sequence matches nothing, and an empty ``exclude_ids`` excludes nothing.
     The same object drives scalar and series queries, frame conversion and facet collection,
     so a filter is written once and reused across output shapes.
 
@@ -216,13 +238,20 @@ class MetricValueFilter(ExecutionScope):
 
 
 def _apply_common(  # noqa: PLR0912
-    stmt: Select[Any], entity: type[MetricValue], f: MetricValueFilter
+    stmt: Select[Any],
+    entity: type[MetricValue],
+    f: MetricValueFilter,
+    *,
+    subquery_type: MetricValueType | None = None,
 ) -> Select[Any]:
     """
     Apply every filter that is identical for scalar and series to a ``Select``.
 
     This is the ONLY place provenance, version, retraction, dimension and id filtering is
     expressed, so scalar and series can never diverge.
+
+    With ``subquery_type`` the execution, group, diagnostic and provider filters and the value type
+    become one ``(execution_id, type) IN (...)`` subquery instead of joins, which matches the same rows.
     """
     needs_diag = (
         f.diagnostic_slug is not None
@@ -230,9 +259,9 @@ def _apply_common(  # noqa: PLR0912
         or bool(f.diagnostic_contains or f.provider_contains)
         or not f.include_superseded
     )
-    needs_exec = bool(
-        f.execution_ids
-        or f.execution_group_ids
+    needs_exec = subquery_type is not None or bool(
+        f.execution_ids is not None
+        or f.execution_group_ids is not None
         or f.input_datasets
         or needs_diag
         or not f.include_retracted
@@ -240,35 +269,48 @@ def _apply_common(  # noqa: PLR0912
     )
 
     if needs_exec:
-        stmt = stmt.join(Execution, entity.execution_id == Execution.id)
-        stmt = apply_execution_scope(stmt, f)
-    if f.execution_ids:
-        stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
-    if f.execution_group_ids:
-        stmt = stmt.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
-    if f.input_datasets:
-        stmt = stmt.where(f.input_datasets.execution_clause())
+        scope: Select[Any] = (
+            select(Execution.id, cast(literal(subquery_type, entity.type.type), entity.type.type))
+            if subquery_type is not None
+            else stmt.join(Execution, entity.execution_id == Execution.id)
+        )
+        scope = apply_execution_scope(scope, f, execution_group_ids=f.execution_group_ids)
+        if f.execution_group_ids is not None:
+            scope = scope.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
+        if f.input_datasets:
+            scope = scope.where(f.input_datasets.execution_clause())
 
-    if needs_diag:
-        stmt = stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-        stmt = stmt.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-    if not f.include_superseded:
-        stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
-    if f.diagnostic_slug is not None:
-        stmt = stmt.where(Diagnostic.slug == f.diagnostic_slug)
-    if f.diagnostic_contains:
-        stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in f.diagnostic_contains)))
-    if f.provider_slug is not None or f.provider_contains:
-        stmt = stmt.join(Provider, Diagnostic.provider_id == Provider.id)
-        if f.provider_slug is not None:
-            stmt = stmt.where(Provider.slug == f.provider_slug)
-        if f.provider_contains:
-            stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in f.provider_contains)))
+        if needs_diag:
+            scope = scope.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
+            scope = scope.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+        if not f.include_superseded:
+            scope = scope.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
+        if f.diagnostic_slug is not None:
+            scope = scope.where(Diagnostic.slug == f.diagnostic_slug)
+        if f.diagnostic_contains:
+            scope = scope.where(
+                or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in f.diagnostic_contains))
+            )
+        if f.provider_slug is not None or f.provider_contains:
+            scope = scope.join(Provider, Diagnostic.provider_id == Provider.id)
+            if f.provider_slug is not None:
+                scope = scope.where(Provider.slug == f.provider_slug)
+            if f.provider_contains:
+                scope = scope.where(
+                    or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in f.provider_contains))
+                )
+
+        if subquery_type is not None:
+            stmt = stmt.where(tuple_(entity.execution_id, entity.type).in_(scope))
+        else:
+            stmt = scope
+    if f.execution_ids is not None:
+        stmt = stmt.where(entity.execution_id.in_(list(f.execution_ids)))
 
     for clause in f.dimension_clauses(entity):
         stmt = stmt.where(clause)
 
-    if f.isolate_ids:
+    if f.isolate_ids is not None:
         stmt = stmt.where(entity.id.in_(list(f.isolate_ids)))
     elif f.exclude_ids:
         stmt = stmt.where(~entity.id.in_(list(f.exclude_ids)))
@@ -302,6 +344,57 @@ def select_series_values(f: MetricValueFilter | None = None) -> Select[tuple[Ser
     elif f.reference_only is False:
         stmt = stmt.where(SeriesMetricValue.reference_id.is_(None))
     return stmt.order_by(SeriesMetricValue.id)
+
+
+class _Unindexed(FunctionElement[Any]):
+    """A column that SQLite must not use an index on, written ``+column`` in SQLite."""
+
+    inherit_cache = True
+
+    def __init__(self, column: ColumnElement[Any]) -> None:
+        super().__init__(column)
+        self.type = column.type
+
+
+@compiles(_Unindexed)
+def _compile_unindexed(element: _Unindexed, compiler: SQLCompiler, **kw: Any) -> str:
+    prefix = "+" if compiler.dialect.name == "sqlite" else ""
+    return prefix + compiler.process(element.clauses, **kw)
+
+
+def select_value_ids(value_type: MetricValueType, f: MetricValueFilter | None = None) -> Select[tuple[int]]:
+    """
+    Build an unordered ``Select`` of the ids of the values of ``value_type`` matching the filter.
+
+    It matches the same rows as [select_scalar_values][climate_ref.results._query.select_scalar_values]
+    or [select_series_values][climate_ref.results._query.select_series_values],
+    and is meant for counts, facets and outlier detection.
+    A filter scoped to diagnostics, providers or groups becomes a subquery on
+    ``ix_metric_value_execution_id_type``, so SQLite reads only that scope's values
+    rather than every value of the type.
+    ``isolate_ids`` keep the joins, because looking those ids up directly is cheaper.
+    """
+    f = f or MetricValueFilter()
+    scoped = not f.isolate_ids and bool(
+        f.diagnostic_slug is not None
+        or f.provider_slug is not None
+        or f.diagnostic_contains
+        or f.provider_contains
+        or f.execution_group_ids
+    )
+    if scoped:
+        stmt = _apply_common(select(MetricValue.id), MetricValue, f, subquery_type=value_type)
+    else:
+        stmt = _apply_common(select(MetricValue.id), MetricValue, f).where(MetricValue.type == value_type)
+    if value_type is MetricValueType.SERIES:
+        reference_id: Any = MetricValue.__table__.c.reference_id
+        if scoped:
+            reference_id = _Unindexed(reference_id)
+        if f.reference_only is True:
+            stmt = stmt.where(reference_id.is_not(None))
+        elif f.reference_only is False:
+            stmt = stmt.where(reference_id.is_(None))
+    return stmt
 
 
 def count_values(session: Session, stmt: Select[Any]) -> int:

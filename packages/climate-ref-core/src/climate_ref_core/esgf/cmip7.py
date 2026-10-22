@@ -1,522 +1,62 @@
 """
 CMIP7 dataset request implementation.
-
-Since CMIP7 data is not yet available on ESGF, this module provides
-a request class that fetches CMIP6 data and converts it to CMIP7 format.
 """
 
-from __future__ import annotations
+from collections.abc import Mapping
+from typing import Any, ClassVar
 
-import re
-import uuid
-from collections.abc import Mapping, Sequence
-from pathlib import Path
-from typing import Any, ClassVar, NamedTuple
-
-import cftime
-import dask
+import intake_esgf
 import pandas as pd
-import xarray as xr
 from loguru import logger
 
-from climate_ref_core.cmip6_to_cmip7 import (
-    convert_cmip6_dataset,
-    create_cmip7_filename,
-    create_cmip7_path,
-    format_cmip7_time_range,
-    get_dreq_entry,
-    get_frequency_from_table,
-    months_to_extend,
-    repeat_final_year_to,
-    suppress_bounds_coordinates,
-)
-from climate_ref_core.data import resolve_cache_dir
-from climate_ref_core.esgf.cmip6 import CMIP6Request
+from climate_ref_core.esgf.base import IntakeESGFMixin
+from climate_ref_core.exceptions import DatasetResolutionError
 
-_MANDATORY_CONVERTED_ATTRS = (
-    "activity_id",
-    "institution_id",
-    "source_id",
-    "experiment_id",
-    "variant_label",
-    "variable_id",
-    "grid_label",
-    "frequency",
-    "region",
-    "branding_suffix",
-    "branded_variable",
-    "mip_era",
-    "realm",
-    "nominal_resolution",
-    "license_id",
-    "tracking_id",
-)
-_LOSSY_DECIMAL_DIGITS = 3
+STAC_INDICES = ("discovery.east.esgf.io", "discovery.west.esgf.io")
+"""The ESGF indices that publish CMIP7 data."""
 
 
-def _write_encoding(ds: xr.Dataset) -> dict[str, dict[str, Any]]:
+def _esgf_id(instance_id: str) -> str:
+    """Spell a REF CMIP7 ``instance_id`` the way ESGF identifies the dataset."""
+    return f"MIP-DRS7.{instance_id}"
+
+
+class CMIP7Request(IntakeESGFMixin):
     """
-    Per-variable NetCDF encoding for a converted dataset.
-
-    Everything is compressed. Values are also rounded to :data:`_LOSSY_DECIMAL_DIGITS`,
-    except where that would quantise the data away: gpp and o3 magnitudes sit below the
-    rounding floor, and ozone additionally needs lossless hybrid-coordinate coefficients.
-    """
-    lossless_dataset = ds.attrs.get("variable_id") == "o3"
-
-    encoding: dict[str, dict[str, Any]] = {}
-    for var in ds.data_vars:
-        var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
-        if not lossless_dataset and str(var) != "gpp":
-            var_encoding["least_significant_digit"] = _LOSSY_DECIMAL_DIGITS
-        encoding[str(var)] = var_encoding
-    return encoding
-
-
-def _quantised_variables(ds: xr.Dataset) -> list[str]:
-    """Name the variables stored with the lossy decimal quantisation the writer applies."""
-    return [
-        str(name)
-        for name in ds.data_vars
-        if ds[name].encoding.get("least_significant_digit") == _LOSSY_DECIMAL_DIGITS
-    ]
-
-
-def _invalid_conversion_reason(path: Path) -> str | None:
-    """Return why a cached conversion cannot be reused, or ``None`` if it can."""
-    try:
-        with xr.open_dataset(path, decode_times=False) as ds:
-            return _conversion_defect(ds)
-    except (OSError, ValueError) as e:
-        return f"cannot read metadata: {e}"
-
-
-def _conversion_defect(ds: xr.Dataset) -> str | None:
-    """Return what is wrong with an opened cached conversion, or ``None`` if nothing is."""
-    missing = [name for name in _MANDATORY_CONVERTED_ATTRS if not ds.attrs.get(name)]
-    if missing:
-        return f"missing mandatory attributes: {', '.join(missing)}"
-
-    variable_id = str(ds.attrs["variable_id"])
-    if variable_id not in ds.variables:
-        return f"missing data variable: {variable_id}"
-    if variable_id == "o3" and (quantised := _quantised_variables(ds)):
-        return f"ozone dataset uses destructive decimal quantisation: {', '.join(quantised)}"
-
-    if "time" in ds.variables and ds.sizes.get("time", 0):
-        time = ds["time"]
-        if not time.attrs.get("units"):
-            return "time coordinate has no units"
-        # Reading both endpoints catches a truncated file.
-        time.isel(time=[0, -1]).load()
-    return None
-
-
-def _load_time_coordinates(ds: xr.Dataset) -> None:
-    """Materialise the small CF time variables before a Dask-backed NetCDF write."""
-    time_variables = {"time"}
-    if "time" in ds:
-        bounds_name = ds["time"].attrs.get("bounds")
-        if bounds_name:
-            time_variables.add(str(bounds_name))
-    for name in time_variables.intersection(ds.variables):
-        ds[name].load()
-
-
-def _get_cmip7_cache_dir() -> Path:
-    """Get the cache directory for converted CMIP7 files."""
-    # Kept out of the intake-esgf cache so converted files don't mix with downloads.
-    cache_dir = resolve_cache_dir("cmip7-converted")
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    return cache_dir
-
-
-class LatestFile(NamedTuple):
-    """The file holding a dataset's final timestep, and that timestep."""
-
-    path: Path
-    end: cftime.datetime
-
-
-def _latest_file(files: list[Path]) -> LatestFile | None:
-    """
-    Find the file holding a dataset's final timestep.
-
-    Only that file is extended, so a dataset split across several files keeps its earlier
-    chunks where they are instead of every chunk being padded out to the same end.
-
-    Parameters
-    ----------
-    files
-        The dataset's CMIP6 source files. Files without a time axis are skipped.
-
-    Returns
-    -------
-    LatestFile | None
-        The file ending last and its final timestep, or ``None`` when none of them carry a time axis.
-    """
-    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-
-    latest: LatestFile | None = None
-    for path in files:
-        with xr.open_dataset(path, decode_times=time_coder) as ds:
-            if "time" not in ds.coords or len(ds["time"]) == 0:
-                continue
-            end = ds["time"].values[-1]
-            if latest is None or end > latest.end:
-                latest = LatestFile(path, end)
-    return latest
-
-
-def _bump_version(version: str) -> str:
-    """
-    Bump a DRS version so fabricated data does not share an ``instance_id`` with the real thing.
-
-    A version that is not already ``v<digits>`` is read as ``v0``,
-    which is what the ingest falls back to when it cannot parse one out of the path.
-
-    Parameters
-    ----------
-    version
-        The version the dataset would otherwise be published under.
-
-    Returns
-    -------
-    str
-        The next version.
-    """
-    match = re.fullmatch(r"v(\d+)", version)
-    current = int(match.group(1)) if match else 0
-    return f"v{current + 1}"
-
-
-def _convert_file_to_cmip7(
-    cmip6_path: Path,
-    cmip7_facets: dict[str, Any],
-    extend_historical_to: tuple[int, int] | None = None,
-) -> Path:
-    """
-    Convert a CMIP6 file to CMIP7 format.
-
-    Parameters
-    ----------
-    cmip6_path
-        Path to the CMIP6 NetCDF file
-    cmip7_facets
-        CMIP7 facets for the output path
-    extend_historical_to
-        Opt-in ``(end_year, end_month)``.
-        The series is padded out to that month by repeating its final year, so historical coverage reaches it.
-        Defaults to ``None`` (time axis untouched).
-
-    Returns
-    -------
-    Path
-        Path to the converted CMIP7 file
-    """
-    cache_dir = _get_cmip7_cache_dir()
-
-    # CMIP6 activity_id can contain multiple activities separated by spaces
-    # (e.g. "C4MIP CDRMIP"). Use only the first activity for the DRS path.
-    activity_id = str(cmip7_facets.get("activity_id", "CMIP")).split()[0]
-    version = str(cmip7_facets.get("version", "v0"))
-
-    # Build CMIP7 DRS path using the standard MIP-DRS7 path builder.
-    # Provide defaults for fields that may not be in facets.
-    path_facets = {
-        "drs_specs": "MIP-DRS7",
-        "mip_era": "CMIP7",
-        "institution_id": "unknown",
-        **cmip7_facets,
-        "activity_id": activity_id,
-    }
-    drs_path = cache_dir / create_cmip7_path(path_facets, version)
-
-    drs_path.mkdir(parents=True, exist_ok=True)
-
-    # Convert the file and derive the time range from the dataset
-    logger.info(f"Converting to CMIP7: {cmip6_path.name}")
-
-    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    # Some CMIP fields are several GiB, so bound chunk size and write concurrency.
-    with dask.config.set({"array.chunk-size": "64MiB", "scheduler": "single-threaded"}):
-        with xr.open_dataset(cmip6_path, decode_times=time_coder, chunks="auto") as ds:
-            # When fabricating extended historical coverage, pad the series first so both the
-            # filename time range and the written data reflect the added months.
-            source_ds = ds
-            if extend_historical_to is not None:
-                end_year, end_month = extend_historical_to
-                source_ds = repeat_final_year_to(ds, end_year=end_year, end_month=end_month)
-
-            frequency = str(cmip7_facets.get("frequency", "mon"))
-            time_range = format_cmip7_time_range(source_ds, frequency)
-            output_file = drs_path / create_cmip7_filename(cmip7_facets, time_range=time_range)
-
-            if output_file.exists():
-                invalid_reason = _invalid_conversion_reason(output_file)
-                if invalid_reason is None:
-                    logger.debug(f"Using cached CMIP7 file: {output_file}")
-                    return output_file
-                logger.info(f"Rebuilding invalid CMIP7 conversion ({invalid_reason}): {output_file}")
-
-            ds_cmip7 = convert_cmip6_dataset(source_ds, file_id=str(output_file.relative_to(cache_dir)))
-
-            # Ensure version and sanitized activity_id are in the file attributes
-            # so that parse_cmip7_file can extract them for instance_id construction
-            ds_cmip7.attrs["version"] = version
-            ds_cmip7.attrs["activity_id"] = activity_id
-
-            temporary_file = output_file.with_name(
-                f".{output_file.stem}.{uuid.uuid4().hex}.tmp{output_file.suffix}"
-            )
-
-            try:
-                logger.info(f"Writing translated CMIP7 file: {output_file}")
-                # Xarray cannot CF-encode a Dask-backed cftime bounds array.
-                _load_time_coordinates(ds_cmip7)
-                suppress_bounds_coordinates(ds_cmip7)
-
-                ds_cmip7.to_netcdf(temporary_file, encoding=_write_encoding(ds_cmip7))
-                temporary_file.replace(output_file)
-            except PermissionError:
-                # If we can't write but file exists (race condition or permission issue), use it
-                if output_file.exists() and _invalid_conversion_reason(output_file) is None:
-                    logger.debug(f"Using existing CMIP7 file (could not overwrite): {output_file}")
-                    return output_file
-                # Clear the cache directory hint for the user
-                logger.error(f"Permission denied writing to {output_file}")
-                logger.error(f"Try clearing the cache: rm -rf {_get_cmip7_cache_dir()}")
-                raise
-            finally:
-                temporary_file.unlink(missing_ok=True)
-
-    return output_file
-
-
-class CMIP7Request:
-    """
-    Represents a CMIP7 dataset request.
-
-    Since CMIP7 data is not yet available on ESGF, this class fetches
-    CMIP6 data and converts it to CMIP7 format using convert_cmip6_dataset().
-
-    The facets use CMIP7 naming conventions (e.g., variant_label instead of member_id).
+    Represents a request for CMIP7 datasets published on ESGF.
     """
 
     source_type = "CMIP7"
+    project = "CMIP7"
+    facet_renames: ClassVar[Mapping[str, str]] = {"branding_suffix": "variable_branding_suffix"}
 
-    # Map CMIP7 facets to CMIP6 facets
-    facet_mapping: ClassVar[dict[str, str]] = {
-        "variant_label": "member_id",
-    }
+    def _pinned_facets(self, instance_ids: tuple[str, ...]) -> dict[str, Any]:
+        # The STAC indices cannot be searched by id, only by the id without its version
+        base_ids, versions = zip(*(_esgf_id(instance_id).rsplit(".", 1) for instance_id in instance_ids))
+        return {"base_id": sorted(set(base_ids)), "version": sorted({v.removeprefix("v") for v in versions})}
 
-    # CMIP7-only facets that should not be passed to CMIP6 ESGF searches
-    cmip7_only_facets: ClassVar[set[str]] = {
-        "branded_variable",
-        "region",
-    }
+    def _select_pinned(self, results: pd.DataFrame) -> pd.DataFrame:
+        wanted = {_esgf_id(instance_id) for instance_id in self.pinned_instance_ids or ()}
+        found = results["id"].map(lambda ids: {str(i).split("|")[0] for i in ids} & wanted)
 
-    available_facets = (
-        "activity_id",
-        "institution_id",
-        "source_id",
-        "experiment_id",
-        "variant_label",  # CMIP7 name for member_id
-        "variable_id",
-        "grid_label",
-        "frequency",
-        "table_id",  # Used for mapping to CMIP6
-        "version",
-        "region",
-        "branded_variable",
-    )
-
-    def __init__(
-        self,
-        slug: str,
-        facets: dict[str, Any],
-        remove_ensembles: bool = False,
-        time_span: tuple[str, str] | None = None,
-        extend_historical_to: tuple[int, int] | None = None,
-    ):
-        """
-        Initialize a CMIP7 request.
-
-        Parameters
-        ----------
-        slug
-            Unique identifier for this request
-        facets
-            CMIP7 search facets (e.g., source_id, variable_id, variant_label)
-        remove_ensembles
-            If True, keep only one ensemble member per model
-        time_span
-            Optional time range filter (start, end) in YYYY-MM format
-        extend_historical_to
-            Opt-in ``(end_year, end_month)``. When set, a converted CMIP7 file that stops
-            short has its final year repeated until it ends on that month, letting us
-            fabricate CMIP7 data for years without real CMIP6 source data (e.g. the fire
-            diagnostic's 2002-2021 window). Files that already reach it are untouched, as
-            are all conversions when this defaults to ``None``.
-        """
-        self.slug = slug
-        self.facets = facets
-        self.remove_ensembles = remove_ensembles
-        self.time_span = time_span
-        self.extend_historical_to = extend_historical_to
-
-        # Create corresponding CMIP6 facets
-        self._cmip6_facets = self._convert_to_cmip6_facets(facets)
-
-    def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> CMIP7Request:
-        """
-        Return this request unchanged: CMIP7 requests are not pinned yet.
-
-        CMIP7 data cannot be fetched from ESGF at the moment.
-
-        Parameters
-        ----------
-        datasets
-            The catalog records of the datasets recorded for this request's source type.
-
-        Returns
-        -------
-        :
-            This request, unchanged.
-        """
-        return self
-
-    def _convert_to_cmip6_facets(self, cmip7_facets: dict[str, Any]) -> dict[str, Any]:
-        """Convert CMIP7 facets to CMIP6 facets for fetching."""
-        cmip6_facets = {}
-        for key, value in cmip7_facets.items():
-            # Skip CMIP7-only facets that don't exist in CMIP6 ESGF
-            if key in self.cmip7_only_facets:
-                continue
-            # Map CMIP7 facet names to CMIP6
-            cmip6_key = self.facet_mapping.get(key, key)
-            cmip6_facets[cmip6_key] = value
-        return cmip6_facets
-
-    def _convert_to_cmip7_metadata(self, cmip6_row: dict[str, Any]) -> dict[str, Any]:
-        """Convert a subset of CMIP6 metadata to CMIP7 format.
-
-        This is the single location for DReq enrichment: it updates
-        ``variable_id`` and adds ``region``, ``branding_suffix``, and
-        ``branded_variable`` from the Data Request when available.
-        """
-        cmip7_row = dict(cmip6_row)
-
-        # Map member_id to variant_label
-        if "member_id" in cmip7_row:
-            cmip7_row["variant_label"] = cmip7_row.pop("member_id")
-
-        # Add CMIP7-specific metadata
-        cmip7_row["mip_era"] = "CMIP7"
-
-        # CMIP6 activity_id can contain multiple activities separated by spaces
-        # (e.g. "C4MIP CDRMIP"). Use only the first activity for CMIP7.
-        if "activity_id" in cmip7_row and " " in str(cmip7_row["activity_id"]):
-            cmip7_row["activity_id"] = str(cmip7_row["activity_id"]).split()[0]
-
-        # Map table_id to frequency if not present
-        if "frequency" not in cmip7_row and "table_id" in cmip7_row:
-            cmip7_row["frequency"] = get_frequency_from_table(cmip7_row["table_id"])
-
-        # Enrich with DReq metadata
-        table_id = cmip7_row.get("table_id")
-        variable_id = cmip7_row.get("variable_id")
-        if table_id and variable_id:
-            try:
-                entry = get_dreq_entry(table_id, variable_id)
-                cmip7_row["region"] = entry.region
-                cmip7_row["variable_id"] = entry.variable_id
-                cmip7_row["branding_suffix"] = entry.branding_suffix
-                cmip7_row["branded_variable"] = entry.branded_variable
-            except KeyError:
-                logger.error(
-                    f"No DReq entry for {table_id}.{variable_id}, region/branding_suffix will not be set"
-                )
-
-        return cmip7_row
+        # intake-esgf keeps only the newest version it finds of each dataset
+        # TODO: fix this upstream in intake-esgf as ESGF has the information
+        missing = wanted - set().union(*found)
+        if missing:
+            raise DatasetResolutionError(
+                f"ESGF no longer resolves {len(missing)} pinned datasets for {self.slug}: {sorted(missing)}"
+            )
+        return results[found.map(bool)]
 
     def fetch_datasets(self) -> pd.DataFrame:
-        """
-        Fetch CMIP6 datasets and convert them to CMIP7 format.
+        """Fetch dataset metadata from ESGF, warning if no index that publishes CMIP7 is enabled."""
+        enabled = intake_esgf.conf["stac_indices"]
 
-        Returns
-        -------
-        pd.DataFrame
-            DataFrame containing CMIP7 dataset metadata and file paths.
-        """
-        # Create a CMIP6 request with converted facets
-        cmip6_request = CMIP6Request(
-            slug=f"{self.slug}-cmip6-source",
-            facets=self._cmip6_facets,
-            remove_ensembles=self.remove_ensembles,
-            time_span=self.time_span,
-        )
-
-        # Fetch CMIP6 datasets
-        cmip6_df = cmip6_request.fetch_datasets()
-
-        if cmip6_df.empty:
-            return cmip6_df
-
-        # Convert each file and update metadata
-        # The returned DataFrame does not need to have the complete set of CMIP7 metadata
-        # Datasets will be re-read during DB ingestion during the tests
-        converted_rows = []
-        for _, row in cmip6_df.iterrows():
-            row_dict: dict[str, Any] = {str(k): v for k, v in row.to_dict().items()}
-
-            # Build CMIP7 facets for this row (includes DReq enrichment)
-            cmip7_row = self._convert_to_cmip7_metadata(row_dict)
-
-            # Get file paths and convert them
-            paths = [Path(file_path) for file_path in row_dict.get("files", [])]
-            latest = None
-            if self.extend_historical_to is not None:
-                found = _latest_file([path for path in paths if path.exists()])
-                if found is not None and months_to_extend(found.end, *self.extend_historical_to) > 0:
-                    # if modified bump the version so they don't collide
-                    latest = found.path
-                    cmip7_row["version"] = _bump_version(str(cmip7_row.get("version", "")))
-
-            converted_files = []
-            for cmip6_path in paths:
-                if cmip6_path.exists():
-                    try:
-                        cmip7_path = _convert_file_to_cmip7(
-                            cmip6_path,
-                            cmip7_row,
-                            extend_historical_to=self.extend_historical_to if cmip6_path == latest else None,
-                        )
-                        converted_files.append(str(cmip7_path))
-                    except Exception as e:
-                        logger.exception(f"Failed to convert {cmip6_path.name}: {e}")
-                        continue
-                else:
-                    logger.warning(f"CMIP6 file not found: {cmip6_path}")
-
-            if converted_files:
-                cmip7_row["files"] = converted_files
-                converted_rows.append(cmip7_row)
-            elif paths:
-                # Every file failed to convert above, so this dataset drops out of the
-                # result. Say so here, while the reason is still next to it in the log:
-                # downstream all that can be seen is a dataset that never arrived.
-                dataset = row_dict.get("key") or cmip7_row.get("variable_id", "<unknown dataset>")
-                logger.error(
-                    f"None of the {len(paths)} file(s) for {dataset} could be converted, "
-                    f"so it is missing from the data fetched for {self.slug}"
-                )
-
-        if not converted_rows:
-            logger.warning(f"No files converted for request: {self.slug}")
-            return pd.DataFrame()
-
-        return pd.DataFrame(converted_rows)
+        if not any(enabled.get(index) for index in STAC_INDICES):
+            logger.warning(
+                f"No CMIP7 index enabled in {intake_esgf.conf.filename}: enable {', '.join(STAC_INDICES)}"
+            )
+        return super().fetch_datasets()
 
     def __repr__(self) -> str:
         return f"CMIP7Request(slug={self.slug!r}, facets={self.facets!r})"

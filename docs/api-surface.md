@@ -166,14 +166,15 @@ and defaults to `None`, so a provider that never sets it stays valid.
 
 ## `climate_ref_core.esgf` (Provisional)
 
-| Symbol                | Kind          | Description                              |
-| --------------------- | ------------- | ---------------------------------------- |
-| `ESGFRequest`         | Class (attrs) | ESGF data request specification          |
-| `CMIP6Request`        | Class (attrs) | CMIP6-specific ESGF request              |
-| `CMIP7Request`        | Class (attrs) | CMIP7-specific ESGF request              |
-| `Obs4MIPsRequest`     | Class (attrs) | obs4MIPs-specific ESGF request           |
-| `ESGFDataFetcher`     | Class         | Fetch data from ESGF                     |
-| `ESGFRequestRegistry` | Class         | Registry of ESGF requests per diagnostic |
+| Symbol                  | Kind          | Description                                |
+| ----------------------- | ------------- | ------------------------------------------ |
+| `ESGFRequest`           | Class (attrs) | ESGF data request specification            |
+| `CMIP6Request`          | Class (attrs) | CMIP6-specific ESGF request                |
+| `CMIP7Request`          | Class (attrs) | CMIP7-specific ESGF request                |
+| `ConvertedCMIP7Request` | Class         | CMIP7 data converted from CMIP6, for tests |
+| `Obs4MIPsRequest`       | Class (attrs) | obs4MIPs-specific ESGF request             |
+| `ESGFDataFetcher`       | Class         | Fetch data from ESGF                       |
+| `ESGFRequestRegistry`   | Class         | Registry of ESGF requests per diagnostic   |
 
 ---
 

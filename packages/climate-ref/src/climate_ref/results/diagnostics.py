@@ -14,10 +14,7 @@ from typing import Any
 import attrs
 import pandas as pd
 from sqlalchemy import ColumnElement, Select, func, literal, or_, select
-from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.compiler import SQLCompiler
-from sqlalchemy.sql.functions import FunctionElement
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
@@ -29,6 +26,7 @@ from climate_ref.results._page import Page
 from climate_ref.results._query import (
     ExecutionScope,
     InputDatasetFilter,
+    _Unindexed,
     apply_execution_scope,
     count_values,
     paginate,
@@ -185,32 +183,18 @@ def _apply_filters(stmt: Select[Any], filters: DiagnosticFilter) -> Select[Any]:
     return stmt
 
 
-class _Unindexed(FunctionElement[Any]):
-    """A column that SQLite must not use an index on, written ``+column`` in SQLite."""
-
-    inherit_cache = True
-
-    def __init__(self, column: ColumnElement[Any]) -> None:
-        super().__init__(column)
-        self.type = column.type
-
-
-@compiles(_Unindexed)
-def _compile_unindexed(element: _Unindexed, compiler: SQLCompiler, **kw: Any) -> str:
-    prefix = "+" if compiler.dialect.name == "sqlite" else ""
-    return prefix + compiler.process(element.clauses, **kw)
-
-
 def select_diagnostics_with_values(
     value_type: MetricValueType,
     filters: DiagnosticFilter | None = None,
     *,
     execution_group_where: ColumnElement[bool] | None = None,
+    scope: ExecutionScope = ExecutionScope(include_retracted=False),
 ) -> Select[Any]:
     """
     Build the ``Select`` for diagnostics with at least one value of ``value_type`` at the promoted version.
 
-    Values from retracted executions do not count, matching
+    ``scope`` picks which executions count.
+    By default retracted executions do not count, matching
     [Reader.values][climate_ref.results.values.Reader.values].
 
     Selects ``id``, ``provider_slug`` and ``slug``, ordered like
@@ -231,7 +215,7 @@ def select_diagnostics_with_values(
             _Unindexed(MetricValue.type.expression) == value_type,
         )
     )
-    has_values = apply_execution_scope(has_values, ExecutionScope(include_retracted=False))
+    has_values = apply_execution_scope(has_values, scope)
     if execution_group_where is not None:
         has_values = has_values.where(execution_group_where)
     if filters.input_datasets:
@@ -317,14 +301,18 @@ class DiagnosticsReader:
         return DiagnosticCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
     def with_values(
-        self, value_type: MetricValueType, filters: DiagnosticFilter | None = None
+        self,
+        value_type: MetricValueType,
+        filters: DiagnosticFilter | None = None,
+        *,
+        scope: ExecutionScope = ExecutionScope(include_retracted=False),
     ) -> frozenset[tuple[str, str]]:
         """
         Find the ``(provider, diagnostic)`` pairs with a value of ``value_type`` at the promoted version.
 
         See [select_diagnostics_with_values][climate_ref.results.diagnostics.select_diagnostics_with_values].
         """
-        rows = self.session.execute(select_diagnostics_with_values(value_type, filters)).all()
+        rows = self.session.execute(select_diagnostics_with_values(value_type, filters, scope=scope)).all()
         return frozenset((row.provider_slug, row.slug) for row in rows)
 
     def stats(

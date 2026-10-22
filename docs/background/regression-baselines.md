@@ -107,16 +107,11 @@ and uploads only blobs whose digest actually changed.
 
 ## CMIP7 test data
 
-CMIP7 data is not yet available on ESGF,
-so `CMIP7Request` (importable from `climate_ref_core.esgf`) bridges the gap:
-it internally maps CMIP7 facets to their CMIP6 equivalents (e.g. `variant_label` -> `member_id`),
-fetches the corresponding CMIP6 files, and converts them to CMIP7 format on the fly.
+CMIP7 data is now available on ESGF as of September 2026.
 
-Converted files are cached under the user cache directory at `climate_ref/cmip7-converted/`
-(resolved by `platformdirs.user_cache_dir`), so repeated fetches for the same request are cheap.
-The cache is not version-controlled; clear it manually if a conversion produces stale output.
+### Published CMIP7 data
 
-Use `CMIP7Request` in `test_data_spec` exactly like `CMIP6Request`:
+`CMIP7Request` downloads CMIP7 data that is published on ESGF via `intake-esgf`.
 
 ```python
 from climate_ref_core.esgf import CMIP7Request
@@ -124,14 +119,52 @@ from climate_ref_core.esgf import CMIP7Request
 CMIP7Request(
     slug="cmip7-tas",
     facets={
+        "source_id": "UKESM1-3-LL",
+        "experiment_id": "historical",
+        "variable_id": "tas",
+        "branding_suffix": "tavg-h2m-hxy-u",
+        "frequency": "mon",
+    },
+    remove_ensembles=True,
+)
+```
+
+CMIP7 data is only published to the ESGF STAC indices (`discovery.east.esgf.io` and `discovery.west.esgf.io`).
+Recent intake-esgf releases enable them by default,
+but an older `~/.config/intake-esgf/conf.yaml` may not list them in which case a warning is shown.
+
+### Converted CMIP6 data
+
+Not every model and variable has CMIP7 data on ESGF yet so for some test cases we fabricate it from CMIP6 datasets.
+`ConvertedCMIP7Request` maps CMIP7 facets to their CMIP6 equivalents (e.g. `variant_label` -> `member_id`),
+fetches the corresponding CMIP6 files, and converts them to CMIP7 format on the fly.
+This functionality will be removed once every test case can use published data.
+
+Converted files are cached in `cmip7-converted/` under `$REF_DATASET_CACHE_DIR` when that variable is set,
+otherwise under the user cache directory at `climate_ref/cmip7-converted/` (resolved by `platformdirs`).
+The cache is not version-controlled. Clear it manually if a conversion produces stale output.
+
+```python
+from climate_ref_core.esgf import ConvertedCMIP7Request
+
+ConvertedCMIP7Request(
+    slug="cmip7-tas",
+    facets={
         "source_id": "ACCESS-ESM1-5",
         "experiment_id": "historical",
         "variable_id": "tas",
-        "variant_label": "r1i1p1f1",   # CMIP7 name; maps to member_id internally
+        "variant_label": "r1i1p1f1",   # CMIP7 name, mapped to member_id internally
         "table_id": "Amon",
     },
 )
 ```
+
+### Moving a test case to published data
+
+Swap its `ConvertedCMIP7Request` for a `CMIP7Request` that selects published data.
+The existing catalog records the converted datasets, which ESGF does not know,
+so run `ref test-cases fetch --regen` to resolve the new request from its facets.
+Then mint new baselines, because the inputs have changed.
 
 ## Committed-bundle float precision
 

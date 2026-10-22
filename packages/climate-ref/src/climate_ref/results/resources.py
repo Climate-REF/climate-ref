@@ -29,7 +29,13 @@ from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
 from climate_ref.results._page import Page
-from climate_ref.results._query import ExecutionScope, apply_execution_scope, count_values, paginate
+from climate_ref.results._query import (
+    ExecutionScope,
+    InputDatasetFilter,
+    apply_execution_scope,
+    count_values,
+    paginate,
+)
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -87,7 +93,8 @@ class ResourceFilter(ExecutionScope):
     Declarative filter over the executions considered for a resource profile.
 
     Every field is optional, and ``None`` means "do not constrain on this axis".
-    Every diagnostic version is counted, because there is no promoted-version scoping here.
+    Every diagnostic version is counted by default, so ``profiles()`` sees the full history.
+    This differs from ``MetricValueFilter``, which keeps only the promoted version unless told otherwise.
     ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches
     (OR-combined within each field),
     matching the semantics used by
@@ -108,6 +115,12 @@ class ResourceFilter(ExecutionScope):
 
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
+
+    include_superseded: bool = True
+    """Include groups at superseded diagnostic versions. ``False`` keeps the promoted version only."""
+
+    input_datasets: InputDatasetFilter | None = None
+    """Restrict to executions that ran against matching datasets."""
 
 
 @attrs.frozen(kw_only=True)
@@ -437,18 +450,30 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
         .join(Provider, Diagnostic.provider_id == Provider.id)
     )
+    clauses = []
     if filters.diagnostic_contains:
-        stmt = stmt.where(
-            or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains))
-        )
+        clauses.append(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains)))
     if filters.provider_contains:
-        stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
+        clauses.append(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
     if filters.diagnostic_slug is not None:
-        stmt = stmt.where(Diagnostic.slug == filters.diagnostic_slug)
+        clauses.append(Diagnostic.slug == filters.diagnostic_slug)
     if filters.provider_slug is not None:
-        stmt = stmt.where(Provider.slug == filters.provider_slug)
+        clauses.append(Provider.slug == filters.provider_slug)
+    if clauses:
+        # Resolved to group ids first, so SQLite reaches executions by index rather than scanning them.
+        scoped_groups = (
+            select(ExecutionGroup.id)
+            .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+            .join(Provider, Diagnostic.provider_id == Provider.id)
+            .where(*clauses)
+        )
+        stmt = stmt.where(Execution.execution_group_id.in_(scoped_groups))
     if filters.since is not None:
         stmt = stmt.where(Execution.created_at >= filters.since)
+    if not filters.include_superseded:
+        stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
+    if filters.input_datasets:
+        stmt = stmt.where(filters.input_datasets.execution_clause())
     return apply_execution_scope(stmt, filters)
 
 
@@ -737,21 +762,8 @@ class ResourcesReader:
         return self._session if self._session is not None else self._db.session
 
     def _to_view(self, row: Any) -> ResourceMeasurementView:
-        return ResourceMeasurementView(
-            execution_id=row.execution_id,
-            provider_slug=row.provider_slug,
-            diagnostic_slug=row.diagnostic_slug,
-            successful=row.successful,
-            wall_seconds=row.wall_seconds,
-            cpu_seconds=row.cpu_seconds,
-            peak_memory_bytes=row.peak_memory_bytes,
-            memory_source=row.memory_source,
-            memory_limit_bytes=row.memory_limit_bytes,
-            cpu_limit=row.cpu_limit,
-            resources_exclusive=row.resources_exclusive,
-            queue_seconds=row.queue_seconds,
-            created_at=row.created_at,
-        )
+        # The labels in ``select_execution_resources`` are the view's field names.
+        return ResourceMeasurementView(**row._mapping)
 
     def measurements(
         self,
@@ -891,7 +903,9 @@ class ResourcesReader:
             )
         elif diagnostic_contains or provider_contains or since is not None:
             raise ValueError("Pass either filters or diagnostic_contains/provider_contains/since, not both")
-        rows = [self._to_view(row) for row in self.session.execute(select_execution_resources(filters)).all()]
+        # Sorting here is cheaper than SQLite's unindexed sort, and ``limit_seen`` needs this order.
+        unordered = self.session.execute(select_execution_resources(filters).order_by(None)).all()
+        rows = sorted(map(self._to_view, unordered), key=lambda row: (row.created_at, row.execution_id))
 
         grouped: dict[tuple[str, str], list[ResourceMeasurementView]] = {}
         for row in rows:

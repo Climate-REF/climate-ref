@@ -36,7 +36,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import MetricValueKind, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
@@ -779,7 +779,7 @@ def _build_test_data_spec(  # noqa: PLR0913
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",

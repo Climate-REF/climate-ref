@@ -9,7 +9,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf.cmip6 import CMIP6Request
-from climate_ref_core.esgf.cmip7 import CMIP7Request
+from climate_ref_core.esgf.cmip7_converted import ConvertedCMIP7Request
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -136,7 +136,7 @@ toz_test_spec = TestDataSpecification(
             name="cmip7",
             description="Test with CMIP7 data.",
             requests=(
-                CMIP7Request(
+                ConvertedCMIP7Request(
                     slug="cmip7",
                     facets={
                         "experiment_id": ["historical"],
@@ -408,7 +408,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],

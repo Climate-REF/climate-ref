@@ -10,6 +10,7 @@ from climate_ref_pmp import provider as pmp_provider
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
+    ExecutionFailureReason,
     ExecutionOutput,
     ResultOutputType,
     get_execution_group_and_latest_filtered,
@@ -314,6 +315,68 @@ class TestGroupsPagination:
         assert set(page_1).isdisjoint(page_2)
         assert set(page_2).isdisjoint(page_3)
         assert page_1 + page_2 + page_3 == full_ids  # no overlap, no gap
+
+
+GROUP_FILTERS = {
+    "unfiltered": (ExecutionGroupFilter(), 7),
+    "diagnostic_contains": (ExecutionGroupFilter(diagnostic_contains=["ENSO"]), 2),
+    "provider_contains": (ExecutionGroupFilter(provider_contains=["esmvaltool"]), 5),
+    "diagnostic_and_provider": (
+        ExecutionGroupFilter(diagnostic_contains=["enso"], provider_contains=["pmp"]),
+        1,
+    ),
+    "dirty": (ExecutionGroupFilter(dirty=True), 1),
+    "not_dirty": (ExecutionGroupFilter(dirty=False), 6),
+    "successful": (ExecutionGroupFilter(successful=True), 4),
+    "not_successful": (ExecutionGroupFilter(successful=False), 3),
+    "latest_successful": (ExecutionGroupFilter(latest_successful=True), 7),
+    "latest_successful_and_successful": (ExecutionGroupFilter(latest_successful=True, successful=True), 4),
+    "failure_reasons": (ExecutionGroupFilter(failure_reasons=[ExecutionFailureReason.DiagnosticError]), 1),
+    "other_failure_reasons": (ExecutionGroupFilter(failure_reasons=[ExecutionFailureReason.SystemError]), 0),
+    "provider_successful_not_dirty": (
+        ExecutionGroupFilter(provider_contains=["esmvaltool"], successful=True, dirty=False),
+        1,
+    ),
+    "include_superseded": (ExecutionGroupFilter(include_superseded=True), 7),
+}
+
+
+@pytest.fixture
+def db_with_failure(db_with_groups):
+    """``db_with_groups`` with key3's failed execution given a failure reason."""
+    session = db_with_groups.session
+    with session.begin_nested() if session.in_transaction() else session.begin():
+        execution = (
+            session.query(Execution).filter_by(execution_group_id=db_with_groups.group_ids["key3"]).one()
+        )
+        execution.failure_reason = ExecutionFailureReason.DiagnosticError.value
+    return db_with_groups
+
+
+@pytest.mark.parametrize(("filters", "expected"), GROUP_FILTERS.values(), ids=list(GROUP_FILTERS))
+class TestGroupsSqlPaging:
+    """Without ``selectors``, ``groups()`` counts and pages in SQL, separately from ``group_rows()``."""
+
+    def test_count_matches_rows(self, db_with_failure, filters, expected):
+        reader = Reader(db_with_failure).executions
+        rows = reader.group_rows(filters)
+        coll = reader.groups(filters)
+
+        assert coll.total_count == len(coll) == len(rows) == expected
+        assert [g.id for g in coll] == [eg.id for eg, _ in rows]
+        assert [g.latest.id if g.latest else None for g in coll] == [
+            latest.id if latest else None for _, latest in rows
+        ]
+
+    def test_pages_are_slices_of_the_full_list(self, db_with_failure, filters, expected):
+        reader = Reader(db_with_failure).executions
+        full = reader.groups(filters)
+
+        for offset in range(len(full) + 1):
+            page = reader.groups(filters, offset=offset, limit=2)
+            assert page.total_count == expected
+            assert page.items == full.items[offset : offset + 2]
+        assert reader.groups(filters, offset=2).items == full.items[2:]
 
 
 class TestGroupsWithCount:

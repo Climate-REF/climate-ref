@@ -15,7 +15,7 @@ Not all executions have resource data.
 import datetime
 import math
 import statistics
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import attrs
@@ -27,7 +27,15 @@ from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
-from climate_ref.results._query import ExecutionScope, SlugFilter, apply_execution_scope, count_values
+from climate_ref.results._page import Page
+from climate_ref.results._query import (
+    ExecutionScope,
+    InputDatasetFilter,
+    SlugFilter,
+    apply_execution_scope,
+    count_values,
+    paginate,
+)
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -85,12 +93,19 @@ class ResourceFilter(ExecutionScope, SlugFilter):
     Declarative filter over the executions considered for a resource profile.
 
     Every field is optional, and ``None`` means "do not constrain on this axis".
-    Every diagnostic version is counted, because there is no promoted-version scoping here.
+    Every diagnostic version is counted by default, so ``profiles()`` sees the full history.
+    This differs from ``MetricValueFilter``, which keeps only the promoted version unless told otherwise.
     Diagnostic and provider matching comes from [SlugFilter][climate_ref.results._query.SlugFilter].
     """
 
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
+
+    include_superseded: bool = True
+    """Include groups at superseded diagnostic versions. ``False`` keeps the promoted version only."""
+
+    input_datasets: InputDatasetFilter | None = None
+    """Restrict to executions that ran against matching datasets."""
 
 
 @attrs.frozen(kw_only=True)
@@ -189,26 +204,8 @@ class ResourceSummary:
 
 
 @attrs.frozen(kw_only=True)
-class ResourceMeasurementCollection:
+class ResourceMeasurementCollection(Page[ResourceMeasurementView]):
     """An immutable page of resource measurements plus collection-level metadata."""
-
-    items: tuple[ResourceMeasurementView, ...]
-    """The measurements on this page."""
-
-    total_count: int
-    """Total measurements matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[ResourceMeasurementView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -438,9 +435,22 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
         .join(Provider, Diagnostic.provider_id == Provider.id)
     )
-    stmt = stmt.where(*filters.slug_clauses())
+    clauses = filters.slug_clauses()
+    if clauses:
+        # Resolved to group ids first, so SQLite reaches executions by index rather than scanning them.
+        scoped_groups = (
+            select(ExecutionGroup.id)
+            .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+            .join(Provider, Diagnostic.provider_id == Provider.id)
+            .where(*clauses)
+        )
+        stmt = stmt.where(Execution.execution_group_id.in_(scoped_groups))
     if filters.since is not None:
         stmt = stmt.where(Execution.created_at >= filters.since)
+    if not filters.include_superseded:
+        stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
+    if filters.input_datasets:
+        stmt = stmt.where(filters.input_datasets.execution_clause())
     return apply_execution_scope(stmt, filters)
 
 
@@ -729,21 +739,8 @@ class ResourcesReader:
         return self._session if self._session is not None else self._db.session
 
     def _to_view(self, row: Any) -> ResourceMeasurementView:
-        return ResourceMeasurementView(
-            execution_id=row.execution_id,
-            provider_slug=row.provider_slug,
-            diagnostic_slug=row.diagnostic_slug,
-            successful=row.successful,
-            wall_seconds=row.wall_seconds,
-            cpu_seconds=row.cpu_seconds,
-            peak_memory_bytes=row.peak_memory_bytes,
-            memory_source=row.memory_source,
-            memory_limit_bytes=row.memory_limit_bytes,
-            cpu_limit=row.cpu_limit,
-            resources_exclusive=row.resources_exclusive,
-            queue_seconds=row.queue_seconds,
-            created_at=row.created_at,
-        )
+        # The labels in ``select_execution_resources`` are the view's field names.
+        return ResourceMeasurementView(**row._mapping)
 
     def measurements(
         self,
@@ -751,6 +748,7 @@ class ResourcesReader:
         *,
         offset: int = 0,
         limit: int | None = None,
+        with_count: bool = True,
     ) -> ResourceMeasurementCollection:
         """
         Query the raw per-execution measurements behind the profiles.
@@ -765,6 +763,8 @@ class ResourcesReader:
             Rows to skip before the returned page.
         limit
             Page size, or ``None`` for every matching row.
+        with_count
+            Whether to run the count query. When ``False``, ``total_count`` is ``None``.
 
         Returns
         -------
@@ -772,13 +772,9 @@ class ResourcesReader:
             A page of measurements plus the pre-pagination total.
         """
         stmt = select_execution_resources(filters)
-        total_count = count_values(self.session, stmt)
+        total_count = count_values(self.session, stmt) if with_count else None
 
-        page = stmt.offset(offset)
-        if limit is not None:
-            page = page.limit(limit)
-
-        items = tuple(self._to_view(row) for row in self.session.execute(page).all())
+        items = tuple(self._to_view(row) for row in self.session.execute(paginate(stmt, offset, limit)).all())
         return ResourceMeasurementCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
     def summary(self, filters: ResourceFilter | None = None) -> ResourceSummary | None:
@@ -884,7 +880,9 @@ class ResourcesReader:
             )
         elif diagnostic_contains or provider_contains or since is not None:
             raise ValueError("Pass either filters or diagnostic_contains/provider_contains/since, not both")
-        rows = [self._to_view(row) for row in self.session.execute(select_execution_resources(filters)).all()]
+        # Sorting here is cheaper than SQLite's unindexed sort, and ``limit_seen`` needs this order.
+        unordered = self.session.execute(select_execution_resources(filters).order_by(None)).all()
+        rows = sorted(map(self._to_view, unordered), key=lambda row: (row.created_at, row.execution_id))
 
         grouped: dict[tuple[str, str], list[ResourceMeasurementView]] = {}
         for row in rows:

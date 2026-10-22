@@ -33,6 +33,11 @@ class SourceDatasetType(enum.Enum):
     obs4REF = "obs4ref"
     ESMValToolReference = "esmvaltool-reference"
 
+    @property
+    def is_model_output(self) -> bool:
+        """Whether the dataset holds model simulation output rather than observations."""
+        return self in (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)
+
     @classmethod
     @functools.lru_cache(maxsize=1)
     def ordered(

@@ -215,6 +215,20 @@ class TestProvidersSetup:
         assert "validation failed" in result.stderr
         assert "Setup failed for providers" in result.stderr
 
+    def test_setup_ingests_provider_data(self, config, invoke_cli, mocker):
+        mock_ingest = mocker.patch("climate_ref.datasets.ingest_provider_data")
+
+        invoke_cli(["providers", "setup", "--skip-env", "--provider", "example"])
+
+        mock_ingest.assert_called_once()
+
+    def test_setup_skip_data_skips_ingest(self, config, invoke_cli, mocker):
+        mock_ingest = mocker.patch("climate_ref.datasets.ingest_provider_data")
+
+        invoke_cli(["providers", "setup", "--skip-data", "--provider", "example"])
+
+        mock_ingest.assert_not_called()
+
     def test_setup_exception_handling(self, config, invoke_cli, mocker):
         """Test setup handles exceptions from provider.setup()."""
         # Create a mock provider that raises an exception during setup

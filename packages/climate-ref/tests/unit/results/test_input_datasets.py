@@ -110,6 +110,45 @@ def db_with_inputs(db_seeded):
     return db_seeded
 
 
+@pytest.fixture
+def db_with_obs_only(db_with_inputs):
+    """``db_with_inputs`` plus ``obs-only``, a group on ``diag_2`` whose execution has no input datasets."""
+    session = db_with_inputs.session
+    with session.begin():
+        diag_2 = session.query(Diagnostic).order_by(Diagnostic.id).offset(1).first()
+        group = ExecutionGroup(key="obs-only", diagnostic_id=diag_2.id, selectors={})
+        session.add(group)
+        session.flush()
+        execution = Execution(
+            execution_group_id=group.id, output_fragment="obs-only", dataset_hash="obs-only", successful=True
+        )
+        session.add(execution)
+        session.flush()
+        session.add(
+            ScalarMetricValue.build(
+                execution_id=execution.id, value=0.0, attributes=None, dimensions={"source_id": "obs-only"}
+            )
+        )
+        db_with_inputs.ids["obs-only"] = group.id
+
+        mixed = ExecutionGroup(key="mixed", diagnostic_id=diag_2.id, selectors={})
+        session.add(mixed)
+        session.flush()
+        execution = Execution(
+            execution_group_id=mixed.id, output_fragment="mixed", dataset_hash="mixed", successful=True
+        )
+        execution.datasets = [session.query(CMIP6Dataset).first(), session.query(CMIP7Dataset).first()]
+        session.add(execution)
+        session.flush()
+        session.add(
+            ScalarMetricValue.build(
+                execution_id=execution.id, value=0.0, attributes=None, dimensions={"source_id": "mixed"}
+            )
+        )
+        db_with_inputs.ids["mixed"] = mixed.id
+    return db_with_inputs
+
+
 def _group_ids(db, input_datasets, **kwargs):
     filters = ExecutionGroupFilter(input_datasets=input_datasets, **kwargs)
     return {g.id for g in Reader(db).executions.groups(filters)}
@@ -150,6 +189,12 @@ class TestExecutionGroups:
         f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "NO-SUCH-MODEL"})
         assert _group_ids(db_with_inputs, f) == set()
 
+    @pytest.mark.filterwarnings("error::sqlalchemy.exc.SADeprecationWarning")
+    def test_no_facets_matches_any_dataset_of_the_type(self, db_with_inputs):
+        ids = db_with_inputs.ids
+        f = InputDatasetFilter(source_types=[CMIP7])
+        assert _group_ids(db_with_inputs, f) == {ids["cmip7-a"]}
+
     def test_multi_value_is_or(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": ["FACET-A", "FACET-B"]})
@@ -175,6 +220,52 @@ class TestExecutionGroups:
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
         diagnostic = ids["diag_2"][1]
         assert _group_ids(db_with_inputs, f, diagnostic_contains=[diagnostic]) == {ids["other-b"]}
+
+
+class TestIncludeWithoutInput:
+    def test_groups(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"}, or_no_model_input=True)
+        # cmip6-b-old matches through its newer execution, which has no inputs.
+        assert _group_ids(db_with_obs_only, f) == {
+            ids["cmip7-a"],
+            ids["cmip6-b-old"],
+            ids["obs-only"],
+            ids["mixed"],
+        }
+
+    def test_drops_cmip6_only_and_keeps_mixed(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        f = InputDatasetFilter(source_types=[CMIP7], or_no_model_input=True)
+        assert _group_ids(db_with_obs_only, f) == {
+            ids["cmip7-a"],
+            ids["cmip6-b-old"],
+            ids["obs-only"],
+            ids["mixed"],
+        }
+
+    def test_mixed_without_a_facet_match_stays_out(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        f = InputDatasetFilter(
+            source_types=[CMIP7], facets={"source_id": "NO-SUCH-MODEL"}, or_no_model_input=True
+        )
+        assert _group_ids(db_with_obs_only, f) == {ids["cmip6-b-old"], ids["obs-only"]}
+
+    def test_default_excludes_executions_without_input(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"})
+        assert _group_ids(db_with_obs_only, f) == {ids["cmip7-a"], ids["mixed"]}
+
+    def test_values_are_per_execution(self, db_with_obs_only):
+        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"}, or_no_model_input=True)
+        values = Reader(db_with_obs_only).values.scalar_values(MetricValueFilter(input_datasets=f))
+        # The older cmip6-b-old execution ran against CMIP6, so it stays out.
+        assert sorted((v.dimensions["source_id"], v.value) for v in values) == [
+            ("cmip6-b-old", 1.0),
+            ("cmip7-a", 0.0),
+            ("mixed", 0.0),
+            ("obs-only", 0.0),
+        ]
 
 
 class TestMetricValues:

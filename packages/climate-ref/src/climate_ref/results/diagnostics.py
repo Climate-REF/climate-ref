@@ -8,23 +8,29 @@ It executes the [select_diagnostics][climate_ref.results.diagnostics.select_diag
 and maps the rows into detached DTOs that outlive the session.
 """
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
 import pandas as pd
 from sqlalchemy import ColumnElement, Select, func, literal, select
-from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.compiler import SQLCompiler
-from sqlalchemy.sql.functions import FunctionElement
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, MetricValueType
 from climate_ref.models.provider import Provider
-from climate_ref.results._query import ExecutionScope, InputDatasetFilter, SlugFilter, apply_execution_scope
+from climate_ref.results._page import Page
+from climate_ref.results._query import (
+    ExecutionScope,
+    InputDatasetFilter,
+    SlugFilter,
+    _Unindexed,
+    apply_execution_scope,
+    count_values,
+    paginate,
+)
 from climate_ref.results._stats import rows_to_execution_stats
 from climate_ref.results.executions import ExecutionStats, select_execution_statistics
 
@@ -81,33 +87,8 @@ class DiagnosticView:
 
 
 @attrs.frozen(kw_only=True)
-class DiagnosticCollection:
-    """
-    An immutable page of diagnostics plus collection-level metadata.
-
-    ``total_count`` is the number of diagnostics matching the filter *before* pagination, so a
-    caller can tell there are more rows than the returned page. ``offset``/``limit`` echo back the
-    pagination applied to produce ``items`` (``limit`` is ``None`` when the whole result was
-    returned).
-    """
-
-    items: tuple[DiagnosticView, ...]
-    """The diagnostics on this page."""
-
-    total_count: int
-    """Total diagnostics matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[DiagnosticView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
+class DiagnosticCollection(Page[DiagnosticView]):
+    """An immutable page of diagnostics plus collection-level metadata."""
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -184,32 +165,18 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     return stmt.where(*filters.slug_clauses())
 
 
-class _Unindexed(FunctionElement[Any]):
-    """A column that SQLite must not use an index on, written ``+column`` in SQLite."""
-
-    inherit_cache = True
-
-    def __init__(self, column: ColumnElement[Any]) -> None:
-        super().__init__(column)
-        self.type = column.type
-
-
-@compiles(_Unindexed)
-def _compile_unindexed(element: _Unindexed, compiler: SQLCompiler, **kw: Any) -> str:
-    prefix = "+" if compiler.dialect.name == "sqlite" else ""
-    return prefix + compiler.process(element.clauses, **kw)
-
-
 def select_diagnostics_with_values(
     value_type: MetricValueType,
     filters: DiagnosticFilter | None = None,
     *,
     execution_group_where: ColumnElement[bool] | None = None,
+    scope: ExecutionScope = ExecutionScope(include_retracted=False),
 ) -> Select[Any]:
     """
     Build the ``Select`` for diagnostics with at least one value of ``value_type`` at the promoted version.
 
-    Values from retracted executions do not count, matching
+    ``scope`` picks which executions count.
+    By default retracted executions do not count, matching
     [Reader.values][climate_ref.results.values.Reader.values].
 
     Selects ``id``, ``provider_slug`` and ``slug``, ordered like
@@ -230,7 +197,7 @@ def select_diagnostics_with_values(
             _Unindexed(MetricValue.type.expression) == value_type,
         )
     )
-    has_values = apply_execution_scope(has_values, ExecutionScope(include_retracted=False))
+    has_values = apply_execution_scope(has_values, scope)
     if execution_group_where is not None:
         has_values = has_values.where(execution_group_where)
     if filters.input_datasets:
@@ -285,6 +252,7 @@ class DiagnosticsReader:
         *,
         offset: int = 0,
         limit: int | None = None,
+        with_count: bool = True,
     ) -> DiagnosticCollection:
         """
         Query diagnostics, with their provider, execution-group count, and promoted-version stats.
@@ -300,16 +268,9 @@ class DiagnosticsReader:
         filters = filters or DiagnosticFilter()
 
         base_stmt = select_diagnostics(filters)
-        count_stmt = select(func.count()).select_from(base_stmt.subquery())
-        total_count = self.session.execute(count_stmt).scalar_one()
+        total_count = count_values(self.session, base_stmt) if with_count else None
 
-        stmt = base_stmt
-        if limit is not None:
-            stmt = stmt.offset(offset).limit(limit)
-        elif offset:
-            stmt = stmt.offset(offset)
-
-        rows = self.session.execute(stmt).all()
+        rows = self.session.execute(paginate(base_stmt, offset, limit)).all()
 
         stats = self.stats(
             diagnostic_slug=filters.diagnostic_slug,
@@ -324,14 +285,18 @@ class DiagnosticsReader:
         return DiagnosticCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
     def with_values(
-        self, value_type: MetricValueType, filters: DiagnosticFilter | None = None
+        self,
+        value_type: MetricValueType,
+        filters: DiagnosticFilter | None = None,
+        *,
+        scope: ExecutionScope = ExecutionScope(include_retracted=False),
     ) -> frozenset[tuple[str, str]]:
         """
         Find the ``(provider, diagnostic)`` pairs with a value of ``value_type`` at the promoted version.
 
         See [select_diagnostics_with_values][climate_ref.results.diagnostics.select_diagnostics_with_values].
         """
-        rows = self.session.execute(select_diagnostics_with_values(value_type, filters)).all()
+        rows = self.session.execute(select_diagnostics_with_values(value_type, filters, scope=scope)).all()
         return frozenset((row.provider_slug, row.slug) for row in rows)
 
     def stats(

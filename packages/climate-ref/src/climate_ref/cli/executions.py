@@ -225,7 +225,7 @@ def list_groups(  # noqa: PLR0913
     render_dataframe(results_df, console=console, output_format=output_format)
 
     # Show limit warning if applicable
-    filtered_count = collection.total_count
+    filtered_count = collection.total_count or 0
     if filtered_count > limit:
         logger.warning(
             f"Displaying {limit} of {filtered_count} filtered results. "
@@ -768,7 +768,7 @@ def _render_scalar_values(  # noqa: PLR0913
             f"Use --include-unverified to show them."
         )
     displayed = offset + len(collection)
-    if displayed < collection.total_count:
+    if displayed < (collection.total_count or 0):
         logger.warning(
             f"Displaying {len(collection)} of {collection.total_count} values. "
             f"Use --limit / --offset to see more."
@@ -811,7 +811,7 @@ def _render_series_values(  # noqa: PLR0913
         render_dataframe(df, console=console, output_format=output_format)
 
     displayed = offset + len(collection)
-    if displayed < collection.total_count:
+    if displayed < (collection.total_count or 0):
         logger.warning(
             f"Displaying {len(collection)} of {collection.total_count} series. "
             f"Use --limit / --offset to see more."

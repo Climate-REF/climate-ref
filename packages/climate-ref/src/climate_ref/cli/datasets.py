@@ -163,7 +163,7 @@ def list_(  # noqa: PLR0913
 
     render_dataframe(data_catalog, console=console, output_format=output_format)
 
-    if not include_files and collection.total_count > limit:
+    if not include_files and (collection.total_count or 0) > limit:
         logger.warning(
             f"Displaying {limit} of {collection.total_count} filtered results. "
             f"Use the `--limit` option to display more."

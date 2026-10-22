@@ -17,7 +17,7 @@ A common set of ordering (``created_at DESC, id DESC``) is used to ensure consis
 """
 
 import warnings
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
@@ -33,10 +33,13 @@ from climate_ref.models.execution import (
     ExecutionFailureReason,
     ExecutionGroup,
     ExecutionOutput,
+    count_execution_group_and_latest_filtered,
     get_execution_group_and_latest_filtered,
+    query_execution_group_and_latest_filtered,
 )
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_failure_reasons
+from climate_ref.results._page import Page
 from climate_ref.results._query import (
     InputDatasetFilter,
     SlugFilter,
@@ -270,26 +273,8 @@ class OutputView:
 
 
 @attrs.frozen(kw_only=True)
-class ExecutionGroupCollection:
+class ExecutionGroupCollection(Page[ExecutionGroupView]):
     """An immutable page of execution groups plus collection-level metadata."""
-
-    items: tuple[ExecutionGroupView, ...]
-    """The execution groups on this page."""
-
-    total_count: int
-    """Total execution groups matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[ExecutionGroupView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -381,11 +366,8 @@ def select_execution_statistics(
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
         .where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
         .join(Provider, Diagnostic.provider_id == Provider.id)
-        .outerjoin(
-            Execution,
-            Execution.id.in_(select(latest.c.execution_id))
-            & (Execution.execution_group_id == ExecutionGroup.id),
-        )
+        .outerjoin(latest, latest.c.execution_group_id == ExecutionGroup.id)
+        .outerjoin(Execution, Execution.id == latest.c.execution_id)
         .group_by(Provider.slug, Diagnostic.slug)
         .order_by(Provider.slug, Diagnostic.slug)
     )
@@ -464,6 +446,24 @@ class ExecutionsReader:
             latest=self._to_execution_view(latest) if latest is not None else None,
         )
 
+    @staticmethod
+    def _sql_filters(filters: ExecutionGroupFilter) -> dict[str, Any]:
+        """Keyword arguments for the group helpers for every filter applied in SQL (all but ``selectors``)."""
+        group_conditions: list[ColumnElement[bool]] = []
+        if filters.matches_diagnostic or filters.matches_provider:
+            matching = select(Diagnostic.id).join(Provider, Diagnostic.provider_id == Provider.id)
+            group_conditions.append(ExecutionGroup.diagnostic_id.in_(matching.where(*filters.slug_clauses())))
+        if filters.input_datasets:
+            group_conditions.append(filters.input_datasets.execution_group_clause())
+        return dict(
+            dirty=filters.dirty,
+            successful=filters.successful,
+            latest_successful=filters.latest_successful,
+            include_superseded=filters.include_superseded,
+            failure_reasons=filters.failure_reasons,
+            group_conditions=group_conditions,
+        )
+
     def group_rows(
         self, filters: ExecutionGroupFilter | None = None
     ) -> list[tuple[ExecutionGroup, Execution | None]]:
@@ -475,24 +475,12 @@ class ExecutionsReader:
         which returns detached views.
         """
         filters = filters or ExecutionGroupFilter()
-
-        group_conditions: list[ColumnElement[bool]] = []
-        if filters.matches_diagnostic or filters.matches_provider:
-            matching = select(Diagnostic.id).join(Provider, Diagnostic.provider_id == Provider.id)
-            group_conditions.append(ExecutionGroup.diagnostic_id.in_(matching.where(*filters.slug_clauses())))
-        if filters.input_datasets:
-            group_conditions.append(filters.input_datasets.execution_group_clause())
         return get_execution_group_and_latest_filtered(
             self.session,
             selector_filters={k: list(v) for k, v in filters.selectors.items()}
             if filters.selectors
             else None,
-            dirty=filters.dirty,
-            successful=filters.successful,
-            latest_successful=filters.latest_successful,
-            include_superseded=filters.include_superseded,
-            failure_reasons=filters.failure_reasons,
-            group_conditions=group_conditions,
+            **self._sql_filters(filters),
         )
 
     def groups(
@@ -501,27 +489,33 @@ class ExecutionsReader:
         *,
         offset: int = 0,
         limit: int | None = None,
+        with_count: bool = True,
     ) -> ExecutionGroupCollection:
         """
         Query execution groups with their per-group latest execution.
 
         Wraps [get_execution_group_and_latest_filtered]
-        [climate_ref.models.execution.get_execution_group_and_latest_filtered],
-        which returns a materialised list.
-        The ``facets`` axis is matched in Python (against each group's ``selectors``),
-        and the helper materialises unconditionally,
-        so pagination here is a Python slice over the fully materialised list rather than SQL.
+        [climate_ref.models.execution.get_execution_group_and_latest_filtered].
+        The ``selectors`` axis is matched in Python (against each group's ``selectors``),
+        so with ``selectors`` set pagination is a Python slice over the fully materialised list.
+        Without it, the filtering, counting and pagination all run in SQL.
 
         ``total_count`` is the post-filter length,
         and the results are ordered by ``id`` ascending (the group primary key)
         before slicing so paging is deterministic even when two groups share a ``created_at``.
         """
-        # Pushing SQL pagination through the helper would be wrong whenever ``facets`` is set,
-        # since the Python facet filter runs after the SQL query.
-        all_results = self.group_rows(filters)
-
-        total_count = len(all_results)
-        page = all_results[offset : offset + limit] if limit is not None else all_results[offset:]
+        filters = filters or ExecutionGroupFilter()
+        if filters.selectors:
+            all_results = self.group_rows(filters)
+            total_count = len(all_results) if with_count else None
+            page = all_results[offset : offset + limit] if limit is not None else all_results[offset:]
+        else:
+            sql_filters = self._sql_filters(filters)
+            total_count = (
+                count_execution_group_and_latest_filtered(self.session, **sql_filters) if with_count else None
+            )
+            query = query_execution_group_and_latest_filtered(self.session, **sql_filters)
+            page = [r._tuple() for r in query.offset(offset).limit(limit).all()]
         items = tuple(self._to_group_view(eg, latest) for eg, latest in page)
 
         return ExecutionGroupCollection(items=items, total_count=total_count, offset=offset, limit=limit)

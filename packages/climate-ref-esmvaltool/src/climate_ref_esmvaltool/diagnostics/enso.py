@@ -52,8 +52,9 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
+                group_by=("source_id", "experiment_id", "member_id"),
                 constraints=(
+                    SelectSingleGrid(group_by=("source_id", "experiment_id", "member_id", "variable_id")),
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
                     RequireFacets(
@@ -91,7 +92,6 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                # CMIP7 grid labels differ per realm, so pr, tauu and tos never share one.
                 group_by=("source_id", "experiment_id", "variant_label"),
                 constraints=(
                     SelectSingleGrid(group_by=("source_id", "experiment_id", "variant_label", "variable_id")),

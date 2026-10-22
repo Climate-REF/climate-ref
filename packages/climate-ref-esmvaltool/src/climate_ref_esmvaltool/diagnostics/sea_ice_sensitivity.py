@@ -64,17 +64,18 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     RequireFacets(
                         "variable_id",
                         required_facets=("siconc", "tas"),
-                        group_by=("source_id", "member_id", "grid_label"),
+                        group_by=("source_id", "member_id"),
                     ),
                     # The diagnostic script expects a single member per model; the REF
                     # otherwise feeds every ingested member into this one execution.
                     SelectFirstMember(member_facet="member_id", group_by=("source_id",)),
+                    SelectSingleGrid(group_by=("source_id", "member_id", "variable_id")),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                     AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
                     RequireFacets(
                         "variable_id",
                         required_facets=("areacello",),
-                        group_by=("source_id", "grid_label"),
+                        group_by=("source_id",),
                     ),
                 ),
             ),
@@ -110,7 +111,6 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     RequireFacets(
                         "variable_id",
                         required_facets=("siconc", "tas"),
-                        # CMIP7 grid labels differ per realm, so siconc and tas never share one.
                         group_by=("source_id", "variant_label"),
                     ),
                     # The diagnostic script expects a single member per model; the REF

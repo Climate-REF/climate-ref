@@ -458,6 +458,9 @@ class ValuesReader:
         context = self._execution_context((row[1] for row in rows), include_context)
         items = []
         for row_id, execution_id, value, attributes, *dim_values in rows:
+            if execution_id not in context:
+                # Deleted by another transaction since its values were read.
+                continue
             group_id, diagnostic_slug, provider_slug = context[execution_id]
             kind, dimensions = _split_kind({k: v for k, v in zip(dims, dim_values) if v is not None})
             flagged = verdicts[row_id] if verdicts is not None else None
@@ -485,6 +488,9 @@ class ValuesReader:
         axes = self._index_axes(row[3] for row in rows)
         items = []
         for row_id, execution_id, values, index_id, reference_id, attributes, *dim_values in rows:
+            if execution_id not in context:
+                # Deleted by another transaction since its values were read.
+                continue
             group_id, diagnostic_slug, provider_slug = context[execution_id]
             index_name, index = axes[index_id] if index_id is not None else (None, None)
             kind, dimensions = _split_kind({k: v for k, v in zip(dims, dim_values) if v is not None})

@@ -52,10 +52,10 @@ def list_(  # noqa: PLR0913
     - diagnostic: the diagnostic slug.
     - name: the human-readable diagnostic name.
     - promoted_version: the currently promoted diagnostic version.
-    - execution_group_count: execution groups created for it across all versions.
+    - execution_group_count: execution groups at the promoted version.
     - successful: promoted-version execution groups whose latest execution succeeded.
     - inflight: promoted-version execution groups whose latest execution is still running.
-    - total: execution groups at the promoted version.
+    - total: executions at the promoted version, counting every rerun.
     """
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)

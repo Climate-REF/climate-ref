@@ -53,8 +53,8 @@ class TestDiagnosticsList:
         by_slug = {row["diagnostic"]: row for row in payload}
         assert by_slug["enso_tel"]["execution_group_count"] == 2
         assert by_slug["extratropical-modes-of-variability-nao"]["execution_group_count"] == 1
-        # No executions seeded, so promoted-version groups are counted in `total` only.
-        assert by_slug["enso_tel"]["total"] == 2
+        # No executions seeded, so `total` is 0.
+        assert by_slug["enso_tel"]["total"] == 0
         assert by_slug["enso_tel"]["successful"] == 0
         assert by_slug["enso_tel"]["inflight"] == 0
 

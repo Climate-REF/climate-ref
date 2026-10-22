@@ -774,3 +774,47 @@ class TestReaderArtifactsGating:
     def test_works_with_paths(self, db_with_groups, tmp_path):
         reader = Reader(db_with_groups, results=tmp_path)
         assert reader.artifacts is not None
+
+
+class TestSharedExecutionScope:
+    """Groups, statistics and diagnostics keep the same groups for the same shared fields."""
+
+    @staticmethod
+    def _retract_latest(db, key):
+        session = db.session
+        with session.begin_nested() if session.in_transaction() else session.begin():
+            group = session.query(ExecutionGroup).filter_by(key=key).one()
+            session.add(
+                Execution(
+                    execution_group_id=group.id,
+                    successful=True,
+                    output_fragment=f"{key}-retracted",
+                    dataset_hash=f"{key}-retracted",
+                    retracted=True,
+                )
+            )
+
+    @staticmethod
+    def _counts(reader, **fields):
+        groups = reader.executions.groups(ExecutionGroupFilter(**fields)).total_count
+        stats = sum(s.total for s in reader.executions.statistics(DiagnosticFilter(**fields)))
+        listed = sum(d.execution_group_count for d in reader.diagnostics.list(DiagnosticFilter(**fields)))
+        return groups, stats, listed
+
+    def test_retracted_latest_drops_the_group_everywhere(self, db_with_groups):
+        self._retract_latest(db_with_groups, "key1")
+        reader = Reader(db_with_groups)
+
+        kept = self._counts(reader, include_retracted=True)
+        assert self._counts(reader) == tuple(n - 1 for n in kept)
+        keys = {g.key for g in reader.executions.groups()}
+        assert "key1" not in keys
+
+    def test_window_drops_groups_without_a_run_in_it(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        future = datetime.datetime(2999, 1, 1)
+        assert self._counts(reader, created_after=future) == (0, 0, 0)
+
+        everything = self._counts(reader)
+        ran = self._counts(reader, created_before=future)
+        assert ran == tuple(n - 1 for n in everything)  # key6 has never run

@@ -20,15 +20,17 @@ They come in four groups, one class each.
 * [DiagnosticScope][climate_ref.results.filters.DiagnosticScope]:
   ``diagnostic_slug``, ``provider_slug``, ``diagnostic_contains``, ``provider_contains``.
   On every filter.
-* [VersionScope][climate_ref.results.filters.VersionScope]: ``include_superseded``.
-  On every filter except ``DiagnosticFilter``.
+* [VersionScope][climate_ref.results.filters.VersionScope]: ``include_superseded``, ``diagnostic_version``.
+  On every filter.
 * [ExecutionScope][climate_ref.results.filters.ExecutionScope]:
-  ``include_retracted``, ``latest_only``, ``created_after``, ``created_before``.
-  On ``MetricValueFilter`` and ``ResourceFilter``.
+  ``include_retracted``, ``created_after``, ``created_before``.
+  On every filter.
 * [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: ``input_datasets``.
   On every filter.
 
 Each filter adds its own fields on top, listed on its class.
+``MetricValueFilter`` and ``ResourceFilter`` add ``latest_only``.
+The group and diagnostic filters always judge a group by its newest execution, so they have no such field.
 Dataset-level fields are in [InputDatasetFilter][climate_ref.results.filters.InputDatasetFilter].
 [DatasetFilter][climate_ref.models.dataset_query.DatasetFilter] filters datasets rather than executions,
 so it is not part of this family.
@@ -90,8 +92,14 @@ from climate_ref_core.source_types import SourceDatasetType
 
 
 def promoted_version_clause() -> ColumnElement[bool]:
-    """Clause that keeps execution groups at their diagnostic's promoted version, joined to ``Diagnostic``."""
-    return ExecutionGroup.diagnostic_version == Diagnostic.promoted_version
+    """Clause over ``ExecutionGroup`` that keeps groups at their diagnostic's promoted version."""
+    promoted = (
+        select(Diagnostic.promoted_version)
+        .where(Diagnostic.id == ExecutionGroup.diagnostic_id)
+        .correlate_except(Diagnostic)
+        .scalar_subquery()
+    )
+    return ExecutionGroup.diagnostic_version == promoted
 
 
 # Unslotted, so several mixins can be combined into one filter.
@@ -312,27 +320,42 @@ class VersionScope(BaseFilter):
 
     >>> from climate_ref.results import ResourceFilter
     >>> filters = ResourceFilter(include_superseded=True)
+
+    Results from version 1 only, after a newer version was promoted:
+
+    >>> filters = ResourceFilter(diagnostic_version=1)
     """
 
     include_superseded: bool = False
     """Also keep results from older, superseded diagnostic versions, not only the promoted one."""
 
+    diagnostic_version: int | None = None
+    """
+    Keep only results from this diagnostic version, promoted or not.
+
+    This wins over ``include_superseded``.
+    """
+
     def version_clauses(self) -> list[ColumnElement[bool]]:
-        """Clauses for a select joined to ``ExecutionGroup`` and ``Diagnostic``."""
+        """Clauses for a select over ``ExecutionGroup``."""
+        if self.diagnostic_version is not None:
+            return [ExecutionGroup.diagnostic_version == self.diagnostic_version]
         return [] if self.include_superseded else [promoted_version_clause()]
 
 
 @attrs.frozen(kw_only=True, slots=False)
 class ExecutionScope(BaseFilter):
     """
-    A group of fields for the values and resource filters: which executions to keep.
+    A group of fields shared by every filter: which executions to keep.
 
     By default every execution that is not retracted counts.
     The creation window applies before the newest execution is picked,
     so ``latest_only`` with ``created_before`` keeps each group's newest execution from before then.
 
-    [DiagnosticsReader.with_values][climate_ref.results.diagnostics.DiagnosticsReader.with_values]
-    also takes one of these on its own, as ``scope``.
+    Filters over execution groups or diagnostics judge each group by its newest execution in the window.
+    A group whose newest execution is retracted is dropped, unless ``include_retracted=True``.
+    It never falls back to an older execution, because the newer one replaced it.
+    With a window set, a group with no execution in it is dropped.
 
     Examples
     --------
@@ -350,15 +373,6 @@ class ExecutionScope(BaseFilter):
 
     include_retracted: bool = False
     """Also keep retracted executions."""
-
-    latest_only: bool = False
-    """
-    Keep only each execution group's newest execution.
-
-    The newest is picked before retracted executions are dropped.
-    So a group whose newest execution is retracted gives nothing, unless ``include_retracted=True``.
-    It never falls back to an older execution, because the newer one replaced it.
-    """
 
     created_after: datetime.datetime | None = None
     """Keep only executions created at or after this time, as naive UTC."""
@@ -423,6 +437,13 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
     >>> filters = MetricValueFilter(reference_only=True)
     """
 
+    latest_only: bool = False
+    """
+    Keep only values from each execution group's newest execution.
+
+    A group whose newest execution is retracted gives nothing, unless ``include_retracted=True``.
+    """
+
     execution_ids: Sequence[int] | None = None
     """Keep only values from these executions."""
 
@@ -473,7 +494,7 @@ class ResourceFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDataset
     """
     Filter for the executions whose resource use is read by ``reader.resources``.
 
-    It has no fields of its own, only those of
+    It also has every field of
     [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
     [VersionScope][climate_ref.results.filters.VersionScope],
     [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
@@ -492,16 +513,20 @@ class ResourceFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDataset
     ... )
     """
 
+    latest_only: bool = False
+    """Keep only each execution group's newest execution."""
+
 
 @attrs.frozen(kw_only=True)
-class ExecutionGroupFilter(DiagnosticScope, VersionScope, InputDatasetScope):
+class ExecutionGroupFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatasetScope):
     """
     Filter for execution groups, passed to ``reader.executions.groups`` and ``group_rows``.
 
     Each group is judged by its newest execution.
     It also has every field of
     [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
-    [VersionScope][climate_ref.results.filters.VersionScope] and
+    [VersionScope][climate_ref.results.filters.VersionScope],
+    [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
     [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
 
     Examples
@@ -561,13 +586,16 @@ class ExecutionGroupFilter(DiagnosticScope, VersionScope, InputDatasetScope):
 
 
 @attrs.frozen(kw_only=True)
-class DiagnosticFilter(DiagnosticScope, InputDatasetScope):
+class DiagnosticFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatasetScope):
     """
     Filter for diagnostics and their run counts.
 
-    Pass it to ``reader.diagnostics.list`` or ``reader.executions.statistics``.
+    Pass it to ``reader.diagnostics.list``, ``reader.diagnostics.with_values``
+    or ``reader.executions.statistics``.
     It has no fields of its own, only those of
-    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope] and
+    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
+    [VersionScope][climate_ref.results.filters.VersionScope],
+    [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
     [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
     With ``input_datasets`` only groups whose newest run matches are counted,
     and a diagnostic left with no groups is dropped.

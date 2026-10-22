@@ -1,5 +1,6 @@
 """Unit tests for the diagnostic read layer."""
 
+import attrs
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
@@ -9,8 +10,7 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import DiagnosticFilter, Reader
-from climate_ref.results.filters import ExecutionScope
+from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, Reader
 from climate_ref.results.queries import select_diagnostics, select_diagnostics_with_values
 
 
@@ -109,9 +109,54 @@ class TestDiagnosticsReaderList:
         assert view.promoted_version == 1
         assert view.execution_group_count == 2
         # Both groups are at the promoted version with no executions yet.
-        assert view.total == 2
+        assert view.total == 0
         assert view.successful == 0
         assert view.inflight == 0
+
+    def test_total_counts_every_execution(self, db_with_diagnostics):
+        session = db_with_diagnostics.session
+        with session.begin():
+            group_1 = session.query(ExecutionGroup).filter_by(key="key1").one()
+            group_2 = session.query(ExecutionGroup).filter_by(key="key2").one()
+            for n, retracted in enumerate([False, False, True]):
+                session.add(
+                    Execution(
+                        execution_group_id=group_1.id,
+                        output_fragment=f"run-{n}",
+                        dataset_hash=f"run-{n}",
+                        successful=False,
+                        retracted=retracted,
+                    )
+                )
+            session.add(
+                Execution(
+                    execution_group_id=group_2.id, output_fragment="b", dataset_hash="b", successful=True
+                )
+            )
+        reader = Reader(db_with_diagnostics)
+        enso = DiagnosticFilter(diagnostic_slug="enso_tel")
+
+        assert reader.diagnostics.list(enso).items[0].total == 3
+        assert reader.diagnostics.list(attrs.evolve(enso, include_retracted=True)).items[0].total == 4
+
+    def test_diagnostic_version(self, db_with_diagnostics):
+        session = db_with_diagnostics.session
+        with session.begin():
+            diagnostic = session.query(Diagnostic).filter_by(slug="enso_tel").one()
+            session.add(
+                ExecutionGroup(key="key4", diagnostic_id=diagnostic.id, diagnostic_version=2, selectors={})
+            )
+        reader = Reader(db_with_diagnostics)
+
+        def group_count(**fields):
+            return reader.diagnostics.list(DiagnosticFilter(diagnostic_slug="enso_tel", **fields)).items[0]
+
+        assert group_count().execution_group_count == 2
+        assert group_count(diagnostic_version=2).execution_group_count == 1
+        assert group_count(diagnostic_version=2, include_superseded=False).execution_group_count == 1
+        assert group_count(include_superseded=True).execution_group_count == 3
+        groups = reader.executions.groups(ExecutionGroupFilter(diagnostic_version=2))
+        assert [g.key for g in groups] == ["key4"]
 
     def test_promoted_version_status_counts(self, db_with_diagnostics):
         # enso_tel has two promoted-version groups (key1, key2); give key1 a successful latest
@@ -244,7 +289,7 @@ class TestExecutionStatistics:
         assert {(s.provider, s.diagnostic) for s in stats} == {("pmp", "enso_tel")}
         assert reader.executions.statistics(DiagnosticFilter(diagnostic_slug="enso")) == ()
 
-    def test_retracted_latest_execution_still_counts(self, db_with_diagnostics):
+    def test_retracted_latest_execution_drops_the_group(self, db_with_diagnostics):
         session = db_with_diagnostics.session
         with session.begin():
             group = session.query(ExecutionGroup).filter_by(key="key1").one()
@@ -258,9 +303,13 @@ class TestExecutionStatistics:
                 )
             )
         reader = Reader(db_with_diagnostics)
-        by_diag = {s.diagnostic: s for s in reader.executions.statistics()}
-        assert by_diag["enso_tel"].successful == 1
-        assert by_diag["enso_tel"].not_started == 1
+        before = {
+            s.diagnostic: s for s in reader.executions.statistics(DiagnosticFilter(include_retracted=True))
+        }
+        after = {s.diagnostic: s for s in reader.executions.statistics()}
+        assert before["enso_tel"].successful == 1
+        assert after["enso_tel"].successful == 0
+        assert after["enso_tel"].total == before["enso_tel"].total - 1
 
 
 @pytest.fixture
@@ -362,7 +411,7 @@ class TestDiagnosticsWithValues:
         assert {slug for _, slug in reader.with_values(MetricValueType.SERIES)} == {
             "extratropical-modes-of-variability-nao"
         }
-        retracted = reader.with_values(MetricValueType.SERIES, scope=ExecutionScope(include_retracted=True))
+        retracted = reader.with_values(MetricValueType.SERIES, DiagnosticFilter(include_retracted=True))
         assert "enso-characteristics" in {slug for _, slug in retracted}
 
     def test_sqlite_plan_reads_only_the_composite_index(self, db_with_values):

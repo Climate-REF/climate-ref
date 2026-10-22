@@ -70,15 +70,29 @@ from climate_ref.results.filters import (
     ExecutionScope,
     MetricValueFilter,
     ResourceFilter,
-    promoted_version_clause,
 )
 
 GroupBy = Literal["diagnostic", "provider"]
 """How resource summaries are grouped: one row per diagnostic, or per provider."""
 
+_ScopedFilter = MetricValueFilter | ResourceFilter | ExecutionGroupFilter | DiagnosticFilter
 
-def apply_execution_scope(
-    stmt: Select[Any], scope: ExecutionScope, *, execution_group_ids: Sequence[int] | None = None
+
+def _where_group_in_scope(stmt: Select[Any], filters: _ScopedFilter) -> Select[Any]:
+    """Keep rows whose ``ExecutionGroup`` is at a kept version of a matching diagnostic."""
+    stmt = stmt.where(*filters.version_clauses())
+    if filters.matches_any:
+        # Matched against diagnostics first, so SQLite reaches the groups by index rather than scanning them.
+        stmt = stmt.where(ExecutionGroup.diagnostic_id.in_(filters.diagnostic_ids()))
+    return stmt
+
+
+def _apply_execution_scope(
+    stmt: Select[Any],
+    scope: ExecutionScope,
+    *,
+    latest_only: bool = False,
+    execution_group_ids: Sequence[int] | None = None,
 ) -> Select[Any]:
     """
     Apply an ``ExecutionScope`` to a select already joined to ``Execution``.
@@ -92,7 +106,7 @@ def apply_execution_scope(
     stmt = stmt.where(*window)
     if not scope.include_retracted:
         stmt = stmt.where(Execution.retracted.is_(False))
-    if scope.latest_only:
+    if latest_only:
         among: list[ColumnElement[bool]] = [*window]
         if execution_group_ids:
             among.append(Execution.execution_group_id.in_(list(execution_group_ids)))
@@ -117,12 +131,12 @@ def _apply_common(
     With ``subquery_type`` the execution, group, diagnostic and provider filters and the value type
     become one ``(execution_id, type) IN (...)`` subquery instead of joins, which matches the same rows.
     """
-    needs_diag = f.matches_any or not f.include_superseded
+    needs_group = f.matches_any or bool(f.version_clauses())
     needs_exec = subquery_type is not None or bool(
         f.execution_ids is not None
         or f.execution_group_ids is not None
         or f.input_datasets
-        or needs_diag
+        or needs_group
         or not f.include_retracted
         or f.latest_only
         or f.created_after is not None
@@ -135,19 +149,13 @@ def _apply_common(
             if subquery_type is not None
             else stmt.join(Execution, entity.execution_id == Execution.id)
         )
-        scope = apply_execution_scope(scope, f, execution_group_ids=f.execution_group_ids)
         if f.execution_group_ids is not None:
             scope = scope.where(Execution.execution_group_id.in_(list(f.execution_group_ids)))
-        if f.input_datasets:
-            scope = scope.where(f.input_datasets.execution_clause())
-
-        if needs_diag:
+        if needs_group:
             scope = scope.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-            scope = scope.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-        scope = scope.where(*f.version_clauses())
-        if f.matches_provider:
-            scope = scope.join(Provider, Diagnostic.provider_id == Provider.id)
-        scope = scope.where(*f.diagnostic_clauses())
+        scope = _scope_executions(
+            scope, f, latest_only=f.latest_only, execution_group_ids=f.execution_group_ids
+        )
 
         if subquery_type is not None:
             stmt = stmt.where(tuple_(entity.execution_id, entity.type).in_(scope))
@@ -279,10 +287,15 @@ def select_latest_execution(execution_group_id: int) -> Select[tuple[Execution]]
 
 def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     """
-    Build the ``Select`` for diagnostics joined to their provider, with an execution-group count.
+    Build the ``Select`` for diagnostics joined to their provider, with group and execution counts.
 
-    ``execution_group_count`` counts every ``ExecutionGroup`` of the diagnostic, across all versions.
-    With ``filters.input_datasets`` it counts only matching groups, and diagnostics with none are dropped.
+    ``execution_group_count`` counts the diagnostic's groups that the filter keeps,
+    the same groups as [select_execution_groups][climate_ref.results.queries.select_execution_groups].
+    ``successful`` and ``running`` count those whose newest execution succeeded or has not finished.
+    ``execution_count`` counts every execution of those diagnostics that the filter keeps,
+    the same executions as
+    [select_execution_resources][climate_ref.results.queries.select_execution_resources].
+    With ``filters.input_datasets`` diagnostics with no matching group are dropped.
     Ordered by ``(Provider.slug, Diagnostic.slug, Diagnostic.id)``, so paging is stable.
     """
     filters = filters or DiagnosticFilter()
@@ -290,10 +303,22 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     group_count_stmt = select(
         ExecutionGroup.diagnostic_id,
         func.count(ExecutionGroup.id).label("execution_group_count"),
-    ).group_by(ExecutionGroup.diagnostic_id)
-    if filters.input_datasets:
-        group_count_stmt = group_count_stmt.where(filters.input_datasets.execution_group_clause())
-    group_count_subquery = group_count_stmt.subquery()
+        func.sum(case((Execution.successful.is_(True), 1), else_=0)).label("successful"),
+        func.sum(case((Execution.successful.is_(None) & Execution.id.isnot(None), 1), else_=0)).label(
+            "running"
+        ),
+    ).select_from(ExecutionGroup)
+    group_count_stmt = _join_latest_execution(group_count_stmt, filters)
+    group_count_subquery = group_count_stmt.group_by(ExecutionGroup.diagnostic_id).subquery()
+
+    execution_count_stmt = (
+        select(ExecutionGroup.diagnostic_id, func.count(Execution.id).label("execution_count"))
+        .select_from(Execution)
+        .join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
+    )
+    execution_count_subquery = (
+        _scope_executions(execution_count_stmt, filters).group_by(ExecutionGroup.diagnostic_id).subquery()
+    )
 
     stmt = (
         select(
@@ -302,13 +327,17 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
             Diagnostic.name.label("name"),
             Diagnostic.promoted_version.label("promoted_version"),
             func.coalesce(group_count_subquery.c.execution_group_count, 0).label("execution_group_count"),
+            func.coalesce(group_count_subquery.c.successful, 0).label("successful"),
+            func.coalesce(group_count_subquery.c.running, 0).label("running"),
+            func.coalesce(execution_count_subquery.c.execution_count, 0).label("execution_count"),
         )
         .join(Provider, Diagnostic.provider_id == Provider.id)
         .join(
             group_count_subquery,
             Diagnostic.id == group_count_subquery.c.diagnostic_id,
-            isouter=filters.input_datasets is None,
+            isouter=not filters.input_datasets,
         )
+        .outerjoin(execution_count_subquery, Diagnostic.id == execution_count_subquery.c.diagnostic_id)
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
 
@@ -320,14 +349,12 @@ def select_diagnostics_with_values(
     filters: DiagnosticFilter | None = None,
     *,
     execution_group_where: ColumnElement[bool] | None = None,
-    scope: ExecutionScope = ExecutionScope(include_retracted=False),
 ) -> Select[Any]:
     """
-    Build the ``Select`` for diagnostics with at least one value of ``value_type`` at the promoted version.
+    Build the ``Select`` for diagnostics with at least one value of ``value_type``.
 
-    ``scope`` picks which executions count.
-    By default retracted executions do not count, as in
-    [Reader.values][climate_ref.results.reader.Reader.values].
+    The executions that count are those [Reader.values][climate_ref.results.reader.Reader.values] reads
+    for the same filter, so by default retracted executions and superseded versions do not count.
     ``execution_group_where`` further restricts which execution groups count.
 
     Selects ``id``, ``provider_slug`` and ``slug``, ordered like
@@ -342,16 +369,13 @@ def select_diagnostics_with_values(
         .join(MetricValue, MetricValue.execution_id == Execution.id)
         .where(
             ExecutionGroup.diagnostic_id == Diagnostic.id,
-            promoted_version_clause(),
             # Without table statistics SQLite picks ix_metric_value_type and reads every series row.
             _Unindexed(MetricValue.type.expression) == value_type,
         )
     )
-    has_values = apply_execution_scope(has_values, scope)
+    has_values = _scope_executions(has_values, filters)
     if execution_group_where is not None:
         has_values = has_values.where(execution_group_where)
-    if filters.input_datasets:
-        has_values = has_values.where(filters.input_datasets.execution_clause())
 
     stmt = (
         select(
@@ -373,7 +397,8 @@ def select_execution_statistics(filters: DiagnosticFilter | None = None) -> Sele
     It takes a [DiagnosticFilter][climate_ref.results.filters.DiagnosticFilter]
     rather than an ``ExecutionGroupFilter``, because the counts cannot honour ``dirty``, ``successful``
     or ``selectors``.
-    With ``filters.input_datasets`` only groups whose latest execution matches are counted.
+    It counts the groups that [select_execution_groups][climate_ref.results.queries.select_execution_groups]
+    keeps for the same diagnostic, version, execution and input-dataset fields.
 
     The status columns are:
 
@@ -382,12 +407,8 @@ def select_execution_statistics(filters: DiagnosticFilter | None = None) -> Sele
     * ``successful``: the latest execution succeeded.
     * ``not_started``: the group has no execution.
     * ``dirty``: the group is marked to be rerun.
-
-    Retraction is ignored, so a retracted latest execution still sets its group's status.
-    Only groups at the diagnostic's ``promoted_version`` are counted.
     """
     filters = filters or DiagnosticFilter()
-    latest = select_latest_executions().subquery()
 
     stmt = (
         select(
@@ -405,21 +426,12 @@ def select_execution_statistics(filters: DiagnosticFilter | None = None) -> Sele
             func.sum(case((Execution.id.is_(None), 1), else_=0)).label("not_started"),
             func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0)).label("dirty"),
         )
+        .select_from(ExecutionGroup)
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-        .where(promoted_version_clause())
         .join(Provider, Diagnostic.provider_id == Provider.id)
-        .outerjoin(latest, latest.c.execution_group_id == ExecutionGroup.id)
-        .outerjoin(Execution, Execution.id == latest.c.execution_id)
-        .group_by(Provider.slug, Diagnostic.slug)
-        .order_by(Provider.slug, Diagnostic.slug)
     )
-
-    stmt = stmt.where(*filters.diagnostic_clauses())
-    if filters.input_datasets:
-        # The outer-joined Execution is each group's latest.
-        stmt = stmt.where(filters.input_datasets.execution_clause())
-
-    return stmt
+    stmt = _join_latest_execution(stmt, filters)
+    return stmt.group_by(Provider.slug, Diagnostic.slug).order_by(Provider.slug, Diagnostic.slug)
 
 
 def select_execution_outputs(execution_id: int) -> Select[Any]:
@@ -485,6 +497,26 @@ def select_execution_resources(filters: ResourceFilter | None = None) -> Select[
     return _apply_resource_filters(stmt, filters)
 
 
+def _scope_executions(
+    stmt: Select[Any],
+    filters: _ScopedFilter,
+    *,
+    latest_only: bool = False,
+    execution_group_ids: Sequence[int] | None = None,
+) -> Select[Any]:
+    """
+    Keep the executions the filter's shared fields keep, for a select over ``Execution``.
+
+    The select must be joined to ``ExecutionGroup`` when the filter narrows diagnostics or versions.
+    """
+    stmt = _where_group_in_scope(stmt, filters)
+    if filters.input_datasets:
+        stmt = stmt.where(filters.input_datasets.execution_clause())
+    return _apply_execution_scope(
+        stmt, filters, latest_only=latest_only, execution_group_ids=execution_group_ids
+    )
+
+
 def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Select[Any]:
     """Join an ``Execution`` select through to its diagnostic and provider, then apply the filter."""
     stmt = (
@@ -492,20 +524,7 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
         .join(Provider, Diagnostic.provider_id == Provider.id)
     )
-    clauses = filters.diagnostic_clauses()
-    if clauses:
-        # Resolved to group ids first, so SQLite reaches executions by index rather than scanning them.
-        scoped_groups = (
-            select(ExecutionGroup.id)
-            .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-            .join(Provider, Diagnostic.provider_id == Provider.id)
-            .where(*clauses)
-        )
-        stmt = stmt.where(Execution.execution_group_id.in_(scoped_groups))
-    stmt = stmt.where(*filters.version_clauses())
-    if filters.input_datasets:
-        stmt = stmt.where(filters.input_datasets.execution_clause())
-    return apply_execution_scope(stmt, filters)
+    return _scope_executions(stmt, filters, latest_only=filters.latest_only)
 
 
 _SUMMARY_AGGREGATES = (
@@ -573,42 +592,45 @@ def _successful_clause(successful: bool) -> ColumnElement[bool]:
     return or_(Execution.successful.is_(False), Execution.successful.is_(None))
 
 
-def _filter_execution_groups(stmt: Select[Any], filters: ExecutionGroupFilter) -> Select[Any]:
-    """Apply the filters on ``ExecutionGroup``, which never depend on which execution is newest."""
-    if not filters.include_superseded:
-        stmt = stmt.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-    stmt = stmt.where(*filters.version_clauses())
-    # Matched against diagnostics first, so SQLite reaches the groups by index rather than scanning them.
-    if filters.matches_any:
-        stmt = stmt.where(ExecutionGroup.diagnostic_id.in_(filters.diagnostic_ids()))
-    if filters.dirty is True:
-        stmt = stmt.where(ExecutionGroup.dirty.is_(True))
-    elif filters.dirty is False:
-        stmt = stmt.where(or_(ExecutionGroup.dirty.is_(False), ExecutionGroup.dirty.is_(None)))
+def _join_latest_execution(
+    stmt: Select[Any],
+    filters: ExecutionGroupFilter | DiagnosticFilter,
+    among_executions: Sequence[ColumnElement[bool]] = (),
+) -> Select[Any]:
+    """
+    Outer-join each group's newest ``Execution`` and keep the groups the filter's shared fields keep.
+
+    This is the one definition of which groups count, used by every reader over groups or diagnostics.
+    """
+    window = filters.created_clauses()
+    stmt = stmt.outerjoin(Execution, Execution.id == _latest_execution_id([*window, *among_executions]))
+    stmt = _where_group_in_scope(stmt, filters)
+    if window:
+        stmt = stmt.where(Execution.id.is_not(None))
+    if not filters.include_retracted:
+        stmt = stmt.where(or_(Execution.id.is_(None), Execution.retracted.is_(False)))
+    if filters.input_datasets:
+        stmt = stmt.where(filters.input_datasets.execution_clause())
     return stmt
 
 
-def _latest_execution_clauses(filters: ExecutionGroupFilter) -> list[ColumnElement[bool]]:
-    """Clauses on each group's outer-joined newest ``Execution``."""
-    clauses: list[ColumnElement[bool]] = []
-    if filters.successful is not None:
-        clauses.append(_successful_clause(filters.successful))
-    if filters.failure_reasons:
-        clauses.append(Execution.failure_reason.in_([reason.value for reason in filters.failure_reasons]))
-    if filters.input_datasets:
-        clauses.append(filters.input_datasets.execution_clause())
-    return clauses
-
-
-def _join_latest_execution(stmt: Select[Any], filters: ExecutionGroupFilter) -> Select[Any]:
-    """Outer-join each group's newest ``Execution`` and apply every filter, rejecting ``selectors``."""
+def _select_groups(stmt: Select[Any], filters: ExecutionGroupFilter) -> Select[Any]:
+    """Apply an ``ExecutionGroupFilter`` to a select over ``ExecutionGroup``, rejecting ``selectors``."""
     if filters.selectors:
         raise ValueError(
             "`selectors` cannot be applied in SQL. Use `filter_by_selectors` on the rows instead."
         )
     among = () if filters.latest_successful is None else (_successful_clause(filters.latest_successful),)
-    stmt = stmt.outerjoin(Execution, Execution.id == _latest_execution_id(among))
-    return _filter_execution_groups(stmt, filters).where(*_latest_execution_clauses(filters))
+    stmt = _join_latest_execution(stmt, filters, among)
+    if filters.dirty is True:
+        stmt = stmt.where(ExecutionGroup.dirty.is_(True))
+    elif filters.dirty is False:
+        stmt = stmt.where(or_(ExecutionGroup.dirty.is_(False), ExecutionGroup.dirty.is_(None)))
+    if filters.successful is not None:
+        stmt = stmt.where(_successful_clause(filters.successful))
+    if filters.failure_reasons:
+        stmt = stmt.where(Execution.failure_reason.in_([reason.value for reason in filters.failure_reasons]))
+    return stmt
 
 
 def select_execution_groups(
@@ -633,7 +655,7 @@ def select_execution_groups(
     stmt: Select[Any] = select(ExecutionGroup, Execution).options(
         joinedload(ExecutionGroup.diagnostic).joinedload(Diagnostic.provider)
     )
-    return _join_latest_execution(stmt, filters).order_by(ExecutionGroup.id)
+    return _select_groups(stmt, filters).order_by(ExecutionGroup.id)
 
 
 def select_execution_group_ids(filters: ExecutionGroupFilter | None = None) -> Select[tuple[int]]:
@@ -641,18 +663,13 @@ def select_execution_group_ids(filters: ExecutionGroupFilter | None = None) -> S
     Build the ``Select`` of matching group ids, for counting.
 
     It matches the groups of [select_execution_groups][climate_ref.results.queries.select_execution_groups].
-    The newest execution is only looked up when a filter on it can drop a group.
 
     Raises
     ------
     ValueError
         If ``filters.selectors`` is set.
     """
-    filters = filters or ExecutionGroupFilter()
-    stmt: Select[Any] = select(ExecutionGroup.id)
-    if _latest_execution_clauses(filters) or filters.selectors:
-        return _join_latest_execution(stmt, filters)
-    return _filter_execution_groups(stmt, filters)
+    return _select_groups(select(ExecutionGroup.id), filters or ExecutionGroupFilter())
 
 
 def filter_by_selectors(

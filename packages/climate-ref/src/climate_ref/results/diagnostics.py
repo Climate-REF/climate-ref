@@ -20,7 +20,6 @@ with Database.from_config(config, read_only=True) as db:
 ```
 """
 
-from collections.abc import Mapping
 from typing import Any
 
 import attrs
@@ -30,13 +29,12 @@ from sqlalchemy.orm import Session
 from climate_ref.database import Database
 from climate_ref.models.metric_value import MetricValueType
 from climate_ref.results._page import Page
-from climate_ref.results.filters import DiagnosticFilter, ExecutionScope
+from climate_ref.results.filters import DiagnosticFilter
 from climate_ref.results.queries import (
     count,
     paginate,
     select_diagnostics,
     select_diagnostics_with_values,
-    select_execution_statistics,
 )
 
 
@@ -45,8 +43,7 @@ class DiagnosticView:
     """
     One diagnostic, with its current version and how many of its runs have succeeded.
 
-    ``successful``, ``inflight`` and ``total`` count only groups at the promoted version.
-    ``execution_group_count`` counts groups at every version, so it is at least ``total``.
+    Every count covers the groups and executions the filter keeps, by default those at the promoted version.
 
     Get them from [DiagnosticsReader.list][climate_ref.results.diagnostics.DiagnosticsReader.list].
 
@@ -58,13 +55,18 @@ class DiagnosticView:
     ...     slug="enso_tel",
     ...     name="ENSO teleconnections",
     ...     promoted_version=2,
-    ...     execution_group_count=30,
+    ...     execution_group_count=24,
     ...     successful=18,
     ...     inflight=2,
-    ...     total=24,
+    ...     total=31,
     ... )
-    >>> diagnostic.total - diagnostic.successful - diagnostic.inflight
+
+    Groups whose newest run failed or that have not run yet, and the reruns on top of one run per group:
+
+    >>> diagnostic.execution_group_count - diagnostic.successful - diagnostic.inflight
     4
+    >>> diagnostic.total - diagnostic.execution_group_count
+    7
     """
 
     provider_slug: str
@@ -80,16 +82,16 @@ class DiagnosticView:
     """The promoted version of the diagnostic."""
 
     execution_group_count: int
-    """Execution groups for the diagnostic across every version."""
+    """Execution groups for the diagnostic that the filter keeps."""
 
     successful: int
-    """Groups at the promoted version whose newest execution succeeded."""
+    """Groups whose newest execution succeeded."""
 
     inflight: int
-    """Groups at the promoted version whose newest execution is still running."""
+    """Groups whose newest execution is still running."""
 
     total: int
-    """Groups at the promoted version."""
+    """Executions that the filter keeps, counting every rerun of every group."""
 
 
 @attrs.frozen(kw_only=True)
@@ -173,17 +175,16 @@ class DiagnosticsReader:
         """The database session the queries run in."""
         return self._session if self._session is not None else self._db.session
 
-    def _to_view(self, row: Any, stats_by_key: Mapping[tuple[str, str], Any]) -> DiagnosticView:
-        stat = stats_by_key.get((row.provider_slug, row.slug))
+    def _to_view(self, row: Any) -> DiagnosticView:
         return DiagnosticView(
             provider_slug=row.provider_slug,
             slug=row.slug,
             name=row.name,
             promoted_version=row.promoted_version,
             execution_group_count=row.execution_group_count,
-            successful=stat.successful if stat is not None else 0,
-            inflight=stat.running if stat is not None else 0,
-            total=stat.total if stat is not None else 0,
+            successful=row.successful,
+            inflight=row.running,
+            total=row.execution_count,
         )
 
     def list(
@@ -213,7 +214,7 @@ class DiagnosticsReader:
         DiagnosticCollection
             The page of diagnostics.
             ``total_count`` is the number of matches before ``offset`` and ``limit``.
-            A diagnostic with no execution groups at its promoted version has zero counts.
+            A diagnostic with no execution groups that the filter keeps has zero counts.
 
         Examples
         --------
@@ -234,10 +235,7 @@ class DiagnosticsReader:
         total_count = count(self.session, base_stmt) if with_count else None
 
         rows = self.session.execute(paginate(base_stmt, offset, limit)).all()
-
-        stats = self.session.execute(select_execution_statistics(filters))
-        stats_by_key = {(s.provider, s.diagnostic): s for s in stats}
-        items = tuple(self._to_view(row, stats_by_key) for row in rows)
+        items = tuple(self._to_view(row) for row in rows)
 
         return DiagnosticCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
@@ -245,28 +243,22 @@ class DiagnosticsReader:
         self,
         value_type: MetricValueType,
         filters: DiagnosticFilter | None = None,
-        *,
-        scope: ExecutionScope = ExecutionScope(include_retracted=False),
     ) -> frozenset[tuple[str, str]]:
         """
         Which diagnostics have results of a given kind?
 
         Use it to find diagnostics worth querying, for example those with time series
         before calling ``reader.values.series_values``.
-        Only results from each diagnostic's current (promoted) version count.
+        By default only results from each diagnostic's current (promoted) version count,
+        and retracted runs do not.
 
         Parameters
         ----------
         value_type
             ``MetricValueType.SCALAR`` for single numbers, or ``MetricValueType.SERIES`` for time series.
         filters
-            Narrow which diagnostics are considered. ``None`` considers all of them.
-        scope
-            Which runs count, as an [ExecutionScope][climate_ref.results.filters.ExecutionScope].
-            It is separate from ``filters`` because a ``DiagnosticFilter`` has no fields about runs.
-            The default counts every run that has not been retracted.
-            Use ``latest_only=True`` to look only at each group's newest run,
-            ``include_retracted=True`` to count retracted runs,
+            Narrow which diagnostics and runs are considered. ``None`` considers all of them.
+            Use ``include_retracted=True`` to count retracted runs,
             or ``created_after`` and ``created_before`` to limit by date.
 
         Returns
@@ -276,18 +268,18 @@ class DiagnosticsReader:
 
         Examples
         --------
-        PMP diagnostics with time series, looking only at each group's newest run:
+        PMP diagnostics with time series from runs created this year:
 
         ```python
+        import datetime
+
         from climate_ref.models.metric_value import MetricValueType
         from climate_ref.results import DiagnosticFilter, Reader
-        from climate_ref.results.filters import ExecutionScope
 
         with Database.from_config(config, read_only=True) as db:
             pairs = Reader(db).diagnostics.with_values(
                 MetricValueType.SERIES,
-                DiagnosticFilter(provider_slug="pmp"),
-                scope=ExecutionScope(latest_only=True),
+                DiagnosticFilter(provider_slug="pmp", created_after=datetime.datetime(2026, 1, 1)),
             )
         # pairs == frozenset({("pmp", "enso_tel"), ...})
         ```
@@ -295,5 +287,5 @@ class DiagnosticsReader:
         See [select_diagnostics_with_values][climate_ref.results.queries.select_diagnostics_with_values]
         for the query.
         """
-        rows = self.session.execute(select_diagnostics_with_values(value_type, filters, scope=scope)).all()
+        rows = self.session.execute(select_diagnostics_with_values(value_type, filters)).all()
         return frozenset((row.provider_slug, row.slug) for row in rows)

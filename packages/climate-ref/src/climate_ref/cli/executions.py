@@ -322,6 +322,7 @@ def delete_groups(  # noqa: PLR0912, PLR0913
             selectors=filters.selectors,
             successful=successful,
             dirty=dirty,
+            include_retracted=True,
         )
     )
 
@@ -1453,6 +1454,7 @@ def requeue(  # noqa: PLR0913
                 dirty=False,
                 successful=False,
                 failure_reasons=failure_reason,
+                include_retracted=True,
             )
         )
         # Drops in-progress and never-run groups, which `successful=False` also matches

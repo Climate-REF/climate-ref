@@ -696,17 +696,66 @@ class SelectFirstMember:
 _RESOLUTION_KM_RE = re.compile(r"\s*([0-9.]+)\s*km\s*")
 
 
-def _grid_sort_key(grid_label: str, nominal_resolution: object) -> tuple[bool, float, str]:
+@runtime_checkable
+class GridPreference(Protocol):
     """
-    Sort key that orders the grids a variable is published on, preferred grid first.
+    A rule for choosing one grid when a variable is published on several.
+
+    CMIP7 grids are described by the
+    [Essential Model Documentation](https://github.com/WCRP-CMIP/Essential-Model-Documentation),
+    which has a [grid viewer](https://emd.wcrp-cmip.org/docs/grid_viewer/horizontal/).
+    A native grid is likely the one that is not regular lat/lon.
+    """
+
+    def choose(self, grids: pd.DataFrame, data_catalog: pd.DataFrame) -> str:
+        """
+        Choose the grid to keep.
+
+        Parameters
+        ----------
+        grids
+            The candidate grids, one row per ``grid_label``.
+            Each row holds the facets of the first dataset on that grid.
+        data_catalog
+            The data catalog of datasets
+
+        Returns
+        -------
+        :
+            The ``grid_label`` of the chosen grid
+        """
+        ...
+
+
+@frozen
+class PreferNativeGrid:
+    """
+    Prefer the native grid, then the finest resolution.
 
     The CMIP6 native grid ``gn`` comes first, then the finest ``nominal_resolution``.
+
+    CMIP7 grid labels carry no meaning, so for CMIP7 this picks the finest ``nominal_resolution``.
     Resolutions that are missing or not given in km sort last,
     and the grid label breaks any remaining tie.
     """
-    match = _RESOLUTION_KM_RE.fullmatch(str(nominal_resolution))
-    resolution = float(match.group(1)) if match else float("inf")
-    return (grid_label != "gn", resolution, grid_label)
+
+    def choose(self, grids: pd.DataFrame, data_catalog: pd.DataFrame) -> str:
+        """
+        Choose the native or finest grid.
+        """
+        resolutions = (
+            grids["nominal_resolution"]
+            if "nominal_resolution" in grids.columns
+            else pd.Series(None, index=grids.index)
+        )
+
+        def sort_key(row: int) -> tuple[bool, float, str]:
+            label = str(grids["grid_label"].iloc[row])
+            match = _RESOLUTION_KM_RE.fullmatch(str(resolutions.iloc[row]))
+            resolution = float(match.group(1)) if match else float("inf")
+            return (label != "gn", resolution, label)
+
+        return str(grids["grid_label"].iloc[min(range(len(grids)), key=sort_key)])
 
 
 @frozen
@@ -715,13 +764,17 @@ class SelectSingleGrid:
     Keep a single grid per variable within each group.
 
     A model may publish one variable on several grids, such as its native grid and a regridded copy.
-    A group that spans realms cannot be split by ``grid_label``, because CMIP7 labels each realm's grid
-    separately, so this constraint drops the extra copies instead.
-    The CMIP6 native grid ``gn`` is kept if present, otherwise the finest ``nominal_resolution``.
+    A group that spans realms cannot be split by ``grid_label``,
+    because CMIP7 labels each realm's grid separately, so this constraint drops the extra copies instead.
+
+    The ``preference`` decides which grid is kept (:class:`PreferNativeGrid` by default).
     """
 
     group_by: tuple[str, ...] = field(converter=_to_tuple)
     """The facets defining each variable of a model, within which a single grid is kept."""
+
+    preference: GridPreference = field(factory=PreferNativeGrid)
+    """The rule that chooses which grid to keep."""
 
     def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
         """
@@ -730,20 +783,12 @@ class SelectSingleGrid:
         if group.empty or "grid_label" not in group.columns:
             return group
 
-        resolutions = (
-            group["nominal_resolution"]
-            if "nominal_resolution" in group.columns
-            else pd.Series(None, index=group.index)
-        )
         keep = pd.Series(False, index=group.index)
         for _, subgroup in group.groupby(list(self.group_by), dropna=False):
-            grids = {
-                label: resolutions.loc[subgroup.index[subgroup["grid_label"] == label]].iloc[0]
-                for label in subgroup["grid_label"].dropna().unique()
-            }
+            grids = subgroup.dropna(subset=["grid_label"]).drop_duplicates("grid_label")
             if len(grids) <= 1:
                 keep.loc[subgroup.index] = True
                 continue
-            preferred = min(grids, key=lambda label: _grid_sort_key(label, grids[label]))
+            preferred = self.preference.choose(grids, data_catalog)
             keep.loc[subgroup.index[subgroup["grid_label"] == preferred]] = True
         return group[keep]

@@ -13,6 +13,7 @@ from climate_ref_core.constraints import (
     GroupConstraint,
     IgnoreFacets,
     PartialDateTime,
+    PreferNativeGrid,
     RequireContiguousTimerange,
     RequireFacets,
     RequireOverlappingTimerange,
@@ -1662,3 +1663,16 @@ class TestSelectSingleGrid:
     def test_empty_group(self):
         data = pd.DataFrame(columns=["source_id", "variant_label", "variable_id", "grid_label", "path"])
         assert self.constraint.apply(data, data).empty
+
+    def test_default_preference(self):
+        assert self.constraint.preference == PreferNativeGrid()
+
+    def test_custom_preference(self):
+        class PreferCoarsest:
+            def choose(self, grids, data_catalog):
+                assert list(grids["grid_label"]) == ["g150", "g147"]
+                return "g150"
+
+        constraint = SelectSingleGrid(group_by=("source_id", "variable_id"), preference=PreferCoarsest())
+        data = _grid_rows(("CanESM6-0-MR", "ts", "g150", "100 km"), ("CanESM6-0-MR", "ts", "g147", "50 km"))
+        assert list(constraint.apply(data, data)["grid_label"]) == ["g150"]

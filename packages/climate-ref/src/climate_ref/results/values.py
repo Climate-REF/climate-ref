@@ -15,28 +15,26 @@ power users who need the raw ``Select`` or ORM rows use those modules directly.
 """
 
 import functools
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import attrs
 import numpy as np
 import pandas as pd
-from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import Select, select
+from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
-from climate_ref.models.metric_value import MetricValue, MetricValueType, ScalarMetricValue, SeriesMetricValue
+from climate_ref.models.metric_value import MetricValue, MetricValueType, SeriesIndex
 from climate_ref.models.provider import Provider
 from climate_ref.results._page import Page
 from climate_ref.results._query import (
     MetricValueFilter,
     count_values,
     paginate,
-    select_scalar_values,
-    select_series_values,
     select_value_ids,
 )
 from climate_ref.results.executions import ExecutionsReader
@@ -57,6 +55,32 @@ if TYPE_CHECKING:
 
 _ID_CHUNK = 900
 """Ids per ``IN`` lookup, below the 999 bound parameters SQLite allowed before 3.32."""
+
+
+def _scalar_columns() -> list[Any]:
+    """Return the columns a ``ScalarValue`` is built from, in the order ``_scalar_dtos`` unpacks them."""
+    table = MetricValue.__table__.c
+    return [
+        table.id,
+        table.execution_id,
+        table.value,
+        table.attributes,
+        *(table[d] for d in MetricValue._cv_dimensions),
+    ]
+
+
+def _series_columns() -> list[Any]:
+    """Return the columns a ``SeriesValue`` is built from, in the order ``_series_dtos`` unpacks them."""
+    table = MetricValue.__table__.c
+    return [
+        table.id,
+        table.execution_id,
+        table["values"],
+        table.index_id,
+        table.reference_id,
+        table.attributes,
+        *(table[d] for d in MetricValue._cv_dimensions),
+    ]
 
 
 def _split_kind(dimensions: Mapping[str, str]) -> tuple[str, dict[str, str]]:
@@ -282,13 +306,12 @@ class ValuesReader:
             )
 
         # No detection: page and count in SQL so we never materialise the whole table.
-        base_stmt = select_scalar_values(filters)
         value_ids = select_value_ids(MetricValueType.SCALAR, filters)
         facets = self._facets(value_ids) if with_facets else ()
         total_count = count_values(self.session, value_ids) if with_count else None
-        load_stmt = paginate(base_stmt.options(self._scalar_loader(include_context)), offset, limit)
-        rows = list(self.session.execute(load_stmt).scalars().all())
-        items = tuple(self._to_scalar_dto(r, include_context) for r in rows)
+        page_stmt = value_ids.with_only_columns(*_scalar_columns()).order_by(MetricValue.__table__.c.id)
+        rows = self._fetch(paginate(page_stmt, offset, limit))
+        items = self._scalar_dtos(rows, include_context)
         return ScalarValueCollection(
             items=items,
             total_count=total_count,
@@ -316,17 +339,14 @@ class ValuesReader:
 
         Only the columns detection needs are loaded for every row, and only the returned page becomes DTOs.
         """
-        dims = ScalarMetricValue._cv_dimensions
+        dims = MetricValue._cv_dimensions
         table = MetricValue.__table__.c
         detect_stmt = (
             select_value_ids(MetricValueType.SCALAR, filters)
             .with_only_columns(table.id, table.execution_id, table.value, *(table[d] for d in dims))
             .order_by(table.id)
         )
-        # Core execution, because the ORM result layer adds a third to this fetch, so flush as it would.
-        if self.session.autoflush:
-            self.session.flush()
-        scalar_rows = self.session.connection().execute(detect_stmt).tuples().all()
+        scalar_rows = self._fetch(detect_stmt)
         _, _, values, *dim_columns = zip(*scalar_rows) if scalar_rows else [()] * (3 + len(dims))
         facets = _to_facets(facets_from_columns(dims, dim_columns)) if with_facets else ()
         detection_dims = {*policy.group_by, "source_id"}
@@ -343,7 +363,10 @@ class ValuesReader:
 
         total_count = len(kept) if with_count else None
         page = kept[offset : offset + limit] if limit is not None else kept[offset:]
-        items = self._scalar_page(scalar_rows, is_outlier, page.tolist(), include_context)
+        verdicts = {scalar_rows[i][0]: bool(is_outlier[i]) for i in page.tolist()}
+        items = self._scalar_dtos(
+            self._fetch_by_id(_scalar_columns(), list(verdicts)), include_context, verdicts
+        )
         return ScalarValueCollection(
             items=items,
             total_count=total_count,
@@ -353,58 +376,6 @@ class ValuesReader:
             had_outliers=outlier_count > 0,
             outlier_count=outlier_count,
         )
-
-    def _scalar_page(
-        self, rows: Sequence[Any], is_outlier: np.ndarray, positions: list[int], include_context: bool
-    ) -> tuple[ScalarValue, ...]:
-        """DTOs for the detection rows at ``positions``, fetching the columns detection did not need."""
-        dims = ScalarMetricValue._cv_dimensions
-        columns: list[Any] = [
-            ScalarMetricValue.id,
-            Execution.execution_group_id,
-            ScalarMetricValue.attributes,
-        ]
-        if include_context:
-            columns += [Diagnostic.slug.label("diagnostic_slug"), Provider.slug.label("provider_slug")]
-        extra_stmt = select(*columns).join(Execution, ScalarMetricValue.execution_id == Execution.id)
-        if include_context:
-            extra_stmt = (
-                extra_stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-                .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-                .join(Provider, Diagnostic.provider_id == Provider.id)
-            )
-        extras: dict[int, Any] = {}
-        ids = [rows[i][0] for i in positions]
-        for start in range(0, len(ids), _ID_CHUNK):
-            chunk = ids[start : start + _ID_CHUNK]
-            for row in self.session.execute(extra_stmt.where(ScalarMetricValue.id.in_(chunk))):
-                extras[row.id] = row
-
-        items = []
-        for i in positions:
-            row_id, execution_id, value, *dim_values = rows[i]
-            extra = extras.get(row_id)
-            if extra is None:
-                # Deleted by another transaction since detection read it.
-                continue
-            kind, dimensions = _split_kind({k: v for k, v in zip(dims, dim_values) if v is not None})
-            flagged = bool(is_outlier[i])
-            items.append(
-                ScalarValue(
-                    id=row_id,
-                    execution_id=execution_id,
-                    execution_group_id=extra.execution_group_id,
-                    value=value,
-                    kind=kind,
-                    dimensions=dimensions,
-                    attributes=dict(extra.attributes or {}),
-                    is_outlier=flagged,
-                    verification_status="unverified" if flagged else "verified",
-                    diagnostic_slug=extra.diagnostic_slug if include_context else None,
-                    provider_slug=extra.provider_slug if include_context else None,
-                )
-            )
-        return tuple(items)
 
     def series_values(  # noqa: PLR0913
         self,
@@ -424,81 +395,116 @@ class ValuesReader:
         """
         filters = filters or MetricValueFilter()
 
-        base_stmt = select_series_values(filters)
         value_ids = select_value_ids(MetricValueType.SERIES, filters)
         facets = self._facets(value_ids) if with_facets else ()
         total_count = count_values(self.session, value_ids) if with_count else None
 
-        load_stmt = paginate(base_stmt.options(self._series_loader(include_context)), offset, limit)
-        rows = list(self.session.execute(load_stmt).scalars().unique().all())
-
-        items = tuple(self._to_series_dto(r, include_context) for r in rows)
+        page_stmt = value_ids.with_only_columns(*_series_columns()).order_by(MetricValue.__table__.c.id)
+        items = self._series_dtos(self._fetch(paginate(page_stmt, offset, limit)), include_context)
         return SeriesValueCollection(
             items=items, total_count=total_count, facets=facets, offset=offset, limit=limit
         )
 
-    # -- loaders / materialisers ------------------------------------------------
-    @staticmethod
-    def _scalar_loader(include_context: bool) -> Any:
-        exec_load = joinedload(ScalarMetricValue.execution)
+    # -- materialisers ---------------------------------------------------------
+    # Rows are fetched as plain columns, because building ORM objects dominates a whole-diagnostic read.
+    def _fetch(self, stmt: Select[Any]) -> list[tuple[Any, ...]]:
+        """Run a column ``Select`` on the session's connection, flushing first as the ORM would."""
+        if self.session.autoflush:
+            self.session.flush()
+        return list(self.session.connection().execute(stmt).tuples().all())
+
+    def _fetch_in(self, stmt: Select[Any], column: Any, ids: Sequence[int]) -> list[tuple[Any, ...]]:
+        """Rows of ``stmt`` whose ``column`` is in ``ids``, one ``IN`` lookup per chunk of ids."""
+        rows = []
+        for start in range(0, len(ids), _ID_CHUNK):
+            rows += self._fetch(stmt.where(column.in_(ids[start : start + _ID_CHUNK])))
+        return rows
+
+    def _fetch_by_id(self, columns: Sequence[Any], ids: Sequence[int]) -> list[tuple[Any, ...]]:
+        """Rows of ``columns`` for the metric values ``ids``, in ``ids`` order, skipping deleted rows."""
+        rows = self._fetch_in(select(*columns), MetricValue.__table__.c.id, ids)
+        position = {row_id: i for i, row_id in enumerate(ids)}
+        return sorted(rows, key=lambda row: position[row[0]])
+
+    def _execution_context(
+        self, execution_ids: Iterable[int], include_context: bool
+    ) -> dict[int, tuple[int, str | None, str | None]]:
+        """``(execution_group_id, diagnostic_slug, provider_slug)`` per execution id."""
+        stmt = select(Execution.id, Execution.execution_group_id)
         if include_context:
-            return (
-                exec_load.joinedload(Execution.execution_group)
-                .joinedload(ExecutionGroup.diagnostic)
-                .joinedload(Diagnostic.provider)
+            stmt = (
+                stmt.add_columns(Diagnostic.slug, Provider.slug)
+                .join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
+                .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+                .join(Provider, Diagnostic.provider_id == Provider.id)
             )
-        return exec_load
+        rows = self._fetch_in(stmt, Execution.id, sorted(set(execution_ids)))
+        return {execution_id: (group_id, *(slugs or (None, None))) for execution_id, group_id, *slugs in rows}
 
-    @staticmethod
-    def _series_loader(include_context: bool) -> Any:
-        exec_load = joinedload(SeriesMetricValue.execution)
-        if include_context:
-            return (
-                exec_load.joinedload(Execution.execution_group)
-                .joinedload(ExecutionGroup.diagnostic)
-                .joinedload(Diagnostic.provider)
+    def _index_axes(self, index_ids: Iterable[int | None]) -> dict[int, tuple[str | None, list[Any]]]:
+        """``(name, values)`` per index axis id, so each shared axis is decoded once."""
+        stmt = select(SeriesIndex.id, SeriesIndex.name, SeriesIndex.values)
+        rows = self._fetch_in(stmt, SeriesIndex.id, sorted({i for i in index_ids if i is not None}))
+        return {axis_id: (name, values) for axis_id, name, values in rows}
+
+    def _scalar_dtos(
+        self,
+        rows: Sequence[tuple[Any, ...]],
+        include_context: bool,
+        verdicts: Mapping[int, bool] | None = None,
+    ) -> tuple[ScalarValue, ...]:
+        """DTOs for rows of ``_scalar_columns()``, with outlier verdicts by id when detection ran."""
+        dims = MetricValue._cv_dimensions
+        context = self._execution_context((row[1] for row in rows), include_context)
+        items = []
+        for row_id, execution_id, value, attributes, *dim_values in rows:
+            group_id, diagnostic_slug, provider_slug = context[execution_id]
+            kind, dimensions = _split_kind({k: v for k, v in zip(dims, dim_values) if v is not None})
+            flagged = verdicts[row_id] if verdicts is not None else None
+            items.append(
+                ScalarValue(
+                    id=row_id,
+                    execution_id=execution_id,
+                    execution_group_id=group_id,
+                    value=value,
+                    kind=kind,
+                    dimensions=dimensions,
+                    attributes=dict(attributes or {}),
+                    is_outlier=flagged,
+                    verification_status=None if flagged is None else "unverified" if flagged else "verified",
+                    diagnostic_slug=diagnostic_slug,
+                    provider_slug=provider_slug,
+                )
             )
-        return exec_load
+        return tuple(items)
 
-    @staticmethod
-    def _context_slugs(execution: Execution, include_context: bool) -> tuple[str | None, str | None]:
-        if not include_context:
-            return None, None
-        diagnostic = execution.execution_group.diagnostic
-        return diagnostic.slug, diagnostic.provider.slug
-
-    def _to_scalar_dto(self, row: ScalarMetricValue, include_context: bool) -> ScalarValue:
-        diagnostic_slug, provider_slug = self._context_slugs(row.execution, include_context)
-        kind, dims = _split_kind(row.dimensions)
-        return ScalarValue(
-            id=row.id,
-            execution_id=row.execution_id,
-            execution_group_id=row.execution.execution_group_id,
-            value=row.value,
-            kind=kind,
-            dimensions=dims,
-            attributes=dict(row.attributes or {}),
-            diagnostic_slug=diagnostic_slug,
-            provider_slug=provider_slug,
-        )
-
-    def _to_series_dto(self, row: SeriesMetricValue, include_context: bool) -> SeriesValue:
-        diagnostic_slug, provider_slug = self._context_slugs(row.execution, include_context)
-        kind, dims = _split_kind(row.dimensions)
-        return SeriesValue(
-            id=row.id,
-            execution_id=row.execution_id,
-            execution_group_id=row.execution.execution_group_id,
-            values=list(row.values or []),
-            index=list(row.index) if row.index is not None else None,
-            index_name=row.index_name,
-            reference_id=row.reference_id,
-            kind=kind,
-            dimensions=dims,
-            attributes=dict(row.attributes or {}),
-            diagnostic_slug=diagnostic_slug,
-            provider_slug=provider_slug,
-        )
+    def _series_dtos(self, rows: Sequence[tuple[Any, ...]], include_context: bool) -> tuple[SeriesValue, ...]:
+        """DTOs for rows of ``_series_columns()``."""
+        dims = MetricValue._cv_dimensions
+        context = self._execution_context((row[1] for row in rows), include_context)
+        axes = self._index_axes(row[3] for row in rows)
+        items = []
+        for row_id, execution_id, values, index_id, reference_id, attributes, *dim_values in rows:
+            group_id, diagnostic_slug, provider_slug = context[execution_id]
+            index_name, index = axes[index_id] if index_id is not None else (None, None)
+            kind, dimensions = _split_kind({k: v for k, v in zip(dims, dim_values) if v is not None})
+            items.append(
+                SeriesValue(
+                    id=row_id,
+                    execution_id=execution_id,
+                    execution_group_id=group_id,
+                    values=list(values or []),
+                    index=list(index) if index is not None else None,
+                    index_name=index_name,
+                    reference_id=reference_id,
+                    kind=kind,
+                    dimensions=dimensions,
+                    attributes=dict(attributes or {}),
+                    diagnostic_slug=diagnostic_slug,
+                    provider_slug=provider_slug,
+                )
+            )
+        return tuple(items)
 
 
 class Reader:

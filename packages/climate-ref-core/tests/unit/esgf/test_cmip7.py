@@ -115,6 +115,6 @@ class TestCMIP7Request:
             request.fetch_datasets()
 
         assert len(messages) == 1
-        assert "discovery.east.esgf.io" in messages[0]
+        assert all(index in messages[0] for index in STAC_INDICES)
         # The user's configuration is left alone
         assert intake_esgf.conf["stac_indices"] == {"api.stac.ceda.ac.uk": False}

@@ -140,7 +140,8 @@ Not every model and variable has CMIP7 data on ESGF yet so for some test cases w
 fetches the corresponding CMIP6 files, and converts them to CMIP7 format on the fly.
 This functionality will be removed once every test case can use published data.
 
-Converted files are cached under the user cache directory at `climate_ref/cmip7-converted/` (resolved by `platformdirs.user_cache_dir`).
+Converted files are cached in `cmip7-converted/` under `$REF_DATASET_CACHE_DIR` when that variable is set,
+otherwise under the user cache directory at `climate_ref/cmip7-converted/` (resolved by `platformdirs`).
 The cache is not version-controlled. Clear it manually if a conversion produces stale output.
 
 ```python

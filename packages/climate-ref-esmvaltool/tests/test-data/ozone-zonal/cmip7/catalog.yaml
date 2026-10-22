@@ -1,47 +1,47 @@
 _metadata:
-  hash: 131741d7fbad51dc759ba7ac6f929725f6aad3d8
+  hash: 5d3df0e4819911c7ff550835a29e1b0aeaa2ae2f
 cmip7:
   slug_column: instance_id
   selector:
     experiment_id: historical
-    grid_label: g110
-    source_id: UKESM1-3-LL
-    variant_label: r1i1p1f2
+    grid_label: gr1
+    source_id: GFDL-ESM4
+    variant_label: r1i1p1f1
   datasets:
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 90000.0
+    branch_time_in_parent: 36500.0
     branded_variable: o3_tavg-p19-hxy-air
     branding_suffix: tavg-p19-hxy-air
-    calendar: 360_day
-    end_time: '2021-12-16 00:00:00'
+    calendar: noleap
+    end_time: '2014-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: o3_tavg-p19-hxy-air_mon_glb_g110_UKESM1-3-LL_historical_r1i1p1f2_195001-202112.nc
+    filename: o3_tavg-p19-hxy-air_mon_glb_gr1_GFDL-ESM4_historical_r1i1p1f1_195001-201412.nc
     finalised: true
     frequency: mon
-    grid_label: g110
-    instance_id: CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r1i1p1f2.glb.mon.o3.tavg-p19-hxy-air.g110.v20261004
-    institution_id: UKNCSP
+    grid_label: gr1
+    instance_id: CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.o3.tavg-p19-hxy-air.gr1.v0
+    institution_id: NOAA-GFDL
     license_id: CC-BY-4.0
     long_name: Mole Fraction of O3
     mip_era: CMIP7
-    nominal_resolution: 250 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP7
-    parent_source_id: UKESM1-3-LL
-    parent_time_units: days since 1850-01-01
+    parent_mip_era: CMIP6
+    parent_source_id: GFDL-ESM4
+    parent_time_units: days since 0001-1-1
     parent_variant_label: r1i1p1f1
     realm: atmosChem
     region: glb
-    source_id: UKESM1-3-LL
+    source_id: GFDL-ESM4
     standard_name: mole_fraction_of_ozone_in_air
-    start_time: '1950-01-16 00:00:00'
-    time_range: 1950-01-16 00:00:00-2021-12-16 00:00:00
+    start_time: '1950-01-16 12:00:00'
+    time_range: 1950-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/76f00a65-1daa-4225-9d3d-f9fbb1340888
+    tracking_id: hdl:21.14107/2f07b81c-d669-5d0f-afd4-7aef37f10338
     units: mol mol-1
     variable_id: o3
-    variant_label: r1i1p1f2
-    version: v20261004
+    variant_label: r1i1p1f1
+    version: v0

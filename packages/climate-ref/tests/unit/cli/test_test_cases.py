@@ -2421,6 +2421,29 @@ class TestMintCommand:
         assert second.exit_code == 0
         assert "Uploaded 0 native blob(s), skipped 3" in second.stderr
 
+    def test_mint_bumps_version_only_when_bundle_changes(self, invoke_cli, mocker, tmp_path):
+        """A re-mint bumps test_case_version only if the bundle changed or --bump-version is given."""
+        from climate_ref_core.regression.manifest import Manifest
+        from climate_ref_core.regression.store import NativeStore
+
+        paths, scratch, _regression, _runner = _setup_real_run(mocker, tmp_path)
+        store = NativeStore(url=str(tmp_path / "store"))
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+        mint = ["test-cases", "mint", "--provider", "example"]
+
+        assert invoke_cli(mint).exit_code == 0
+        assert Manifest.load(paths.manifest).test_case_version == 1
+
+        assert invoke_cli(mint).exit_code == 0
+        assert Manifest.load(paths.manifest).test_case_version == 1
+
+        (scratch / "series.json").write_text('[{"changed": true}]')
+        assert invoke_cli(mint).exit_code == 0
+        assert Manifest.load(paths.manifest).test_case_version == 2
+
+        assert invoke_cli([*mint, "--bump-version"]).exit_code == 0
+        assert Manifest.load(paths.manifest).test_case_version == 3
+
     def test_mint_from_replay_reauthors_without_reexecuting(self, invoke_cli, mocker, tmp_path):
         """`mint --from-replay` rebuilds from stored native, uploading nothing and not re-executing."""
         from climate_ref_core.regression.manifest import Manifest

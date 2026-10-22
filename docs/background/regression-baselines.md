@@ -335,6 +335,23 @@ Dispatch it on the feature branch that should receive the new baseline:
 the job runs `mint`, and commits the regenerated `manifest.json` (and committed bundle) back to that branch,
 so the change is reviewed through its pull request and no developer ever needs write credentials.
 A `dry_run` input previews without uploading or committing, and the job refuses to run on the default branch.
+
+The workflow takes these inputs:
+
+- `provider`: the provider slug to mint.
+- `diagnostic`: one or more diagnostic slugs, separated by commas or spaces.
+  A blank value mints every diagnostic of the provider.
+- `test_case`: a single test case name.
+  This is rejected when more than one diagnostic is given.
+- `bump_version`: always increment `test_case_version`.
+  `mint` already bumps it when the committed bundle changed versus the previous manifest, so this is only needed to force a bump.
+- `dry_run`: preview without uploading or committing.
+
+Several diagnostics are minted by one job, so a single approval of the `native-baselines` environment covers all of them.
+The provider is set up once, then each diagnostic is fetched and minted in turn.
+The fetches are serial because the runners share an `intake-esgf` cache whose download database is SQLite.
+A failing diagnostic does not stop the others, and the successful ones are still committed in a single commit.
+The job then fails and names the diagnostics that did not mint.
 Once the commit is pushed, the mint calls `regression-diff-report.yaml` to publish the diff of what it changed.
 
 !!! warning "The mint commit does not re-trigger the PR gate"

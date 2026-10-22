@@ -13,7 +13,7 @@ from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy import ColumnElement, Select, func, literal, or_, select
+from sqlalchemy import ColumnElement, Select, func, literal, select
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.compiler import SQLCompiler
@@ -24,28 +24,19 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, MetricValueType
 from climate_ref.models.provider import Provider
-from climate_ref.results._converters import _as_str_tuple
-from climate_ref.results._query import ExecutionScope, InputDatasetFilter, apply_execution_scope
+from climate_ref.results._query import ExecutionScope, InputDatasetFilter, SlugFilter, apply_execution_scope
 from climate_ref.results._stats import rows_to_execution_stats
 from climate_ref.results.executions import ExecutionStats, select_execution_statistics
 
 
 @attrs.frozen(kw_only=True)
-class DiagnosticFilter:
+class DiagnosticFilter(SlugFilter):
     """
     Declarative filter over diagnostics.
 
     Every field is optional; ``None`` means "do not constrain on this axis".
-    ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches
-    (OR-combined within each field), matching the semantics used by
-    [ExecutionGroupFilter][climate_ref.results.executions.ExecutionGroupFilter].
+    Diagnostic and provider matching comes from [SlugFilter][climate_ref.results._query.SlugFilter].
     """
-
-    provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on provider slug (OR-combined)."""
-
-    diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on diagnostic slug (OR-combined)."""
 
     input_datasets: InputDatasetFilter | None = None
     """
@@ -190,17 +181,7 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
 
-    return _apply_filters(stmt, filters)
-
-
-def _apply_filters(stmt: Select[Any], filters: DiagnosticFilter) -> Select[Any]:
-    if filters.provider_contains:
-        stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
-    if filters.diagnostic_contains:
-        stmt = stmt.where(
-            or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains))
-        )
-    return stmt
+    return stmt.where(*filters.slug_clauses())
 
 
 class _Unindexed(FunctionElement[Any]):
@@ -265,7 +246,7 @@ def select_diagnostics_with_values(
         .where(has_values.exists())
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
-    return _apply_filters(stmt, filters)
+    return stmt.where(*filters.slug_clauses())
 
 
 class DiagnosticsReader:
@@ -331,6 +312,8 @@ class DiagnosticsReader:
         rows = self.session.execute(stmt).all()
 
         stats = self.stats(
+            diagnostic_slug=filters.diagnostic_slug,
+            provider_slug=filters.provider_slug,
             provider_contains=filters.provider_contains,
             diagnostic_contains=filters.diagnostic_contains,
             input_datasets=filters.input_datasets,
@@ -354,6 +337,8 @@ class DiagnosticsReader:
     def stats(
         self,
         *,
+        diagnostic_slug: str | None = None,
+        provider_slug: str | None = None,
         diagnostic_contains: Sequence[str] | None = None,
         provider_contains: Sequence[str] | None = None,
         input_datasets: InputDatasetFilter | None = None,
@@ -368,6 +353,8 @@ class DiagnosticsReader:
         just reachable under the diagnostics domain.
         """
         stmt = select_execution_statistics(
+            diagnostic_slug=diagnostic_slug,
+            provider_slug=provider_slug,
             diagnostic_contains=diagnostic_contains,
             provider_contains=provider_contains,
             input_datasets=input_datasets,

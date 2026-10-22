@@ -82,6 +82,52 @@ class InputDatasetFilter:
         return ExecutionGroup.executions.any(self.execution_clause())
 
 
+# Unslotted so it can be mixed in beside ExecutionScope.
+@attrs.frozen(kw_only=True, slots=False)
+class SlugFilter:
+    """
+    Diagnostic and provider slug matching, shared by every reader filter.
+
+    The exact and substring fields can be combined, and every set field must match.
+    Apply it with [slug_clauses][climate_ref.results._query.SlugFilter.slug_clauses].
+    """
+
+    diagnostic_slug: str | None = None
+    """Exact-match diagnostic slug, for API path-scoped queries."""
+
+    provider_slug: str | None = None
+    """Exact-match provider slug, for API path-scoped queries."""
+
+    diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """Case-insensitive substring matches on diagnostic slug (OR-combined), for CLI-style search."""
+
+    provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
+
+    @property
+    def matches_diagnostic(self) -> bool:
+        """Whether any diagnostic axis is set."""
+        return self.diagnostic_slug is not None or bool(self.diagnostic_contains)
+
+    @property
+    def matches_provider(self) -> bool:
+        """Whether any provider axis is set."""
+        return self.provider_slug is not None or bool(self.provider_contains)
+
+    def slug_clauses(self) -> list[ColumnElement[bool]]:
+        """Clauses for a select joined to ``Diagnostic``, and to ``Provider`` if a provider axis is set."""
+        clauses: list[ColumnElement[bool]] = []
+        if self.diagnostic_slug is not None:
+            clauses.append(Diagnostic.slug == self.diagnostic_slug)
+        if self.diagnostic_contains:
+            clauses.append(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in self.diagnostic_contains)))
+        if self.provider_slug is not None:
+            clauses.append(Provider.slug == self.provider_slug)
+        if self.provider_contains:
+            clauses.append(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in self.provider_contains)))
+        return clauses
+
+
 @attrs.frozen(kw_only=True)
 class ExecutionScope:
     """
@@ -116,7 +162,7 @@ def apply_execution_scope(stmt: Select[Any], scope: ExecutionScope) -> Select[An
 
 
 @attrs.frozen(kw_only=True)
-class MetricValueFilter(ExecutionScope):
+class MetricValueFilter(ExecutionScope, SlugFilter):
     """
     Declarative filter over metric values.
 
@@ -125,15 +171,7 @@ class MetricValueFilter(ExecutionScope):
     The same object drives scalar and series queries, frame conversion and facet collection,
     so a filter is written once and reused across output shapes.
 
-    Two styles of diagnostic/provider filtering are offered deliberately:
-
-    * ``diagnostic_slug`` / ``provider_slug`` are **exact** matches, for API path-scoped queries
-      (``/diagnostics/{provider_slug}/{diagnostic_slug}/values``).
-    * ``diagnostic_contains`` / ``provider_contains`` are case-insensitive **substring** matches
-      (OR-combined), for CLI-style search.
-
-    Keeping them separate avoids the ``Diagnostic.slug`` vs ``Diagnostic.name`` divergence that
-    exists today between the CLI and the ref-app API.
+    Diagnostic and provider matching comes from [SlugFilter][climate_ref.results._query.SlugFilter].
     """
 
     execution_ids: Sequence[int] | None = None
@@ -141,18 +179,6 @@ class MetricValueFilter(ExecutionScope):
 
     execution_group_ids: Sequence[int] | None = None
     """Restrict to values produced by executions belonging to these groups."""
-
-    diagnostic_slug: str | None = None
-    """Exact-match diagnostic slug, for API path-scoped queries."""
-
-    provider_slug: str | None = None
-    """Exact-match provider slug, for API path-scoped queries."""
-
-    diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on diagnostic slug (OR-combined), for CLI-style search."""
-
-    provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
 
     dimensions: Mapping[str, str | Sequence[str]] | None = None
     """CV dimension filters keyed by registered dimension name; a string is equality, a sequence is IN."""
@@ -215,21 +241,14 @@ class MetricValueFilter(ExecutionScope):
         return clauses
 
 
-def _apply_common(  # noqa: PLR0912
-    stmt: Select[Any], entity: type[MetricValue], f: MetricValueFilter
-) -> Select[Any]:
+def _apply_common(stmt: Select[Any], entity: type[MetricValue], f: MetricValueFilter) -> Select[Any]:
     """
     Apply every filter that is identical for scalar and series to a ``Select``.
 
     This is the ONLY place provenance, version, retraction, dimension and id filtering is
     expressed, so scalar and series can never diverge.
     """
-    needs_diag = (
-        f.diagnostic_slug is not None
-        or f.provider_slug is not None
-        or bool(f.diagnostic_contains or f.provider_contains)
-        or not f.include_superseded
-    )
+    needs_diag = f.matches_diagnostic or f.matches_provider or not f.include_superseded
     needs_exec = bool(
         f.execution_ids
         or f.execution_group_ids
@@ -254,16 +273,9 @@ def _apply_common(  # noqa: PLR0912
         stmt = stmt.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
     if not f.include_superseded:
         stmt = stmt.where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
-    if f.diagnostic_slug is not None:
-        stmt = stmt.where(Diagnostic.slug == f.diagnostic_slug)
-    if f.diagnostic_contains:
-        stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in f.diagnostic_contains)))
-    if f.provider_slug is not None or f.provider_contains:
+    if f.matches_provider:
         stmt = stmt.join(Provider, Diagnostic.provider_id == Provider.id)
-        if f.provider_slug is not None:
-            stmt = stmt.where(Provider.slug == f.provider_slug)
-        if f.provider_contains:
-            stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in f.provider_contains)))
+    stmt = stmt.where(*f.slug_clauses())
 
     for clause in f.dimension_clauses(entity):
         stmt = stmt.where(clause)

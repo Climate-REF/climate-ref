@@ -159,6 +159,23 @@ class TestGroupsFilter:
         assert "key2" in keys
         assert "key3" not in keys
 
+    def test_exact_diagnostic_slug(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        coll = reader.executions.groups(ExecutionGroupFilter(diagnostic_slug="enso_tel"))
+        assert {g.diagnostic_slug for g in coll} == {"enso_tel"}
+        assert reader.executions.groups(ExecutionGroupFilter(diagnostic_slug="enso")).total_count == 0
+
+    def test_exact_provider_slug(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        coll = reader.executions.groups(ExecutionGroupFilter(provider_slug="pmp"))
+        assert {g.provider_slug for g in coll} == {"pmp"}
+        assert reader.executions.groups(ExecutionGroupFilter(provider_slug="pm")).total_count == 0
+
+    def test_exact_and_contains_combine(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        filters = ExecutionGroupFilter(provider_slug="pmp", diagnostic_contains=["enso"])
+        assert {g.key for g in reader.executions.groups(filters)} == {"key1"}
+
     def test_dirty(self, db_with_groups):
         reader = Reader(db_with_groups)
         coll = reader.executions.groups(ExecutionGroupFilter(dirty=True))
@@ -582,6 +599,12 @@ class TestStatistics:
         stats = reader.executions.statistics(diagnostic_contains=["enso"])
         diagnostics = {s.diagnostic for s in stats}
         assert diagnostics == {"enso_tel", "enso-characteristics"}
+
+    def test_exact_slug_filter(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        stats = reader.executions.statistics(provider_slug="pmp", diagnostic_slug="enso_tel")
+        assert {(s.provider, s.diagnostic) for s in stats} == {("pmp", "enso_tel")}
+        assert reader.executions.statistics(diagnostic_slug="enso") == ()
 
 
 class TestLatestExecution:

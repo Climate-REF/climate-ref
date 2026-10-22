@@ -27,8 +27,7 @@ from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
-from climate_ref.results._converters import _as_str_tuple
-from climate_ref.results._query import ExecutionScope, apply_execution_scope, count_values
+from climate_ref.results._query import ExecutionScope, SlugFilter, apply_execution_scope, count_values
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -81,29 +80,14 @@ def _percentile(values: Sequence[float], quantile: float) -> float:
 
 
 @attrs.frozen(kw_only=True)
-class ResourceFilter(ExecutionScope):
+class ResourceFilter(ExecutionScope, SlugFilter):
     """
     Declarative filter over the executions considered for a resource profile.
 
     Every field is optional, and ``None`` means "do not constrain on this axis".
     Every diagnostic version is counted, because there is no promoted-version scoping here.
-    ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches
-    (OR-combined within each field),
-    matching the semantics used by
-    [ExecutionGroupFilter][climate_ref.results.executions.ExecutionGroupFilter].
+    Diagnostic and provider matching comes from [SlugFilter][climate_ref.results._query.SlugFilter].
     """
-
-    diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on diagnostic slug (OR-combined)."""
-
-    provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on provider slug (OR-combined)."""
-
-    diagnostic_slug: str | None = None
-    """Exact-match diagnostic slug."""
-
-    provider_slug: str | None = None
-    """Exact-match provider slug."""
 
     since: datetime.datetime | None = None
     """Keep only executions created at or after this naive UTC timestamp."""
@@ -454,16 +438,7 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
         .join(Provider, Diagnostic.provider_id == Provider.id)
     )
-    if filters.diagnostic_contains:
-        stmt = stmt.where(
-            or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains))
-        )
-    if filters.provider_contains:
-        stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
-    if filters.diagnostic_slug is not None:
-        stmt = stmt.where(Diagnostic.slug == filters.diagnostic_slug)
-    if filters.provider_slug is not None:
-        stmt = stmt.where(Provider.slug == filters.provider_slug)
+    stmt = stmt.where(*filters.slug_clauses())
     if filters.since is not None:
         stmt = stmt.where(Execution.created_at >= filters.since)
     return apply_execution_scope(stmt, filters)

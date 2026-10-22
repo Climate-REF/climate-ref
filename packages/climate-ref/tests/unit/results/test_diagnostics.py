@@ -72,6 +72,15 @@ class TestSelectDiagnostics:
         slugs = {row.slug for row in rows}
         assert slugs == {"enso_tel"}
 
+    def test_exact_slug_filter(self, db_with_diagnostics):
+        stmt = select_diagnostics(DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel"))
+        rows = db_with_diagnostics.session.execute(stmt).all()
+        assert {(row.provider_slug, row.slug) for row in rows} == {("pmp", "enso_tel")}
+
+    def test_exact_slug_is_not_a_substring(self, db_with_diagnostics):
+        stmt = select_diagnostics(DiagnosticFilter(diagnostic_slug="enso", provider_slug="pm"))
+        assert db_with_diagnostics.session.execute(stmt).all() == []
+
     def test_ordered_by_provider_then_diagnostic(self, db_with_diagnostics):
         stmt = select_diagnostics()
         rows = db_with_diagnostics.session.execute(stmt).all()
@@ -231,6 +240,12 @@ class TestDiagnosticsReaderStats:
         stats = reader.diagnostics.stats(diagnostic_contains=["enso_tel"])
         diagnostics = {s.diagnostic for s in stats}
         assert diagnostics == {"enso_tel"}
+
+    def test_exact_slug_filter(self, db_with_diagnostics):
+        reader = Reader(db_with_diagnostics)
+        stats = reader.diagnostics.stats(provider_slug="pmp", diagnostic_slug="enso_tel")
+        assert {(s.provider, s.diagnostic) for s in stats} == {("pmp", "enso_tel")}
+        assert reader.diagnostics.stats(diagnostic_slug="enso") == ()
 
     def test_retracted_latest_execution_still_counts(self, db_with_diagnostics):
         session = db_with_diagnostics.session

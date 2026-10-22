@@ -22,7 +22,7 @@ from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy import Select, case, func, or_, select
+from sqlalchemy import ColumnElement, Select, case, func, select
 from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
@@ -36,9 +36,10 @@ from climate_ref.models.execution import (
     get_execution_group_and_latest_filtered,
 )
 from climate_ref.models.provider import Provider
-from climate_ref.results._converters import _as_failure_reasons, _as_str_tuple
+from climate_ref.results._converters import _as_failure_reasons
 from climate_ref.results._query import (
     InputDatasetFilter,
+    SlugFilter,
     latest_execution_for_group,
     select_latest_executions,
 )
@@ -46,27 +47,17 @@ from climate_ref.results._stats import rows_to_execution_stats
 
 
 @attrs.frozen(kw_only=True)
-class ExecutionGroupFilter:
+class ExecutionGroupFilter(SlugFilter):
     """
     Declarative filter over execution groups.
 
     Every field is optional; ``None`` means "do not constrain on this axis".
-    This mirrors exactly what [get_execution_group_and_latest_filtered]
-    [climate_ref.models.execution.get_execution_group_and_latest_filtered] supports --
-    ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches (OR-combined),
+    Diagnostic and provider matching comes from [SlugFilter][climate_ref.results._query.SlugFilter].
     ``selectors`` is the map matched against each group's ``selectors`` in Python,
-    and ``successful`` vs ``latest_successful`` expose the helper's post-rank / pre-rank success filters.
-
-    Exact-match ``diagnostic_slug``/``provider_slug`` are a documented follow-up,
-    as the underlying helper only does substring matching today,
-    so adding exact match means extending the helper first.
+    and ``successful`` vs ``latest_successful`` expose the
+    [get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered]
+    post-rank / pre-rank success filters.
     """
-
-    diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on diagnostic slug (OR-combined)."""
-
-    provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on provider slug (OR-combined)."""
 
     dirty: bool | None = None
     """Constrain on the group's ``dirty`` flag."""
@@ -340,6 +331,8 @@ class ExecutionGroupCollection:
 
 def select_execution_statistics(
     *,
+    diagnostic_slug: str | None = None,
+    provider_slug: str | None = None,
     diagnostic_contains: Sequence[str] | None = None,
     provider_contains: Sequence[str] | None = None,
     input_datasets: InputDatasetFilter | None = None,
@@ -348,7 +341,7 @@ def select_execution_statistics(
     Build the per-(provider, diagnostic) status-count aggregate ``Select``.
 
     Moved out of ``cli/executions.py::stats`` so the aggregate is reusable plumbing.
-    Only ``diagnostic_contains``/``provider_contains``/``input_datasets`` are accepted
+    Only the [SlugFilter][climate_ref.results._query.SlugFilter] axes and ``input_datasets`` are accepted
     (not the full [ExecutionGroupFilter][climate_ref.results.executions.ExecutionGroupFilter])
     so ``dirty`` / ``successful`` / ``facets`` are never silently ignored
     on an aggregate that cannot honour them.
@@ -397,10 +390,13 @@ def select_execution_statistics(
         .order_by(Provider.slug, Diagnostic.slug)
     )
 
-    if diagnostic_contains:
-        stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in diagnostic_contains)))
-    if provider_contains:
-        stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in provider_contains)))
+    slugs = SlugFilter(
+        diagnostic_slug=diagnostic_slug,
+        provider_slug=provider_slug,
+        diagnostic_contains=diagnostic_contains,
+        provider_contains=provider_contains,
+    )
+    stmt = stmt.where(*slugs.slug_clauses())
     if input_datasets:
         stmt = stmt.where(input_datasets.execution_group_clause())
 
@@ -480,13 +476,14 @@ class ExecutionsReader:
         """
         filters = filters or ExecutionGroupFilter()
 
-        group_conditions = []
+        group_conditions: list[ColumnElement[bool]] = []
+        if filters.matches_diagnostic or filters.matches_provider:
+            matching = select(Diagnostic.id).join(Provider, Diagnostic.provider_id == Provider.id)
+            group_conditions.append(ExecutionGroup.diagnostic_id.in_(matching.where(*filters.slug_clauses())))
         if filters.input_datasets:
             group_conditions.append(filters.input_datasets.execution_group_clause())
         return get_execution_group_and_latest_filtered(
             self.session,
-            diagnostic_filters=list(filters.diagnostic_contains) if filters.diagnostic_contains else None,
-            provider_filters=list(filters.provider_contains) if filters.provider_contains else None,
             selector_filters={k: list(v) for k, v in filters.selectors.items()}
             if filters.selectors
             else None,
@@ -532,12 +529,16 @@ class ExecutionsReader:
     def statistics(
         self,
         *,
+        diagnostic_slug: str | None = None,
+        provider_slug: str | None = None,
         diagnostic_contains: Sequence[str] | None = None,
         provider_contains: Sequence[str] | None = None,
         input_datasets: InputDatasetFilter | None = None,
     ) -> tuple[ExecutionStats, ...]:
         """Execute the ``select_execution_statistics`` builder and map rows to ``ExecutionStats``."""
         stmt = select_execution_statistics(
+            diagnostic_slug=diagnostic_slug,
+            provider_slug=provider_slug,
             diagnostic_contains=diagnostic_contains,
             provider_contains=provider_contains,
             input_datasets=input_datasets,

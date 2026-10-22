@@ -155,18 +155,60 @@ Obs4MIPsRequest(
 )
 ```
 
-### Common CMIP6 Facets
+#### CMIP7Request
 
-| Facet            | Description     | Example                    |
-| ---------------- | --------------- | -------------------------- |
-| `source_id`      | Model name      | `"ACCESS-ESM1-5"`          |
-| `experiment_id`  | Experiment      | `"historical"`, `"ssp585"` |
-| `variable_id`    | Variable        | `"tas"`, `"pr"`            |
-| `member_id`      | Ensemble member | `"r1i1p1f1"`               |
-| `table_id`       | MIP table       | `"Amon"`, `"fx"`  |
-| `grid_label`     | Grid type       | `"gn"`, `"gr"`             |
-| `institution_id` | Institution     | `"CSIRO"`                  |
-| `activity_drs`   | Activity        | `"CMIP"`, `"ScenarioMIP"`  |
+For CMIP7 data published on ESGF:
+
+```python
+from climate_ref_core.esgf import CMIP7Request
+
+CMIP7Request(
+    slug="cmip7-tas",
+    facets={
+        "source_id": "UKESM1-3-LL",
+        "experiment_id": "historical",
+        "variable_id": "tas",
+        "branding_suffix": "tavg-h2m-hxy-u",
+        "frequency": "mon",
+    },
+    remove_ensembles=True,
+)
+```
+
+CMIP7 data is only in the ESGF STAC indices (`discovery.east.esgf.io` and `discovery.west.esgf.io`).
+Recent intake-esgf releases enable them by default.
+An older `~/.config/intake-esgf/conf.yaml` may not list them, and a warning is shown.
+
+#### ConvertedCMIP7Request
+
+Not every model and variable has CMIP7 data on ESGF yet,
+so `ConvertedCMIP7Request` fabricates it from CMIP6.
+It maps CMIP7 facets to CMIP6 ones (eg. `variant_label` -> `member_id`),
+fetches the CMIP6 files and converts them on the fly.
+It will be removed once every test case can use published data.
+
+```python
+from climate_ref_core.esgf import ConvertedCMIP7Request
+
+ConvertedCMIP7Request(
+    slug="cmip7-tas",
+    facets={
+        "source_id": "ACCESS-ESM1-5",
+        "experiment_id": "historical",
+        "variable_id": "tas",
+        "variant_label": "r1i1p1f1",   # CMIP7 name, mapped to member_id internally
+        "table_id": "Amon",
+    },
+)
+```
+
+Converted files are cached in `cmip7-converted/` under `$REF_DATASET_CACHE_DIR`,
+or under the user cache directory at `climate_ref/cmip7-converted/` when that is unset.
+Clear it by hand if a conversion produces stale output.
+
+To move a test case to published data, swap its `ConvertedCMIP7Request` for a `CMIP7Request`.
+ESGF does not know the converted datasets in the existing catalog,
+so run `ref test-cases fetch --regen` to resolve the new request, then re-mint the baselines.
 
 ### Dataset Resolution
 
@@ -325,13 +367,7 @@ to download datasets from ESGF if they cannot be found locally.
 The fetch command saves a catalog YAML file that records the paths to these files,
 so subsequent test runs can locate the data without re-scanning directories.
 
-Cached CMIP7 conversions are checked for required metadata, their declared data variable,
-and readable time endpoints before reuse. Invalid files are rebuilt individually.
-Valid cached files are retained. New conversions are written to a temporary file and
-renamed into place only after the write completes. Data fields use 64 MiB automatic
-chunks with a single-threaded writer to limit peak memory during compression.
-Ozone datasets remain lossless, including hybrid-coordinate coefficients and bounds.
-Older quantised ozone conversions are rebuilt.
+Cached CMIP7 conversions are checked before reuse, and any invalid file is rebuilt.
 
 /// Note | Using shared ESGF data (HPC/shared drives)
 
@@ -464,93 +500,90 @@ pytest -m "not requires_esgf_data"
 
 ## Regression baselines
 
-Diagnostics can be slow, so the REF doesn't re-run them on every pull request.
-Instead each test case is pinned to a **regression baseline** — a recorded, known-good
-output — and CI checks changes against it.
+Diagnostics are slow, so CI does not re-run them on every pull request.
+Each test case is instead pinned to a regression baseline:
+a recorded set of results that a pull request must still reproduce.
+See [Regression baselines](../background/regression-baselines.md) for how CI checks this.
 
-A baseline has two layers (see
-[Regression baselines](../background/regression-baselines.md) for the full model):
+### Terms
 
-- the small, git-tracked **committed bundle** (`series.json`, `diagnostic.json`,
-  `output.json`) under `regression/`, which is what review and CI gate on; and
-- the heavy **native bundle** (`.nc`, `.png`, ...), stored by digest in a shared object
-  store and fetched anonymously.
+| Term | Meaning |
+| --- | --- |
+| Committed bundle | The small JSON results in `regression/` (`series.json`, `diagnostic.json`, `output.json`). These are in git, so reviewers see your numbers change in the diff. |
+| Native files | The heavy outputs (`.nc`, `.png`, ...) that the JSON refers to. These are kept in shared storage, not in git. |
+| `manifest.json` | A record of which committed and native files belong to the baseline, plus two version numbers. It is in git. |
+| Mint | Upload the native files and record them in `manifest.json`. Only a maintainer can mint. |
+| Replay | Rebuild the committed bundle from the stored native files, without re-running the diagnostic, and compare. |
+| Output slot | A gitignored folder, `output/latest/` by default, where every run puts what it produced so you can inspect it. |
 
-`manifest.json` (shown in the layout above) binds the two, recording a `test_case_version`
-that authorises a new baseline, the digests of both layers, and the input catalog's hash.
+### Adding a test case
 
-### Creating or updating a baseline
+1. Define the test case and fetch its data (see [Fetching Test Data](#fetching-test-data)).
+2. Run it:
 
-Regenerate the committed bundle when you add a diagnostic or intend to change its results:
+   ```bash
+   ref test-cases run --provider my-provider --diagnostic my-diagnostic --test-case my-case
+   ```
 
-```bash
-ref test-cases run --provider my-provider --diagnostic my-diagnostic --force-regen
-```
+   The first run creates `regression/` and `manifest.json`.
+3. Check the numbers in `regression/` look right.
+   CI cannot check them yet, so you and the reviewer are the only check.
+4. Commit `catalog.yaml`, `manifest.json` and `regression/`, then open a pull request.
+   The PR gate shows `skip` for the new case.
+5. Ask a maintainer in the pull request to mint the baseline.
+   Afterwards the CI checks if the baseline is available.
 
-We keep committed files small.
-After `ref test-cases run`, `_print_regression_summary` reports any file in the
-`regression/` directory that exceeds the `--size-threshold` (default 1.0 MB).
-Large outputs belong in the native bundle, published with `mint` (see below).
+### Changing a diagnostic's results
 
-/// note
-The pre-commit `check-added-large-files` hook does **not** flag regression baselines —
-`.*/regression/.*` is explicitly excluded in `.pre-commit-config.yaml`.
-Size enforcement for regression files comes solely from `ref test-cases run`.
-///
+1. Bump `version` on your diagnostic class.
+   It is an integer that starts at `1`.
+   Bump it for algorithm changes, bug fixes or data requirement changes that alter the results.
+   A new `version` will trigger all existing executions to be recalculated.
 
-### The pull request workflow
+   ```python
+   class MyDiagnostic(Diagnostic):
+       version = 2
+   ```
 
-When you open a pull request, CI decides *how* to verify each test case from what your
-branch changed — you don't re-run every diagnostic. The diagram shows the path; the table
-below says what each outcome asks of you.
+2. Check the new results locally with `ref test-cases run`.
+   This writes them to the output slot, so compare them with the old baseline:
 
-```mermaid
-flowchart TD
-    start([You changed a diagnostic]) --> q1{Did the committed<br/>bundle change?}
-    q1 -->|"no — refactor,<br/>same results"| openA[Open pull request]
-    q1 -->|"yes — intended<br/>new results"| regen["Regenerate locally:<br/>ref test-cases run --force-regen"]
-    regen --> bump["Bump test_case_version<br/>in manifest.json"]
-    bump --> openB[Open pull request]
+   ```bash
+   cd packages/climate-ref-my-provider/tests/test-data/my-diagnostic/default
+   git diff --no-index regression/ output/latest/regression/
+   ```
 
-    openA --> gate{{"PR gate runs<br/>ref test-cases ci-gate"}}
-    openB --> gate
+3. Commit your code change, but not changes to `regression/` or `manifest.json`.
+   The PR gate fails at this point, because the baseline is older than your `version`.
+   This is expected.
+4. Ask a maintainer in the pull request to mint.
+   The mint reruns the diagnostic, commits the new `regression/` and `manifest.json` to the branch,
+   and posts a report comparing the old and new outputs.
+5. Push any follow-up commit so the PR gate runs again and replays the new baseline.
 
-    gate -->|skip| done1([Nothing to verify — merge])
-    gate -->|replay| rep[CI replays the cached<br/>native baseline]
-    rep --> repok{Reproduces within<br/>tolerance?}
-    repok -->|yes| done2([Gate passes — merge])
-    repok -->|no| fixcode[["Your change moved the results:<br/>regenerate + bump, or fix the code"]]
-    gate -->|fail| failed[["Baseline changed without a<br/>version bump — bump or revert"]]
-    gate -->|execute| flagged[Version bump detected —<br/>new baseline authorised]
-    flagged --> mint["Publish the native baseline:<br/>dispatch the mint workflow"]
-    mint --> done3([Reviewed via the committed diff — merge])
-```
+Do not commit a baseline from `run --force-regen` when you are going to mint.
+`mint` bumps `test_case_version` only when its bundle differs from the committed one,
+so a pre-committed bundle leaves the version unbumped and the gate fails.
+
+`run` warns about any `regression/` file over `--size-threshold` (default 1.0 MB).
+Keep committed files small, because large outputs belong in the native files.
+
+### For maintainers: minting
+
+Dispatch the **"Regression baselines (mint)"** workflow from the Actions tab on the pull request's branch.
+The workflow only runs on branches in `Climate-REF/climate-ref`,
+so a pull request from a fork needs its branch pushed to the repository first.
+Its inputs and configuration are described in [Gated mint](../background/regression-baselines.md#gated-mint).
+
+### What the PR gate says
 
 | Outcome | Meaning | What to do |
 | --- | --- | --- |
-| **skip** | Nothing relevant changed. | Nothing. |
-| **replay** | Your change could affect the result; CI re-checks the cached native baseline against the committed bundle. | Nothing if it passes. On drift, regenerate and bump `test_case_version`, or fix the code. |
-| **execute** | You bumped `test_case_version`, authorising a new baseline; the credential-free PR tier flags it rather than publishing native files. | Publish the native baseline (below); the new committed bundle is reviewed in the diff. |
-| **fail** | The committed bundle or input catalog changed without a `test_case_version` bump (or the version moved backwards). | Bump `test_case_version` to authorise it, or revert the edit. |
+| **skip** | Nothing relevant changed, or there are no native files to replay yet. | Nothing. For a new or changed baseline, check the diff yourself. |
+| **replay** | CI rebuilt the committed bundle from the stored native files and it matched. | Nothing. If it does not match, your change moved the results, so follow [Changing a diagnostic's results](#changing-a-diagnostics-results). |
+| **fail** | The baseline does not match the code, eg. `version` was bumped but nothing was minted, or `regression/` was edited without a version bump. | Ask a maintainer to mint, or revert the change to `regression/`. |
 
-Bump `test_case_version` whenever you *intend* to change a baseline — it tells reviewers and CI the new output is correct.
-
-!!! tip "Check the gate locally before pushing"
-    Run the same gate your pull request will hit with `make regression-gate` (it compares against `origin/main`).
-
-#### Publishing a native baseline
-
-Native files are written to the object store only by `ref test-case mint`, which needs write credentials.
-Instead of every contributor requiring credentials, we run the minting via a CI workflow:
-
-1. Regenerate and commit the new bundle locally (`run --force-regen`) and bump `test_case_version`.
-2. Run the **"Regression baselines (mint)"** workflow from the Actions tab,
-   dispatched **on your branch** (gated behind a reviewed environment).
-   It uploads the native files and commits the updated `manifest.json` back to your branch.
-3. The PR gate then replays the published baseline.
-
-Use the **`--dry-run`** input to preflight without uploading.
-If you hold credentials locally, `ref test-cases mint` does the same from your machine.
+Run the same gate locally with `make regression-gate`, which compares against `origin/main`.
 
 ## Troubleshooting
 
@@ -631,7 +664,7 @@ because the outputs stay in a predictable place.
 
    The drift assertion also prints a per-file summary of what moved beyond tolerance.
 
-3. **Compare two runs side by side** using named output slots —
+3. **Compare two runs side by side** using named output slots.
    `latest` is overwritten on every run, but a named slot persists:
 
    ```bash
@@ -644,10 +677,9 @@ because the outputs stay in a predictable place.
 4. **Separate "my code changed the results" from "the baseline is stale"** with
    `ref test-cases replay --provider my-provider`.
 
-   Replay rebuilds the bundle from the stored native baseline *without executing the diagnostic*,
-   so if replay passes but `run` drifts, your change moved the results;
-   if replay also fails, the committed baseline itself is inconsistent
-   (regenerate with `run --force-regen` and bump `test_case_version`).
+   Replay rebuilds the bundle from the stored native baseline without executing the diagnostic.
+   If replay passes but `run` drifts, your change moved the results.
+   If replay also fails, the committed baseline itself is inconsistent, so re-mint it.
 
 5. **Debug through pytest** when you need a debugger at the point of failure:
 

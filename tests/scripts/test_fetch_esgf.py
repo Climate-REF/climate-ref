@@ -2,16 +2,19 @@
 Tests for the failure handling in `scripts/fetch-esgf.py`.
 
 The script is not an importable module, so it is loaded by path.
-No network access is performed: every request's `fetch` is stubbed.
+No network access is performed: every request's `fetch_datasets` is stubbed.
 """
 
 import importlib.util
 from pathlib import Path
 
+import pandas as pd
 import pytest
 import typer
-from intake_esgf.exceptions import DatasetLoadError, NoSearchResults, StalledDownload
+from intake_esgf.exceptions import DatasetLoadError, StalledDownload
 from typer.testing import CliRunner
+
+from climate_ref_core.exceptions import DatasetResolutionError
 
 SCRIPT = Path(__file__).parents[2] / "scripts" / "fetch-esgf.py"
 
@@ -38,12 +41,12 @@ def no_sleep(script, monkeypatch):
 
 
 def _request(script, request_id="req"):
-    return script.Obs4MIPsRequest(id=request_id, facets={"source_id": "X"})
+    return script.obs4mips(request_id, {"source_id": "X"})
 
 
 def _stub_fetch(script, monkeypatch, behaviours):
     """
-    Replace `Obs4MIPsRequest.fetch` with a stub driven by `behaviours`.
+    Replace `Obs4MIPsRequest.fetch_datasets` with a stub driven by `behaviours`.
 
     Each behaviour is either an exception to raise or a value to return.
     The list is consumed one entry per call, and the number of calls is recorded.
@@ -51,20 +54,24 @@ def _stub_fetch(script, monkeypatch, behaviours):
     remaining = list(behaviours)
     calls: list[int] = []
 
-    def fake_fetch(self, remove_ensembles=True):
+    def fake_fetch(self):
         calls.append(1)
         behaviour = remaining.pop(0)
         if isinstance(behaviour, Exception):
             raise behaviour
         return behaviour
 
-    monkeypatch.setattr(script.Obs4MIPsRequest, "fetch", fake_fetch)
+    monkeypatch.setattr(script.Obs4MIPsRequest, "fetch_datasets", fake_fetch)
     return calls
+
+
+def _datasets(*keys):
+    return pd.DataFrame({"key": list(keys), "files": [[f"{key}.nc"] for key in keys]})
 
 
 class TestRunRequest:
     def test_success(self, script, monkeypatch, no_sleep):
-        _stub_fetch(script, monkeypatch, [{"a": [Path("a.nc")], "b": [Path("b.nc")]}])
+        _stub_fetch(script, monkeypatch, [_datasets("a", "b")])
 
         result = script.run_request(_request(script))
 
@@ -73,7 +80,7 @@ class TestRunRequest:
         assert result.error is None
 
     def test_no_search_results_is_not_a_failure(self, script, monkeypatch, no_sleep):
-        calls = _stub_fetch(script, monkeypatch, [NoSearchResults()])
+        calls = _stub_fetch(script, monkeypatch, [DatasetResolutionError("no results")])
 
         result = script.run_request(_request(script))
 
@@ -85,7 +92,7 @@ class TestRunRequest:
 
     def test_transient_error_is_retried_then_succeeds(self, script, monkeypatch, no_sleep):
         # This is the observed ORNL THREDDS 504: DatasetLoadError, then a clean retry.
-        calls = _stub_fetch(script, monkeypatch, [DatasetLoadError(["k"]), {"a": [Path("a.nc")]}])
+        calls = _stub_fetch(script, monkeypatch, [DatasetLoadError(["k"]), _datasets("a")])
 
         result = script.run_request(_request(script), retry_delay=5.0)
 
@@ -134,18 +141,18 @@ class TestExitCode:
         assert result.exit_code == 1
 
     def test_success_exits_zero(self, script, monkeypatch, no_sleep):
-        result = self._invoke(script, monkeypatch, [{"a": [Path("a.nc")]}])
+        result = self._invoke(script, monkeypatch, [_datasets("a")])
 
         assert result.exit_code == 0
 
     def test_empty_search_exits_zero(self, script, monkeypatch, no_sleep):
         # A request that legitimately matches nothing must not fail the run.
-        result = self._invoke(script, monkeypatch, [NoSearchResults()])
+        result = self._invoke(script, monkeypatch, [DatasetResolutionError("no results")])
 
         assert result.exit_code == 0
 
     def test_one_failure_among_many_exits_non_zero(self, script, monkeypatch, no_sleep):
-        _stub_fetch(script, monkeypatch, [{"a": [Path("a.nc")]}, DatasetLoadError(["k"])])
+        _stub_fetch(script, monkeypatch, [_datasets("a"), DatasetLoadError(["k"])])
         monkeypatch.setattr(script, "requests", [_request(script, "good"), _request(script, "bad")])
 
         app = typer.Typer()

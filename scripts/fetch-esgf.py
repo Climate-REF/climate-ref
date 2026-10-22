@@ -9,24 +9,23 @@ This fetches about 3TB of datasets into the default location for intake esgf.
 This can be adjusted via `~/.config/intake-esgf/config.yaml`.
 """
 
+import copy
 import enum
 import time
-from pathlib import Path
+from typing import Any
 
-import intake_esgf
+import pandas as pd
 import typer
 from attrs import define
 from intake_esgf.exceptions import (
     DatasetLoadError,
     GlobusTransferError,
-    NoSearchResults,
     StalledDownload,
 )
 from loguru import logger
 
-from climate_ref_core.esgf import enable_ceda_solr_index
-
-PathDict = dict[str, list[Path]]
+from climate_ref_core.esgf import CMIP6Request, Obs4MIPsRequest
+from climate_ref_core.exceptions import DatasetResolutionError
 
 TRANSIENT_ERRORS = (DatasetLoadError, StalledDownload, GlobusTransferError)
 """
@@ -34,134 +33,60 @@ Errors raised when the search succeeded but the data could not be retrieved.
 
 ESGF data nodes intermittently return 5xx responses or stall mid-transfer,
 so these are worth retrying before giving up.
-A `NoSearchResults` is deliberately excluded:
+A `DatasetResolutionError` is deliberately excluded:
 it means the request matched nothing, which retrying cannot change.
 """
 
 DEFAULT_MAX_ATTEMPTS = 3
 DEFAULT_RETRY_DELAY = 5.0
-
-
-@define
-class CMIP6Request:
-    """
-    A set of CMIP6 data that will be fetched from ESGF
-    """
-
-    id: str
-    facets: dict[str, str | tuple[str, ...] | list[str]]
-
-    def fetch(self, remove_ensembles: bool = True) -> PathDict:
-        """
-        Fetch CMIP6 data from the ESGF catalog.
-
-        Parameters
-        ----------
-        remove_ensembles : bool, default True
-            Whether to remove ensemble members, keeping only one per model.
-            If False, all ensemble members will be included.
-
-        Returns
-        -------
-        :
-            Mapping of dataset key to the local paths of the downloaded files.
-
-        Raises
-        ------
-        NoSearchResults
-            The search matched no datasets.
-        IntakeESGFException
-            The datasets were found but could not be retrieved.
-        """
-        catalog = intake_esgf.ESGFCatalog()
-        search_parameters = {
-            "project": "CMIP6",
-            "frequency": ["mon", "fx"],
-            **self.facets,
-        }
-        logger.debug(f"Fetching CMIP6 data: {search_parameters}")
-        cmip6_data = catalog.search(**search_parameters)
-        if remove_ensembles:
-            cmip6_data = cmip6_data.remove_ensembles()
-        return cmip6_data.to_path_dict()
-
-
-@define
-class Obs4MIPsRequest:
-    """
-    A set of Obs4MIPs data that will be fetched from ESGF
-    """
-
-    id: str
-    facets: dict[str, str | tuple[str, ...] | list[str]]
-
-    def fetch(self, remove_ensembles: bool = True) -> PathDict:
-        """
-        Fetch Obs4MIPs data from the ESGF catalog.
-
-        Parameters
-        ----------
-        remove_ensembles : bool, default True
-            Ignored as Obs4MIPs data does not have ensembles.
-
-        Returns
-        -------
-        :
-            Mapping of dataset key to the local paths of the downloaded files.
-
-        Raises
-        ------
-        NoSearchResults
-            The search matched no datasets.
-        IntakeESGFException
-            The datasets were found but could not be retrieved.
-        """
-        catalog = intake_esgf.ESGFCatalog()
-        search_parameters = {
-            "project": "obs4MIPs",
-            "frequency": ["mon", "fx"],
-            **self.facets,
-        }
-        logger.info(f"Fetching Obs4MIPs data: {search_parameters}")
-        obs_data = catalog.search(**search_parameters)
-        return obs_data.to_path_dict(minimal_keys=False)
-
+DEFAULT_FREQUENCIES = ["mon", "fx"]
 
 Request = CMIP6Request | Obs4MIPsRequest
+
+
+def cmip6(slug: str, facets: dict[str, Any]) -> CMIP6Request:
+    """Request CMIP6 data, keeping one ensemble member per model."""
+    return CMIP6Request(slug, {"frequency": DEFAULT_FREQUENCIES, **facets}, remove_ensembles=True)
+
+
+def obs4mips(slug: str, facets: dict[str, Any]) -> Obs4MIPsRequest:
+    """Request obs4MIPs reference data."""
+    return Obs4MIPsRequest(slug, {"frequency": DEFAULT_FREQUENCIES, **facets})
+
 
 # TODO use the data requirements from the diagnostics directly.
 # Until then, `tests/scripts/test_fetch_esgf_coverage.py`
 # checks the obs4MIPs requests below against those requirements,
 # so a diagnostic cannot start asking for reference data that nothing here fetches.
 requests: list[Request] = [
-    CMIP6Request(
-        id="esmvaltool-climate-at-global-warmings-levels",
-        facets=dict(
+    cmip6(
+        "esmvaltool-climate-at-global-warmings-levels",
+        dict(
             variable_id=["pr", "tas"],
             experiment_id=["ssp126", "ssp245", "ssp370", "ssp585", "historical"],
             table_id="Amon",
         ),
     ),
     # ESMValTool Cloud radiative effects
-    CMIP6Request(
-        id="esmvaltool-cloud-radiative-effects",
-        facets=dict(
+    cmip6(
+        "esmvaltool-cloud-radiative-effects",
+        dict(
             variable_id=["rlut", "rlutcs", "rsut", "rsutcs"],
             experiment_id="historical",
             table_id="Amon",
         ),
     ),
-    Obs4MIPsRequest(
-        id="esmvaltool-cloud-radiative-effects-obs4mips",
-        facets=dict(
+    obs4mips(
+        "esmvaltool-cloud-radiative-effects-obs4mips",
+        dict(
             source_id="CERES-EBAF-4-2-1",
             variable_id=["rlut", "rlutcs", "rsut", "rsutcs"],
         ),
     ),
     # ESMValTool cloud scatterplots
-    CMIP6Request(
-        id="esmvaltool-cloud-scatterplots-cmip6",
-        facets=dict(
+    cmip6(
+        "esmvaltool-cloud-scatterplots-cmip6",
+        dict(
             variable_id=[
                 "areacella",
                 "cli",
@@ -179,26 +104,26 @@ requests: list[Request] = [
             table_id="Amon",
         ),
     ),
-    Obs4MIPsRequest(
-        id="esmvaltool-cloud-scatterplots-obs4mips",
-        facets=dict(
+    obs4mips(
+        "esmvaltool-cloud-scatterplots-obs4mips",
+        dict(
             source_id="ERA-5",
             variable_id="ta",
         ),
     ),
     # ESMValTool ECS data
-    CMIP6Request(
-        id="esmvaltool-ecs",
-        facets=dict(
+    cmip6(
+        "esmvaltool-ecs",
+        dict(
             variable_id=["rlut", "rsdt", "rsut", "tas"],
             experiment_id=["abrupt-4xCO2", "piControl"],
             table_id="Amon",
         ),
     ),
     # ESMValTool ENSO data
-    CMIP6Request(
-        id="esmvaltool-enso",
-        facets=dict(
+    cmip6(
+        "esmvaltool-enso",
+        dict(
             variable_id=[
                 "pr",
                 "tos",
@@ -209,9 +134,9 @@ requests: list[Request] = [
         ),
     ),
     # ESMValTool fire data
-    CMIP6Request(
-        id="esmvaltool-fire",
-        facets=dict(
+    cmip6(
+        "esmvaltool-fire",
+        dict(
             variable_id=[
                 "cVeg",
                 "hurs",
@@ -227,9 +152,9 @@ requests: list[Request] = [
         ),
     ),
     # ESMValTool Historical data
-    CMIP6Request(
-        id="esmvaltool-historical-cmip6",
-        facets=dict(
+    cmip6(
+        "esmvaltool-historical-cmip6",
+        dict(
             variable_id=[
                 "hus",
                 "pr",
@@ -241,9 +166,9 @@ requests: list[Request] = [
             table_id="Amon",
         ),
     ),
-    Obs4MIPsRequest(
-        id="esmvaltool-historical-obs4mips",
-        facets=dict(
+    obs4mips(
+        "esmvaltool-historical-obs4mips",
+        dict(
             source_id="ERA-5",
             variable_id=[
                 "psl",
@@ -253,60 +178,60 @@ requests: list[Request] = [
         ),
     ),
     # ESMValTool TCR data
-    CMIP6Request(
-        id="esmvaltool-tcr",
-        facets=dict(
+    cmip6(
+        "esmvaltool-tcr",
+        dict(
             variable_id=["tas"],
             experiment_id=["1pctCO2", "piControl"],
             table_id="Amon",
         ),
     ),
     # ESMValTool TCRE data
-    CMIP6Request(
-        id="esmvaltool-tcre",
-        facets=dict(
+    cmip6(
+        "esmvaltool-tcre",
+        dict(
             variable_id=["fco2antt", "tas"],
             experiment_id=["esm-1pctCO2", "esm-piControl"],
             table_id="Amon",
         ),
     ),
     # ESMValTool ZEC data
-    CMIP6Request(
-        id="esmvaltool-zec",
-        facets=dict(
+    cmip6(
+        "esmvaltool-zec",
+        dict(
             variable_id=["areacella", "tas"],
             experiment_id=["1pctCO2", "esm-1pct-brch-1000PgC"],
             table_id="Amon",
         ),
     ),
     # ESMValTool Sea Ice Area Seasonal Cycle data
-    CMIP6Request(
-        id="esmvaltool-sea-ice-area-seasonal-cycle",
-        facets=dict(
+    cmip6(
+        "esmvaltool-sea-ice-area-seasonal-cycle",
+        dict(
             variable_id=["areacello", "siconc"],
             experiment_id=["historical"],
         ),
     ),
     # ESMValTool Ozone
-    CMIP6Request(
-        id="esmvaltool-ozone",
-        facets=dict(
+    cmip6(
+        "esmvaltool-ozone",
+        dict(
             variable_id=["toz", "o3"],
             experiment_id=["historical"],
             table_id="AERmon",
         ),
     ),
-    Obs4MIPsRequest(
-        id="esmvaltool-ozone-obs4mips",
-        facets=dict(
+    obs4mips(
+        "esmvaltool-ozone-obs4mips",
+        dict(
             source_id="C3S-GTO-ECV-9-0",
             variable_id="toz",
         ),
     ),
     # ILAMB data
-    CMIP6Request(
-        id="ilamb-data",
-        facets=dict(
+    cmip6(
+        "ilamb-data",
+        dict(
             variable_id=[
                 "areacella",
                 "sftlf",
@@ -327,33 +252,33 @@ requests: list[Request] = [
         ),
     ),
     # ILAMB lai reference
-    Obs4MIPsRequest(
-        id="ilamb-lai-obs4mips",
-        facets=dict(
+    obs4mips(
+        "ilamb-lai-obs4mips",
+        dict(
             source_id="NOAA-NCEI-LAI-AVHRR-5-0",
             variable_id="lai",
         ),
     ),
     # IOMB data
-    CMIP6Request(  # Already provided by the ESMValTool ENSO request.
-        id="iomb-data",
-        facets=dict(
+    cmip6(  # Already provided by the ESMValTool ENSO request.
+        "iomb-data",
+        dict(
             variable_id=["areacello", "tos"],
             experiment_id=["historical"],
         ),
     ),
-    CMIP6Request(
-        id="iomb-data-2",
-        facets=dict(
+    cmip6(
+        "iomb-data-2",
+        dict(
             variable_id=["sftof", "sos", "msftmz"],
             experiment_id=["historical"],
         ),
     ),
     # Large 4D ocean datasets
     # A small set of models are fetched here for now
-    CMIP6Request(
-        id="iomb-data-large",
-        facets=dict(
+    cmip6(
+        "iomb-data-large",
+        dict(
             variable_id=["volcello", "thetao"],
             experiment_id=["historical"],
             source_id=[
@@ -372,9 +297,9 @@ requests: list[Request] = [
         ),
     ),
     # PMP modes of variability data
-    CMIP6Request(
-        id="pmp-modes-of-variability",
-        facets=dict(
+    cmip6(
+        "pmp-modes-of-variability",
+        dict(
             variable_id=["areacella", "ts", "psl"],
             experiment_id=["historical", "hist-GHG"],
             table_id="Amon",
@@ -383,38 +308,38 @@ requests: list[Request] = [
     # PMP ENSO reference data.
     # One request per source_id: the ESGF search treats source_id and variable_id as an
     # intersection, so a combined request would ask each source for variables it does not have.
-    Obs4MIPsRequest(
-        id="pmp-enso-gpcp-obs4mips",
-        facets=dict(
+    obs4mips(
+        "pmp-enso-gpcp-obs4mips",
+        dict(
             source_id="GPCP-Monthly-3-2",
             variable_id="pr",
         ),
     ),
-    Obs4MIPsRequest(
-        id="pmp-enso-tropflux-obs4mips",
-        facets=dict(
+    obs4mips(
+        "pmp-enso-tropflux-obs4mips",
+        dict(
             source_id="TropFlux-1-0",
             variable_id=["hfls", "hfss", "tauu", "ts"],
         ),
     ),
-    Obs4MIPsRequest(
-        id="pmp-enso-ceres-obs4mips",
-        facets=dict(
+    obs4mips(
+        "pmp-enso-ceres-obs4mips",
+        dict(
             source_id="CERES-EBAF-4-2",
             variable_id=["rlds", "rlus", "rsds", "rsus"],
         ),
     ),
     # Shared by PMP ENSO, the PMP ts modes of variability, and the example global-sst-bias.
-    Obs4MIPsRequest(
-        id="pmp-hadisst-obs4mips",
-        facets=dict(
+    obs4mips(
+        "pmp-hadisst-obs4mips",
+        dict(
             source_id="HadISST-1-1",
             variable_id="ts",
         ),
     ),
-    Obs4MIPsRequest(
-        id="pmp-modes-20cr-obs4mips",
-        facets=dict(
+    obs4mips(
+        "pmp-modes-20cr-obs4mips",
+        dict(
             source_id="20CR-V2",
             variable_id="psl",
         ),
@@ -458,22 +383,19 @@ class RequestResult:
 
 def fetch_with_retry(
     request: Request,
-    remove_ensembles: bool = True,
     max_attempts: int = DEFAULT_MAX_ATTEMPTS,
     retry_delay: float = DEFAULT_RETRY_DELAY,
-) -> PathDict:
+) -> pd.DataFrame:
     """
     Fetch a request, retrying transient ESGF access failures with an exponential backoff.
 
     Only the errors in `TRANSIENT_ERRORS` are retried.
-    Everything else, including `NoSearchResults`, is raised immediately.
+    Everything else, including `DatasetResolutionError`, is raised immediately.
 
     Parameters
     ----------
     request
         The request to fetch.
-    remove_ensembles
-        Passed through to the request.
     max_attempts
         Total number of attempts, including the first.
     retry_delay
@@ -482,17 +404,17 @@ def fetch_with_retry(
     Returns
     -------
     :
-        Mapping of dataset key to the local paths of the downloaded files.
+        The fetched datasets, one row per dataset.
     """
     for attempt in range(1, max_attempts + 1):
         try:
-            return request.fetch(remove_ensembles=remove_ensembles)
+            return request.fetch_datasets()
         except TRANSIENT_ERRORS as exc:
             if attempt == max_attempts:
                 raise
             delay = retry_delay * 2 ** (attempt - 1)
             logger.warning(
-                f"Transient error fetching '{request.id}' "
+                f"Transient error fetching '{request.slug}' "
                 f"(attempt {attempt}/{max_attempts}): {type(exc).__name__}. "
                 f"Retrying in {delay:.0f}s"
             )
@@ -503,7 +425,6 @@ def fetch_with_retry(
 
 def run_request(
     request: Request,
-    remove_ensembles: bool = True,
     max_attempts: int = DEFAULT_MAX_ATTEMPTS,
     retry_delay: float = DEFAULT_RETRY_DELAY,
 ) -> RequestResult:
@@ -520,23 +441,18 @@ def run_request(
     :
         The outcome of the request.
     """
-    logger.info(f"Processing request: {request.id}")
+    logger.info(f"Processing request: {request.slug}")
     try:
-        paths = fetch_with_retry(
-            request,
-            remove_ensembles=remove_ensembles,
-            max_attempts=max_attempts,
-            retry_delay=retry_delay,
-        )
-    except NoSearchResults:
-        logger.warning(f"No datasets matched request '{request.id}'")
-        return RequestResult(request.id, Outcome.EMPTY)
+        datasets = fetch_with_retry(request, max_attempts=max_attempts, retry_delay=retry_delay)
+    except DatasetResolutionError:
+        logger.warning(f"No datasets matched request '{request.slug}'")
+        return RequestResult(request.slug, Outcome.EMPTY)
     except Exception as exc:
-        logger.exception(f"Failed to fetch request '{request.id}'")
-        return RequestResult(request.id, Outcome.FAILED, error=f"{type(exc).__name__}: {exc}")
+        logger.exception(f"Failed to fetch request '{request.slug}'")
+        return RequestResult(request.slug, Outcome.FAILED, error=f"{type(exc).__name__}: {exc}")
 
-    logger.info(f"Fetched {len(paths)} datasets for request '{request.id}'")
-    return RequestResult(request.id, Outcome.OK, dataset_count=len(paths))
+    logger.info(f"Fetched {len(datasets)} datasets for request '{request.slug}'")
+    return RequestResult(request.slug, Outcome.OK, dataset_count=len(datasets))
 
 
 def report(results: list[RequestResult]) -> None:
@@ -600,12 +516,12 @@ def main(
     """
     if request_id:
         # Find and run the specific request
-        matching_requests = [req for req in requests if req.id == request_id]
+        matching_requests = [req for req in requests if req.slug == request_id]
         if not matching_requests:
             logger.error(f"No request found with ID '{request_id}'")
             logger.info("Available request IDs:")
             for req in requests:
-                logger.info(f"  - {req.id}")
+                logger.info(f"  - {req.slug}")
             raise typer.Exit(1)
 
         logger.info(f"Running single request: {request_id}")
@@ -622,11 +538,13 @@ def main(
         logger.info(f"Running {len(selected)} '{kind}' requests...")
     if not remove_ensembles:
         logger.info("Fetching all ensemble members")
+        selected = [copy.copy(request) for request in selected]
+        for request in selected:
+            request.remove_ensembles = False
 
     results = [
         run_request(
             request,
-            remove_ensembles=remove_ensembles,
             max_attempts=max_attempts,
             retry_delay=retry_delay,
         )
@@ -641,5 +559,4 @@ def main(
 # joblib.Parallel(n_jobs=2)(joblib.delayed(run_request)(request) for request in requests)
 
 if __name__ == "__main__":
-    enable_ceda_solr_index()
     typer.run(main)

@@ -107,7 +107,7 @@ def _requested_pairs(script) -> dict[tuple[str, str], str]:
         variable_ids = (variable_ids,) if isinstance(variable_ids, str) else variable_ids
         for source_id in source_ids:
             for variable_id in variable_ids:
-                pairs[(source_id, variable_id)] = request.id
+                pairs[(source_id, variable_id)] = request.slug
     return pairs
 
 

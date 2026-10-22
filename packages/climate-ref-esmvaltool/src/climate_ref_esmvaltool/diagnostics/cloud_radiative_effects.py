@@ -9,7 +9,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
@@ -213,7 +213,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",

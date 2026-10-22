@@ -5,6 +5,8 @@
 # Dispatch it on the feature branch to update: the result is committed back to that branch for review.
 #
 name: Regression baselines (mint)
+# Shows the inputs on the run page, so the approver can see what will be minted.
+run-name: "Mint ${{ inputs.provider }} (${{ inputs.diagnostic || 'all diagnostics' }})${{ inputs.dry_run && ' [dry run]' || '' }}"
 
 on:
   workflow_dispatch:

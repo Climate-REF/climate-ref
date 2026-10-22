@@ -3,12 +3,23 @@
 from collections.abc import Sequence
 
 from climate_ref.models.execution import ExecutionFailureReason
+from climate_ref_core.source_types import SourceDatasetType
 
 
 def _as_failure_reasons(
     value: Sequence[ExecutionFailureReason] | None,
 ) -> tuple[ExecutionFailureReason, ...] | None:
     """Coerce a multi-value failure reason filter to a tuple, leaving ``None`` as is."""
+    return None if value is None else tuple(value)
+
+
+def _as_source_types(value: Sequence[SourceDatasetType]) -> tuple[SourceDatasetType, ...]:
+    """Coerce the dataset types of an input dataset filter to a tuple."""
+    return tuple(value)
+
+
+def _as_id_tuple(value: Sequence[int] | None) -> tuple[int, ...] | None:
+    """Coerce an id filter to a tuple, leaving ``None`` as is."""
     return None if value is None else tuple(value)
 
 

@@ -35,7 +35,7 @@ from climate_ref.models.metric_value import (
     SeriesMetricValue,
 )
 from climate_ref.models.provider import Provider
-from climate_ref.results._converters import _as_str_tuple
+from climate_ref.results._converters import _as_id_tuple, _as_source_types, _as_str_tuple
 from climate_ref_core.source_types import SourceDatasetType
 
 
@@ -60,12 +60,10 @@ class InputDatasetFilter:
         or a facet is a column on none of the ``source_types``.
     """
 
-    source_types: tuple[SourceDatasetType, ...] = attrs.field(default=(), converter=tuple)
+    source_types: tuple[SourceDatasetType, ...] = attrs.field(default=(), converter=_as_source_types)
     """Dataset types to match against, e.g. ``(SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)``."""
 
-    dataset_ids: tuple[int, ...] | None = attrs.field(
-        default=None, converter=attrs.converters.optional(tuple)
-    )
+    dataset_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
     """Dataset primary keys to match. An empty tuple matches nothing."""
 
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)

@@ -118,9 +118,9 @@ class SlugFilter:
     """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
 
     @property
-    def matches_diagnostic(self) -> bool:
-        """Whether any diagnostic axis is set."""
-        return self.diagnostic_slug is not None or bool(self.diagnostic_contains)
+    def matches_any(self) -> bool:
+        """Whether any diagnostic or provider axis is set."""
+        return self.diagnostic_slug is not None or bool(self.diagnostic_contains) or self.matches_provider
 
     @property
     def matches_provider(self) -> bool:
@@ -139,6 +139,13 @@ class SlugFilter:
         if self.provider_contains:
             clauses.append(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in self.provider_contains)))
         return clauses
+
+    def diagnostic_ids(self) -> Select[tuple[int]]:
+        """Select the ids of the diagnostics that match."""
+        stmt = select(Diagnostic.id)
+        if self.matches_provider:
+            stmt = stmt.join(Provider, Diagnostic.provider_id == Provider.id)
+        return stmt.where(*self.slug_clauses())
 
 
 @attrs.frozen(kw_only=True)
@@ -279,7 +286,7 @@ def _apply_common(
     With ``subquery_type`` the execution, group, diagnostic and provider filters and the value type
     become one ``(execution_id, type) IN (...)`` subquery instead of joins, which matches the same rows.
     """
-    needs_diag = f.matches_diagnostic or f.matches_provider or not f.include_superseded
+    needs_diag = f.matches_any or not f.include_superseded
     needs_exec = subquery_type is not None or bool(
         f.execution_ids is not None
         or f.execution_group_ids is not None
@@ -385,7 +392,7 @@ def select_value_ids(value_type: MetricValueType, f: MetricValueFilter | None = 
     ``isolate_ids`` keep the joins, because looking those ids up directly is cheaper.
     """
     f = f or MetricValueFilter()
-    scoped = not f.isolate_ids and bool(f.matches_diagnostic or f.matches_provider or f.execution_group_ids)
+    scoped = not f.isolate_ids and bool(f.matches_any or f.execution_group_ids)
     if scoped:
         stmt = _apply_common(select(MetricValue.id), MetricValue, f, subquery_type=value_type)
     else:

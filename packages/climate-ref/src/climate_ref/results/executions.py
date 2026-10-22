@@ -450,9 +450,8 @@ class ExecutionsReader:
     def _sql_filters(filters: ExecutionGroupFilter) -> dict[str, Any]:
         """Keyword arguments for the group helpers for every filter applied in SQL (all but ``selectors``)."""
         group_conditions: list[ColumnElement[bool]] = []
-        if filters.matches_diagnostic or filters.matches_provider:
-            matching = select(Diagnostic.id).join(Provider, Diagnostic.provider_id == Provider.id)
-            group_conditions.append(ExecutionGroup.diagnostic_id.in_(matching.where(*filters.slug_clauses())))
+        if filters.matches_any:
+            group_conditions.append(ExecutionGroup.diagnostic_id.in_(filters.diagnostic_ids()))
         if filters.input_datasets:
             group_conditions.append(filters.input_datasets.execution_group_clause())
         return dict(

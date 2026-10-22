@@ -265,7 +265,7 @@ class TestIntakeESGFMixin:
         mock_cat.to_path_dict.return_value = {}
 
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
-            with pytest.raises(ValueError, match="No datasets found"):
+            with pytest.raises(DatasetResolutionError, match="No datasets found"):
                 request.fetch_datasets()
 
     def test_fetch_datasets_empty_dataframe(self):
@@ -280,7 +280,7 @@ class TestIntakeESGFMixin:
         mock_cat.to_path_dict.return_value = {}
 
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
-            with pytest.raises(ValueError, match="No datasets found"):
+            with pytest.raises(DatasetResolutionError, match="No datasets found"):
                 request.fetch_datasets()
 
     def test_fetch_datasets_no_search_results(self):

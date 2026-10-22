@@ -11,7 +11,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -200,7 +200,7 @@ class GlobalMeanTimeseries(Diagnostic):
                 name="cmip7",
                 description="CMIP7 test case with converted historical tas from ACCESS-ESM1-5",
                 requests=(
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="example-tas-cmip7",
                         facets={
                             "source_id": "ACCESS-ESM1-5",
@@ -211,7 +211,7 @@ class GlobalMeanTimeseries(Diagnostic):
                         },
                         time_span=("2000-01", "2014-12"),
                     ),
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="example-areacella-cmip7",
                         facets={
                             "source_id": "ACCESS-ESM1-5",

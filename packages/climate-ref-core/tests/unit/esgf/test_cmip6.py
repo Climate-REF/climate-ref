@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from climate_ref_core.esgf import CMIP6Request, ESGFRequest
 from climate_ref_core.esgf.cmip6 import prefix_to_filename
 
@@ -69,24 +67,6 @@ class TestCMIP6Request:
         """Test that all filename path items are in available facets."""
         for item in CMIP6Request.cmip6_filename_paths:
             assert item in CMIP6Request.available_facets
-
-    def test_init_invalid_path_item(self):
-        """Test that invalid path items raise ValueError."""
-
-        class BadCMIP6Request(CMIP6Request):
-            cmip6_path_items = ("invalid_facet",)
-
-        with pytest.raises(ValueError, match=r"Path item.*not in available facets"):
-            BadCMIP6Request(slug="test", facets={})
-
-    def test_init_invalid_filename_path(self):
-        """Test that invalid filename path items raise ValueError."""
-
-        class BadCMIP6Request(CMIP6Request):
-            cmip6_filename_paths = ("invalid_facet",)
-
-        with pytest.raises(ValueError, match=r"Filename path.*not in available facets"):
-            BadCMIP6Request(slug="test", facets={})
 
 
 class TestPrefixToFilename:

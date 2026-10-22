@@ -4,8 +4,6 @@ Obs4MIPs dataset request implementation.
 
 from __future__ import annotations
 
-from typing import Any
-
 from climate_ref_core.esgf.base import IntakeESGFMixin
 
 
@@ -44,39 +42,6 @@ class Obs4MIPsRequest(IntakeESGFMixin):
         "data_node",
         "project",
     )
-
-    def __init__(
-        self,
-        slug: str,
-        facets: dict[str, Any],
-        remove_ensembles: bool = False,
-        time_span: tuple[str, str] | None = None,
-    ):
-        """
-        Initialize an Obs4MIPs request.
-
-        Parameters
-        ----------
-        slug
-            Unique identifier for this request
-        facets
-            ESGF search facets (e.g., source_id, variable_id)
-        remove_ensembles
-            If True, keep only one ensemble member (typically not relevant for obs)
-        time_span
-            Optional time range filter (start, end) in YYYY-MM format
-        """
-        self.slug = slug
-        self.facets = facets
-        self.remove_ensembles = remove_ensembles
-        self.time_span = time_span
-
-        for key in self.obs4mips_path_items:
-            if key not in self.avail_facets:
-                raise ValueError(f"Path item {key!r} not in available facets")
-        for key in self.obs4mips_filename_paths:
-            if key not in self.avail_facets:
-                raise ValueError(f"Filename path {key!r} not in available facets")
 
     def __repr__(self) -> str:
         return f"Obs4MIPsRequest(slug={self.slug!r}, facets={self.facets!r})"

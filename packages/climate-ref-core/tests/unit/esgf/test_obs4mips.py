@@ -1,7 +1,5 @@
 """Tests for climate_ref_core.esgf.obs4mips module."""
 
-import pytest
-
 from climate_ref_core.esgf import ESGFRequest, Obs4MIPsRequest
 
 
@@ -58,21 +56,3 @@ class TestObs4MIPsRequest:
         """Test that all filename path items are in available facets."""
         for item in Obs4MIPsRequest.obs4mips_filename_paths:
             assert item in Obs4MIPsRequest.avail_facets
-
-    def test_init_invalid_path_item(self):
-        """Test that invalid path items raise ValueError."""
-
-        class BadObs4MIPsRequest(Obs4MIPsRequest):
-            obs4mips_path_items = ("invalid_facet",)
-
-        with pytest.raises(ValueError, match=r"Path item.*not in available facets"):
-            BadObs4MIPsRequest(slug="test", facets={})
-
-    def test_init_invalid_filename_path(self):
-        """Test that invalid filename path items raise ValueError."""
-
-        class BadObs4MIPsRequest(Obs4MIPsRequest):
-            obs4mips_filename_paths = ("invalid_facet",)
-
-        with pytest.raises(ValueError, match=r"Filename path.*not in available facets"):
-            BadObs4MIPsRequest(slug="test", facets={})

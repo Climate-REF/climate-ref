@@ -12,6 +12,7 @@ from climate_ref_core.esgf.base import (
 )
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 from climate_ref_core.esgf.cmip7 import CMIP7Request
+from climate_ref_core.esgf.cmip7_converted import ConvertedCMIP7Request
 from climate_ref_core.esgf.fetcher import ESGFFetcher
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.esgf.registry import RegistryRequest
@@ -19,6 +20,7 @@ from climate_ref_core.esgf.registry import RegistryRequest
 __all__ = [
     "CMIP6Request",
     "CMIP7Request",
+    "ConvertedCMIP7Request",
     "ESGFFetcher",
     "ESGFRequest",
     "IntakeESGFMixin",

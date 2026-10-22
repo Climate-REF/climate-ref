@@ -7,7 +7,7 @@ using the intake-esgf package.
 
 import copy
 from collections.abc import Mapping, Sequence
-from typing import Any, Protocol, Self, cast, runtime_checkable
+from typing import Any, ClassVar, Protocol, Self, cast, runtime_checkable
 
 import intake_esgf
 import pandas as pd
@@ -164,11 +164,7 @@ class IntakeESGFMixin:
     """
     Mixin that fetches datasets from ESGF using intake-esgf.
 
-    Subclasses must define:
-    - project: str
-    - facets: dict[str, str | tuple[str, ...]]
-    - remove_ensembles: bool
-    - time_span: tuple[str, str] | None
+    Subclasses must define ``source_type`` and ``project``.
 
     A request can also be pinned to the datasets an existing test case catalog records,
     see :meth:`pin_to_datasets`.
@@ -183,6 +179,35 @@ class IntakeESGFMixin:
 
     pinned_instance_ids: tuple[str, ...] | None = None
     """Ids of the datasets this request is pinned to."""
+
+    facet_names: ClassVar[Mapping[str, str]] = {}
+    """REF facet names that the ESGF index spells differently."""
+
+    def __init__(
+        self,
+        slug: str,
+        facets: dict[str, Any],
+        remove_ensembles: bool = False,
+        time_span: tuple[str, str] | None = None,
+    ):
+        """
+        Initialize an ESGF request.
+
+        Parameters
+        ----------
+        slug
+            Unique identifier for this request
+        facets
+            ESGF search facets (e.g., source_id, variable_id, experiment_id)
+        remove_ensembles
+            If True, keep only one ensemble member per model
+        time_span
+            Optional time range filter (start, end) in YYYY-MM format
+        """
+        self.slug = slug
+        self.facets = facets
+        self.remove_ensembles = remove_ensembles
+        self.time_span = time_span
 
     def pin_to_datasets(self, datasets: Sequence[Mapping[str, Any]]) -> Self:
         """
@@ -216,9 +241,20 @@ class IntakeESGFMixin:
         pinned.pinned_instance_ids = tuple(dict.fromkeys(cast(list[str], instance_ids)))
         return pinned
 
+    def _pinned_facets(self, instance_ids: tuple[str, ...]) -> dict[str, Any]:
+        """Search facets that find the pinned datasets."""
+        return {"instance_id": list(instance_ids)}
+
+    def _select_pinned(self, results: pd.DataFrame) -> pd.DataFrame:
+        """Narrow the search results for a pinned request down to the pinned datasets."""
+        return results
+
     def fetch_datasets(self) -> pd.DataFrame:
         """Fetch dataset metadata from ESGF."""
-        facets: dict[str, Any] = {"project": self.project, **self.facets}
+        facets: dict[str, Any] = {
+            "project": self.project,
+            **{self.facet_names.get(key, key): value for key, value in self.facets.items()},
+        }
 
         if self.pinned_instance_ids:
             # Ask for the pinned datasets by id as the declared facets may now
@@ -227,7 +263,7 @@ class IntakeESGFMixin:
             logger.info(f"Resolving {len(self.pinned_instance_ids)} pinned datasets for {self.slug}")
             facets = {
                 "project": facets["project"],
-                "instance_id": list(self.pinned_instance_ids),
+                **self._pinned_facets(self.pinned_instance_ids),
                 # A pin holds even once a newer version of the dataset has been published
                 "latest": [True, False],
             }
@@ -258,9 +294,12 @@ class IntakeESGFMixin:
                 # Pinned ids already name one ensemble member each
                 cat.remove_ensembles()
 
-            path_dict = cat.to_path_dict(prefer_streaming=False, minimal_keys=False, quiet=True)
             if cat.df is None or cat.df.empty:
-                raise ValueError("No datasets found for the given ESGF request")
+                raise DatasetResolutionError(f"No datasets found for the ESGF request {self.slug}")
+            if self.pinned_instance_ids:
+                cat.df = self._select_pinned(cat.df)
+
+            path_dict = cat.to_path_dict(prefer_streaming=False, minimal_keys=False, quiet=True)
             merged_df = cat.df.merge(pd.Series(path_dict, name="files"), left_on="key", right_index=True)
 
             if self.time_span:

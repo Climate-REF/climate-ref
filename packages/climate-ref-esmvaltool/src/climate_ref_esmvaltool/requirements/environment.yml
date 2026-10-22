@@ -9,7 +9,8 @@ dependencies:
   - esmvaltool-base
   - iris
   - mapgenerator
-  - matplotlib-base
+  # 3.11 lays out the monitor multi-panel figures differently, moving every plot baseline.
+  - matplotlib-base <3.11
   - numpy
   - pandas
   - requests

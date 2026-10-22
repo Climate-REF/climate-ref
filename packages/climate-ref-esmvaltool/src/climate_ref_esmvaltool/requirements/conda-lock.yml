@@ -9,13 +9,13 @@
 # To update a single package to the latest version compatible with the version constraints in the source:
 #     conda-lock lock  --lockfile conda-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
-#     conda-lock -f packages/climate-ref-esmvaltool/src/climate_ref_esmvaltool/requirements/environment.yml --lockfile conda-lock.yml
+#     conda-lock -f packages/climate-ref-esmvaltool/src/climate_ref_esmvaltool/requirements/environment.yml -f environment.yml --lockfile conda-lock.yml
 version: 1
 metadata:
   content_hash:
-    linux-64: d1062d1a3993074985d803aa942987986a173a529ad08656bcf74ed230460ce7
-    osx-64: 09e28c8582fcd68bbc9bd3979eb36e617a08468f1902d1f61688e85b0646adc0
-    osx-arm64: 15b21d16a2254ae5566cbbbe50a74c955f67d62715dc5624d9d759c59bf77bfb
+    linux-64: ad9fb1ca7327f5fd63518bc0ce5d45e8a09c60979527cf5890a5f68f7ad1c1ef
+    osx-64: 72dc93648aee2f3aea8177a2f2bad552f711445fe9fa78221312c18dba4f77c8
+    osx-arm64: fa43917dee2de436e49aba9995831bc88ce32ac11bd2085c091b421cb4f666b2
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -25,6 +25,7 @@ metadata:
   - osx-arm64
   sources:
   - packages/climate-ref-esmvaltool/src/climate_ref_esmvaltool/requirements/environment.yml
+  - environment.yml
 package:
 - name: _openmp_mutex
   version: '4.5'
@@ -5058,7 +5059,7 @@ package:
     __glibc: '>=2.17,<3.0.a0'
     libffi: ''
     libgcc: '>=14'
-    libglib: ==2.88.3
+    libglib: 2.88.3
   url: https://conda.anaconda.org/conda-forge/linux-64/glib-tools-2.88.3-h4916ab3_1.conda
   hash:
     md5: 246c12ff18139b126586eb2d0e906c7e
@@ -5072,7 +5073,7 @@ package:
   dependencies:
     __osx: '>=11.0'
     libffi: ''
-    libglib: ==2.88.3
+    libglib: 2.88.3
     libintl: '>=0.25.1,<1.0a0'
   url: https://conda.anaconda.org/conda-forge/osx-64/glib-tools-2.88.3-h899c5e0_1.conda
   hash:
@@ -5087,7 +5088,7 @@ package:
   dependencies:
     __osx: '>=11.0'
     libffi: ''
-    libglib: ==2.88.3
+    libglib: 2.88.3
     libintl: '>=0.25.1,<1.0a0'
   url: https://conda.anaconda.org/conda-forge/osx-arm64/glib-tools-2.88.3-hd03a632_1.conda
   hash:
@@ -5844,7 +5845,7 @@ package:
   platform: linux-64
   dependencies:
     anyio: ''
-    httpcore2: ==2.12.0
+    httpcore2: 2.12.0
     idna: '>=3.18'
     python: '>=3.10'
     truststore: '>=0.10'
@@ -5861,7 +5862,7 @@ package:
   platform: osx-64
   dependencies:
     anyio: ''
-    httpcore2: ==2.12.0
+    httpcore2: 2.12.0
     idna: '>=3.18'
     python: '>=3.10'
     truststore: '>=0.10'
@@ -5878,7 +5879,7 @@ package:
   platform: osx-arm64
   dependencies:
     anyio: ''
-    httpcore2: ==2.12.0
+    httpcore2: 2.12.0
     idna: '>=3.18'
     python: '>=3.10'
     truststore: '>=0.10'
@@ -9976,55 +9977,6 @@ package:
     sha256: c8c3153df39abedf3413483f672151ad70f1adb0c06c192bdf7ec432c3616b07
   category: main
   optional: false
-- name: libraqm
-  version: 0.11.0
-  manager: conda
-  platform: linux-64
-  dependencies:
-    __glibc: '>=2.28,<3.0.a0'
-    fribidi: '>=1.0.16,<2.0a0'
-    libfreetype: '>=2.14.3'
-    libfreetype6: '>=2.14.3'
-    libgcc: '>=14'
-    libharfbuzz: '>=14.2.1'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libraqm-0.11.0-h6406941_0.conda
-  hash:
-    md5: 3ac89a48d224409739dbf6200e524373
-    sha256: ab3ccb9fd5816f76b18ee8974d359cd2605ca87d8ddef55369dc461b9986f95c
-  category: main
-  optional: false
-- name: libraqm
-  version: 0.11.0
-  manager: conda
-  platform: osx-64
-  dependencies:
-    __osx: '>=11.0'
-    fribidi: '>=1.0.16,<2.0a0'
-    libfreetype: '>=2.14.3'
-    libfreetype6: '>=2.14.3'
-    libharfbuzz: '>=14.2.1'
-  url: https://conda.anaconda.org/conda-forge/osx-64/libraqm-0.11.0-h1888d0e_0.conda
-  hash:
-    md5: dee8bedede5363e2ac41aed818c486e9
-    sha256: 65c925254419f03f036e39fba03fa84fea6aa29a6c63a1fb97d45f70301a1c8f
-  category: main
-  optional: false
-- name: libraqm
-  version: 0.11.0
-  manager: conda
-  platform: osx-arm64
-  dependencies:
-    __osx: '>=11.0'
-    fribidi: '>=1.0.16,<2.0a0'
-    libfreetype: '>=2.14.3'
-    libfreetype6: '>=2.14.3'
-    libharfbuzz: '>=14.2.1'
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/libraqm-0.11.0-h45af499_0.conda
-  hash:
-    md5: 46ea0eb4e71bffa35ab7070678bcb053
-    sha256: b110f7f9b2cec61ea793c521950414e00cd64826e18aeb4ab40369acf05c0039
-  category: main
-  optional: false
 - name: libre2-11
   version: 2025.11.05
   manager: conda
@@ -11323,92 +11275,89 @@ package:
   category: main
   optional: false
 - name: matplotlib-base
-  version: 3.11.1
+  version: 3.10.9
   manager: conda
   platform: linux-64
   dependencies:
     __glibc: '>=2.17,<3.0.a0'
     contourpy: '>=1.0.1'
     cycler: '>=0.10'
-    fonttools: '>=4.28.2'
+    fonttools: '>=4.22.0'
     freetype: ''
     kiwisolver: '>=1.3.1'
     libfreetype: '>=2.14.3'
     libfreetype6: '>=2.14.3'
     libgcc: '>=14'
-    libraqm: '>=0.11.0,<0.12.0a0'
     libstdcxx: '>=14'
-    numpy: '>=1.25,>=1.25,<3'
+    numpy: '>=1.23,>=1.23,<3'
     packaging: '>=20.0'
-    pillow: '>=9'
-    pyparsing: '>=3'
+    pillow: '>=8'
+    pyparsing: '>=2.3.1'
     python: '>=3.14,<3.15.0a0'
     python-dateutil: '>=2.7'
     python_abi: 3.14.*
     qhull: '>=2020.2,<2020.3.0a0'
     tk: '>=8.6.13,<8.7.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.11.1-py314h9a9c090_2.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.10.9-py314h1194b4b_0.conda
   hash:
-    md5: 57f668cbc4b70c11ea9d19ebed67295e
-    sha256: d76657ece6fef30e44fca988a0a884cf5744f2fb1611814c5c993700148fbefa
+    md5: 11a821746ad11e642fcc615c3d66aa44
+    sha256: 94599b0ca937530f7c7ba1e394cbe8420db613da2524bd0000988e9bbe118f0a
   category: main
   optional: false
 - name: matplotlib-base
-  version: 3.11.1
+  version: 3.10.9
   manager: conda
   platform: osx-64
   dependencies:
     __osx: '>=11.0'
     contourpy: '>=1.0.1'
     cycler: '>=0.10'
-    fonttools: '>=4.28.2'
+    fonttools: '>=4.22.0'
     freetype: ''
     kiwisolver: '>=1.3.1'
     libcxx: '>=19'
     libfreetype: '>=2.14.3'
     libfreetype6: '>=2.14.3'
-    libraqm: '>=0.11.0,<0.12.0a0'
-    numpy: '>=1.25,>=1.25,<3'
+    numpy: '>=1.23,>=1.23,<3'
     packaging: '>=20.0'
-    pillow: '>=9'
-    pyparsing: '>=3'
+    pillow: '>=8'
+    pyparsing: '>=2.3.1'
     python: '>=3.14,<3.15.0a0'
     python-dateutil: '>=2.7'
     python_abi: 3.14.*
     qhull: '>=2020.2,<2020.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.11.1-py314hdf6dac4_2.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.10.9-py314h7c1ad30_0.conda
   hash:
-    md5: e927280a81871402f8cc7e1f3774ac78
-    sha256: dbb09051267c04dc5dfe60e726da14b0fd36af2a5bbeaa52c42e3f2f9116b3d1
+    md5: 9ab3835bd11afa0a9571ade6a875b5ce
+    sha256: a0981d28f4483049015bef219ddf4dfaf5485682dadba48924f29091ca77174d
   category: main
   optional: false
 - name: matplotlib-base
-  version: 3.11.1
+  version: 3.10.9
   manager: conda
   platform: osx-arm64
   dependencies:
     __osx: '>=11.0'
     contourpy: '>=1.0.1'
     cycler: '>=0.10'
-    fonttools: '>=4.28.2'
+    fonttools: '>=4.22.0'
     freetype: ''
     kiwisolver: '>=1.3.1'
     libcxx: '>=19'
     libfreetype: '>=2.14.3'
     libfreetype6: '>=2.14.3'
-    libraqm: '>=0.11.0,<0.12.0a0'
-    numpy: '>=1.25,>=1.25,<3'
+    numpy: '>=1.23,>=1.23,<3'
     packaging: '>=20.0'
-    pillow: '>=9'
-    pyparsing: '>=3'
-    python: '>=3.14,<3.15.0a0'
+    pillow: '>=8'
+    pyparsing: '>=2.3.1'
+    python: '>=3.14,<3.15.0a0,>=3.14,<3.15.0a0'
     python-dateutil: '>=2.7'
     python_abi: 3.14.*
     qhull: '>=2020.2,<2020.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.11.1-py314h27b0870_2.conda
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/matplotlib-base-3.10.9-py314hc042b31_0.conda
   hash:
-    md5: 41fb78906bf657af4fbdcf8c67f41c11
-    sha256: 363b319e21cf4782fe264b96494c6be949db79d0d0ba126be1a1a94a5e96aae6
+    md5: 3252e58ac5ade3ba2dacd5dacfa6e7b8
+    sha256: 8c1912582f457a40e39b9770dc2417c804f5ab1eb1ce73860d24a1414fb56145
   category: main
   optional: false
 - name: matplotlib-inline
@@ -13163,7 +13112,7 @@ package:
   manager: conda
   platform: linux-64
   dependencies:
-    polars-default: ==1.32.3
+    polars-default: 1.32.3
   url: https://conda.anaconda.org/conda-forge/linux-64/polars-1.32.3-default_h3512890_0.conda
   hash:
     md5: 43ff217be270dde3228f423f2d95c995
@@ -13175,7 +13124,7 @@ package:
   manager: conda
   platform: osx-64
   dependencies:
-    polars-default: ==1.32.3
+    polars-default: 1.32.3
   url: https://conda.anaconda.org/conda-forge/osx-64/polars-1.32.3-default_h11ec952_0.conda
   hash:
     md5: d831d8913161f168bf73a7c49404225b
@@ -13187,7 +13136,7 @@ package:
   manager: conda
   platform: osx-arm64
   dependencies:
-    polars-default: ==1.32.3
+    polars-default: 1.32.3
   url: https://conda.anaconda.org/conda-forge/osx-arm64/polars-1.32.3-default_h1fdcfb2_0.conda
   hash:
     md5: 9eae5764b552865eeea37f9dc3534c0c
@@ -17466,7 +17415,7 @@ package:
   manager: conda
   platform: linux-64
   dependencies:
-    typing_extensions: ==4.16.0
+    typing_extensions: 4.16.0
   url: https://conda.anaconda.org/conda-forge/noarch/typing-extensions-4.16.0-h69aa097_0.conda
   hash:
     md5: c680b5747e8c4c8f23dca0bb7042a8fc
@@ -17478,7 +17427,7 @@ package:
   manager: conda
   platform: osx-64
   dependencies:
-    typing_extensions: ==4.16.0
+    typing_extensions: 4.16.0
   url: https://conda.anaconda.org/conda-forge/noarch/typing-extensions-4.16.0-h69aa097_0.conda
   hash:
     md5: c680b5747e8c4c8f23dca0bb7042a8fc
@@ -17490,7 +17439,7 @@ package:
   manager: conda
   platform: osx-arm64
   dependencies:
-    typing_extensions: ==4.16.0
+    typing_extensions: 4.16.0
   url: https://conda.anaconda.org/conda-forge/noarch/typing-extensions-4.16.0-h69aa097_0.conda
   hash:
     md5: c680b5747e8c4c8f23dca0bb7042a8fc

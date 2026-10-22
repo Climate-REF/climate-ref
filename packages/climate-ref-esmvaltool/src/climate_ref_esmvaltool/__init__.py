@@ -2,10 +2,8 @@
 Rapid evaluating CMIP data with ESMValTool.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pooch
 from loguru import logger
@@ -19,7 +17,7 @@ from climate_ref_core.dataset_registry import (
     fetch_all_files,
     validate_registry_cache,
 )
-from climate_ref_core.providers import CondaDiagnosticProvider
+from climate_ref_core.providers import CondaDiagnosticProvider, DataIngestRequest
 from climate_ref_core.source_types import SourceDatasetType
 from climate_ref_esmvaltool._version import __version__
 from climate_ref_esmvaltool.diagnostics.base import _DATASETS_REGISTRY_NAME, registry_data_root
@@ -30,42 +28,24 @@ from climate_ref_esmvaltool.recipe import (
     _RECIPES_URL,
 )
 
-if TYPE_CHECKING:
-    from climate_ref.config import Config
-
 
 class ESMValToolProvider(CondaDiagnosticProvider):
     """Provider for ESMValTool diagnostics."""
 
-    def fetch_data(self, config: Config) -> None:
+    def fetch_data(self, config: Any) -> None:
         """Fetch ESMValTool reference data."""
         for registry_name in [_DATASETS_REGISTRY_NAME, _RECIPES_REGISTRY_NAME]:
             registry = dataset_registry_manager[registry_name]
             fetch_all_files(registry, registry_name, output_dir=None)
 
-    def ingest_data(self, config: Config, db: Any) -> None:
+    def data_to_ingest(self, config: Any) -> list[DataIngestRequest]:
         """
-        Ingest the fetched ESMValTool reference data into the database.
+        Request ingestion of the fetched ESMValTool reference data.
 
         A diagnostic that declares an `esmvaltool-reference` requirement
         selects its reference data from the catalog,
         so the downloaded files have to be ingested before the solver can find them.
-
-        Ingestion needs the climate-ref package, so it is skipped when the provider is
-        installed on its own.
         """
-        try:
-            from climate_ref.datasets import ingest_datasets  # noqa: PLC0415
-            from climate_ref.datasets.esmvaltool_reference import (  # noqa: PLC0415
-                ESMValToolReferenceDatasetAdapter,
-            )
-        except ImportError:
-            logger.info(
-                f"Skipping {self.slug} data ingestion: climate-ref package not installed. "
-                "Run `ref datasets ingest --source-type esmvaltool-reference` manually if needed."
-            )
-            return
-
         reference_path = registry_data_root()
         if not reference_path.exists():
             logger.warning(
@@ -73,15 +53,11 @@ class ESMValToolProvider(CondaDiagnosticProvider):
                 "so there is nothing to ingest. "
                 f"Fetch it with `ref datasets fetch-data --registry {_DATASETS_REGISTRY_NAME}`."
             )
-            return
+            return []
 
-        try:
-            stats = ingest_datasets(ESMValToolReferenceDatasetAdapter(), reference_path, db)
-            stats.log_summary("ESMValTool reference ingestion complete:")
-        except ValueError as e:
-            logger.warning(f"No valid ESMValTool reference datasets found: {e}")
+        return [DataIngestRequest(SourceDatasetType.ESMValToolReference, reference_path)]
 
-    def validate_setup(self, config: Config) -> bool:
+    def validate_setup(self, config: Any) -> bool:
         """Validate conda environment and data checksums."""
         # First check conda environment
         if not super().validate_setup(config):

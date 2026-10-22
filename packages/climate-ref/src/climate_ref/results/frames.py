@@ -12,8 +12,11 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-from sqlalchemy import Select, distinct
+from sqlalchemy import JSON, Select
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.compiler import SQLCompiler
+from sqlalchemy.sql.functions import FunctionElement
 
 from climate_ref.models.metric_value import MetricValue
 
@@ -91,6 +94,23 @@ def series_values_to_frame(values: "Sequence[SeriesValue]", *, explode: bool = T
     return pd.DataFrame.from_records(records)
 
 
+class _DistinctValues(FunctionElement[Any]):
+    """JSON array of the distinct values of a column, including any null."""
+
+    inherit_cache = True
+    type = JSON()
+
+
+@compiles(_DistinctValues)
+def _compile_distinct_values(element: _DistinctValues, compiler: SQLCompiler, **kw: Any) -> str:
+    return f"json_agg(DISTINCT {compiler.process(element.clauses, **kw)})"
+
+
+@compiles(_DistinctValues, "sqlite")
+def _compile_distinct_values_sqlite(element: _DistinctValues, compiler: SQLCompiler, **kw: Any) -> str:
+    return f"json_group_array(DISTINCT {compiler.process(element.clauses, **kw)})"
+
+
 def collect_facets(
     session: Session,
     stmt: Select[Any],
@@ -99,14 +119,21 @@ def collect_facets(
     """
     Distinct non-null values for each registered CV dimension of a filtered query.
 
-    Runs one ``DISTINCT`` per dimension over the (pre-pagination) ``stmt`` so cost scales with
-    cardinality rather than row count. Returns only dimensions that have at least one value.
+    Aggregates every dimension in one pass over the (pre-pagination) ``stmt``,
+    so each matching row is read once. Returns only dimensions that have at least one value.
     """
-    facets: dict[str, list[str]] = {}
-    for key in entity._cv_dimensions:
-        col = getattr(entity, key)
-        sub = stmt.with_only_columns(distinct(col)).order_by(None)
-        values = [v for (v,) in session.execute(sub) if v is not None]
-        if values:
-            facets[key] = sorted(values)
+    keys = list(entity._cv_dimensions)
+    if not keys:
+        return {}
+    sub = stmt.with_only_columns(*(_DistinctValues(getattr(entity, key)) for key in keys)).order_by(None)
+    return facets_from_columns(keys, session.execute(sub).one())
+
+
+def facets_from_columns(keys: Sequence[str], columns: Sequence[Sequence[Any] | None]) -> dict[str, list[Any]]:
+    """Sorted distinct non-null values per key, dropping keys with none."""
+    facets: dict[str, list[Any]] = {}
+    for key, values in zip(keys, columns, strict=True):
+        present = sorted({v for v in values or () if v is not None})
+        if present:
+            facets[key] = present
     return facets

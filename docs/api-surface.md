@@ -50,7 +50,7 @@ The primary module providers interact with.
 ### Key extension points
 
 - Override `DiagnosticProvider.configure(config)` for provider-level setup
-- Override `setup_environment(config)`, `fetch_data(config)`, `ingest_data(config, db)`
+- Override `setup_environment(config)`, `fetch_data(config)`, `data_to_ingest(config)`
 - Override `validate_setup(config) -> bool`
 - Call `provider.register(diagnostic)` to add diagnostics
 

@@ -3,12 +3,15 @@
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
+from sqlalchemy.dialects import postgresql
 
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
+from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
 from climate_ref.results import DiagnosticFilter, Reader
-from climate_ref.results.diagnostics import select_diagnostics
+from climate_ref.results._query import ExecutionScope
+from climate_ref.results.diagnostics import select_diagnostics, select_diagnostics_with_values
 
 
 def test_import_smoke() -> None:
@@ -229,3 +232,156 @@ class TestDiagnosticsReaderStats:
         stats = reader.diagnostics.stats(diagnostic_contains=["enso_tel"])
         diagnostics = {s.diagnostic for s in stats}
         assert diagnostics == {"enso_tel"}
+
+    def test_retracted_latest_execution_still_counts(self, db_with_diagnostics):
+        session = db_with_diagnostics.session
+        with session.begin():
+            group = session.query(ExecutionGroup).filter_by(key="key1").one()
+            session.add(
+                Execution(
+                    execution_group_id=group.id,
+                    output_fragment="retracted",
+                    dataset_hash="retracted",
+                    successful=True,
+                    retracted=True,
+                )
+            )
+        reader = Reader(db_with_diagnostics)
+        by_diag = {s.diagnostic: s for s in reader.diagnostics.stats()}
+        assert by_diag["enso_tel"].successful == 1
+        assert by_diag["enso_tel"].not_started == 1
+        assert reader.diagnostics.stats() == reader.executions.statistics()
+
+
+@pytest.fixture
+def db_with_values(db_with_diagnostics):
+    """
+    enso_tel has a scalar value and the NAO diagnostic a series value.
+
+    enso-characteristics has a scalar only at a superseded version, and a retracted series value.
+    """
+    session = db_with_diagnostics.session
+
+    def add_execution(group):
+        execution = Execution(
+            execution_group_id=group.id, output_fragment=group.key, dataset_hash=group.key, successful=True
+        )
+        session.add(execution)
+        session.flush()
+        return execution
+
+    with session.begin():
+        scalar_execution = add_execution(session.query(ExecutionGroup).filter_by(key="key1").one())
+        session.add(
+            ScalarMetricValue.build(
+                execution_id=scalar_execution.id, value=1.0, attributes=None, dimensions={"metric": "tas"}
+            )
+        )
+
+        series_execution = add_execution(session.query(ExecutionGroup).filter_by(key="key3").one())
+        session.add(
+            SeriesMetricValue.build(
+                execution_id=series_execution.id,
+                values=[1.0, 2.0],
+                index_axis=SeriesIndex.get_or_create(session, "time", [0, 1]),
+                dimensions={"metric": "tas"},
+                attributes=None,
+            )
+        )
+
+        characteristics = session.query(Diagnostic).filter_by(slug="enso-characteristics").one()
+        superseded = ExecutionGroup(
+            key="superseded",
+            diagnostic_id=characteristics.id,
+            diagnostic_version=characteristics.promoted_version + 1,
+            selectors={},
+        )
+        session.add(superseded)
+        session.flush()
+        session.add(
+            ScalarMetricValue.build(
+                execution_id=add_execution(superseded).id,
+                value=1.0,
+                attributes=None,
+                dimensions={"metric": "tas"},
+            )
+        )
+
+        promoted = ExecutionGroup(key="retracted", diagnostic_id=characteristics.id, selectors={})
+        session.add(promoted)
+        session.flush()
+        retracted = add_execution(promoted)
+        retracted.retracted = True
+        session.add(
+            SeriesMetricValue.build(
+                execution_id=retracted.id,
+                values=[1.0, 2.0],
+                index_axis=SeriesIndex.get_or_create(session, "time", [0, 1]),
+                dimensions={"metric": "tas"},
+                attributes=None,
+            )
+        )
+
+    return db_with_diagnostics
+
+
+class TestDiagnosticsWithValues:
+    def test_scalar(self, db_with_values):
+        reader = Reader(db_with_values)
+        assert {slug for _, slug in reader.diagnostics.with_values(MetricValueType.SCALAR)} == {"enso_tel"}
+
+    def test_series(self, db_with_values):
+        reader = Reader(db_with_values)
+        assert {slug for _, slug in reader.diagnostics.with_values(MetricValueType.SERIES)} == {
+            "extratropical-modes-of-variability-nao"
+        }
+
+    def test_diagnostic_filter(self, db_with_values):
+        reader = Reader(db_with_values)
+        filters = DiagnosticFilter(diagnostic_contains=["nao"])
+        assert reader.diagnostics.with_values(MetricValueType.SCALAR, filters) == frozenset()
+
+    def test_execution_group_where(self, db_with_values):
+        stmt = select_diagnostics_with_values(
+            MetricValueType.SCALAR, execution_group_where=ExecutionGroup.key == "key2"
+        )
+        assert db_with_values.session.execute(stmt).all() == []
+
+    def test_scope_includes_retracted(self, db_with_values):
+        reader = Reader(db_with_values).diagnostics
+        assert {slug for _, slug in reader.with_values(MetricValueType.SERIES)} == {
+            "extratropical-modes-of-variability-nao"
+        }
+        retracted = reader.with_values(MetricValueType.SERIES, scope=ExecutionScope(include_retracted=True))
+        assert "enso-characteristics" in {slug for _, slug in retracted}
+
+    def test_sqlite_plan_reads_only_the_composite_index(self, db_with_values):
+        session = db_with_values.session
+        compiled = select_diagnostics_with_values(MetricValueType.SCALAR).compile(
+            bind=session.get_bind(), compile_kwargs={"literal_binds": True}
+        )
+        plan = " ".join(
+            row[3] for row in session.connection().exec_driver_sql(f"EXPLAIN QUERY PLAN {compiled}")
+        )
+        assert "COVERING INDEX ix_metric_value_execution_id_type" in plan
+        assert "ix_metric_value_type " not in plan
+
+    def test_hint_is_sqlite_only(self):
+        compiled = str(
+            select_diagnostics_with_values(MetricValueType.SCALAR).compile(dialect=postgresql.dialect())
+        )
+        assert "+metric_value.type" not in compiled
+        assert "metric_value.type" in compiled
+
+
+class TestWithCount:
+    def test_without_count(self, db_with_diagnostics, count_queries):
+        reader = Reader(db_with_diagnostics)
+        with count_queries(db_with_diagnostics) as counted:
+            full = reader.diagnostics.list(limit=2)
+        with count_queries(db_with_diagnostics) as uncounted:
+            page = reader.diagnostics.list(limit=2, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1

@@ -17,7 +17,8 @@ import typer
 from loguru import logger
 
 from climate_ref.cli._utils import OutputFormat, parse_facet_filters, pretty_print_df, render_dataframe
-from climate_ref.datasets import get_dataset_adapter
+from climate_ref.datasets import get_dataset_adapter, skip_ingested
+from climate_ref.datasets.base import SkipFunction
 from climate_ref.models import Dataset
 from climate_ref.results import DatasetFilter, Reader
 from climate_ref.results.datasets import DatasetCollection
@@ -162,7 +163,7 @@ def list_(  # noqa: PLR0913
 
     render_dataframe(data_catalog, console=console, output_format=output_format)
 
-    if not include_files and collection.total_count > limit:
+    if not include_files and (collection.total_count or 0) > limit:
         logger.warning(
             f"Displaying {limit} of {collection.total_count} filtered results. "
             f"Use the `--limit` option to display more."
@@ -246,6 +247,13 @@ def unretract(ctx: typer.Context, slug: str) -> None:
     console.print(f"Unretracted dataset {slug!r}.")
 
 
+def _log_nothing_to_ingest(directory: Path, skip_existing: bool) -> None:
+    if skip_existing:
+        logger.info(f"No new valid datasets found in {directory}")
+    else:
+        logger.warning(f"No valid datasets found in {directory}")
+
+
 @app.command()
 def ingest(  # noqa
     ctx: typer.Context,
@@ -266,7 +274,7 @@ def ingest(  # noqa
             help=(
                 "Stream the catalog in chunks of this many files instead of loading the whole "
                 "directory at once. Bounds peak memory for large archives. Only supported by "
-                "adapters that implement iter_local_datasets (currently CMIP6 and CMIP7)."
+                "adapters that implement iter_local_datasets (all built-in adapters)."
             )
         ),
     ] = None,
@@ -274,6 +282,15 @@ def ingest(  # noqa
         bool,
         typer.Option(help="Health check providers before solving, as `ref solve --check-health` does"),
     ] = True,
+    skip_existing: Annotated[
+        bool,
+        typer.Option(
+            help=(
+                "Skip files that are already in the database without parsing them. "
+                "Assumes files are immutable, so run a full ingest periodically to pick up changes."
+            )
+        ),
+    ] = False,
 ) -> None:
     """
     Ingest a directory of datasets into the database
@@ -304,6 +321,9 @@ def ingest(  # noqa
             "falling back to whole-catalog mode."
         )
 
+    # Only pass `skip` when asked, so adapters without the parameter keep working.
+    skip_kwargs: dict[str, SkipFunction] = {"skip": skip_ingested(db, source_type)} if skip_existing else {}
+
     for _dir in file_or_directory:
         _dir = Path(_dir).expanduser()
         logger.info(f"Ingesting {_dir}")
@@ -326,7 +346,9 @@ def ingest(  # noqa
             total_files = 0
             total_datasets = 0
             try:
-                for raw_chunk in adapter.iter_local_datasets(_dir, chunk_size=chunk_size):  # type: ignore[attr-defined]
+                for raw_chunk in adapter.iter_local_datasets(  # type: ignore[attr-defined]
+                    _dir, chunk_size=chunk_size, **skip_kwargs
+                ):
                     validated_chunk = adapter.validate_data_catalog(raw_chunk, skip_invalid=skip_invalid)
                     if validated_chunk.empty:
                         continue
@@ -355,7 +377,7 @@ def ingest(  # noqa
                 continue
 
             if total_files == 0:
-                logger.warning(f"No valid datasets found in {_dir}")
+                _log_nothing_to_ingest(_dir, skip_existing)
                 continue
 
             logger.info(
@@ -366,7 +388,10 @@ def ingest(  # noqa
             continue
 
         try:
-            data_catalog = adapter.find_local_datasets(_dir)
+            data_catalog = adapter.find_local_datasets(_dir, **skip_kwargs)
+            if data_catalog.empty:
+                _log_nothing_to_ingest(_dir, skip_existing)
+                continue
             data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
         except Exception as e:
             logger.exception(f"Error ingesting datasets from {_dir}: {e}")
@@ -374,7 +399,7 @@ def ingest(  # noqa
             continue
 
         if data_catalog.empty:
-            logger.warning(f"No valid datasets found in {_dir}")
+            _log_nothing_to_ingest(_dir, skip_existing)
             continue
 
         logger.info(

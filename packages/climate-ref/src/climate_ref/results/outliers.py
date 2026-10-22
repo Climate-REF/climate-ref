@@ -22,14 +22,11 @@ Non-finite values (NaN/inf) are always flagged.
 
 """
 
-import math
 import statistics
-from collections.abc import Sequence
 
 import attrs
+import numpy as np
 import pandas as pd
-
-from climate_ref.models.metric_value import ScalarMetricValue
 
 _SUPPORTED_METHODS = ("off", "iqr")
 
@@ -68,137 +65,96 @@ class OutlierPolicy:
         return self.method == "iqr"
 
 
-@attrs.frozen(kw_only=True)
-class AnnotatedScalar:
-    """A scalar ORM row paired with its outlier verdict."""
-
-    value: ScalarMetricValue
-    """The underlying scalar metric value row."""
-
-    is_outlier: bool
-    """Whether this value was flagged as an outlier."""
-
-    verification_status: str
-    """``"verified"`` or ``"unverified"``, mirroring ``is_outlier``."""
-
-
-def _is_finite(x: object) -> bool:
-    return isinstance(x, int | float) and not math.isinf(x) and not math.isnan(x)
-
-
-def _flag_outliers_iqr(values: Sequence[float], factor: float, min_n: int) -> list[bool]:
+def _iqr_bounds(samples: list[float], factor: float, min_n: int) -> tuple[float, float] | None:
     """
-    Flag outliers with a plain IQR test (fallback when no source_id is available).
+    ``Q1 - factor*IQR`` and ``Q3 + factor*IQR`` of finite ``samples``.
 
-    Detection runs only over finite values: a single NaN/inf would otherwise poison the quantiles
-    and disable the test for the whole group.
-    Non-finite values are never flagged here (the caller flags them separately).
-    When the finite spread is zero the bounds collapse, so nothing is flagged.
-    Gated on the count of finite values against ``min_n``.
+    Returns ``None`` when fewer than ``min_n`` samples are given or when the spread is zero,
+    so collapsed bounds never flag anything.
     """
-    finite = [v for v in values if _is_finite(v)]
-    if len(finite) < min_n:
-        return [False] * len(values)
-    q1, _, q3 = statistics.quantiles(finite, n=4, method="inclusive")
-    iqr = q3 - q1
-    if iqr == 0:
-        return [False] * len(values)
-    lower, upper = q1 - factor * iqr, q3 + factor * iqr
-    return [_is_finite(v) and (v < lower or v > upper) for v in values]
-
-
-def _iqr_bounds_by_source_id(df: pd.DataFrame, factor: float, min_n: int) -> tuple[float, float] | None:
-    """
-    IQR bounds computed on per-source_id means (equal model weighting).
-
-    A source whose mean is non-finite (e.g. all values NaN) is dropped before the ``min_n`` count
-    and the quantile computation, so it cannot poison the bounds for the others. Returns ``None``
-    when fewer than ``min_n`` sources have a finite mean or when the spread is zero.
-    """
-    if "source_id" not in df.columns:
+    if len(samples) < min_n:
         return None
-    non_reference = df[df["source_id"] != "Reference"]
-    source_id_means = non_reference.groupby("source_id")["value"].mean()
-    finite_means = source_id_means[source_id_means.map(_is_finite)]
-    if len(finite_means) < min_n:
-        return None
-    q1, _, q3 = statistics.quantiles(finite_means.tolist(), n=4, method="inclusive")
+    q1, _, q3 = statistics.quantiles(samples, n=4, method="inclusive")
     iqr = q3 - q1
     if iqr == 0:
         return None
     return q1 - factor * iqr, q3 + factor * iqr
 
 
-def detect_scalar_outliers(
-    scalar_values: Sequence[ScalarMetricValue],
-    policy: OutlierPolicy,
-) -> tuple[list[AnnotatedScalar], int]:
+def _bounds_by_group(
+    group_ids: np.ndarray, samples: np.ndarray, factor: float, min_n: int
+) -> dict[int, tuple[float, float]]:
+    """IQR bounds for each group id, from the finite samples carrying that id."""
+    finite = np.isfinite(samples)
+    group_ids, samples = group_ids[finite], samples[finite]
+    if not len(samples):
+        return {}
+    order = np.argsort(group_ids, kind="stable")
+    group_ids, samples = group_ids[order], samples[order]
+    starts = np.flatnonzero(np.r_[True, group_ids[1:] != group_ids[:-1]])
+    bounds = {}
+    for gid, chunk in zip(group_ids[starts].tolist(), np.split(samples, starts[1:])):
+        group_bounds = _iqr_bounds(chunk.tolist(), factor, min_n)
+        if group_bounds is not None:
+            bounds[gid] = group_bounds
+    return bounds
+
+
+def flag_outliers(frame: pd.DataFrame, policy: OutlierPolicy) -> np.ndarray:
     """
-    Annotate scalar values with outlier verdicts.
+    Outlier verdict for each row of ``frame``, in row order.
 
-    Parameters
-    ----------
-    scalar_values
-        The full (unpaginated) set of scalar rows for the query scope. Detection must run over
-        the whole set so IQR bounds are globally consistent.
-    policy
-        Detection configuration.
+    ``frame`` holds a ``value`` column and one column per CV dimension,
+    where a dimension that is null in every row counts as absent.
+    Rows with a null ``group_by`` key belong to no group and are never flagged.
 
-    Returns
-    -------
-    :
-        A tuple of (annotated values in input order, total number of outliers).
+    When any row has a ``source_id``, IQR bounds are computed on the per-``source_id`` means
+    of each group (equal model weighting) and ``"Reference"`` values are never flagged.
+    A source whose mean is non-finite is dropped before the ``min_n`` count,
+    so it cannot poison the bounds for the others.
+    Otherwise a plain IQR test runs over the finite values of each group.
     """
-    if not scalar_values:
-        return [], 0
+    if frame.empty:
+        return np.zeros(0, dtype=bool)
 
-    if not policy.enabled:
-        return (
-            [
-                AnnotatedScalar(value=sv, is_outlier=False, verification_status="verified")
-                for sv in scalar_values
-            ],
-            0,
+    present = {c for c in frame.columns if frame[c].notna().any()}
+    group_by = [g for g in policy.group_by if g in present]
+    values = frame["value"].astype(float)
+    finite = np.isfinite(values.to_numpy())
+
+    if group_by:
+        # ``ngroup`` labels rows with a null key as NaN.
+        group_numbers = frame.groupby(group_by, sort=False).ngroup()
+        in_group = group_numbers.notna().to_numpy()
+        group_ids = group_numbers.fillna(-1).to_numpy(dtype=np.int64)
+    else:
+        in_group = np.ones(len(frame), dtype=bool)
+        group_ids = np.zeros(len(frame), dtype=np.int64)
+
+    if "source_id" in present:
+        source_id = frame["source_id"]
+        candidate = source_id != "Reference"
+        candidate_rows = candidate.to_numpy() & in_group
+        means = values[candidate_rows].groupby([group_ids[candidate_rows], source_id[candidate_rows]]).mean()
+        mean_group_ids = means.index.get_level_values(0).to_numpy()
+        bounds = _bounds_by_group(mean_group_ids, means.to_numpy(), policy.factor, policy.min_n)
+        eligible = candidate.to_numpy()
+    else:
+        bounds = _bounds_by_group(
+            group_ids[in_group], values.to_numpy()[in_group], policy.factor, policy.min_n
         )
+        eligible = np.ones(len(frame), dtype=bool)
 
-    df = pd.DataFrame(
-        [{"scalar_value": sv, "value": sv.value, **sv.dimensions, "id": sv.id} for sv in scalar_values]
-    )
-    group_by = [g for g in policy.group_by if g in df.columns]
+    n_groups = int(group_ids.max()) + 1
+    lower_by_group = np.full(n_groups + 1, np.nan)
+    upper_by_group = np.full(n_groups + 1, np.nan)
+    for gid, (low, high) in bounds.items():
+        lower_by_group[gid] = low
+        upper_by_group[gid] = high
+    # Rows outside any group carry id -1, which reads the trailing NaN slot.
+    raw = values.to_numpy()
+    with np.errstate(invalid="ignore"):
+        out_of_bounds = (raw < lower_by_group[group_ids]) | (raw > upper_by_group[group_ids])
 
-    verdict_by_id: dict[int, bool] = {}
-    groups = df.groupby(list(group_by)) if group_by else [(None, df)]
-    for _, group in groups:
-        values = group["value"]
-        finite = values.map(_is_finite)
-        if "source_id" in group.columns:
-            # Distinct finite source_ids gate detection (see _iqr_bounds_by_source_id).
-            bounds = _iqr_bounds_by_source_id(group, factor=policy.factor, min_n=policy.min_n)
-            if bounds is not None:
-                lower, upper = bounds
-                out_of_bounds = (values < lower) | (values > upper)
-                flags = finite & out_of_bounds & (group["source_id"] != "Reference")
-            else:
-                flags = pd.Series(False, index=group.index)
-        else:
-            # Finite value count gates detection (see _flag_outliers_iqr).
-            flag_list = _flag_outliers_iqr(values.to_list(), factor=policy.factor, min_n=policy.min_n)
-            flags = pd.Series(flag_list, index=group.index)
-
-        verdicts = flags | ~finite  # non-finite values are always flagged
-        for row_id, verdict in zip(group["id"], verdicts):
-            verdict_by_id[row_id] = bool(verdict)
-
-    annotated: list[AnnotatedScalar] = []
-    total = 0
-    for sv in scalar_values:
-        is_outlier = verdict_by_id.get(sv.id, False)
-        annotated.append(
-            AnnotatedScalar(
-                value=sv,
-                is_outlier=is_outlier,
-                verification_status="unverified" if is_outlier else "verified",
-            )
-        )
-        total += int(is_outlier)
-    return annotated, total
+    # Non-finite values are always flagged.
+    return in_group & ((finite & out_of_bounds & eligible) | ~finite)

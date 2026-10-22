@@ -7,12 +7,15 @@ from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import Reader, ResourceFilter
+from climate_ref.results import InputDatasetFilter, Reader, ResourceFilter
 from climate_ref.results.resources import _percentile
+from climate_ref_core.source_types import SourceDatasetType
 
 GIB = 1024**3
+CMIP6 = SourceDatasetType.CMIP6
 
 
 def _add_execution(session, group_id: int, index: int, **columns):
@@ -431,3 +434,266 @@ class TestMeasurements:
 
     def test_get_by_id_missing(self, db_with_resources):
         assert Reader(db_with_resources).resources.measurement(-1) is None
+
+
+class TestSummary:
+    def test_aggregates_one_diagnostic(self, db_with_resources):
+        summary = Reader(db_with_resources).resources.summary(ResourceFilter(diagnostic_slug="enso_tel"))
+
+        assert summary is not None
+        assert (summary.provider_slug, summary.diagnostic_slug) == (None, None)
+        # The unmeasured failure has no wall time, so 12 of the 13 executions are timed.
+        assert summary.timed_execution_count == 12
+        assert summary.wall_seconds_total == pytest.approx(1200.0)
+        assert summary.wall_seconds_mean == pytest.approx(100.0)
+        assert summary.wall_seconds_max == pytest.approx(100.0)
+        assert summary.cpu_seconds_total == pytest.approx(10 * 110.0 + 100.0)
+        assert summary.cpu_seconds_mean == pytest.approx((10 * 110.0 + 100.0) / 11)
+        assert summary.peak_memory_bytes_min == GIB
+        assert summary.peak_memory_bytes_max == 40 * GIB
+
+    def test_no_timed_executions(self, db_with_resources):
+        reader = Reader(db_with_resources).resources
+
+        assert reader.summary(ResourceFilter(diagnostic_slug="sea-ice-area-basic")) is None
+        assert reader.summary(ResourceFilter(diagnostic_slug="no-such-diagnostic")) is None
+
+    def test_per_diagnostic(self, db_with_resources):
+        summaries = Reader(db_with_resources).resources.summaries(ResourceFilter(provider_contains=["pmp"]))
+
+        assert [(s.provider_slug, s.diagnostic_slug, s.timed_execution_count) for s in summaries] == [
+            ("pmp", "enso_tel", 12),
+            ("pmp", "extratropical-modes-of-variability-nao", 3),
+        ]
+
+    def test_per_provider(self, db_with_resources):
+        summaries = Reader(db_with_resources).resources.summaries(group_by="provider")
+
+        by_provider = {s.provider_slug: s for s in summaries}
+        assert by_provider["esmvaltool"].diagnostic_slug is None
+        assert by_provider["esmvaltool"].timed_execution_count == 4
+        assert by_provider["pmp"].timed_execution_count == 15
+        assert by_provider["pmp"].peak_memory_bytes_max == 40 * GIB
+
+    def test_exact_provider_slug(self, db_with_resources):
+        reader = Reader(db_with_resources).resources
+
+        assert reader.summary(ResourceFilter(provider_slug="pm")) is None
+        summary = reader.summary(ResourceFilter(provider_slug="pmp"))
+        assert summary is not None
+        assert summary.timed_execution_count == 15
+
+    def test_latest_only_counts_each_groups_latest_execution(self, db_with_resources):
+        reader = Reader(db_with_resources).resources
+
+        nao = reader.summary(ResourceFilter(diagnostic_slug="extratropical-modes-of-variability-nao"))
+        latest_nao = reader.summary(
+            ResourceFilter(diagnostic_slug="extratropical-modes-of-variability-nao", latest_only=True)
+        )
+        assert nao is not None
+        assert nao.timed_execution_count == 3
+        assert latest_nao is not None
+        assert latest_nao.timed_execution_count == 1
+        assert latest_nao.wall_seconds_total == pytest.approx(3000.0)
+        assert (
+            len(
+                reader.measurements(
+                    ResourceFilter(diagnostic_slug="extratropical-modes-of-variability-nao", latest_only=True)
+                )
+            )
+            == 1
+        )
+
+        # The latest enso_tel execution is the unmeasured failure, so nothing is timed.
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", latest_only=True)) is None
+
+    def test_latest_only_prefers_newer_created_at_over_higher_id(self, db_seeded):
+        now = datetime.datetime(2026, 1, 1)
+        with db_seeded.session.begin():
+            _register_provider(db_seeded, pmp_provider)
+            diagnostic = db_seeded.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            group = ExecutionGroup(key="retry", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+            _add_execution(db_seeded.session, group.id, 0, created_at=now, **_sample(wall_seconds=50.0))
+            _add_execution(
+                db_seeded.session,
+                group.id,
+                1,
+                created_at=now - datetime.timedelta(days=1),
+                **_sample(wall_seconds=900.0),
+            )
+
+        summary = Reader(db_seeded).resources.summary(ResourceFilter(latest_only=True))
+
+        assert summary is not None
+        assert summary.timed_execution_count == 1
+        assert summary.wall_seconds_total == pytest.approx(50.0)
+
+    def test_latest_only_grouped(self, db_with_resources):
+        reader = Reader(db_with_resources).resources
+
+        per_diagnostic = reader.summaries(ResourceFilter(latest_only=True))
+        assert [(s.diagnostic_slug, s.timed_execution_count) for s in per_diagnostic] == [
+            ("enso-characteristics", 1),
+            ("extratropical-modes-of-variability-nao", 1),
+        ]
+        assert per_diagnostic[0].peak_memory_bytes_max == 100 * GIB
+
+        per_provider = {
+            s.provider_slug: s.timed_execution_count
+            for s in reader.summaries(ResourceFilter(latest_only=True), group_by="provider")
+        }
+        assert per_provider == {"esmvaltool": 1, "pmp": 1}
+
+
+class TestSuperseded:
+    @pytest.fixture
+    def db_superseded(self, db_with_resources):
+        with db_with_resources.session.begin():
+            diagnostic = db_with_resources.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            diagnostic.promoted_version = 2
+        return db_with_resources
+
+    def test_counted_by_default(self, db_superseded):
+        reader = Reader(db_superseded).resources
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel")) is not None
+        assert "enso_tel" in _by_slug(reader.profiles())
+
+    def test_excluded_when_asked(self, db_superseded):
+        reader = Reader(db_superseded).resources
+        f = ResourceFilter(include_superseded=False)
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", include_superseded=False)) is None
+        assert {m.diagnostic_slug for m in reader.measurements(f)} == {
+            "extratropical-modes-of-variability-nao",
+            "enso-characteristics",
+        }
+        assert "enso_tel" not in _by_slug(reader.profiles(f))
+        assert "enso_tel" not in {s.diagnostic_slug for s in reader.summaries(f)}
+
+
+class TestInputDatasets:
+    @pytest.fixture
+    def db_with_inputs(self, db_with_resources):
+        session = db_with_resources.session
+        with session.begin():
+            slug = "CMIP6.CMIP.TEST.FACET-A.historical.r1i1p1f1.Amon.tas.gn.v1"
+            dataset = CMIP6Dataset(
+                slug=slug,
+                activity_id="CMIP",
+                experiment_id="historical",
+                institution_id="TEST",
+                source_id="FACET-A",
+                member_id="r1i1p1f1",
+                table_id="Amon",
+                variable_id="tas",
+                grid_label="gn",
+                version="v1",
+                instance_id=slug,
+                variant_label="r1i1p1f1",
+            )
+            session.add(dataset)
+            execution = (
+                session.query(Execution)
+                .join(ExecutionGroup)
+                .filter(ExecutionGroup.key == "nao")
+                .order_by(Execution.id)
+                .first()
+            )
+            execution.datasets = [dataset]
+        return db_with_resources
+
+    def test_scopes_every_read(self, db_with_inputs):
+        reader = Reader(db_with_inputs).resources
+        f = ResourceFilter(
+            input_datasets=InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-A"})
+        )
+        none = ResourceFilter(
+            input_datasets=InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "NO-SUCH-MODEL"})
+        )
+        summary = reader.summary(f)
+        assert summary is not None
+        assert summary.timed_execution_count == 1
+        assert [s.diagnostic_slug for s in reader.summaries(f)] == ["extratropical-modes-of-variability-nao"]
+        assert len(reader.measurements(f)) == 1
+        assert list(_by_slug(reader.profiles(f))) == ["extratropical-modes-of-variability-nao"]
+        assert reader.summary(none) is None
+
+
+class TestRetracted:
+    @pytest.fixture
+    def db_with_retracted(self, db_seeded):
+        """``enso_tel`` has an older live run of 100 s and a newer retracted run of 900 s."""
+        now = datetime.datetime(2026, 1, 1)
+        with db_seeded.session.begin():
+            _register_provider(db_seeded, pmp_provider)
+            diagnostic = db_seeded.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            group = ExecutionGroup(key="retracted", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+            _add_execution(
+                db_seeded.session, group.id, 0, created_at=now - datetime.timedelta(days=1), **_sample()
+            )
+            _add_execution(
+                db_seeded.session, group.id, 1, created_at=now, retracted=True, **_sample(wall_seconds=900.0)
+            )
+        return db_seeded
+
+    def test_excluded_by_default(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        summary = reader.summary()
+        assert summary is not None
+        assert summary.timed_execution_count == 1
+        assert summary.wall_seconds_total == pytest.approx(100.0)
+        assert len(reader.measurements()) == 1
+
+    def test_include_retracted(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        summary = reader.summary(ResourceFilter(include_retracted=True))
+        assert summary is not None
+        assert summary.timed_execution_count == 2
+        assert len(reader.measurements(ResourceFilter(include_retracted=True))) == 2
+
+    def test_retracted_latest_execution_still_wins_its_group(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        assert reader.summary(ResourceFilter(latest_only=True)) is None
+        summary = reader.summary(ResourceFilter(latest_only=True, include_retracted=True))
+        assert summary is not None
+        assert summary.wall_seconds_total == pytest.approx(900.0)
+
+    def test_measurement_by_id_finds_a_retracted_execution(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        retracted = [
+            m for m in reader.measurements(ResourceFilter(include_retracted=True)) if m.wall_seconds == 900.0
+        ]
+        assert reader.measurement(retracted[0].execution_id) is not None
+
+    def test_profiles_exclude_retracted_samples_by_default(self, db_with_retracted):
+        (profile,) = Reader(db_with_retracted).resources.profiles()
+        assert profile.n_samples == 1
+
+    def test_profiles_take_a_filter(self, db_with_retracted):
+        reader = Reader(db_with_retracted).resources
+        (profile,) = reader.profiles(ResourceFilter(include_retracted=True))
+        assert profile.n_samples == 2
+        (latest,) = reader.profiles(ResourceFilter(latest_only=True, include_retracted=True))
+        assert latest.n_samples == 1
+
+    def test_profiles_reject_a_filter_with_loose_kwargs(self, db_with_retracted):
+        with pytest.raises(ValueError, match="not both"):
+            Reader(db_with_retracted).resources.profiles(
+                ResourceFilter(), since=datetime.datetime(2020, 1, 1)
+            )
+
+
+class TestWithCount:
+    def test_without_count(self, db_with_resources, count_queries):
+        reader = Reader(db_with_resources).resources
+        with count_queries(db_with_resources) as counted:
+            full = reader.measurements(limit=3)
+        with count_queries(db_with_resources) as uncounted:
+            page = reader.measurements(limit=3, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1

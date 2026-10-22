@@ -2,13 +2,19 @@
 
 import datetime
 
+import attrs
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import ExecutionOutput, ResultOutputType
+from climate_ref.models.execution import (
+    ExecutionFailureReason,
+    ExecutionOutput,
+    ResultOutputType,
+    get_execution_group_and_latest_filtered,
+)
 from climate_ref.provider_registry import _register_provider
 from climate_ref.results import ExecutionGroupFilter, MetricValueFilter, OutlierPolicy, Reader
 from climate_ref.results.executions import select_execution_outputs, select_execution_statistics
@@ -182,13 +188,13 @@ class TestGroupsFilter:
 
     def test_facet_bare_key(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"source_id": ["GFDL-ESM4"]}))
         keys = {g.key for g in coll}
         assert keys == {"key1"}
 
     def test_facet_dataset_type_scoped_key(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"cmip6.source_id": ["GFDL-ESM4"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"cmip6.source_id": ["GFDL-ESM4"]}))
         keys = {g.key for g in coll}
         assert keys == {"key1"}
 
@@ -199,6 +205,59 @@ class TestGroupsFilter:
     def test_bare_string_rejected_provider_contains(self):
         with pytest.raises(TypeError):
             ExecutionGroupFilter(provider_contains="pmp")
+
+
+class TestDeprecatedFacetsAlias:
+    def test_maps_onto_selectors(self):
+        with pytest.warns(DeprecationWarning, match="selectors"):
+            f = ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]})
+        assert f.selectors == {"source_id": ("GFDL-ESM4",)}
+        assert f == ExecutionGroupFilter(selectors={"source_id": ["GFDL-ESM4"]})
+
+    def test_filters_like_selectors(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        with pytest.warns(DeprecationWarning):
+            f = ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]})
+        assert {g.key for g in reader.executions.groups(f)} == {"key1"}
+
+    def test_disagreeing_values_raise(self):
+        with pytest.raises(ValueError, match="disagree"):
+            ExecutionGroupFilter(selectors={"source_id": ["A"]}, facets={"source_id": ["B"]})
+
+    def test_agreeing_values_are_accepted(self):
+        with pytest.warns(DeprecationWarning):
+            f = ExecutionGroupFilter(selectors={"source_id": ["A"]}, facets={"source_id": ["A"]})
+        assert f.selectors == {"source_id": ("A",)}
+
+    def test_evolve_applies_alias(self):
+        with pytest.warns(DeprecationWarning):
+            f = attrs.evolve(ExecutionGroupFilter(), facets={"source_id": ["A"]})
+        assert f.selectors == {"source_id": ("A",)}
+
+    def test_evolve_keeps_resolved_value(self):
+        f = attrs.evolve(ExecutionGroupFilter(selectors={"source_id": ["A"]}), dirty=True)
+        assert f.selectors == {"source_id": ("A",)}
+
+
+class TestDeprecatedFacetFiltersKwarg:
+    def test_maps_onto_selector_filters(self, db_with_groups):
+        session = db_with_groups.session
+        expected = get_execution_group_and_latest_filtered(
+            session, selector_filters={"source_id": ["GFDL-ESM4"]}
+        )
+        with pytest.warns(DeprecationWarning, match="selector_filters"):
+            actual = get_execution_group_and_latest_filtered(
+                session, facet_filters={"source_id": ["GFDL-ESM4"]}
+            )
+        assert [eg.key for eg, _ in actual] == [eg.key for eg, _ in expected] == ["key1"]
+
+    def test_disagreeing_values_raise(self, db_with_groups):
+        with pytest.raises(ValueError, match="disagree"):
+            get_execution_group_and_latest_filtered(
+                db_with_groups.session,
+                selector_filters={"source_id": ["A"]},
+                facet_filters={"source_id": ["B"]},
+            )
 
 
 class TestGroupsPromotedVersion:
@@ -258,6 +317,78 @@ class TestGroupsPagination:
         assert page_1 + page_2 + page_3 == full_ids  # no overlap, no gap
 
 
+GROUP_FILTERS = {
+    "unfiltered": (ExecutionGroupFilter(), 7),
+    "diagnostic_contains": (ExecutionGroupFilter(diagnostic_contains=["ENSO"]), 2),
+    "provider_contains": (ExecutionGroupFilter(provider_contains=["esmvaltool"]), 5),
+    "diagnostic_and_provider": (
+        ExecutionGroupFilter(diagnostic_contains=["enso"], provider_contains=["pmp"]),
+        1,
+    ),
+    "dirty": (ExecutionGroupFilter(dirty=True), 1),
+    "not_dirty": (ExecutionGroupFilter(dirty=False), 6),
+    "successful": (ExecutionGroupFilter(successful=True), 4),
+    "not_successful": (ExecutionGroupFilter(successful=False), 3),
+    "latest_successful": (ExecutionGroupFilter(latest_successful=True), 7),
+    "latest_successful_and_successful": (ExecutionGroupFilter(latest_successful=True, successful=True), 4),
+    "failure_reasons": (ExecutionGroupFilter(failure_reasons=[ExecutionFailureReason.DiagnosticError]), 1),
+    "other_failure_reasons": (ExecutionGroupFilter(failure_reasons=[ExecutionFailureReason.SystemError]), 0),
+    "provider_successful_not_dirty": (
+        ExecutionGroupFilter(provider_contains=["esmvaltool"], successful=True, dirty=False),
+        1,
+    ),
+    "include_superseded": (ExecutionGroupFilter(include_superseded=True), 7),
+}
+
+
+@pytest.fixture
+def db_with_failure(db_with_groups):
+    """``db_with_groups`` with key3's failed execution given a failure reason."""
+    session = db_with_groups.session
+    with session.begin_nested() if session.in_transaction() else session.begin():
+        execution = (
+            session.query(Execution).filter_by(execution_group_id=db_with_groups.group_ids["key3"]).one()
+        )
+        execution.failure_reason = ExecutionFailureReason.DiagnosticError.value
+    return db_with_groups
+
+
+@pytest.mark.parametrize(("filters", "expected"), GROUP_FILTERS.values(), ids=list(GROUP_FILTERS))
+class TestGroupsSqlPaging:
+    """Without ``selectors``, ``groups()`` counts and pages in SQL, separately from ``group_rows()``."""
+
+    def test_count_matches_rows(self, db_with_failure, filters, expected):
+        reader = Reader(db_with_failure).executions
+        rows = reader.group_rows(filters)
+        coll = reader.groups(filters)
+
+        assert coll.total_count == len(coll) == len(rows) == expected
+        assert [g.id for g in coll] == [eg.id for eg, _ in rows]
+        assert [g.latest.id if g.latest else None for g in coll] == [
+            latest.id if latest else None for _, latest in rows
+        ]
+
+    def test_pages_are_slices_of_the_full_list(self, db_with_failure, filters, expected):
+        reader = Reader(db_with_failure).executions
+        full = reader.groups(filters)
+
+        for offset in range(len(full) + 1):
+            page = reader.groups(filters, offset=offset, limit=2)
+            assert page.total_count == expected
+            assert page.items == full.items[offset : offset + 2]
+        assert reader.groups(filters, offset=2).items == full.items[2:]
+
+
+class TestGroupsWithCount:
+    def test_without_count(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        full = reader.executions.groups(limit=3)
+        page = reader.executions.groups(limit=3, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+
+
 class TestGroupsLatestSuccessful:
     def test_latest_successful_surfaces_earlier_success(self, db_with_groups):
         # key3's only execution failed. Add an earlier successful run: successful=True (post-rank)
@@ -285,6 +416,30 @@ class TestGroupsLatestSuccessful:
         assert view.latest is not None
         assert view.latest.successful is True
         assert view.latest.output_fragment == "key3-ok"
+
+
+class TestGroupRows:
+    def test_matches_groups(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        filters = ExecutionGroupFilter(provider_contains=["pmp"])
+        rows = reader.executions.group_rows(filters)
+        views = reader.executions.groups(filters)
+        assert [eg.id for eg, _ in rows] == [g.id for g in views]
+        assert [latest.id if latest else None for _, latest in rows] == [
+            g.latest.id if g.latest else None for g in views
+        ]
+
+    def test_returns_live_orm_rows(self, db_with_groups):
+        rows = Reader(db_with_groups).executions.group_rows()
+        assert rows
+        for eg, latest in rows:
+            assert isinstance(eg, ExecutionGroup)
+            assert latest is None or isinstance(latest, Execution)
+            assert eg in db_with_groups.session
+
+    def test_ordered_by_group_id(self, db_with_groups):
+        ids = [eg.id for eg, _ in Reader(db_with_groups).executions.group_rows()]
+        assert ids == sorted(ids)
 
 
 class TestGroupAndExecutionById:
@@ -377,7 +532,7 @@ class TestGroupsToPandas:
 class TestGroupLatestMapping:
     def test_latest_none_when_no_executions(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"experiment_id": ["ssp126"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"experiment_id": ["ssp126"]}))
         assert len(coll) == 1
         assert coll.items[0].latest is None
         assert coll.items[0].successful is None
@@ -401,7 +556,7 @@ class TestGroupLatestMapping:
 
     def test_latest_running(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"experiment_id": ["ssp245"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"experiment_id": ["ssp245"]}))
         assert len(coll) == 1
         view = coll.items[0]
         assert view.latest is not None

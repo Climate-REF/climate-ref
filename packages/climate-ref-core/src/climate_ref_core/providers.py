@@ -25,7 +25,7 @@ from typing import Any
 
 import requests
 import yaml
-from attrs import evolve
+from attrs import evolve, frozen
 from loguru import logger
 
 from climate_ref_core.constraints import IgnoreFacets
@@ -55,6 +55,19 @@ def _slugify(value: str) -> str:
         Slugified string.
     """
     return value.lower().replace(" ", "-")
+
+
+@frozen
+class DataIngestRequest:
+    """
+    A directory of fetched provider data that the application should ingest into its database.
+    """
+
+    source_type: SourceDatasetType
+    """Source type whose dataset adapter parses the files"""
+
+    path: Path
+    """Directory containing the files to ingest"""
 
 
 class DiagnosticProvider:
@@ -203,15 +216,16 @@ class DiagnosticProvider:
         self,
         config: Any,
         *,
-        db: Any = None,
         skip_env: bool = False,
         skip_data: bool = False,
     ) -> None:
         """
         Perform all setup required before offline execution.
 
-        This calls setup_environment, fetch_data, and ingest_data in the correct order.
+        This calls setup_environment and fetch_data in the correct order.
         Override individual hooks for fine-grained control.
+        Ingesting the fetched data is left to the application,
+        which reads what to ingest from `data_to_ingest`.
 
         This method MUST be idempotent - safe to call multiple times.
 
@@ -219,11 +233,6 @@ class DiagnosticProvider:
         ----------
         config
             The application configuration
-        db
-            Optional database instance for data ingestion.
-
-            If None, ingestion is skipped. This allows providers to be set up without the full
-            climate-ref package (e.g., for environment setup or data fetching only).
         skip_env
             If True, skip environment setup (e.g., conda)
         skip_data
@@ -233,8 +242,6 @@ class DiagnosticProvider:
             self.setup_environment(config)
         if not skip_data:
             self.fetch_data(config)
-            if db is not None:
-                self.ingest_data(config, db)
 
     def setup_environment(self, config: Any) -> None:
         """
@@ -276,34 +283,28 @@ class DiagnosticProvider:
         """
         pass
 
-    def ingest_data(self, config: Any, db: Any) -> None:
+    def data_to_ingest(self, config: Any) -> list[DataIngestRequest]:
         """
-        Ingest fetched data into the database.
+        Describe the fetched data that needs ingesting into the database.
 
-        This is called after fetch_data to register any provider-specific
-        datasets in the database. For example, PMP climatology data needs
-        to be ingested so it can be used by diagnostics.
+        `ref providers setup` ingests each request after fetch_data,
+        using `climate_ref.datasets.ingest_provider_data`,
+        so the solver can find provider-specific datasets such as the PMP climatologies.
 
-        Default implementation does nothing. Override in subclasses
-        that have data to ingest.
-
-        This method MUST be idempotent.
-
-        Note: This method is only called when a database instance is provided
-        to setup(). The database and ingestion utilities are part of the
-        climate-ref package, not climate-ref-core. Provider implementations
-        should handle ImportError gracefully if they need to import from
-        climate-ref, allowing the provider to work standalone without
-        the full climate-ref package installed.
+        Default implementation returns no requests.
+        Override in subclasses that have data to ingest.
 
         Parameters
         ----------
         config
             The application configuration
-        db
-            The database instance (from climate-ref package)
+
+        Returns
+        -------
+        :
+            The directories to ingest
         """
-        pass
+        return []
 
     def validate_setup(self, config: Any) -> bool:
         """

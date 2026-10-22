@@ -10,6 +10,7 @@ from sqlalchemy import (
     BigInteger,
     Column,
     ColumnElement,
+    Enum,
     Float,
     ForeignKey,
     Select,
@@ -21,7 +22,7 @@ from sqlalchemy import (
     or_,
     select,
 )
-from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
+from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship, validates
 from sqlalchemy.orm.query import Query, RowReturningQuery
 
 from climate_ref.models.base import Base
@@ -29,6 +30,7 @@ from climate_ref.models.dataset import Dataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.mixins import CreatedUpdatedMixin, DimensionMixin
 from climate_ref.models.provider import Provider
+from climate_ref_core.source_types import SourceDatasetType
 
 if TYPE_CHECKING:
     from climate_ref.database import Database
@@ -50,6 +52,33 @@ class SkipReason(enum.Enum):
 
     UpToDate = "up to date"
     """The latest execution succeeded and no new data has arrived since"""
+
+
+class ExecutionGroupSourceType(Base):
+    """
+    A source dataset type an execution group draws on.
+
+    This allows execution groups to be queried by source type using plain SQL.
+    """
+
+    __tablename__ = "execution_group_source_type"
+
+    execution_group_id: Mapped[int] = mapped_column(
+        ForeignKey("execution_group.id", ondelete="CASCADE"), primary_key=True
+    )
+    # Non-native so a new source type needs no Postgres enum migration.
+    # No index of its own: without table statistics SQLite then reads every row of a type.
+    source_type: Mapped[SourceDatasetType] = mapped_column(
+        Enum(SourceDatasetType, native_enum=False, create_constraint=False, length=64),
+        primary_key=True,
+    )
+
+    def __repr__(self) -> str:
+        values = inspect(self).dict
+        return (
+            f"<ExecutionGroupSourceType execution_group_id={values.get('execution_group_id')} "
+            f"source_type={values.get('source_type')}>"
+        )
 
 
 class ExecutionGroup(CreatedUpdatedMixin, Base):
@@ -123,6 +152,21 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
     executions: Mapped[list["Execution"]] = relationship(
         back_populates="execution_group", order_by="Execution.created_at, Execution.id"
     )
+    source_types: Mapped[list[ExecutionGroupSourceType]] = relationship(
+        cascade="all, delete-orphan", passive_deletes=True
+    )
+    """
+    Source dataset types this group draws on, kept in step with ``selectors``.
+    """
+
+    @validates("selectors")
+    def _sync_source_types(self, _key: str, selectors: dict[str, Any]) -> dict[str, Any]:
+        wanted = {SourceDatasetType(name) for name in selectors}
+        kept = [link for link in self.source_types if link.source_type in wanted]
+        missing = wanted - {link.source_type for link in kept}
+        added = [ExecutionGroupSourceType(source_type=t) for t in SourceDatasetType.ordered() if t in missing]
+        self.source_types = kept + added
+        return selectors
 
     def skip_reason(  # noqa: PLR0911
         self,

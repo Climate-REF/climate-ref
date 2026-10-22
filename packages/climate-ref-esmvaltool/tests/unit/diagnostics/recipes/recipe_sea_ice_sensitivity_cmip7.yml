@@ -127,6 +127,17 @@ diagnostics:
           institute: NCAR
           region: glb
           timerange: 1979/2014
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: GFDL-ESM4
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: NOAA-GFDL
+          region: glb
+          timerange: 1979/2014
       tas:
         preprocessor: pp_avg_ann_global_temp
         mip: atmos
@@ -162,6 +173,17 @@ diagnostics:
           frequency: mon
           grid: gn
           institute: NCAR
+          region: glb
+          timerange: 1979/2014
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: GFDL-ESM4
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gr1
+          institute: NOAA-GFDL
           region: glb
           timerange: 1979/2014
     scripts:
@@ -216,6 +238,17 @@ diagnostics:
           institute: NCAR
           region: glb
           timerange: 1979/2014
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: GFDL-ESM4
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: NOAA-GFDL
+          region: glb
+          timerange: 1979/2014
       tas:
         preprocessor: pp_avg_ann_global_temp
         mip: atmos
@@ -251,6 +284,17 @@ diagnostics:
           frequency: mon
           grid: gn
           institute: NCAR
+          region: glb
+          timerange: 1979/2014
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: GFDL-ESM4
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gr1
+          institute: NOAA-GFDL
           region: glb
           timerange: 1979/2014
     scripts:

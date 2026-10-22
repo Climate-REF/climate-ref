@@ -39,7 +39,7 @@ esmvaltool/cloud-scatterplots-reference/obs4mips_obs4MIPs.ECMWF.ERA-5.mon.ta.gn.
   - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
   - obs4MIPs.ECMWF.ERA-5.mon.ta.gn.v20250220
-esmvaltool/enso-basic-climatology/cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
+esmvaltool/enso-basic-climatology/cmip6_historical_r1i1p1f1_ACCESS-ESM1-5:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tauu.gn.v20191115

@@ -118,6 +118,14 @@ diagnostics:
           exp: historical
           grid: gn
           timerange: 1979/2014
+        - project: CMIP6
+          activity: CMIP
+          dataset: GFDL-ESM4
+          ensemble: r1i1p1f1
+          institute: NOAA-GFDL
+          exp: historical
+          grid: gn
+          timerange: 1979/2014
       tas:
         preprocessor: pp_avg_ann_global_temp
         mip: Amon
@@ -145,6 +153,14 @@ diagnostics:
           institute: NCAR
           exp: historical
           grid: gn
+          timerange: 1979/2014
+        - project: CMIP6
+          activity: CMIP
+          dataset: GFDL-ESM4
+          ensemble: r1i1p1f1
+          institute: NOAA-GFDL
+          exp: historical
+          grid: gr1
           timerange: 1979/2014
     scripts:
       sea_ice_sensitivity_script:
@@ -189,6 +205,14 @@ diagnostics:
           exp: historical
           grid: gn
           timerange: 1979/2014
+        - project: CMIP6
+          activity: CMIP
+          dataset: GFDL-ESM4
+          ensemble: r1i1p1f1
+          institute: NOAA-GFDL
+          exp: historical
+          grid: gn
+          timerange: 1979/2014
       tas:
         preprocessor: pp_avg_ann_global_temp
         mip: Amon
@@ -216,6 +240,14 @@ diagnostics:
           institute: NCAR
           exp: historical
           grid: gn
+          timerange: 1979/2014
+        - project: CMIP6
+          activity: CMIP
+          dataset: GFDL-ESM4
+          ensemble: r1i1p1f1
+          institute: NOAA-GFDL
+          exp: historical
+          grid: gr1
           timerange: 1979/2014
     scripts:
       sea_ice_sensitivity_script:

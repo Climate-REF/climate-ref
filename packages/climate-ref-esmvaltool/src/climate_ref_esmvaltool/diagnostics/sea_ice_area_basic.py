@@ -11,7 +11,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import (
@@ -224,22 +224,37 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
-                            "variable_id": ["areacello", "siconc"],
-                            "branded_variable": [
-                                "areacello_ti-u-hxy-u",
-                                "siconc_tavg-u-hxy-u",
+                            "source_id": "UKESM1-3-LL",
+                            "variable_id": ["siconc"],
+                            "branding_suffix": [
+                                "tavg-u-hxy-u",
                             ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1979", "2014"),
+                    ),
+                    # intake-esgf cannot filter fx files by time, so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": "historical",
+                            "source_id": "UKESM1-3-LL",
+                            "variable_id": ["areacello"],
+                            "branding_suffix": [
+                                "ti-u-hxy-u",
+                            ],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                     _REFERENCE_REQUEST,
                 ),

@@ -4,7 +4,6 @@ cmip6:
   slug_column: instance_id
   selector:
     experiment_id: historical
-    grid_label: gn
     member_id: r1i1p1f1
     source_id: CanESM5
   datasets:

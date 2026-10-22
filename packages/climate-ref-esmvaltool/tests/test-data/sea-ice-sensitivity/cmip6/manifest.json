@@ -5,10 +5,10 @@
     "output.json": "f3b3b0f75f134bb26a730e5f51ce20acd253e373fd07e15b62939963652d4775",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
-      "sha256": "2119b8fe5751c25caa4b82e3bc34f6ef42ea15a3cf1cda5b0730cf3d8542848d",
+      "sha256": "30288d3bf81a36a2b9d0c49aaef6f685ed130ca0811f5df97a6a95a9cad99d7f",
       "size": 2317
     },
     "executions/recipe/index.html": {
@@ -16,20 +16,20 @@
       "size": 15971
     },
     "executions/recipe/plots/antarctic/sea_ice_sensitivity_script/png/Annual Antarctic sea ice sensitivity.png": {
-      "sha256": "c0c574544ccab6542148bfbcadd6be187f53e2db7816e00950fd1350e4ea3d59",
-      "size": 16406
+      "sha256": "80825e91fddebeba657e63d1791a9382566058ca4112e712ca351a60d532d10b",
+      "size": 16509
     },
     "executions/recipe/plots/antarctic/sea_ice_sensitivity_script/png/Annual Antarctic sea ice trends.png": {
-      "sha256": "7278db8150586ae7080715a5ce9aa5985b18556a6a1cd779b9b9411fc84f4d2e",
-      "size": 39561
+      "sha256": "434b09c2e12de917b99e0ccfb33fc97f73900186c9604dc19090bec2225b6732",
+      "size": 38604
     },
     "executions/recipe/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice sensitivity.png": {
-      "sha256": "5693bee5d6810c0d8c58d7adf0c7ecc80adbc01c2d84c0b689134104b143133b",
-      "size": 20488
+      "sha256": "eba73173c4d750faecd3dc25ae399d54cd497d1fb222b392e99f644b8e953dcf",
+      "size": 20261
     },
     "executions/recipe/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice trends.png": {
-      "sha256": "c4a54dfc60fc88af4ff633d8067f76aa977d1b40a4083d331c653612f370eaa4",
-      "size": 39996
+      "sha256": "776eb705fad1c88c19afd0959b33270d3d589b1c5eef52e136a8c462a53b75ce",
+      "size": 37452
     },
     "executions/recipe/run/antarctic/sea_ice_sensitivity_script/diagnostic_provenance.yml": {
       "sha256": "aa316a3d7211e624f50d97d1716570f850eb9e32a70341f8f3f2dfc7edb8fddc",
@@ -40,8 +40,8 @@
       "size": 1560
     },
     "executions/recipe/work/antarctic/sea_ice_sensitivity_script/data_values.csv": {
-      "sha256": "f717d22563f878c90c3c5afb203ce30930761db09f1ca046de74fb1314f28e65",
-      "size": 715
+      "sha256": "53453bea10b5247dd5e47c46c1b966a0e2802ee5ad25db76543641f4a03af77c",
+      "size": 716
     },
     "executions/recipe/work/arctic/sea_ice_sensitivity_script/data_values.csv": {
       "sha256": "2beee01f0310e8cfd93570e09e2fb36adafeb89456d4ac926c1fc2a448c83d28",
@@ -57,5 +57,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 4
 }

@@ -9,6 +9,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf.cmip6 import CMIP6Request
+from climate_ref_core.esgf.cmip7 import CMIP7Request
 from climate_ref_core.esgf.cmip7_converted import ConvertedCMIP7Request
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
@@ -136,22 +137,21 @@ toz_test_spec = TestDataSpecification(
             name="cmip7",
             description="Test with CMIP7 data.",
             requests=(
-                ConvertedCMIP7Request(
+                CMIP7Request(
                     slug="cmip7",
                     facets={
                         "experiment_id": ["historical"],
-                        "source_id": "GFDL-ESM4",
+                        "source_id": "UKESM1-3-LL",
                         "variable_id": "toz",
-                        "branded_variable": [
-                            "toz_tavg-u-hxy-u",
+                        "branding_suffix": [
+                            "tavg-u-hxy-u",
                         ],
-                        "variant_label": "r1i1p1f1",
+                        "variant_label": "r1i1p1f2",
                         "frequency": ["fx", "mon"],
                         "region": "glb",
                     },
                     remove_ensembles=True,
-                    time_span=("1950", "2015"),
-                    extend_historical_to=(2021, 12),
+                    time_span=("1950", "2021"),
                 ),
                 Obs4MIPsRequest(
                     slug="obs4mips",
@@ -408,6 +408,8 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
+                    # Published CMIP7 o3 cannot be compared with obs yet:
+                    # https://github.com/ESMValGroup/ESMValCore/issues/3093
                     ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={

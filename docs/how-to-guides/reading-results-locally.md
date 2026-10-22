@@ -66,6 +66,26 @@ with Database.from_config(config, read_only=True) as db:
 Constructing `Reader(db)` without a `results` root and then touching `reader.artifacts`
 raises a `ValueError` telling you to supply one.
 
+## Filters
+
+Each reader takes a `*Filter`, which you construct and pass in:
+`MetricValueFilter`, `ExecutionGroupFilter`, `DiagnosticFilter`, `ResourceFilter` and `DatasetFilter`.
+Every field is optional, and `None` means "do not constrain on this axis".
+
+The filters over executions are built from the same `*Scope` pieces,
+so a field means the same thing, with the same default, wherever it appears:
+
+| Scope | Fields | Carried by |
+| --- | --- | --- |
+| `DiagnosticScope` | `diagnostic_slug`, `provider_slug`, `diagnostic_contains`, `provider_contains` | every filter except `DatasetFilter` |
+| `VersionScope` | `include_superseded` (default `False`, so only the promoted version) | values, resources, execution groups |
+| `ExecutionScope` | `include_retracted`, `latest_only`, `created_after`, `created_before` | values, resources |
+| `InputDatasetScope` | `input_datasets` | every filter except `DatasetFilter` |
+
+A scope is never passed to a reader on its own.
+Readers over execution groups check `input_datasets` against each group's latest execution.
+`DatasetFilter` filters datasets rather than executions, so its `latest_only` means the latest dataset version.
+
 ## Scalar and series values
 
 `reader.values` reads the two shapes of metric value the REF stores:

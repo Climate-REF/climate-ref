@@ -561,6 +561,13 @@ class TestSuperseded:
         assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", include_superseded=True)) is not None
         assert "enso_tel" in _by_slug(reader.profiles(f))
 
+    def test_measurement_lookup_ignores_promotion(self, db_superseded):
+        reader = Reader(db_superseded).resources
+        (row,) = reader.measurements(
+            ResourceFilter(diagnostic_slug="enso_tel", include_superseded=True), limit=1
+        )
+        assert reader.measurement(row.execution_id) is not None
+
     def test_excluded_by_default(self, db_superseded):
         reader = Reader(db_superseded).resources
         f = ResourceFilter()

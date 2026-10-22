@@ -1,17 +1,26 @@
 """
 Filter objects for the results readers.
 
-Every reader filter is a [BaseFilter][climate_ref.results.filters.BaseFilter]
-composed from one mixin per axis:
+Two kinds of class live here, told apart by their suffix:
 
-* [SlugFilter][climate_ref.results.filters.SlugFilter]: which diagnostics and providers.
+* A ``*Filter`` is a whole filter you construct and pass to a reader, such as ``MetricValueFilter``.
+  It is exported from [climate_ref.results][].
+* A ``*Scope`` is one axis mixed into those filters, such as ``DiagnosticScope``.
+  It is never passed to a reader on its own.
+  ``ExecutionScope`` is the one exception, also taken as ``scope=`` by
+  [DiagnosticsReader.with_values][climate_ref.results.diagnostics.DiagnosticsReader.with_values].
+
+Every reader filter is a [BaseFilter][climate_ref.results.filters.BaseFilter]
+composed from one scope per axis:
+
+* [DiagnosticScope][climate_ref.results.filters.DiagnosticScope]: which diagnostics and providers.
 * [VersionScope][climate_ref.results.filters.VersionScope]: promoted or every diagnostic version.
 * [ExecutionScope][climate_ref.results.filters.ExecutionScope]: which executions count
   (retraction, latest only, creation time).
 * [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: which input datasets
   the counted executions ran against.
 
-A mixin means the same thing, with the same default, on every filter that carries it.
+A scope means the same thing, with the same default, on every filter that carries it.
 The concrete filters add only the fields specific to their reader.
 [DatasetFilter][climate_ref.models.dataset_query.DatasetFilter] filters datasets rather than
 executions, so it stands outside this family.
@@ -107,6 +116,8 @@ class InputDatasetFilter:
 
     def execution_clause(self) -> ColumnElement[bool]:
         """Clause over ``Execution`` that is true when the execution ran against a matching dataset."""
+        if self.dataset_ids == ():
+            return false()
         facets = self.facets or {}
         branches: list[ColumnElement[bool]] = []
         if not self.source_types and self.dataset_ids is not None:
@@ -127,7 +138,10 @@ class InputDatasetFilter:
             absent = (~Execution.datasets.of_type(_entity_for(t)).any() for t in model_types)
             branches.append(and_(*absent))
         # An empty or_() emits no predicate, which would match every execution.
-        return or_(*branches) if branches else false()
+        if not branches:
+            return false()
+        # An outer-joined missing execution would pass the no-model-input branch.
+        return and_(Execution.id.is_not(None), or_(*branches))
 
     def execution_group_clause(self) -> ColumnElement[bool]:
         """
@@ -146,12 +160,13 @@ class InputDatasetFilter:
 
 
 @attrs.frozen(kw_only=True, slots=False)
-class SlugFilter(BaseFilter):
+class DiagnosticScope(BaseFilter):
     """
-    Diagnostic and provider slug matching.
+    Which diagnostics count, matched by diagnostic and provider slug.
 
+    Every field narrows the set of diagnostics, so a provider field means that provider's diagnostics.
     The exact and substring fields can be combined, and every set field must match.
-    Apply it with [slug_clauses][climate_ref.results.filters.SlugFilter.slug_clauses].
+    Apply it with [diagnostic_clauses][climate_ref.results.filters.DiagnosticScope.diagnostic_clauses].
     """
 
     diagnostic_slug: str | None = None
@@ -176,7 +191,7 @@ class SlugFilter(BaseFilter):
         """Whether any provider axis is set."""
         return self.provider_slug is not None or bool(self.provider_contains)
 
-    def slug_clauses(self) -> list[ColumnElement[bool]]:
+    def diagnostic_clauses(self) -> list[ColumnElement[bool]]:
         """Clauses for a select joined to ``Diagnostic``, and to ``Provider`` if a provider axis is set."""
         clauses: list[ColumnElement[bool]] = []
         if self.diagnostic_slug is not None:
@@ -194,7 +209,7 @@ class SlugFilter(BaseFilter):
         stmt = select(Diagnostic.id)
         if self.matches_provider:
             stmt = stmt.join(Provider, Diagnostic.provider_id == Provider.id)
-        return stmt.where(*self.slug_clauses())
+        return stmt.where(*self.diagnostic_clauses())
 
 
 @attrs.frozen(kw_only=True, slots=False)
@@ -262,7 +277,7 @@ class InputDatasetScope(BaseFilter):
 
 
 @attrs.frozen(kw_only=True)
-class MetricValueFilter(SlugFilter, VersionScope, ExecutionScope, InputDatasetScope):
+class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatasetScope):
     """
     Declarative filter over metric values.
 
@@ -312,12 +327,12 @@ class MetricValueFilter(SlugFilter, VersionScope, ExecutionScope, InputDatasetSc
 
 
 @attrs.frozen(kw_only=True)
-class ResourceFilter(SlugFilter, VersionScope, ExecutionScope, InputDatasetScope):
+class ResourceFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatasetScope):
     """Declarative filter over the executions considered for resource measurements and profiles."""
 
 
 @attrs.frozen(kw_only=True)
-class ExecutionGroupFilter(SlugFilter, VersionScope, InputDatasetScope):
+class ExecutionGroupFilter(DiagnosticScope, VersionScope, InputDatasetScope):
     """
     Declarative filter over execution groups and their latest execution.
 
@@ -368,7 +383,7 @@ class ExecutionGroupFilter(SlugFilter, VersionScope, InputDatasetScope):
 
 
 @attrs.frozen(kw_only=True)
-class DiagnosticFilter(SlugFilter, InputDatasetScope):
+class DiagnosticFilter(DiagnosticScope, InputDatasetScope):
     """
     Declarative filter over diagnostics, and over the execution statistics grouped by diagnostic.
 

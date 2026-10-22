@@ -407,7 +407,7 @@ def _apply_resource_filters(stmt: Select[Any], filters: ResourceFilter) -> Selec
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
         .join(Provider, Diagnostic.provider_id == Provider.id)
     )
-    clauses = filters.slug_clauses()
+    clauses = filters.diagnostic_clauses()
     if clauses:
         # Resolved to group ids first, so SQLite reaches executions by index rather than scanning them.
         scoped_groups = (
@@ -774,10 +774,10 @@ class ResourcesReader:
         Returns ``None`` when no execution has that id,
         or when the execution neither recorded a measurement nor failed.
         """
-        # A lookup by id names the execution, so retraction does not hide it.
-        stmt = select_execution_resources(ResourceFilter(include_retracted=True)).where(
-            Execution.id == execution_id
-        )
+        # A lookup by id names the execution, so neither retraction nor promotion hides it.
+        stmt = select_execution_resources(
+            ResourceFilter(include_retracted=True, include_superseded=True)
+        ).where(Execution.id == execution_id)
         row = self.session.execute(stmt).one_or_none()
         return self._to_view(row) if row is not None else None
 

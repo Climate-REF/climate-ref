@@ -143,7 +143,7 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
 
-    return stmt.where(*filters.slug_clauses())
+    return stmt.where(*filters.diagnostic_clauses())
 
 
 def select_diagnostics_with_values(
@@ -194,7 +194,7 @@ def select_diagnostics_with_values(
         .where(has_values.exists())
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
-    return stmt.where(*filters.slug_clauses())
+    return stmt.where(*filters.diagnostic_clauses())
 
 
 class DiagnosticsReader:

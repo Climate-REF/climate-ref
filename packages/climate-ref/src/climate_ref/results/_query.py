@@ -103,7 +103,7 @@ def _apply_common(
         scope = scope.where(*f.version_clauses())
         if f.matches_provider:
             scope = scope.join(Provider, Diagnostic.provider_id == Provider.id)
-        scope = scope.where(*f.slug_clauses())
+        scope = scope.where(*f.diagnostic_clauses())
 
         if subquery_type is not None:
             stmt = stmt.where(tuple_(entity.execution_id, entity.type).in_(scope))

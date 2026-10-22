@@ -279,7 +279,7 @@ def select_execution_statistics(filters: DiagnosticFilter | None = None) -> Sele
         .order_by(Provider.slug, Diagnostic.slug)
     )
 
-    stmt = stmt.where(*filters.slug_clauses())
+    stmt = stmt.where(*filters.diagnostic_clauses())
     if filters.input_datasets:
         # The outer-joined Execution is each group's latest.
         stmt = stmt.where(filters.input_datasets.execution_clause())

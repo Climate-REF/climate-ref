@@ -277,6 +277,12 @@ class TestDatasetIds:
         assert _group_ids(db_with_inputs, f) == set()
         assert _value_sources(db_with_inputs, f) == set()
 
+    @pytest.mark.parametrize("source_types", [(), (CMIP6, CMIP7)])
+    def test_empty_matches_nothing_with_no_model_input(self, db_with_obs_only, source_types):
+        f = InputDatasetFilter(source_types=source_types, dataset_ids=[], or_no_model_input=True)
+        assert _group_ids(db_with_obs_only, f) == set()
+        assert _value_sources(db_with_obs_only, f) == set()
+
     def test_values(self, db_with_inputs):
         f = InputDatasetFilter(dataset_ids=[self._dataset_id(db_with_inputs, CMIP6Dataset, "FACET-A")])
         assert _value_sources(db_with_inputs, f) == {"cmip6-a"}
@@ -315,6 +321,44 @@ class TestIncludeWithoutInput:
         ids = db_with_obs_only.ids
         f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"})
         assert _group_ids(db_with_obs_only, f) == {ids["cmip7-a"], ids["mixed"]}
+
+    def test_groups_without_a_selected_execution_stay_out(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        session = db_with_obs_only.session
+        with session.begin():
+            diag_2 = session.query(Diagnostic).order_by(Diagnostic.id).offset(1).first()
+            never_run = ExecutionGroup(key="never-run", diagnostic_id=diag_2.id, selectors={})
+            session.add(never_run)
+            session.flush()
+            only_failed = ExecutionGroup(key="only-failed", diagnostic_id=diag_2.id, selectors={})
+            session.add(only_failed)
+            session.flush()
+            session.add(
+                Execution(
+                    execution_group_id=only_failed.id,
+                    output_fragment="only-failed",
+                    dataset_hash="only-failed",
+                    successful=False,
+                )
+            )
+        f = InputDatasetFilter(source_types=[CMIP7], or_no_model_input=True)
+        reader = Reader(db_with_obs_only)
+        groups = reader.executions.groups(ExecutionGroupFilter(input_datasets=f))
+        assert never_run.id not in {g.id for g in groups}
+        assert groups.total_count == len(groups.items)
+        latest_successful = _group_ids(db_with_obs_only, f, latest_successful=True)
+        assert only_failed.id not in latest_successful
+        assert ids["obs-only"] in latest_successful
+        stats = {
+            (s.provider, s.diagnostic): s
+            for s in reader.diagnostics.stats(DiagnosticFilter(input_datasets=f))
+        }
+        assert stats[ids["diag_2"]].not_started == 0
+        listed = {
+            (d.provider_slug, d.slug): d.execution_group_count
+            for d in reader.diagnostics.list(DiagnosticFilter(input_datasets=f)).items
+        }
+        assert listed[ids["diag_2"]] == stats[ids["diag_2"]].total
 
     def test_values_are_per_execution(self, db_with_obs_only):
         f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"}, or_no_model_input=True)

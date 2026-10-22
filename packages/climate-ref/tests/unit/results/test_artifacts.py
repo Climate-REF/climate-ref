@@ -153,3 +153,30 @@ class TestSymlinkContainment:
         reader = ArtifactsReader(results_root)
 
         assert reader.output_file("missing", "plot.png") == results_root / "missing" / "plot.png"
+
+    def test_dangling_symlink_pointing_outside_raises(self, layout):
+        results_root, outside = layout
+        (results_root / "frag" / "plot.png").symlink_to(outside / "missing.png")
+        reader = ArtifactsReader(results_root)
+
+        with pytest.raises(ValueError, match="symlink"):
+            reader.output_file("frag", "plot.png")
+
+    def test_self_referencing_symlink_raises(self, layout):
+        results_root, _ = layout
+        (results_root / "frag" / "plot.png").symlink_to("plot.png")
+        reader = ArtifactsReader(results_root)
+
+        with pytest.raises(ValueError, match="Cannot resolve"):
+            reader.output_file("frag", "plot.png")
+
+    def test_symlink_cycle_in_fragment_raises(self, layout):
+        results_root, _ = layout
+        (results_root / "a").symlink_to("b")
+        (results_root / "b").symlink_to("a")
+        reader = ArtifactsReader(results_root)
+
+        with pytest.raises(ValueError, match="Cannot resolve"):
+            reader.output_directory("a")
+        with pytest.raises(ValueError, match="Cannot resolve"):
+            reader.log_file("a")

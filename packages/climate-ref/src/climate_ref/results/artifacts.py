@@ -21,6 +21,21 @@ from pathlib import Path
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
 
+def _resolve(path: Path) -> Path:
+    """
+    Resolve symlinks in ``path``, allowing it to be missing.
+
+    A symlink loop or an unreadable component raises ``ValueError``,
+    because Python 3.12 raises ``RuntimeError`` for a loop and later versions return the path unresolved.
+    """
+    try:
+        return path.resolve(strict=True)
+    except FileNotFoundError:
+        return path.resolve()
+    except (OSError, RuntimeError) as exc:
+        raise ValueError(f"Cannot resolve {str(path)!r}: {exc}") from exc
+
+
 class ArtifactsReader:
     """
     Resolves execution output fragments into filesystem paths.
@@ -46,7 +61,7 @@ class ArtifactsReader:
         candidate = os.path.normpath(os.path.join(root, *parts))
         if os.path.commonpath([root, candidate]) != root:
             raise ValueError(f"Path {candidate!r} escapes {root!r}")
-        if not Path(candidate).resolve().is_relative_to(self._results.resolve()):
+        if not _resolve(Path(candidate)).is_relative_to(_resolve(self._results)):
             raise ValueError(f"Path {candidate!r} escapes {str(self._results)!r} through a symlink")
         return Path(candidate)
 

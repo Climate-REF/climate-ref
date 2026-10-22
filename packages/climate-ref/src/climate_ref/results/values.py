@@ -1,23 +1,36 @@
 """
-Typed, ORM-free surface for metric-value results.
+Read metric values, and the ``Reader`` entry point to every kind of result.
 
-[Reader][climate_ref.results.values.Reader] is the intent-named entry point that notebooks
-and (eventually) the API use, via its [values][climate_ref.results.values.Reader.values]
-sub-reader.
-[ValuesReader][climate_ref.results.values.ValuesReader]'s read methods return frozen,
-detached value objects wrapped in collections that offer ``to_pandas()``.
-The objects are fully materialised, so they remain valid after the originating session closes.
-A notebook can build a DataFrame inside a ``with Database(...)`` block and keep using it afterwards.
+A metric value is a number, or a series of numbers, that a diagnostic produced for a model or a reference.
+Each value has labels such as ``source_id``, ``experiment_id``, ``metric`` and ``statistic``.
+These labels are the CV dimensions, and the values present for each label are its facets.
 
-Everything here is a thin layer over [climate_ref.results._query][]
-(the shared ``Select`` builders) and [climate_ref.results.outliers][].
-power users who need the raw ``Select`` or ORM rows use those modules directly.
+[Reader][climate_ref.results.reader.Reader] wraps an open REF database.
+Its [values][climate_ref.results.reader.Reader.values] reader,
+[ValuesReader][climate_ref.results.values.ValuesReader], gets scalar and series values.
+A read returns a collection that you can loop over or turn into a DataFrame with ``to_pandas()``.
+
+Pass a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter] to choose which values you get,
+and an [OutlierPolicy][climate_ref.results.outliers.OutlierPolicy] to flag unusual scalar values.
+
+Examples
+--------
+Get the scalar values and the time series of one diagnostic:
+
+```python
+from climate_ref.results import MetricValueFilter, Reader
+
+filters = MetricValueFilter(provider_slug="example", diagnostic_slug="global-mean-timeseries")
+
+with Database.from_config(config, read_only=True) as db:
+    reader = Reader(db)
+    scalars = reader.values.scalar_values(filters).to_pandas()
+    series = reader.values.series_values(filters).to_pandas()
+```
 """
 
-import functools
 from collections.abc import Mapping, Sequence
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import attrs
 import numpy as np
@@ -31,14 +44,6 @@ from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, MetricValueType, ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.provider import Provider
 from climate_ref.results._page import Page
-from climate_ref.results._query import (
-    count_values,
-    paginate,
-    select_scalar_values,
-    select_series_values,
-    select_value_ids,
-)
-from climate_ref.results.executions import ExecutionsReader
 from climate_ref.results.filters import MetricValueFilter
 from climate_ref.results.frames import (
     collect_facets,
@@ -47,13 +52,13 @@ from climate_ref.results.frames import (
     series_values_to_frame,
 )
 from climate_ref.results.outliers import OutlierPolicy, flag_outliers
-
-if TYPE_CHECKING:
-    from climate_ref.results.artifacts import ArtifactsReader
-    from climate_ref.results.datasets import DatasetsReader
-    from climate_ref.results.diagnostics import DiagnosticsReader
-    from climate_ref.results.resources import ResourcesReader
-
+from climate_ref.results.queries import (
+    count,
+    paginate,
+    select_scalar_values,
+    select_series_values,
+    select_value_ids,
+)
 
 _ID_CHUNK = 900
 """Ids per ``IN`` lookup, below the 999 bound parameters SQLite allowed before 3.32."""
@@ -67,63 +72,116 @@ def _split_kind(dimensions: Mapping[str, str]) -> tuple[str, dict[str, str]]:
 
 @attrs.frozen(kw_only=True)
 class Facet:
-    """Distinct values observed for one CV dimension across a filtered query."""
+    """
+    The values that one label takes across a result, such as the models in it.
+
+    Use these to see what you can filter on.
+
+    Examples
+    --------
+    >>> from climate_ref.results.values import Facet
+    >>> Facet(key="source_id", values=("CanESM5", "MIROC6")).values
+    ('CanESM5', 'MIROC6')
+    """
 
     key: str
-    """The CV dimension name."""
+    """Name of the label, such as ``"source_id"``."""
 
     values: tuple[str, ...]
-    """Distinct values observed for the dimension."""
+    """The distinct values of the label, such as the ``source_id`` of each model."""
 
 
 @attrs.frozen(kw_only=True)
 class ScalarValue:
-    """A single scalar metric value, detached from the ORM."""
+    """
+    One number that a diagnostic produced, such as the bias of one model for one metric.
+
+    Read with [ValuesReader.scalar_values][climate_ref.results.values.ValuesReader.scalar_values].
+    The labels of the value, such as the model and the metric, are in ``dimensions``.
+
+    Examples
+    --------
+    >>> from climate_ref.results.values import ScalarValue
+    >>> value = ScalarValue(
+    ...     id=1,
+    ...     execution_id=2,
+    ...     execution_group_id=3,
+    ...     value=0.5,
+    ...     kind="model",
+    ...     dimensions={"source_id": "CanESM5", "statistic": "mean"},
+    ...     attributes={},
+    ... )
+    >>> value.dimensions["statistic"]
+    'mean'
+    """
 
     id: int
-    """Primary key of the underlying ``ScalarMetricValue`` row."""
+    """Id of the value in the REF database."""
 
     execution_id: int
-    """The execution that produced this value."""
+    """The run (execution) that produced the value."""
 
     execution_group_id: int
-    """The execution group the producing execution belongs to."""
+    """The execution group of that run."""
 
     value: float | None
-    """The scalar value itself."""
+    """The scalar value, which can be ``None`` or NaN."""
 
     kind: str
-    """Model/reference kind, resolved from the ``kind`` CV dimension (defaults to ``"model"``)."""
+    """Whether the value is for a model or a reference. This is ``"model"`` if the value has no such label."""
 
     dimensions: Mapping[str, str]
     """
-    CV dimension values (e.g. ``source_id``, ``statistic``, ``metric``) for this row.
+    The labels of the value, e.g. ``source_id``, ``experiment_id``, ``metric`` or ``statistic``.
 
-    ``kind`` is excluded here and surfaced as the dedicated ``kind`` field instead.
+    ``kind`` is not repeated here.
     """
 
     attributes: Mapping[str, Any]
-    """Free-form, non-CV attributes attached to the row."""
+    """Extra notes stored with the value that are not labels you can filter on."""
 
     is_outlier: bool | None = None
-    """Per-row outlier verdict; ``None`` unless outlier detection ran."""
+    """Whether the value was flagged as an outlier, or ``None`` if outlier detection was off."""
 
     verification_status: str | None = None
-    """``"verified"``/``"unverified"`` status paired with ``is_outlier``; ``None`` unless detection ran."""
+    """``"unverified"`` for a flagged value, ``"verified"`` otherwise, or ``None`` if detection was off."""
 
     diagnostic_slug: str | None = None
-    """Owning diagnostic's slug, populated only when ``include_context=True``."""
+    """Slug of the diagnostic that produced the value, set only with ``include_context=True``."""
 
     provider_slug: str | None = None
-    """Owning provider's slug, populated only when ``include_context=True``."""
+    """Slug of the provider of that diagnostic, set only with ``include_context=True``."""
 
 
 @attrs.frozen(kw_only=True)
 class SeriesValue:
-    """A 1-d series metric value, detached from the ORM. The index is snapshotted from the shared axis."""
+    """
+    One series of numbers that a diagnostic produced, such as a global-mean time series of one model.
+
+    Read with [ValuesReader.series_values][climate_ref.results.values.ValuesReader.series_values].
+    The labels of the series, such as the model, are in ``dimensions``.
+
+    Examples
+    --------
+    >>> from climate_ref.results.values import SeriesValue
+    >>> series = SeriesValue(
+    ...     id=1,
+    ...     execution_id=2,
+    ...     execution_group_id=3,
+    ...     values=[280.1, 280.4],
+    ...     index=[2000, 2001],
+    ...     index_name="time",
+    ...     reference_id=None,
+    ...     kind="model",
+    ...     dimensions={"source_id": "CanESM5"},
+    ...     attributes={},
+    ... )
+    >>> series.is_reference
+    False
+    """
 
     id: int
-    """Primary key of the underlying ``SeriesMetricValue`` row."""
+    """Database id of the value."""
 
     execution_id: int
     """The execution that produced this value."""
@@ -132,16 +190,16 @@ class SeriesValue:
     """The execution group the producing execution belongs to."""
 
     values: Sequence[float | int]
-    """The series' y-values, in index order."""
+    """The numbers of the series, in the same order as ``index``."""
 
     index: Sequence[float | int | str] | None
-    """The shared index axis values, snapshotted at read time."""
+    """What the series is plotted against, such as times or latitudes."""
 
     index_name: str | None
-    """Name of the shared index axis (e.g. a time or latitude label)."""
+    """Name of the index axis, e.g. ``"time"`` or ``"lat"``."""
 
     reference_id: str | None
-    """Set for observation/reference series; ``None`` for model series."""
+    """Id of the observational dataset for a reference series, and ``None`` for a model series."""
 
     kind: str
     """Model/reference kind, resolved from the ``kind`` CV dimension (defaults to ``"model"``)."""
@@ -157,62 +215,128 @@ class SeriesValue:
     """Free-form, non-CV attributes attached to the row."""
 
     diagnostic_slug: str | None = None
-    """Owning diagnostic's slug, populated only when ``include_context=True``."""
+    """Slug of the diagnostic that produced the value, set only with ``include_context=True``."""
 
     provider_slug: str | None = None
-    """Owning provider's slug, populated only when ``include_context=True``."""
+    """Slug of the provider of that diagnostic, set only with ``include_context=True``."""
 
     @property
     def is_reference(self) -> bool:
-        """True for observation/reference series (``reference_id`` is set)."""
+        """Whether this is a reference series, which means ``reference_id`` is set."""
         return self.reference_id is not None
 
 
 @attrs.frozen(kw_only=True)
 class ScalarValueCollection(Page[ScalarValue]):
     """
-    An immutable page of scalar values plus collection-level, outlier-aware metadata.
+    The scalar values from a read, with the models and other labels present and any outlier counts.
 
-    ``total_count`` is taken after outlier removal, if any.
+    Returned by [ValuesReader.scalar_values][climate_ref.results.values.ValuesReader.scalar_values].
+    Loop over it for the [ScalarValue][climate_ref.results.values.ScalarValue] objects,
+    or call ``to_pandas()`` for a DataFrame.
+    ``total_count`` does not include values removed as outliers.
+
+    Examples
+    --------
+    See which models have results, then get the first 100 values as a table:
+
+    ```python
+    with Database.from_config(config, read_only=True) as db:
+        collection = Reader(db).values.scalar_values(limit=100)
+
+    print(collection.total_count, len(collection))
+    print(collection.facets_dict()["source_id"])
+    df = collection.to_pandas()
+    ```
+
+    >>> from climate_ref.results.values import Facet, ScalarValue, ScalarValueCollection
+    >>> value = ScalarValue(
+    ...     id=1,
+    ...     execution_id=2,
+    ...     execution_group_id=3,
+    ...     value=0.5,
+    ...     kind="model",
+    ...     dimensions={"source_id": "CanESM5"},
+    ...     attributes={},
+    ... )
+    >>> collection = ScalarValueCollection(
+    ...     items=(value,),
+    ...     total_count=1,
+    ...     facets=(Facet(key="source_id", values=("CanESM5",)),),
+    ...     offset=0,
+    ...     limit=None,
+    ...     had_outliers=False,
+    ...     outlier_count=0,
+    ... )
+    >>> collection.facets_dict()
+    {'source_id': ['CanESM5']}
+    >>> collection.to_pandas()[["source_id", "value"]]
+      source_id  value
+    0   CanESM5    0.5
     """
 
     facets: tuple[Facet, ...]
-    """Distinct CV dimension values observed over the full filtered set, before pagination."""
+    """The values of each label over all matching results, such as every ``source_id``. Ignores ``limit``."""
 
     had_outliers: bool
     """Whether outlier detection ran and flagged at least one value."""
 
     outlier_count: int
-    """Number of values flagged as outliers, or ``0`` when detection did not run."""
+    """Number of values flagged as outliers, or ``0`` if detection did not run."""
 
     def facets_dict(self) -> dict[str, list[str]]:
-        """Facets as a plain ``{dimension: [values]}`` mapping."""
+        """Return ``facets`` as a plain ``{label: [values]}`` dict, e.g. ``{"source_id": ["CanESM5"]}``."""
         return {f.key: list(f.values) for f in self.facets}
 
     def to_pandas(self) -> pd.DataFrame:
-        """Tidy DataFrame: one row per value, one column per CV dimension present, plus metadata."""
+        """
+        Return the values as a DataFrame with one row per value.
+
+        The columns are one per label (such as ``source_id`` or ``metric``),
+        then ``id``, ``execution_id``, ``execution_group_id``, ``kind`` and ``value``.
+        ``is_outlier`` and ``verification_status`` are added if outlier detection was on.
+        ``diagnostic_slug`` and ``provider_slug`` are added if the read used ``include_context=True``.
+        """
         detection_ran = any(v.is_outlier is not None for v in self.items)
         return scalar_values_to_frame(self.items, detection_ran=detection_ran)
 
 
 @attrs.frozen(kw_only=True)
 class SeriesValueCollection(Page[SeriesValue]):
-    """An immutable page of series values plus collection-level metadata."""
+    """
+    The series values from a read, with the models and other labels present.
+
+    Returned by [ValuesReader.series_values][climate_ref.results.values.ValuesReader.series_values].
+    Loop over it for the [SeriesValue][climate_ref.results.values.SeriesValue] objects,
+    or call ``to_pandas()`` for a DataFrame.
+
+    Examples
+    --------
+    Get the observational series, as one row per point and as one row per series:
+
+    ```python
+    with Database.from_config(config, read_only=True) as db:
+        collection = Reader(db).values.series_values(MetricValueFilter(reference_only=True))
+
+    long_df = collection.to_pandas()
+    wide_df = collection.to_pandas(explode=False)
+    ```
+    """
 
     facets: tuple[Facet, ...]
-    """Distinct CV dimension values observed over the full filtered set, before pagination."""
+    """The values of each label over all matching results, such as every ``source_id``. Ignores ``limit``."""
 
     def facets_dict(self) -> dict[str, list[str]]:
-        """Facets as a plain ``{dimension: [values]}`` mapping."""
+        """Return ``facets`` as a plain ``{label: [values]}`` dict, e.g. ``{"source_id": ["CanESM5"]}``."""
         return {f.key: list(f.values) for f in self.facets}
 
     def to_pandas(self, *, explode: bool = True) -> pd.DataFrame:
         """
-        DataFrame of the series values.
+        Return the series as a DataFrame.
 
-        With ``explode=True`` (default) the result is long-form: one row per (series, index point),
-        matching the API's CSV shape. With ``explode=False`` each series is one row with list-valued
-        ``values``/``index`` cells.
+        With ``explode=True`` (the default) there is one row per point, with columns ``index`` and ``value``.
+        This is the form to plot or group with pandas, and it matches the CSV of the REF API.
+        With ``explode=False`` there is one row per series, and ``values`` and ``index`` hold lists.
         """
         return series_values_to_frame(self.items, explode=explode)
 
@@ -223,13 +347,23 @@ def _to_facets(facet_map: Mapping[str, Sequence[Any]]) -> tuple[Facet, ...]:
 
 class ValuesReader:
     """
-    Metric-value read domain: scalar/series values and their facets.
+    Gets the metric values that diagnostics produced, to compare models or plot against observations.
 
-    Constructed from a [Database][climate_ref.database.Database], which owns the session and the
-    read-only story. All read methods return detached collections that outlive the session.
+    Use it as ``Reader(db).values``.
+    ``scalar_values`` gets single numbers, such as a bias per model and metric.
+    ``series_values`` gets series, such as time series.
+    Both return a collection that you can turn into a DataFrame and keep after the database is closed.
 
-    Pass ``session`` to read through a caller-owned session instead,
-    for example one opened by [Database.session_scope][climate_ref.database.Database.session_scope].
+    Pass ``session`` only if you manage the database session yourself.
+
+    Examples
+    --------
+    ```python
+    with Database.from_config(config, read_only=True) as db:
+        values = Reader(db).values
+        scalars = values.scalar_values(MetricValueFilter(provider_slug="pmp"), limit=50)
+        series = values.series_values(MetricValueFilter(diagnostic_slug="enso_tel"))
+    ```
     """
 
     def __init__(self, database: Database, *, session: Session | None = None) -> None:
@@ -238,7 +372,7 @@ class ValuesReader:
 
     @property
     def session(self) -> Session:
-        """The underlying database session."""
+        """The database session the reads use."""
         return self._session if self._session is not None else self._db.session
 
     def _facets(self, value_ids: Any) -> tuple[Facet, ...]:
@@ -257,14 +391,66 @@ class ValuesReader:
         include_context: bool = False,
     ) -> ScalarValueCollection:
         """
-        Query scalar values, returning an outlier-aware collection.
+        Get single-number metric values, to compare models in a table.
 
-        When outlier detection is disabled (the default) pagination and counting happen in SQL,
-        so cost scales with the requested page rather than the whole result set. When ``outliers``
-        is enabled, detection runs over the FULL filtered set so IQR bounds are globally
-        consistent; with ``include_unverified`` False, flagged values are then removed before
-        pagination and excluded from ``total_count``. ``facets`` are always computed over the full
-        filtered set (before any outlier removal and pagination).
+        Call it with a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]
+        to choose the diagnostic, models, experiments or metric.
+        For large results, set ``limit`` to read them in pages.
+
+        Parameters
+        ----------
+        filters
+            Which values to get. ``None`` gets every value from the current version of each diagnostic.
+        outliers
+            Flags unusual values, e.g. ``OutlierPolicy(method="iqr")``. It is off by default.
+        include_unverified
+            Keep the values flagged as outliers. By default they are dropped,
+            and not counted in ``total_count``.
+            This only matters if ``outliers`` is set.
+        offset
+            Number of values to skip, to read the next page.
+        limit
+            Maximum number of values to return. ``None`` returns all of them.
+        with_facets
+            Fill ``facets`` with the values of each label, such as the models present.
+        with_count
+            Fill ``total_count``. It is ``None`` otherwise.
+        include_context
+            Fill ``diagnostic_slug`` and ``provider_slug`` on each value.
+
+        Returns
+        -------
+        ScalarValueCollection
+            The values. Call ``to_pandas()`` on it for a DataFrame.
+
+        Notes
+        -----
+        Outlier flags compare each value with the others for the same metric, across all matching values.
+        So ``offset`` and ``limit`` do not change which values are flagged.
+        ``facets`` cover all matching values, including those dropped as outliers or left out by ``limit``.
+
+        Examples
+        --------
+        Compare two models on the mean of one diagnostic, and flag outliers:
+
+        ```python
+        from climate_ref.results import MetricValueFilter, OutlierPolicy
+
+        filters = MetricValueFilter(
+            provider_slug="example",
+            diagnostic_slug="global-mean-timeseries",
+            dimensions={"statistic": "mean", "source_id": ["ACCESS-ESM1-5", "CanESM5"]},
+        )
+        with Database.from_config(config, read_only=True) as db:
+            collection = Reader(db).values.scalar_values(
+                filters,
+                outliers=OutlierPolicy(method="iqr", factor=10.0),
+                include_unverified=True,
+                include_context=True,
+            )
+        print(collection.outlier_count)
+        df = collection.to_pandas()
+        ```
         """
         filters = filters or MetricValueFilter()
         policy = outliers or OutlierPolicy(method="off")
@@ -285,7 +471,7 @@ class ValuesReader:
         base_stmt = select_scalar_values(filters)
         value_ids = select_value_ids(MetricValueType.SCALAR, filters)
         facets = self._facets(value_ids) if with_facets else ()
-        total_count = count_values(self.session, value_ids) if with_count else None
+        total_count = count(self.session, value_ids) if with_count else None
         load_stmt = paginate(base_stmt.options(self._scalar_loader(include_context)), offset, limit)
         rows = list(self.session.execute(load_stmt).scalars().all())
         items = tuple(self._to_scalar_dto(r, include_context) for r in rows)
@@ -417,17 +603,53 @@ class ValuesReader:
         include_context: bool = False,
     ) -> SeriesValueCollection:
         """
-        Query series values with SQL-level pagination.
+        Get series of values, such as time series, to plot.
 
-        The shared index axis is resolved so ``index``/``index_name`` are populated. ``facets`` are
-        computed over the full filtered set before pagination.
+        Call it with a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]
+        to choose the diagnostic and models.
+        Set ``reference_only`` on the filter to get the observational series or the model series.
+        For large results, set ``limit`` to read them in pages.
+
+        Parameters
+        ----------
+        filters
+            Which series to get. ``None`` gets every series from the current version of each diagnostic.
+        offset
+            Number of series to skip, to read the next page.
+        limit
+            Maximum number of series to return. ``None`` returns all of them.
+        with_facets
+            Fill ``facets`` with the values of each label, such as the models present.
+        with_count
+            Fill ``total_count``. It is ``None`` otherwise.
+        include_context
+            Fill ``diagnostic_slug`` and ``provider_slug`` on each series.
+
+        Returns
+        -------
+        SeriesValueCollection
+            The series, each with its ``index`` and ``index_name``.
+            ``facets`` cover all matching series, including those left out by ``limit``.
+
+        Examples
+        --------
+        Get the model series of one diagnostic for plotting:
+
+        ```python
+        from climate_ref.results import MetricValueFilter
+
+        filters = MetricValueFilter(provider_slug="pmp", diagnostic_slug="enso_tel", reference_only=False)
+        with Database.from_config(config, read_only=True) as db:
+            collection = Reader(db).values.series_values(filters, limit=20)
+        df = collection.to_pandas()
+        ```
         """
         filters = filters or MetricValueFilter()
 
         base_stmt = select_series_values(filters)
         value_ids = select_value_ids(MetricValueType.SERIES, filters)
         facets = self._facets(value_ids) if with_facets else ()
-        total_count = count_values(self.session, value_ids) if with_count else None
+        total_count = count(self.session, value_ids) if with_count else None
 
         load_stmt = paginate(base_stmt.options(self._series_loader(include_context)), offset, limit)
         rows = list(self.session.execute(load_stmt).scalars().unique().all())
@@ -437,7 +659,6 @@ class ValuesReader:
             items=items, total_count=total_count, facets=facets, offset=offset, limit=limit
         )
 
-    # -- loaders / materialisers ------------------------------------------------
     @staticmethod
     def _scalar_loader(include_context: bool) -> Any:
         exec_load = joinedload(ScalarMetricValue.execution)
@@ -499,84 +720,3 @@ class ValuesReader:
             diagnostic_slug=diagnostic_slug,
             provider_slug=provider_slug,
         )
-
-
-class Reader:
-    """
-    Typed entry point to REF query results.
-
-    Constructed from a [Database][climate_ref.database.Database], which owns the session and the
-    read-only story. This is a thin entry point: it exposes per-domain sub-readers as properties,
-    [values][climate_ref.results.values.Reader.values] for metric-value reads,
-    [executions][climate_ref.results.values.Reader.executions] for execution-group reads,
-    [datasets][climate_ref.results.values.Reader.datasets] for dataset reads,
-    [diagnostics][climate_ref.results.values.Reader.diagnostics] for diagnostic reads,
-    [resources][climate_ref.results.values.Reader.resources] for per-execution resource
-    measurements, and
-    [artifacts][climate_ref.results.values.Reader.artifacts] for output path resolution
-    (only available when a ``results`` root is supplied).
-
-    By default every sub-reader queries through the database's long-lived session.
-    Pass ``session`` to read through a caller-owned session instead,
-    for example one opened by [Database.session_scope][climate_ref.database.Database.session_scope].
-    The sub-readers are cached, so a reader built this way must not outlive the scope it was given.
-    """
-
-    def __init__(
-        self, database: Database, results: Path | None = None, *, session: Session | None = None
-    ) -> None:
-        self._db = database
-        self._results = results
-        self._session = session
-
-    @property
-    def session(self) -> Session:
-        """The underlying database session."""
-        return self._session if self._session is not None else self._db.session
-
-    @functools.cached_property
-    def values(self) -> ValuesReader:
-        """Metric-value reads (scalar/series/facets)."""
-        return ValuesReader(self._db, session=self._session)
-
-    @functools.cached_property
-    def executions(self) -> ExecutionsReader:
-        """Execution-group and execution reads."""
-        return ExecutionsReader(self._db, session=self._session)
-
-    @functools.cached_property
-    def datasets(self) -> "DatasetsReader":
-        """Dataset reads."""
-        from climate_ref.results.datasets import DatasetsReader  # noqa: PLC0415
-
-        return DatasetsReader(self._db, session=self._session)
-
-    @functools.cached_property
-    def diagnostics(self) -> "DiagnosticsReader":
-        """Diagnostic reads."""
-        from climate_ref.results.diagnostics import DiagnosticsReader  # noqa: PLC0415
-
-        return DiagnosticsReader(self._db, session=self._session)
-
-    @functools.cached_property
-    def resources(self) -> "ResourcesReader":
-        """Per-execution resource measurement reads."""
-        from climate_ref.results.resources import ResourcesReader  # noqa: PLC0415
-
-        return ResourcesReader(self._db, session=self._session)
-
-    @functools.cached_property
-    def artifacts(self) -> "ArtifactsReader":
-        """
-        Output path resolution.
-
-        Raises ``ValueError`` when no ``results`` root was supplied to the constructor.
-        """
-        if self._results is None:
-            raise ValueError(
-                "reader.artifacts requires a results root; construct "
-                "Reader(database, results=config.paths.results)."
-            )
-        from climate_ref.results.artifacts import ArtifactsReader  # noqa: PLC0415
-
-        return ArtifactsReader(self._results)

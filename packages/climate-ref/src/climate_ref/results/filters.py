@@ -1,29 +1,66 @@
 """
-Filter objects for the results readers.
+Filters that narrow what the results readers return.
 
-Two kinds of class live here, told apart by their suffix:
+Build a filter and pass it to a reader method.
+Every field is optional, and a field left as ``None`` does not narrow the result.
+So ``MetricValueFilter()`` matches every value at the promoted diagnostic version.
 
-* A ``*Filter`` is a whole filter you construct and pass to a reader, such as ``MetricValueFilter``.
-  It is exported from [climate_ref.results][].
-* A ``*Scope`` is one axis mixed into those filters, such as ``DiagnosticScope``.
-  It is never passed to a reader on its own.
-  ``ExecutionScope`` is the one exception, also taken as ``scope=`` by
-  [DiagnosticsReader.with_values][climate_ref.results.diagnostics.DiagnosticsReader.with_values].
+* [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]:
+  ``reader.values.scalar_values`` and ``series_values``.
+* [ExecutionGroupFilter][climate_ref.results.filters.ExecutionGroupFilter]:
+  ``reader.executions.groups`` and ``group_rows``.
+* [DiagnosticFilter][climate_ref.results.filters.DiagnosticFilter]:
+  ``reader.diagnostics.list`` and ``reader.executions.statistics``.
+* [ResourceFilter][climate_ref.results.filters.ResourceFilter]:
+  ``reader.resources.measurements``, ``summary``, ``summaries`` and ``profiles``.
 
-Every reader filter is a [BaseFilter][climate_ref.results.filters.BaseFilter]
-composed from one scope per axis:
+Some fields are shared by several filters, and each means the same thing, with the same default, on each.
+They come in four groups, one class each.
 
-* [DiagnosticScope][climate_ref.results.filters.DiagnosticScope]: which diagnostics and providers.
-* [VersionScope][climate_ref.results.filters.VersionScope]: promoted or every diagnostic version.
-* [ExecutionScope][climate_ref.results.filters.ExecutionScope]: which executions count
-  (retraction, latest only, creation time).
-* [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: which input datasets
-  the counted executions ran against.
+* [DiagnosticScope][climate_ref.results.filters.DiagnosticScope]:
+  ``diagnostic_slug``, ``provider_slug``, ``diagnostic_contains``, ``provider_contains``.
+  On every filter.
+* [VersionScope][climate_ref.results.filters.VersionScope]: ``include_superseded``.
+  On every filter except ``DiagnosticFilter``.
+* [ExecutionScope][climate_ref.results.filters.ExecutionScope]:
+  ``include_retracted``, ``latest_only``, ``created_after``, ``created_before``.
+  On ``MetricValueFilter`` and ``ResourceFilter``.
+* [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: ``input_datasets``.
+  On every filter.
 
-A scope means the same thing, with the same default, on every filter that carries it.
-The concrete filters add only the fields specific to their reader.
-[DatasetFilter][climate_ref.models.dataset_query.DatasetFilter] filters datasets rather than
-executions, so it stands outside this family.
+Each filter adds its own fields on top, listed on its class.
+Dataset-level fields are in [InputDatasetFilter][climate_ref.results.filters.InputDatasetFilter].
+[DatasetFilter][climate_ref.models.dataset_query.DatasetFilter] filters datasets rather than executions,
+so it is not part of this family.
+
+Examples
+--------
+The latest PMP values from runs created this year:
+
+>>> import datetime
+>>> from climate_ref.results import MetricValueFilter
+>>> filters = MetricValueFilter(
+...     provider_slug="pmp",
+...     latest_only=True,
+...     created_after=datetime.datetime(2026, 1, 1),
+... )
+
+Then read through a [Reader][climate_ref.results.reader.Reader]:
+
+```python
+with Database.from_config(config, read_only=True) as db:
+    df = Reader(db).values.scalar_values(filters).to_pandas()
+```
+
+Multi-value fields take a list or tuple.
+A bare string is rejected, because it would otherwise be matched one character at a time:
+
+>>> MetricValueFilter(diagnostic_contains="enso")
+Traceback (most recent call last):
+...
+TypeError: Expected a sequence of strings, not a bare str. Wrap it in a list/tuple.
+>>> MetricValueFilter(diagnostic_contains=["enso"]).diagnostic_contains
+('enso',)
 """
 
 import datetime
@@ -63,11 +100,11 @@ class BaseFilter:
     """
     Base of every reader filter.
 
-    The conventions every field follows:
+    Every field follows the same rules:
 
-    * ``None`` means "do not constrain on this axis".
-    * An empty id tuple matches nothing.
-    * Multi-value fields are stored as tuples, and a bare ``str`` is rejected.
+    * ``None`` does not narrow the result.
+    * An empty id list matches nothing.
+    * Multi-value fields are stored as tuples.
     """
 
 
@@ -76,33 +113,75 @@ class InputDatasetFilter:
     """
     Match executions by the datasets they ran against.
 
-    An execution matches when one of its input datasets has one of ``source_types``
-    and satisfies every facet in ``facets`` (values for one facet are OR-combined).
-    A source type whose dataset table lacks a requested facet cannot match,
+    Pass it as ``input_datasets`` on any reader filter.
+    An execution matches when one of its input datasets passes every condition:
+
+    * Its type is one of ``source_types``.
+    * It has one of the listed values for every facet in ``facets``.
+    * Its id is one of ``dataset_ids``, if set.
+
+    A dataset type without a requested facet never matches,
     so a CMIP7-only facet does not pull in all of CMIP6.
-    With ``dataset_ids`` the matching dataset must also be one of those ids,
-    and ``source_types`` may then be left empty to match a dataset of any type.
-    With ``or_no_model_input`` an execution with no model-simulation input dataset also matches,
-    which keeps observation-only executions when scoping to one era.
 
     Raises
     ------
     ValueError
         If neither ``source_types`` nor ``dataset_ids`` is set,
         or a facet is a column on none of the ``source_types``.
+
+    Examples
+    --------
+    Runs that used ACCESS-CM2 data, from either CMIP6 or CMIP7:
+
+    >>> from climate_ref.results import InputDatasetFilter, MetricValueFilter
+    >>> from climate_ref_core.source_types import SourceDatasetType
+    >>> access = InputDatasetFilter(
+    ...     source_types=[SourceDatasetType.CMIP6, SourceDatasetType.CMIP7],
+    ...     facets={"source_id": "ACCESS-CM2"},
+    ... )
+    >>> filters = MetricValueFilter(input_datasets=access)
+
+    A single facet value can be a bare string:
+
+    >>> access.facets
+    {'source_id': ('ACCESS-CM2',)}
+
+    Runs that used particular datasets, of any type:
+
+    >>> InputDatasetFilter(dataset_ids=[12, 13]).dataset_ids
+    (12, 13)
+
+    CMIP6 runs plus the observation-only runs, which use no model data:
+
+    >>> cmip6 = InputDatasetFilter(source_types=[SourceDatasetType.CMIP6], or_no_model_input=True)
+
+    A facet that is not a column on any of the types is rejected:
+
+    >>> InputDatasetFilter(source_types=[SourceDatasetType.CMIP6], facets={"model": ["x"]})
+    Traceback (most recent call last):
+    ...
+    ValueError: Unknown facet 'model' for cmip6
     """
 
     source_types: tuple[SourceDatasetType, ...] = attrs.field(default=(), converter=_as_source_types)
-    """Dataset types to match against, e.g. ``(SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)``."""
+    """
+    Dataset types to match against, e.g. ``[SourceDatasetType.CMIP6, SourceDatasetType.CMIP7]``.
+
+    Leave it empty with ``dataset_ids`` to match a dataset of any type.
+    """
 
     dataset_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
-    """Dataset primary keys to match. An empty tuple matches nothing."""
+    """Dataset ids to match. An empty list matches nothing."""
 
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
-    """Dataset columns to match, e.g. ``{"source_id": ("ACCESS-CM2",)}``. ``None`` matches any dataset."""
+    """
+    Dataset attributes to match, e.g. ``{"source_id": ["ACCESS-CM2", "CanESM5"]}``.
+
+    Values for one facet are alternatives. Every facet must match.
+    """
 
     or_no_model_input: bool = False
-    """Also match executions with no model-simulation input dataset, such as observation-only ones."""
+    """Also match executions with no model input dataset, such as observation-only ones."""
 
     def __attrs_post_init__(self) -> None:
         if not self.source_types and self.dataset_ids is None:
@@ -162,24 +241,32 @@ class InputDatasetFilter:
 @attrs.frozen(kw_only=True, slots=False)
 class DiagnosticScope(BaseFilter):
     """
-    Which diagnostics count, matched by diagnostic and provider slug.
+    A group of fields shared by every filter: which diagnostics or providers to keep.
 
-    Every field narrows the set of diagnostics, so a provider field means that provider's diagnostics.
-    The exact and substring fields can be combined, and every set field must match.
-    Apply it with [diagnostic_clauses][climate_ref.results.filters.DiagnosticScope.diagnostic_clauses].
+    Use the ``*_slug`` fields for one exact diagnostic or provider,
+    and the ``*_contains`` fields to search by part of a name.
+    Every field you set must match.
+
+    Examples
+    --------
+    One exact diagnostic, then every diagnostic whose name mentions ENSO or the annual cycle:
+
+    >>> from climate_ref.results import DiagnosticFilter
+    >>> one = DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel")
+    >>> search = DiagnosticFilter(diagnostic_contains=["enso", "annual-cycle"])
     """
 
     diagnostic_slug: str | None = None
-    """Exact-match diagnostic slug, for API path-scoped queries."""
+    """Keep only the diagnostic with exactly this slug, e.g. ``"enso_tel"``."""
 
     provider_slug: str | None = None
-    """Exact-match provider slug, for API path-scoped queries."""
+    """Keep only the diagnostics of the provider with exactly this slug, e.g. ``"pmp"``."""
 
     diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on diagnostic slug (OR-combined), for CLI-style search."""
+    """Keep diagnostics whose slug contains any of these, ignoring case, e.g. ``["enso"]``."""
 
     provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
+    """Keep the diagnostics of providers whose slug contains any of these, ignoring case."""
 
     @property
     def matches_any(self) -> bool:
@@ -214,10 +301,21 @@ class DiagnosticScope(BaseFilter):
 
 @attrs.frozen(kw_only=True, slots=False)
 class VersionScope(BaseFilter):
-    """Which diagnostic versions count."""
+    """
+    A group of fields shared by most filters: which diagnostic versions to keep.
+
+    By default only results from each diagnostic's promoted (current) version are kept.
+
+    Examples
+    --------
+    Resource use across every diagnostic version, for sizing jobs:
+
+    >>> from climate_ref.results import ResourceFilter
+    >>> filters = ResourceFilter(include_superseded=True)
+    """
 
     include_superseded: bool = False
-    """Include execution groups at superseded diagnostic versions, not only the promoted version."""
+    """Also keep results from older, superseded diagnostic versions, not only the promoted one."""
 
     def version_clauses(self) -> list[ColumnElement[bool]]:
         """Clauses for a select joined to ``ExecutionGroup`` and ``Diagnostic``."""
@@ -227,32 +325,46 @@ class VersionScope(BaseFilter):
 @attrs.frozen(kw_only=True, slots=False)
 class ExecutionScope(BaseFilter):
     """
-    Which executions count.
+    A group of fields for the values and resource filters: which executions to keep.
 
-    Apply it with [apply_execution_scope][climate_ref.results._query.apply_execution_scope].
-    The creation window applies before the latest execution is picked,
-    so ``latest_only`` with ``created_before`` keeps each group's latest execution created before then.
+    By default every execution that is not retracted counts.
+    The creation window applies before the newest execution is picked,
+    so ``latest_only`` with ``created_before`` keeps each group's newest execution from before then.
+
+    [DiagnosticsReader.with_values][climate_ref.results.diagnostics.DiagnosticsReader.with_values]
+    also takes one of these on its own, as ``scope``.
+
+    Examples
+    --------
+    Values from each group's newest run in March 2026, retracted runs included:
+
+    >>> import datetime
+    >>> from climate_ref.results import MetricValueFilter
+    >>> filters = MetricValueFilter(
+    ...     latest_only=True,
+    ...     include_retracted=True,
+    ...     created_after=datetime.datetime(2026, 3, 1),
+    ...     created_before=datetime.datetime(2026, 4, 1),
+    ... )
     """
 
     include_retracted: bool = False
-    """Include retracted executions."""
+    """Also keep retracted executions."""
 
     latest_only: bool = False
     """
-    Keep only each group's latest execution, as picked by ``select_latest_executions``.
+    Keep only each execution group's newest execution.
 
-    The latest is picked before retracted executions are dropped.
-    So if a group's newest execution is retracted, that group contributes nothing
-    unless ``include_retracted=True``.
-    It never falls back to an older execution, because the newer one superseded it.
-    ``DatasetFilter`` drops retracted rows first instead, because an older dataset version is still valid.
+    The newest is picked before retracted executions are dropped.
+    So a group whose newest execution is retracted gives nothing, unless ``include_retracted=True``.
+    It never falls back to an older execution, because the newer one replaced it.
     """
 
     created_after: datetime.datetime | None = None
-    """Keep only executions created at or after this naive UTC timestamp."""
+    """Keep only executions created at or after this time, as naive UTC."""
 
     created_before: datetime.datetime | None = None
-    """Keep only executions created before this naive UTC timestamp."""
+    """Keep only executions created before this time, as naive UTC."""
 
     def created_clauses(self) -> list[ColumnElement[bool]]:
         """Clauses over ``Execution`` for the creation window."""
@@ -266,43 +378,73 @@ class ExecutionScope(BaseFilter):
 
 @attrs.frozen(kw_only=True, slots=False)
 class InputDatasetScope(BaseFilter):
-    """Which input datasets the counted executions ran against."""
+    """
+    A group of fields shared by every filter: which input datasets the runs used.
+
+    See [InputDatasetFilter][climate_ref.results.filters.InputDatasetFilter] for examples.
+    """
 
     input_datasets: InputDatasetFilter | None = None
     """
     Keep only executions that ran against matching datasets.
 
-    Readers over execution groups check each group's latest execution.
+    Filters over execution groups or diagnostics check each group's newest execution.
     """
 
 
 @attrs.frozen(kw_only=True)
 class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatasetScope):
     """
-    Declarative filter over metric values.
+    Filter for metric values, passed to ``reader.values.scalar_values`` and ``series_values``.
 
-    An empty ``exclude_ids`` excludes nothing.
-    The same object drives scalar and series queries, frame conversion and facet collection,
-    so a filter is written once and reused across output shapes.
+    It also has every field of
+    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
+    [VersionScope][climate_ref.results.filters.VersionScope],
+    [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
+    [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
+
+    Examples
+    --------
+    Mean values for two models from one diagnostic:
+
+    >>> from climate_ref.results import MetricValueFilter
+    >>> filters = MetricValueFilter(
+    ...     provider_slug="example",
+    ...     diagnostic_slug="global-mean-timeseries",
+    ...     dimensions={"statistic": "mean", "source_id": ["ACCESS-ESM1-5", "CanESM5"]},
+    ... )
+
+    Every value from one execution, whatever its version or retraction:
+
+    >>> filters = MetricValueFilter(execution_ids=[42], include_superseded=True, include_retracted=True)
+
+    Only the reference series, as opposed to the model ones:
+
+    >>> filters = MetricValueFilter(reference_only=True)
     """
 
     execution_ids: Sequence[int] | None = None
-    """Restrict to values produced by these executions."""
+    """Keep only values from these executions."""
 
     execution_group_ids: Sequence[int] | None = None
-    """Restrict to values produced by executions belonging to these groups."""
+    """Keep only values from executions in these groups."""
 
     dimensions: Mapping[str, str | Sequence[str]] | None = None
-    """CV dimension filters keyed by registered dimension name; a string is equality, a sequence is IN."""
+    """
+    Keep values by CV dimension, e.g. ``{"statistic": "mean", "source_id": ["CanESM5", "MIROC6"]}``.
+
+    A string must match exactly, and a list matches any of its values.
+    An unknown dimension raises ``KeyError`` when the query runs.
+    """
 
     isolate_ids: Sequence[int] | None = None
-    """Restrict to exactly these value ids; takes precedence over ``exclude_ids``, matching the API."""
+    """Keep only these value ids. This wins over ``exclude_ids``."""
 
     exclude_ids: Sequence[int] | None = None
-    """Exclude these value ids; ignored when ``isolate_ids`` is set."""
+    """Drop these value ids. Ignored when ``isolate_ids`` is set."""
 
     reference_only: bool | None = None
-    """Series-only: ``True`` for observation/reference series, ``False`` for model series."""
+    """Series only: ``True`` keeps the reference series, ``False`` keeps the model series."""
 
     def dimension_clauses(self, entity: type[MetricValue]) -> list[ColumnElement[bool]]:
         """
@@ -328,65 +470,112 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
 
 @attrs.frozen(kw_only=True)
 class ResourceFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatasetScope):
-    """Declarative filter over the executions considered for resource measurements and profiles."""
+    """
+    Filter for the executions whose resource use is read by ``reader.resources``.
+
+    It has no fields of its own, only those of
+    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
+    [VersionScope][climate_ref.results.filters.VersionScope],
+    [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
+    [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
+
+    Examples
+    --------
+    ESMValTool runs from the last 30 days, across every diagnostic version:
+
+    >>> import datetime
+    >>> from climate_ref.results import ResourceFilter
+    >>> filters = ResourceFilter(
+    ...     provider_slug="esmvaltool",
+    ...     created_after=datetime.datetime(2026, 10, 1),
+    ...     include_superseded=True,
+    ... )
+    """
 
 
 @attrs.frozen(kw_only=True)
 class ExecutionGroupFilter(DiagnosticScope, VersionScope, InputDatasetScope):
     """
-    Declarative filter over execution groups and their latest execution.
+    Filter for execution groups, passed to ``reader.executions.groups`` and ``group_rows``.
 
-    ``selectors`` is matched against each group's ``selectors`` in Python,
-    and ``successful`` vs ``latest_successful`` expose the
-    [get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered]
-    post-rank / pre-rank success filters.
-    ``input_datasets`` is checked against the latest execution, as picked under ``latest_successful``.
+    Each group is judged by its newest execution.
+    It also has every field of
+    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
+    [VersionScope][climate_ref.results.filters.VersionScope] and
+    [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
+
+    Examples
+    --------
+    PMP groups whose newest run failed inside the diagnostic:
+
+    >>> from climate_ref.models.execution import ExecutionFailureReason
+    >>> from climate_ref.results import ExecutionGroupFilter
+    >>> filters = ExecutionGroupFilter(
+    ...     provider_slug="pmp",
+    ...     successful=False,
+    ...     failure_reasons=[ExecutionFailureReason.DiagnosticError],
+    ... )
+
+    Groups selected for one model, with their newest successful run:
+
+    >>> filters = ExecutionGroupFilter(selectors={"source_id": "ACCESS-CM2"}, latest_successful=True)
+
+    Groups waiting to be rerun:
+
+    >>> filters = ExecutionGroupFilter(dirty=True)
     """
 
     dirty: bool | None = None
-    """Constrain on the group's ``dirty`` flag."""
+    """``True`` keeps groups marked to be rerun, ``False`` keeps the rest."""
 
     successful: bool | None = None
     """
-    Post-rank filter on the *winning* execution: keep a group only if its latest execution matches.
+    Keep groups by how their newest execution went.
 
-    ``True`` keeps groups whose latest execution succeeded.
-    ``False`` keeps groups whose latest execution failed, is in progress, or does not exist yet.
-    This does not change which execution is considered latest -- contrast ``latest_successful``.
+    ``True`` keeps groups whose newest execution succeeded.
+    ``False`` keeps groups whose newest execution failed, is still running, or does not exist yet.
+    This does not change which execution counts as newest. ``latest_successful`` does that.
     """
 
     latest_successful: bool | None = None
     """
-    Pre-rank population filter: change which execution is chosen as "latest" before ranking.
+    Change which execution counts as a group's newest.
 
-    ``True`` ranks only over successful executions,
-    so a group's ``latest`` becomes its most recent *successful* run
-    (surfacing an earlier success even when a later run failed).
-    ``False`` ranks only over unsuccessful / in-progress runs.
-
-    ``None`` (default) ranks over all executions.
-    Composes with ``successful`` but answers a different question.
+    ``True`` picks the newest successful execution, even when a later one failed.
+    ``False`` picks the newest unsuccessful or running execution.
+    It can be combined with ``successful``.
     """
 
     selectors: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     """
-    Facet map matched against each group's ``ExecutionGroup.selectors``, in Python.
+    Keep groups by the facets they were selected with, e.g. ``{"source_id": ["ACCESS-CM2"]}``.
 
     A key is a bare facet such as ``source_id``, or ``<dataset_type>.<facet>`` for one dataset type.
-    Unlike ``input_datasets``, this checks how the group was selected, not the datasets its executions used.
+    Unlike ``input_datasets``, this checks how the group was selected, not the datasets its runs used.
     """
 
     failure_reasons: tuple[ExecutionFailureReason, ...] | None = attrs.field(
         default=None, converter=_as_failure_reasons
     )
-    """Keep a group only if its latest execution failed for one of these reasons."""
+    """Keep groups whose newest execution failed for one of these reasons."""
 
 
 @attrs.frozen(kw_only=True)
 class DiagnosticFilter(DiagnosticScope, InputDatasetScope):
     """
-    Declarative filter over diagnostics, and over the execution statistics grouped by diagnostic.
+    Filter for diagnostics and their run counts.
 
-    With ``input_datasets`` only execution groups whose latest execution matches are counted,
-    and diagnostics left with no groups are dropped.
+    Pass it to ``reader.diagnostics.list`` or ``reader.executions.statistics``.
+    It has no fields of its own, only those of
+    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope] and
+    [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
+    With ``input_datasets`` only groups whose newest run matches are counted,
+    and a diagnostic left with no groups is dropped.
+
+    Examples
+    --------
+    Every ENSO diagnostic, from any provider:
+
+    >>> from climate_ref.results import DiagnosticFilter
+    >>> filters = DiagnosticFilter(diagnostic_contains=["enso"])
     """

@@ -1,11 +1,23 @@
 """
-Typed, detached read surface for diagnostic metadata.
+Find out which diagnostics exist, how their runs are going and which have results.
 
 [DiagnosticsReader][climate_ref.results.diagnostics.DiagnosticsReader] is reached via
-[Reader.diagnostics][climate_ref.results.values.Reader.diagnostics].
-It executes the [select_diagnostics][climate_ref.results.diagnostics.select_diagnostics] query
-(joining ``Diagnostic -> Provider`` and counting execution groups per diagnostic)
-and maps the rows into detached DTOs that outlive the session.
+[Reader.diagnostics][climate_ref.results.reader.Reader.diagnostics].
+It returns:
+
+* [DiagnosticView][climate_ref.results.diagnostics.DiagnosticView]: one diagnostic, with run counts.
+* [DiagnosticCollection][climate_ref.results.diagnostics.DiagnosticCollection]:
+  a page of diagnostics, with ``to_pandas()``.
+
+Examples
+--------
+```python
+from climate_ref.results import DiagnosticFilter, Reader
+
+with Database.from_config(config, read_only=True) as db:
+    reader = Reader(db)
+    df = reader.diagnostics.list(DiagnosticFilter(provider_slug="pmp")).to_pandas()
+```
 """
 
 from collections.abc import Mapping
@@ -13,33 +25,46 @@ from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy import ColumnElement, Select, func, literal, select
 from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
-from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import Execution, ExecutionGroup
-from climate_ref.models.metric_value import MetricValue, MetricValueType
-from climate_ref.models.provider import Provider
+from climate_ref.models.metric_value import MetricValueType
 from climate_ref.results._page import Page
-from climate_ref.results._query import (
-    _Unindexed,
-    apply_execution_scope,
-    count_values,
+from climate_ref.results.filters import DiagnosticFilter, ExecutionScope
+from climate_ref.results.queries import (
+    count,
     paginate,
+    select_diagnostics,
+    select_diagnostics_with_values,
+    select_execution_statistics,
 )
-from climate_ref.results._stats import rows_to_execution_stats
-from climate_ref.results.executions import ExecutionStats, select_execution_statistics
-from climate_ref.results.filters import DiagnosticFilter, ExecutionScope, promoted_version_clause
 
 
 @attrs.frozen(kw_only=True)
 class DiagnosticView:
     """
-    A single diagnostic with information about the currently promoted version and execution-group counts.
+    One diagnostic, with its current version and how many of its runs have succeeded.
 
-    ``execution_group_count`` counts execution groups across every diagnostic version,
-    while ``successful``/``inflight``/``total`` are scoped to the currently ``promoted_version``.
+    ``successful``, ``inflight`` and ``total`` count only groups at the promoted version.
+    ``execution_group_count`` counts groups at every version, so it is at least ``total``.
+
+    Get them from [DiagnosticsReader.list][climate_ref.results.diagnostics.DiagnosticsReader.list].
+
+    Examples
+    --------
+    >>> from climate_ref.results.diagnostics import DiagnosticView
+    >>> diagnostic = DiagnosticView(
+    ...     provider_slug="pmp",
+    ...     slug="enso_tel",
+    ...     name="ENSO teleconnections",
+    ...     promoted_version=2,
+    ...     execution_group_count=30,
+    ...     successful=18,
+    ...     inflight=2,
+    ...     total=24,
+    ... )
+    >>> diagnostic.total - diagnostic.successful - diagnostic.inflight
+    4
     """
 
     provider_slug: str
@@ -52,32 +77,47 @@ class DiagnosticView:
     """Human-readable diagnostic name."""
 
     promoted_version: int
-    """Diagnostic version currently promoted for production."""
+    """The promoted version of the diagnostic."""
 
     execution_group_count: int
     """Execution groups for the diagnostic across every version."""
 
     successful: int
-    """Promoted-version execution groups whose latest execution succeeded."""
+    """Groups at the promoted version whose newest execution succeeded."""
 
     inflight: int
-    """Promoted-version execution groups whose latest execution is still running (outcome not yet known)."""
+    """Groups at the promoted version whose newest execution is still running."""
 
     total: int
-    """Execution groups at the promoted version."""
+    """Groups at the promoted version."""
 
 
 @attrs.frozen(kw_only=True)
 class DiagnosticCollection(Page[DiagnosticView]):
-    """An immutable page of diagnostics plus collection-level metadata."""
+    """
+    A page of diagnostics.
+
+    Iterate it for [DiagnosticView][climate_ref.results.diagnostics.DiagnosticView] items,
+    or use ``len()`` for the size of the page.
+    ``total_count`` is the number of matching diagnostics before paging.
+
+    Examples
+    --------
+    An empty page still gives a DataFrame with the right columns:
+
+    >>> from climate_ref.results.diagnostics import DiagnosticCollection
+    >>> page = DiagnosticCollection(items=(), total_count=0, offset=0, limit=None)
+    >>> list(page.to_pandas().columns[:3])
+    ['provider', 'diagnostic', 'name']
+    """
 
     def to_pandas(self) -> pd.DataFrame:
         """
-        DataFrame mirroring the ``diagnostics list`` CLI columns.
+        Convert to a pandas DataFrame with the same columns as ``ref diagnostics list``.
 
-        Columns are emitted explicitly (``provider, diagnostic, name, promoted_version,
-        execution_group_count, successful, inflight, total``) even when the collection is empty, so
-        callers can select columns / build an empty table without special-casing.
+        The columns are ``provider``, ``diagnostic``, ``name``, ``promoted_version``,
+        ``execution_group_count``, ``successful``, ``inflight`` and ``total``.
+        They are present even when the collection is empty.
         """
         columns = [
             "provider",
@@ -105,104 +145,23 @@ class DiagnosticCollection(Page[DiagnosticView]):
         return pd.DataFrame.from_records(records, columns=columns)
 
 
-def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
-    """
-    Build the ``Select`` for diagnostics joined to their provider, with an execution-group count.
-
-    ``execution_group_count`` counts every ``ExecutionGroup`` row for the diagnostic
-    (all versions, not scoped to ``promoted_version``),
-    so it reflects the diagnostic's full execution history.
-    With ``filters.input_datasets`` it counts only matching groups, and diagnostics without one are dropped.
-    Ordered by ``(Provider.slug, Diagnostic.slug, Diagnostic.id)``.
-    The diagnostic primary key is the final tiebreak so SQL pagination is deterministic across pages.
-    """
-    filters = filters or DiagnosticFilter()
-
-    group_count_stmt = select(
-        ExecutionGroup.diagnostic_id,
-        func.count(ExecutionGroup.id).label("execution_group_count"),
-    ).group_by(ExecutionGroup.diagnostic_id)
-    if filters.input_datasets:
-        group_count_stmt = group_count_stmt.where(filters.input_datasets.execution_group_clause())
-    group_count_subquery = group_count_stmt.subquery()
-
-    stmt = (
-        select(
-            Provider.slug.label("provider_slug"),
-            Diagnostic.slug.label("slug"),
-            Diagnostic.name.label("name"),
-            Diagnostic.promoted_version.label("promoted_version"),
-            func.coalesce(group_count_subquery.c.execution_group_count, 0).label("execution_group_count"),
-        )
-        .join(Provider, Diagnostic.provider_id == Provider.id)
-        .join(
-            group_count_subquery,
-            Diagnostic.id == group_count_subquery.c.diagnostic_id,
-            isouter=filters.input_datasets is None,
-        )
-        .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
-    )
-
-    return stmt.where(*filters.diagnostic_clauses())
-
-
-def select_diagnostics_with_values(
-    value_type: MetricValueType,
-    filters: DiagnosticFilter | None = None,
-    *,
-    execution_group_where: ColumnElement[bool] | None = None,
-    scope: ExecutionScope = ExecutionScope(include_retracted=False),
-) -> Select[Any]:
-    """
-    Build the ``Select`` for diagnostics with at least one value of ``value_type`` at the promoted version.
-
-    ``scope`` picks which executions count.
-    By default retracted executions do not count, matching
-    [Reader.values][climate_ref.results.values.Reader.values].
-
-    Selects ``id``, ``provider_slug`` and ``slug``, ordered like
-    [select_diagnostics][climate_ref.results.diagnostics.select_diagnostics].
-    ``execution_group_where`` further restricts which execution groups count.
-    """
-    filters = filters or DiagnosticFilter()
-
-    has_values = (
-        select(literal(1))
-        .select_from(ExecutionGroup)
-        .join(Execution, Execution.execution_group_id == ExecutionGroup.id)
-        .join(MetricValue, MetricValue.execution_id == Execution.id)
-        .where(
-            ExecutionGroup.diagnostic_id == Diagnostic.id,
-            promoted_version_clause(),
-            # Without table statistics SQLite picks ix_metric_value_type and reads every series row.
-            _Unindexed(MetricValue.type.expression) == value_type,
-        )
-    )
-    has_values = apply_execution_scope(has_values, scope)
-    if execution_group_where is not None:
-        has_values = has_values.where(execution_group_where)
-    if filters.input_datasets:
-        has_values = has_values.where(filters.input_datasets.execution_clause())
-
-    stmt = (
-        select(
-            Diagnostic.id.label("id"),
-            Provider.slug.label("provider_slug"),
-            Diagnostic.slug.label("slug"),
-        )
-        .join(Provider, Diagnostic.provider_id == Provider.id)
-        .where(has_values.exists())
-        .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
-    )
-    return stmt.where(*filters.diagnostic_clauses())
-
-
 class DiagnosticsReader:
     """
-    Diagnostic read domain.
+    Look up diagnostics, how many of their runs succeeded and which have results.
 
-    Constructed from a [Database][climate_ref.database.Database], which owns the session.
-    All read methods return detached DTOs that outlive the session.
+    Reach it as ``Reader(db).diagnostics``.
+
+    Examples
+    --------
+    ```python
+    from climate_ref.models.metric_value import MetricValueType
+    from climate_ref.results import DiagnosticFilter, Reader
+
+    with Database.from_config(config, read_only=True) as db:
+        reader = Reader(db)
+        page = reader.diagnostics.list(DiagnosticFilter(provider_slug="example"))
+        has_series = reader.diagnostics.with_values(MetricValueType.SERIES)
+    ```
     """
 
     def __init__(self, database: Database, *, session: Session | None = None) -> None:
@@ -211,10 +170,10 @@ class DiagnosticsReader:
 
     @property
     def session(self) -> Session:
-        """The underlying database session."""
+        """The database session the queries run in."""
         return self._session if self._session is not None else self._db.session
 
-    def _to_view(self, row: Any, stats_by_key: Mapping[tuple[str, str], ExecutionStats]) -> DiagnosticView:
+    def _to_view(self, row: Any, stats_by_key: Mapping[tuple[str, str], Any]) -> DiagnosticView:
         stat = stats_by_key.get((row.provider_slug, row.slug))
         return DiagnosticView(
             provider_slug=row.provider_slug,
@@ -236,24 +195,47 @@ class DiagnosticsReader:
         with_count: bool = True,
     ) -> DiagnosticCollection:
         """
-        Query diagnostics, with their provider, execution-group count, and promoted-version stats.
+        Which diagnostics are there, and how many of their runs succeeded?
 
-        Pagination is applied in SQL (``offset``/``limit``), with ``total_count`` computed from a
-        separate unpaged count query over the same filtered statement.
-        Promoted-version status counts (``successful``/``inflight``/``total``) are merged in from
-        [stats][climate_ref.results.diagnostics.DiagnosticsReader.stats],
-        and keyed by ``(provider, diagnostic)`` so status-count logic stays defined once.
+        Parameters
+        ----------
+        filters
+            Which diagnostics to return. ``None`` returns all of them.
+        offset
+            Diagnostics to skip, ordered by provider slug then diagnostic slug.
+        limit
+            Maximum diagnostics to return. ``None`` returns the rest.
+        with_count
+            Set ``False`` to skip counting the matches. ``total_count`` is then ``None``.
 
-        Diagnostics with no execution groups at the promoted version get zeros.
+        Returns
+        -------
+        DiagnosticCollection
+            The page of diagnostics.
+            ``total_count`` is the number of matches before ``offset`` and ``limit``.
+            A diagnostic with no execution groups at its promoted version has zero counts.
+
+        Examples
+        --------
+        The ENSO diagnostics and how their runs are going, as a table:
+
+        ```python
+        from climate_ref.results import DiagnosticFilter, Reader
+
+        with Database.from_config(config, read_only=True) as db:
+            page = Reader(db).diagnostics.list(DiagnosticFilter(diagnostic_contains=["enso"]))
+            df = page.to_pandas()
+            print(df[["provider", "diagnostic", "successful", "total"]])
+        ```
         """
         filters = filters or DiagnosticFilter()
 
         base_stmt = select_diagnostics(filters)
-        total_count = count_values(self.session, base_stmt) if with_count else None
+        total_count = count(self.session, base_stmt) if with_count else None
 
         rows = self.session.execute(paginate(base_stmt, offset, limit)).all()
 
-        stats = self.stats(filters)
+        stats = self.session.execute(select_execution_statistics(filters))
         stats_by_key = {(s.provider, s.diagnostic): s for s in stats}
         items = tuple(self._to_view(row, stats_by_key) for row in rows)
 
@@ -267,22 +249,51 @@ class DiagnosticsReader:
         scope: ExecutionScope = ExecutionScope(include_retracted=False),
     ) -> frozenset[tuple[str, str]]:
         """
-        Find the ``(provider, diagnostic)`` pairs with a value of ``value_type`` at the promoted version.
+        Which diagnostics have results of a given kind?
 
-        See [select_diagnostics_with_values][climate_ref.results.diagnostics.select_diagnostics_with_values].
+        Use it to find diagnostics worth querying, for example those with time series
+        before calling ``reader.values.series_values``.
+        Only results from each diagnostic's current (promoted) version count.
+
+        Parameters
+        ----------
+        value_type
+            ``MetricValueType.SCALAR`` for single numbers, or ``MetricValueType.SERIES`` for time series.
+        filters
+            Narrow which diagnostics are considered. ``None`` considers all of them.
+        scope
+            Which runs count, as an [ExecutionScope][climate_ref.results.filters.ExecutionScope].
+            It is separate from ``filters`` because a ``DiagnosticFilter`` has no fields about runs.
+            The default counts every run that has not been retracted.
+            Use ``latest_only=True`` to look only at each group's newest run,
+            ``include_retracted=True`` to count retracted runs,
+            or ``created_after`` and ``created_before`` to limit by date.
+
+        Returns
+        -------
+        frozenset[tuple[str, str]]
+            ``(provider_slug, diagnostic_slug)`` pairs, such as ``("pmp", "enso_tel")``.
+
+        Examples
+        --------
+        PMP diagnostics with time series, looking only at each group's newest run:
+
+        ```python
+        from climate_ref.models.metric_value import MetricValueType
+        from climate_ref.results import DiagnosticFilter, Reader
+        from climate_ref.results.filters import ExecutionScope
+
+        with Database.from_config(config, read_only=True) as db:
+            pairs = Reader(db).diagnostics.with_values(
+                MetricValueType.SERIES,
+                DiagnosticFilter(provider_slug="pmp"),
+                scope=ExecutionScope(latest_only=True),
+            )
+        # pairs == frozenset({("pmp", "enso_tel"), ...})
+        ```
+
+        See [select_diagnostics_with_values][climate_ref.results.queries.select_diagnostics_with_values]
+        for the query.
         """
         rows = self.session.execute(select_diagnostics_with_values(value_type, filters, scope=scope)).all()
         return frozenset((row.provider_slug, row.slug) for row in rows)
-
-    def stats(self, filters: DiagnosticFilter | None = None) -> tuple[ExecutionStats, ...]:
-        """
-        Per-(provider, diagnostic) execution status counts.
-
-        Reuses [select_execution_statistics][climate_ref.results.executions.select_execution_statistics]
-        rather than duplicating the aggregate SQL, so status-count logic stays defined once.
-        This has the same signature and behaviour as
-        [ExecutionsReader.statistics][climate_ref.results.executions.ExecutionsReader.statistics],
-        just reachable under the diagnostics domain.
-        """
-        stmt = select_execution_statistics(filters)
-        return rows_to_execution_stats(self.session.execute(stmt).all())

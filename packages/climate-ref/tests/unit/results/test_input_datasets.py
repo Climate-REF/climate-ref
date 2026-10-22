@@ -351,7 +351,7 @@ class TestIncludeWithoutInput:
         assert ids["obs-only"] in latest_successful
         stats = {
             (s.provider, s.diagnostic): s
-            for s in reader.diagnostics.stats(DiagnosticFilter(input_datasets=f))
+            for s in reader.executions.statistics(DiagnosticFilter(input_datasets=f))
         }
         assert stats[ids["diag_2"]].not_started == 0
         listed = {
@@ -408,7 +408,7 @@ class TestDiagnostics:
     def test_stats_scoped(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
-        stats = Reader(db_with_inputs).diagnostics.stats(DiagnosticFilter(input_datasets=f))
+        stats = Reader(db_with_inputs).executions.statistics(DiagnosticFilter(input_datasets=f))
         assert {(s.provider, s.diagnostic): s.total for s in stats} == {ids["diag_2"]: 1}
 
     def test_with_values_scoped(self, db_with_inputs):

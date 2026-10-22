@@ -10,8 +10,8 @@ from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
 from climate_ref.results import DiagnosticFilter, Reader
-from climate_ref.results.diagnostics import select_diagnostics, select_diagnostics_with_values
 from climate_ref.results.filters import ExecutionScope
+from climate_ref.results.queries import select_diagnostics, select_diagnostics_with_values
 
 
 def test_import_smoke() -> None:
@@ -214,39 +214,35 @@ class TestDiagnosticsReaderList:
         assert len(df) == 0
 
 
-class TestDiagnosticsReaderStats:
-    def test_delegates_to_execution_statistics(self, db_with_diagnostics):
+class TestExecutionStatistics:
+    def test_counts_by_diagnostic(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats()
+        stats = reader.executions.statistics()
         by_diag = {s.diagnostic: s for s in stats}
 
         assert "enso_tel" in by_diag
         assert by_diag["enso_tel"].total == 2
         assert by_diag["enso_tel"].not_started == 2
 
-    def test_matches_executions_statistics(self, db_with_diagnostics):
-        reader = Reader(db_with_diagnostics)
-        via_diagnostics = reader.diagnostics.stats()
-        via_executions = reader.executions.statistics()
-        assert via_diagnostics == via_executions
-
     def test_provider_filter(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats(DiagnosticFilter(provider_contains=["pmp"]))
+        stats = reader.executions.statistics(DiagnosticFilter(provider_contains=["pmp"]))
         providers = {s.provider for s in stats}
         assert providers == {"pmp"}
 
     def test_diagnostic_filter(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats(DiagnosticFilter(diagnostic_contains=["enso_tel"]))
+        stats = reader.executions.statistics(DiagnosticFilter(diagnostic_contains=["enso_tel"]))
         diagnostics = {s.diagnostic for s in stats}
         assert diagnostics == {"enso_tel"}
 
     def test_exact_slug_filter(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats(DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel"))
+        stats = reader.executions.statistics(
+            DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel")
+        )
         assert {(s.provider, s.diagnostic) for s in stats} == {("pmp", "enso_tel")}
-        assert reader.diagnostics.stats(DiagnosticFilter(diagnostic_slug="enso")) == ()
+        assert reader.executions.statistics(DiagnosticFilter(diagnostic_slug="enso")) == ()
 
     def test_retracted_latest_execution_still_counts(self, db_with_diagnostics):
         session = db_with_diagnostics.session
@@ -262,10 +258,9 @@ class TestDiagnosticsReaderStats:
                 )
             )
         reader = Reader(db_with_diagnostics)
-        by_diag = {s.diagnostic: s for s in reader.diagnostics.stats()}
+        by_diag = {s.diagnostic: s for s in reader.executions.statistics()}
         assert by_diag["enso_tel"].successful == 1
         assert by_diag["enso_tel"].not_started == 1
-        assert reader.diagnostics.stats() == reader.executions.statistics()
 
 
 @pytest.fixture

@@ -21,7 +21,7 @@ from climate_ref.results import (
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results.executions import select_execution_outputs, select_execution_statistics
+from climate_ref.results.queries import select_execution_outputs, select_execution_statistics
 
 
 def test_import_smoke() -> None:

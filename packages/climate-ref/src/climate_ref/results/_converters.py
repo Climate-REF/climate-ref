@@ -1,4 +1,16 @@
-"""Shared ``attrs`` field converters for the results filter DTOs."""
+"""
+``attrs`` field converters for the results filters.
+
+They turn the list a caller passes into the tuple a frozen filter stores.
+
+Examples
+--------
+>>> from climate_ref.results._converters import _as_id_tuple, _as_str_tuple
+>>> _as_id_tuple([3, 1, 2])
+(3, 1, 2)
+>>> _as_str_tuple(["enso"])
+('enso',)
+"""
 
 from collections.abc import Sequence
 
@@ -9,28 +21,38 @@ from climate_ref_core.source_types import SourceDatasetType
 def _as_failure_reasons(
     value: Sequence[ExecutionFailureReason] | None,
 ) -> tuple[ExecutionFailureReason, ...] | None:
-    """Coerce a multi-value failure reason filter to a tuple, leaving ``None`` as is."""
+    """Convert failure reasons to a tuple, leaving ``None`` as is."""
     return None if value is None else tuple(value)
 
 
 def _as_source_types(value: Sequence[SourceDatasetType]) -> tuple[SourceDatasetType, ...]:
-    """Coerce the dataset types of an input dataset filter to a tuple."""
+    """Convert the dataset types of an ``InputDatasetFilter`` to a tuple."""
     return tuple(value)
 
 
 def _as_id_tuple(value: Sequence[int] | None) -> tuple[int, ...] | None:
-    """Coerce an id filter to a tuple, leaving ``None`` as is."""
+    """Convert ids to a tuple, leaving ``None`` as is. An empty list stays empty and matches nothing."""
     return None if value is None else tuple(value)
 
 
 def _as_str_tuple(value: Sequence[str] | None) -> tuple[str, ...] | None:
     """
-    Coerce a multi-value filter field to ``tuple[str, ...]``, rejecting a bare ``str``.
+    Convert strings to a tuple, leaving ``None`` as is and rejecting a bare ``str``.
 
-    A bare ``str`` is itself a ``Sequence[str]``, so without this guard a caller passing
-    ``diagnostic_contains="enso"`` would have it iterated character-by-character
-    (``"enso"`` -> ``e``, ``n``, ``s``, ``o``) before it ever reaches ``ilike`` /
-    the facet matcher.
+    A ``str`` is also a ``Sequence[str]``, so ``"enso"`` would otherwise be split into
+    ``("e", "n", "s", "o")`` and matched one character at a time.
+
+    Raises
+    ------
+    TypeError
+        If ``value`` is a ``str``.
+
+    Examples
+    --------
+    >>> _as_str_tuple("enso")
+    Traceback (most recent call last):
+    ...
+    TypeError: Expected a sequence of strings, not a bare str. Wrap it in a list/tuple.
     """
     if value is None:
         return None

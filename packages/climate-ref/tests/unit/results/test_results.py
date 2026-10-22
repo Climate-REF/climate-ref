@@ -23,15 +23,15 @@ from climate_ref.results import (
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results._query import (
-    latest_execution_for_group,
+from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
+from climate_ref.results.outliers import flag_outliers
+from climate_ref.results.queries import (
+    select_latest_execution,
     select_latest_executions,
     select_scalar_values,
     select_series_values,
     select_value_ids,
 )
-from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
-from climate_ref.results.outliers import flag_outliers
 
 
 @pytest.fixture
@@ -432,7 +432,7 @@ class TestLatestExecutionForGroup:
             session.add(newer)
             session.flush()
             newer_id = newer.id
-        latest = latest_execution_for_group(session, group_id)
+        latest = session.execute(select_latest_execution(group_id)).scalar_one_or_none()
         assert latest is not None
         assert latest.id == newer_id
 

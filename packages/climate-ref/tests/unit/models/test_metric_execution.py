@@ -339,6 +339,22 @@ class TestExecutionGroupSourceTypes:
 
         assert self._stored(db, group) == {SourceDatasetType.CMIP7, SourceDatasetType.obs4MIPs}
 
+    def test_deleting_unloaded_group_removes_rows(self, db, diagnostic_id):
+        # SQLite does not enforce foreign keys here, so the ORM has to delete the rows.
+        group = ExecutionGroup(diagnostic_id=diagnostic_id, key="k", selectors={"cmip6": []})
+        db.session.add(group)
+        db.session.flush()
+        group_id = group.id
+        db.session.expire_all()
+
+        db.session.delete(db.session.get(ExecutionGroup, group_id))
+        db.session.flush()
+
+        remaining = db.session.scalars(
+            select(ExecutionGroupSourceType).where(ExecutionGroupSourceType.execution_group_id == group_id)
+        ).all()
+        assert remaining == []
+
     def test_filter_groups_by_source_type(self, db, diagnostic_id):
         cmip6 = ExecutionGroup(diagnostic_id=diagnostic_id, key="a", selectors={"cmip6": []})
         obs_only = ExecutionGroup(diagnostic_id=diagnostic_id, key="b", selectors={"obs4mips": []})

@@ -152,9 +152,7 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
     executions: Mapped[list["Execution"]] = relationship(
         back_populates="execution_group", order_by="Execution.created_at, Execution.id"
     )
-    source_types: Mapped[list[ExecutionGroupSourceType]] = relationship(
-        cascade="all, delete-orphan", passive_deletes=True
-    )
+    source_types: Mapped[list[ExecutionGroupSourceType]] = relationship(cascade="all, delete-orphan")
     """
     Source dataset types this group draws on, kept in step with ``selectors``.
     """

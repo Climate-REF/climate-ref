@@ -26,6 +26,7 @@ from sqlalchemy.sql.functions import FunctionElement
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.dataset_query import _as_facets, _entity_for
 from climate_ref.models.diagnostic import Diagnostic
+from climate_ref.models.execution import execution_datasets
 from climate_ref.models.execution import select_latest_executions as select_latest_executions  # noqa: PLC0414
 from climate_ref.models.metric_value import (
     MetricValue,
@@ -47,17 +48,25 @@ class InputDatasetFilter:
     and satisfies every facet in ``facets`` (values for one facet are OR-combined).
     A source type whose dataset table lacks a requested facet cannot match,
     so a CMIP7-only facet does not pull in all of CMIP6.
+    With ``dataset_ids`` the matching dataset must also be one of those ids,
+    and ``source_types`` may then be left empty to match a dataset of any type.
     With ``or_no_model_input`` an execution with no model-simulation input dataset also matches,
     which keeps observation-only executions when scoping to one era.
 
     Raises
     ------
     ValueError
-        If ``source_types`` is empty, or a facet is a column on none of the ``source_types``.
+        If neither ``source_types`` nor ``dataset_ids`` is set,
+        or a facet is a column on none of the ``source_types``.
     """
 
-    source_types: tuple[SourceDatasetType, ...] = attrs.field(converter=tuple)
+    source_types: tuple[SourceDatasetType, ...] = attrs.field(default=(), converter=tuple)
     """Dataset types to match against, e.g. ``(SourceDatasetType.CMIP6, SourceDatasetType.CMIP7)``."""
+
+    dataset_ids: tuple[int, ...] | None = attrs.field(
+        default=None, converter=attrs.converters.optional(tuple)
+    )
+    """Dataset primary keys to match. An empty tuple matches nothing."""
 
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     """Dataset columns to match, e.g. ``{"source_id": ("ACCESS-CM2",)}``. ``None`` matches any dataset."""
@@ -66,8 +75,10 @@ class InputDatasetFilter:
     """Also match executions with no model-simulation input dataset, such as observation-only ones."""
 
     def __attrs_post_init__(self) -> None:
-        if not self.source_types:
-            raise ValueError("`source_types` must name at least one dataset type")
+        if not self.source_types and self.dataset_ids is None:
+            raise ValueError("`source_types` must name at least one dataset type, or `dataset_ids` be set")
+        if self.facets and not self.source_types:
+            raise ValueError("`facets` need `source_types` to say which dataset table they are on")
         for facet in self.facets or {}:
             if not any(facet in _entity_for(t).__mapper__.columns for t in self.source_types):
                 names = ", ".join(t.value for t in self.source_types)
@@ -76,12 +87,19 @@ class InputDatasetFilter:
     def execution_clause(self) -> ColumnElement[bool]:
         """Clause over ``Execution`` that is true when the execution ran against a matching dataset."""
         facets = self.facets or {}
-        branches = []
+        branches: list[ColumnElement[bool]] = []
+        if not self.source_types and self.dataset_ids is not None:
+            used = select(execution_datasets.c.execution_id).where(
+                execution_datasets.c.dataset_id.in_(self.dataset_ids)
+            )
+            branches.append(Execution.id.in_(used))
         for source_type in self.source_types:
             entity = _entity_for(source_type)
             if any(facet not in entity.__mapper__.columns for facet in facets):
                 continue
             conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
+            if self.dataset_ids is not None:
+                conditions.append(entity.id.in_(self.dataset_ids))
             branches.append(Execution.datasets.of_type(entity).any(and_(true(), *conditions)))
         if self.or_no_model_input:
             model_types = (t for t in SourceDatasetType if t.is_model_output)

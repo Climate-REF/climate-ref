@@ -28,7 +28,7 @@
       "arctic": {}
     },
     "source_id": {
-      "CanESM5": {}
+      "UKESM1-3-LL": {}
     }
   },
   "DISCLAIMER": null,
@@ -36,34 +36,34 @@
   "PROVENANCE": null,
   "RESULTS": {
     "historical": {
-      "CanESM5": {
+      "UKESM1-3-LL": {
         "antarctic": {
-          "gmst_over_time_p_value": 1.169205e-16,
-          "gmst_over_time_r_value": 0.933025,
-          "gmst_over_time_slope": 0.03273005,
-          "gmst_over_time_std_err_slope": 0.002164657,
-          "sia_over_gmst_p_value": 0.3521365,
-          "sia_over_gmst_r_value": -0.1597134,
-          "sia_over_gmst_slope": -0.2176575,
-          "sia_over_gmst_std_err_slope": 0.2307182,
-          "sia_over_time_p_value": 0.6876532,
-          "sia_over_time_r_value": -0.06937449,
-          "sia_over_time_slope": -0.003316542,
-          "sia_over_time_std_err_slope": 0.008178971
+          "gmst_over_time_p_value": 8.815536e-16,
+          "gmst_over_time_r_value": 0.92427,
+          "gmst_over_time_slope": 0.03248532,
+          "gmst_over_time_std_err_slope": 0.002300995,
+          "sia_over_gmst_p_value": 1.405232e-05,
+          "sia_over_gmst_r_value": -0.6559488,
+          "sia_over_gmst_slope": -1.166728,
+          "sia_over_gmst_std_err_slope": 0.2302476,
+          "sia_over_time_p_value": 0.0001980823,
+          "sia_over_time_r_value": -0.5817538,
+          "sia_over_time_slope": -0.03636864,
+          "sia_over_time_std_err_slope": 0.008720349
         },
         "arctic": {
-          "gmst_over_time_p_value": 1.169205e-16,
-          "gmst_over_time_r_value": 0.933025,
-          "gmst_over_time_slope": 0.03273005,
-          "gmst_over_time_std_err_slope": 0.002164657,
-          "sia_over_gmst_p_value": 3.959334e-12,
-          "sia_over_gmst_r_value": -0.8727891,
-          "sia_over_gmst_slope": -2.0661,
-          "sia_over_gmst_std_err_slope": 0.1981568,
-          "sia_over_time_p_value": 4.573249e-12,
-          "sia_over_time_r_value": -0.8716361,
-          "sia_over_time_slope": -0.07238201,
-          "sia_over_time_std_err_slope": 0.006980524
+          "gmst_over_time_p_value": 8.815536e-16,
+          "gmst_over_time_r_value": 0.92427,
+          "gmst_over_time_slope": 0.03248532,
+          "gmst_over_time_std_err_slope": 0.002300995,
+          "sia_over_gmst_p_value": 1.784409e-13,
+          "sia_over_gmst_r_value": -0.8950944,
+          "sia_over_gmst_slope": -3.518685,
+          "sia_over_gmst_std_err_slope": 0.3005985,
+          "sia_over_time_p_value": 4.076969e-16,
+          "sia_over_time_r_value": -0.9277441,
+          "sia_over_time_slope": -0.1281823,
+          "sia_over_time_std_err_slope": 0.008843452
         }
       }
     }

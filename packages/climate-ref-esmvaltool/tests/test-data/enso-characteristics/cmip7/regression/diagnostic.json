@@ -4,7 +4,7 @@
       "historical": {}
     },
     "grid_label": {
-      "gn": {}
+      "g126": {}
     },
     "json_structure": [
       "experiment_id",
@@ -27,10 +27,10 @@
       "global": {}
     },
     "source_id": {
-      "CanESM5": {}
+      "UKESM1-3-LL": {}
     },
     "variant_label": {
-      "r1i1p1f1": {}
+      "r1i1p1f2": {}
     }
   },
   "DISCLAIMER": null,
@@ -38,17 +38,17 @@
   "PROVENANCE": null,
   "RESULTS": {
     "historical": {
-      "gn": {
-        "CanESM5": {
-          "r1i1p1f1": {
+      "g126": {
+        "UKESM1-3-LL": {
+          "r1i1p1f2": {
             "global": {
-              "09pattern": 0.2525872,
-              "10lifecycle": 0.2503408,
-              "11amplitude": 7.707193,
-              "12seasonality": 44.73485,
-              "13asymmetry": 0.142175,
-              "14duration": 76.92308,
-              "15diversity": 16.54676
+              "09pattern": 0.1290631,
+              "10lifecycle": 0.08389997,
+              "11amplitude": 3.639887,
+              "12seasonality": 31.18576,
+              "13asymmetry": 102.4101,
+              "14duration": 7.692308,
+              "15diversity": 22.30216
             }
           }
         }

@@ -17,7 +17,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
-from sqlalchemy import ColumnElement, Select, and_, cast, false, func, literal, or_, select, tuple_
+from sqlalchemy import ColumnElement, Select, and_, cast, false, func, literal, or_, select, true, tuple_
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.compiler import SQLCompiler
@@ -82,7 +82,7 @@ class InputDatasetFilter:
             if any(facet not in entity.__mapper__.columns for facet in facets):
                 continue
             conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
-            branches.append(Execution.datasets.of_type(entity).any(and_(*conditions)))
+            branches.append(Execution.datasets.of_type(entity).any(and_(true(), *conditions)))
         if self.or_no_model_input:
             model_types = (t for t in SourceDatasetType if t.is_model_output)
             absent = (~Execution.datasets.of_type(_entity_for(t)).any() for t in model_types)

@@ -37,16 +37,17 @@ class ArtifactsReader:
         """
         Join ``parts`` onto ``base`` and guard against escaping ``base``.
 
-        The joined path is normalised and checked with ``os.path.commonpath``,
-        then checked again after resolving symlinks on both sides.
+        The joined path is normalised and checked against ``base`` with ``os.path.commonpath``.
+        After resolving symlinks it only has to stay under the results root,
+        so a link into another execution's outputs still resolves.
         The lexical path is returned, so callers see the layout they asked for.
         """
         root = os.path.normpath(base)
         candidate = os.path.normpath(os.path.join(root, *parts))
         if os.path.commonpath([root, candidate]) != root:
             raise ValueError(f"Path {candidate!r} escapes {root!r}")
-        if not Path(candidate).resolve().is_relative_to(Path(root).resolve()):
-            raise ValueError(f"Path {candidate!r} escapes {root!r} through a symlink")
+        if not Path(candidate).resolve().is_relative_to(self._results.resolve()):
+            raise ValueError(f"Path {candidate!r} escapes {str(self._results)!r} through a symlink")
         return Path(candidate)
 
     def _within_results(self, *parts: str) -> Path:

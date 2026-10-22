@@ -127,6 +127,19 @@ class TestSymlinkContainment:
 
         assert reader.output_file("alias", "plot.png") == results_root / "alias" / "plot.png"
 
+    def test_symlinks_into_another_execution_are_allowed(self, layout):
+        results_root, _ = layout
+        other = results_root / "other"
+        other.mkdir()
+        (results_root / "frag" / "plot.png").symlink_to(other / "plot.png")
+        (results_root / "frag" / "cmec.json").symlink_to(other / "cmec.json")
+        (results_root / "frag" / EXECUTION_LOG_FILENAME).symlink_to(other / EXECUTION_LOG_FILENAME)
+        reader = ArtifactsReader(results_root)
+
+        assert reader.output_file("frag", "plot.png") == results_root / "frag" / "plot.png"
+        assert reader.bundle("frag", "cmec.json") == results_root / "frag" / "cmec.json"
+        assert reader.log_file("frag") == results_root / "frag" / EXECUTION_LOG_FILENAME
+
     def test_symlinked_results_root_is_allowed(self, layout, tmp_path):
         results_root, _ = layout
         linked_root = tmp_path / "linked-results"

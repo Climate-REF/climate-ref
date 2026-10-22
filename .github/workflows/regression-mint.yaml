@@ -1,13 +1,8 @@
 # Mint the native regression baselines.
 #
-# Minting executes a test case, uploads its curated native outputs to the Cloudflare R2 object store,
-# and rewrites the committed `manifest.json` to record their digests.
-# It requires credentials to access the object store.
-# It is therefore manually dispatched and gated behind the `native-baselines` GitHub Environment, and never runs on fork pull-request code.
-#
-# Dispatch this workflow on the *feature branch* that should receive the regenerated manifest.
-# The action commits the result back to that branch so the change is reviewed through its pull request,
-# and so individual developers never need write credentials.
+# Minting uploads each test case's native outputs to the R2 object store and rewrites its `manifest.json`.
+# It needs write credentials, so it is dispatched by hand behind the `native-baselines` environment.
+# Dispatch it on the feature branch to update: the result is committed back to that branch for review.
 #
 name: Regression baselines (mint)
 
@@ -61,7 +56,6 @@ jobs:
       run:
         shell: bash
     env:
-      # Keep the cache-warming download steps from flooding the log with progress bars.
       TQDM_DISABLE: "1"
     steps:
       - name: Refuse to mint on the default branch
@@ -92,30 +86,9 @@ jobs:
       - name: Set up provider (environment + reference data)
         env:
           PROVIDER: ${{ inputs.provider }}
-        # Provisions the provider's conda environment (where applicable) and its
-        # reference-data registries. ILAMB/PMP/ESMValTool diagnostics read observational
-        # reference data that is not part of the ESGF model fetch above; without this the
-        # diagnostic fails to open its reference files during the mint run.
+        # Diagnostics read observational reference data that the ESGF fetch does not provide.
         run: uv run ref providers setup --provider "${PROVIDER}"
-      - name: Restore test-case catalog paths
-        env:
-          PROVIDER: ${{ inputs.provider }}
-          DIAGNOSTIC: ${{ inputs.diagnostic }}
-          TEST_CASE: ${{ inputs.test_case }}
-        run: |
-          # Scope the fetch to the dispatched diagnostics/test case so a single-case
-          # mint does not re-fetch every case for the provider (cmip7 cases in
-          # particular can stall on ESGF). Mirrors the mint step's argument handling.
-          # Serial, because the runners share an intake-esgf cache whose download db is SQLite.
-          read -ra diagnostics <<< "${DIAGNOSTIC//,/ }"
-          if [ "${#diagnostics[@]}" -eq 0 ]; then diagnostics=(""); fi
-          for diagnostic in "${diagnostics[@]}"; do
-            args=(--provider "${PROVIDER}")
-            if [ -n "${diagnostic}" ]; then args+=(--diagnostic "${diagnostic}"); fi
-            if [ -n "${TEST_CASE}" ]; then args+=(--test-case "${TEST_CASE}"); fi
-            uv run ref test-cases fetch "${args[@]}" || echo "::warning::test-case fetch incomplete for ${diagnostic:-all diagnostics}"
-          done
-      - name: Mint native baselines
+      - name: Fetch and mint each diagnostic
         id: mint
         env:
           REF_NATIVE_STORE_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -126,24 +99,33 @@ jobs:
           BUMP_VERSION: ${{ inputs.bump_version }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
-          # A failing diagnostic does not stop the others. The failures are reported by the last step.
+          # Serial, because the runners share an intake-esgf cache backed by SQLite.
+          # A blank input becomes one pass over every diagnostic of the provider.
           read -ra diagnostics <<< "${DIAGNOSTIC//,/ }"
           if [ "${#diagnostics[@]}" -eq 0 ]; then diagnostics=(""); fi
-          : > "${RUNNER_TEMP}/failed-mints"
+
+          failed=()
           for diagnostic in "${diagnostics[@]}"; do
+            name="${diagnostic:-all diagnostics}"
             args=(--provider "${PROVIDER}")
             if [ -n "${diagnostic}" ]; then args+=(--diagnostic "${diagnostic}"); fi
             if [ -n "${TEST_CASE}" ]; then args+=(--test-case "${TEST_CASE}"); fi
+
+            uv run ref test-cases fetch "${args[@]}" || echo "::warning::test-case fetch incomplete for ${name}"
+
             if [ "${BUMP_VERSION}" = "true" ]; then args+=(--bump-version); fi
             if [ "${DRY_RUN}" = "true" ]; then args+=(--dry-run); fi
-            if ! uv run ref test-cases mint "${args[@]}"; then
-              echo "::error::mint failed for ${diagnostic:-all diagnostics}"
-              echo "${diagnostic:-all diagnostics}" >> "${RUNNER_TEMP}/failed-mints"
-            fi
+            uv run ref test-cases mint "${args[@]}" || failed+=("${name}")
           done
+
+          # Set even on failure, so the diagnostics that did mint are still committed and reported.
           echo "minted=true" >> "${GITHUB_OUTPUT}"
+          if [ "${#failed[@]}" -gt 0 ]; then
+            echo "::error::Failed to mint: ${failed[*]}"
+            exit 1
+          fi
       - name: Commit regenerated baselines
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !cancelled() && !inputs.dry_run && steps.mint.outputs.minted == 'true' }}
         env:
           PROVIDER: ${{ inputs.provider }}
           DIAGNOSTIC: ${{ inputs.diagnostic }}
@@ -151,10 +133,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Stage the committed bundle, its manifest, and the input catalog.
-          # The catalog.yaml is included because the mint regenerates it:
-          #  datasets.hash (its _metadata.hash, recorded as the manifest's catalog_hash) is not reproducible across pandas versions,
-          #  so the runner's value can differ from the developer-authored one.
+          # catalog.yaml too, because its hash differs between pandas versions and mint rewrites it.
           git add ':(glob)packages/**/test-data/**/manifest.json' \
                   ':(glob)packages/**/test-data/**/catalog.yaml' \
                   ':(glob)packages/**/test-data/**/regression/**'
@@ -164,31 +143,10 @@ jobs:
           fi
           scope="${DIAGNOSTIC//,/ }"
           git commit -m "chore(regression): mint native baselines for ${PROVIDER}${scope:+ (${scope})}"
-          # Pushed with GITHUB_TOKEN, so GitHub will NOT start new workflow runs for this commit.
-          # See docs/background/regression-baselines.md.
-          #
-          # The branch may have advanced (e.g. mint of another diagnostic).
-          # Different diagnostics touch disjoint test-data paths, so the rebase does not conflict.
-          for attempt in 1 2 3 4 5; do
-            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
-              exit 0
-            fi
-            echo "push rejected (attempt ${attempt}); rebasing onto origin/${GITHUB_REF_NAME}"
-            git fetch origin "${GITHUB_REF_NAME}"
-            git rebase "origin/${GITHUB_REF_NAME}" || {
-              echo "::error::rebase conflict while committing regenerated baselines"
-              exit 1
-            }
-          done
-          echo "::error::failed to push regenerated baselines after retries"
-          exit 1
-      - name: Fail if any diagnostic failed to mint
-        if: ${{ !cancelled() && steps.mint.outputs.minted == 'true' }}
-        run: |
-          if [ -s "${RUNNER_TEMP}/failed-mints" ]; then
-            echo "::error::Failed to mint: $(paste -sd, "${RUNNER_TEMP}/failed-mints")"
-            exit 1
-          fi
+
+          # Pushes with GITHUB_TOKEN do not start workflows, so the PR gate does not rerun.
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
 
   report:
     needs: mint

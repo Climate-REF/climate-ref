@@ -73,35 +73,70 @@ class TestOutputFile:
             reader.output_file("frag", "/etc/passwd")
 
 
-class TestSymlinkEscapeIsLexicalOnly:
-    """Pin the documented lexical-only containment contract.
-
-    ``_within`` normalises paths without touching the filesystem or resolving symlinks
-    (see the ``ArtifactsReader`` docstring). A symlink that lives *inside* the results root
-    but points *outside* it therefore passes the guard: the returned path is lexically
-    contained even though following it escapes on the filesystem. This is the documented
-    contract, not a bug -- the test exists so a future change to it is a conscious one.
-    """
-
-    def test_symlink_inside_root_pointing_outside_passes_guard(self, tmp_path):
+class TestSymlinkContainment:
+    @pytest.fixture
+    def layout(self, tmp_path):
         results_root = tmp_path / "results"
-        results_root.mkdir()
+        (results_root / "frag").mkdir(parents=True)
         outside = tmp_path / "outside"
         outside.mkdir()
         (outside / "secret.txt").write_text("secret")
+        return results_root, outside
 
-        # A symlink that lives inside the results root but targets a sibling outside it.
-        link = results_root / "link"
-        link.symlink_to(outside)
-
+    def test_symlinked_directory_pointing_outside_raises(self, layout):
+        results_root, outside = layout
+        (results_root / "link").symlink_to(outside)
         reader = ArtifactsReader(results_root)
 
-        # Lexical guard succeeds: the resolved path is textually under the results root.
-        resolved = reader.output_file("link", "secret.txt")
-        assert resolved == results_root / "link" / "secret.txt"
+        with pytest.raises(ValueError, match="symlink"):
+            reader.output_directory("link")
+        with pytest.raises(ValueError, match="symlink"):
+            reader.output_file("link", "secret.txt")
+        with pytest.raises(ValueError, match="symlink"):
+            reader.log_file("link")
 
-        # But following the symlink on the filesystem escapes the root: the resolved real
-        # path is the outside file, and it is not contained under the results root.
-        real = resolved.resolve()
-        assert real == (outside / "secret.txt").resolve()
-        assert results_root.resolve() not in real.parents
+    def test_symlinked_file_pointing_outside_raises(self, layout):
+        results_root, outside = layout
+        (results_root / "frag" / "plot.png").symlink_to(outside / "secret.txt")
+        reader = ArtifactsReader(results_root)
+
+        with pytest.raises(ValueError, match="symlink"):
+            reader.output_file("frag", "plot.png")
+
+    def test_symlinked_bundle_pointing_outside_raises(self, layout):
+        results_root, outside = layout
+        (results_root / "frag" / "cmec.json").symlink_to(outside / "secret.txt")
+        reader = ArtifactsReader(results_root)
+
+        with pytest.raises(ValueError, match="symlink"):
+            reader.bundle("frag", "cmec.json")
+
+    def test_symlinked_log_pointing_outside_raises(self, layout):
+        results_root, outside = layout
+        (results_root / "frag" / EXECUTION_LOG_FILENAME).symlink_to(outside / "secret.txt")
+        reader = ArtifactsReader(results_root)
+
+        with pytest.raises(ValueError, match="symlink"):
+            reader.log_file("frag")
+
+    def test_symlink_within_root_is_allowed(self, layout):
+        results_root, _ = layout
+        (results_root / "frag" / "plot.png").write_bytes(b"png")
+        (results_root / "alias").symlink_to(results_root / "frag")
+        reader = ArtifactsReader(results_root)
+
+        assert reader.output_file("alias", "plot.png") == results_root / "alias" / "plot.png"
+
+    def test_symlinked_results_root_is_allowed(self, layout, tmp_path):
+        results_root, _ = layout
+        linked_root = tmp_path / "linked-results"
+        linked_root.symlink_to(results_root)
+        reader = ArtifactsReader(linked_root)
+
+        assert reader.output_file("frag", "plot.png") == linked_root / "frag" / "plot.png"
+
+    def test_missing_path_is_allowed(self, layout):
+        results_root, _ = layout
+        reader = ArtifactsReader(results_root)
+
+        assert reader.output_file("missing", "plot.png") == results_root / "missing" / "plot.png"

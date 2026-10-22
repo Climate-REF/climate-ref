@@ -11,8 +11,8 @@ This module is deliberately narrow: no DB, no [Config][climate_ref.config.Config
 coupling to the ``executions`` DTOs.
 It depends on a single ``results`` root path -- not the whole ``Config`` -- passed straight in;
 a value object would only earn its keep once a second root (e.g. an archive root) is needed.
-Resolution is purely lexical over the results root; opening/streaming the resolved paths
-stays with the consumer.
+Containment is checked against the real filesystem, so a symlink cannot lead out of the results root.
+Opening/streaming the resolved paths stays with the consumer.
 """
 
 import os
@@ -26,8 +26,8 @@ class ArtifactsReader:
     Resolves execution output fragments into filesystem paths.
 
     Constructed from a single ``results`` root directory.
-    Every method is containment-guarded: a resolved path that would escape the results root
-    raises ``ValueError`` rather than returning a path outside it.
+    Every method is containment-guarded: a resolved path that would escape the results root,
+    lexically or by following a symlink, raises ``ValueError`` rather than returning a path outside it.
     """
 
     def __init__(self, results: Path) -> None:
@@ -37,14 +37,16 @@ class ArtifactsReader:
         """
         Join ``parts`` onto ``base`` and guard against escaping ``base``.
 
-        Lexically normalises the joined path (no filesystem access, no symlink resolution) and
-        checks containment with ``os.path.commonpath`` -- a real containment primitive, not a
-        string-prefix check (which would wrongly accept a sibling directory like ``results2``).
+        The joined path is normalised and checked with ``os.path.commonpath``,
+        then checked again after resolving symlinks on both sides.
+        The lexical path is returned, so callers see the layout they asked for.
         """
         root = os.path.normpath(base)
         candidate = os.path.normpath(os.path.join(root, *parts))
         if os.path.commonpath([root, candidate]) != root:
             raise ValueError(f"Path {candidate!r} escapes {root!r}")
+        if not Path(candidate).resolve().is_relative_to(Path(root).resolve()):
+            raise ValueError(f"Path {candidate!r} escapes {root!r} through a symlink")
         return Path(candidate)
 
     def _within_results(self, *parts: str) -> Path:

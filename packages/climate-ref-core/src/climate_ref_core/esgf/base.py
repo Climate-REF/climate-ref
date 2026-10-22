@@ -301,6 +301,9 @@ class IntakeESGFMixin:
 
             path_dict = cat.to_path_dict(prefer_streaming=False, minimal_keys=False, quiet=True)
             merged_df = cat.df.merge(pd.Series(path_dict, name="files"), left_on="key", right_index=True)
+            if self.pinned_instance_ids and len(merged_df) < len(cat.df):
+                missing = sorted(set(cat.df["key"]) - set(path_dict))
+                raise DatasetResolutionError(f"Could not retrieve pinned datasets for {self.slug}: {missing}")
 
             if self.time_span:
                 merged_df["time_start"] = self.time_span[0]

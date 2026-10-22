@@ -90,6 +90,19 @@ class TestCMIP7Request:
             with pytest.raises(DatasetResolutionError, match="no longer resolves 1 pinned"):
                 pinned.fetch_datasets()
 
+    @pytest.mark.usefixtures("stac_enabled")
+    def test_pinned_fetch_raises_when_a_pin_is_not_retrieved(self):
+        pinned = CMIP7Request(slug="test", facets={}).pin_to_datasets(
+            [{"instance_id": INSTANCE_ID}, {"instance_id": OTHER_ID}]
+        )
+        cat = _mock_catalog(INSTANCE_ID, OTHER_ID)
+        # intake-esgf leaves out a dataset it failed to download when break_on_error is off
+        cat.to_path_dict.side_effect = lambda **_: {"ds0": ["/ds0.nc"]}
+
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=cat):
+            with pytest.raises(DatasetResolutionError, match=r"Could not retrieve pinned datasets.*ds1"):
+                pinned.fetch_datasets()
+
     def test_warns_when_no_cmip7_index_is_enabled(self, monkeypatch):
         monkeypatch.setitem(intake_esgf.conf, "stac_indices", {"api.stac.ceda.ac.uk": False})
         request = CMIP7Request(slug="test", facets={"variable_id": "tas"})

@@ -13,6 +13,7 @@ from typing import Any, cast
 import attrs
 import sqlalchemy as sa
 from sqlalchemy import Select, select
+from sqlalchemy.orm import configure_mappers
 
 from climate_ref.models.dataset import Dataset
 from climate_ref.models.diagnostic import Diagnostic
@@ -110,6 +111,8 @@ def select_datasets(
         or if a key in ``filter.facets`` is not a mapped column on the target entity.
     """
     entity = _entity_for(filter.source_type)
+    # Callers eager-load the ``files`` backref, which only exists once the mappers are configured.
+    configure_mappers()
 
     if filter.latest_only and not latest_group_by:
         raise ValueError("`latest_group_by` must be provided when `latest_only` is True")
@@ -158,7 +161,7 @@ def select_datasets(
             partition_by=[getattr(entity, c) for c in latest_group_by],
             order_by=entity.version_key.desc(),
         )
-        inner = stmt.add_columns(rank.label("_rank")).subquery()
+        inner = stmt.with_only_columns(entity.id, rank.label("_rank")).subquery()
         latest_ids = select(inner.c.id).where(inner.c._rank == 1)
         # The id membership already encodes every filter/join from above,
         # so the outer select only needs the entity and the id predicate.

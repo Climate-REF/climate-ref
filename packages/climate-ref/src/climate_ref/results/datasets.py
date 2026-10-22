@@ -11,6 +11,7 @@ The filter and query builder live in the models layer
 re-exported here so callers construct it from ``climate_ref.results``.
 """
 
+import functools
 from collections.abc import Mapping
 from typing import Any
 
@@ -110,6 +111,12 @@ class DatasetCollection(Page[DatasetView]):
         return pd.DataFrame.from_records(records, columns=base_columns if not records else None)
 
 
+@functools.cache
+def _dataset_specific_metadata(source_type: str) -> tuple[str, ...]:
+    # Building an adapter loads the default config, too slow to repeat for every row.
+    return tuple(get_dataset_adapter(source_type).dataset_specific_metadata)
+
+
 def _dataset_subtypes() -> list[type[Dataset]]:
     """Every concrete ``Dataset`` subclass, for polymorphic eager-loading."""
     return [m.class_ for m in Dataset.__mapper__.polymorphic_map.values()]
@@ -140,8 +147,8 @@ class DatasetsReader:
         return self._session if self._session is not None else self._db.session
 
     def _to_view(self, dataset: Dataset, *, include_files: bool) -> DatasetView:
-        adapter = get_dataset_adapter(dataset.dataset_type.value)
-        facets = {k: getattr(dataset, k) for k in adapter.dataset_specific_metadata if hasattr(dataset, k)}
+        fields = _dataset_specific_metadata(dataset.dataset_type.value)
+        facets = {k: getattr(dataset, k) for k in fields if hasattr(dataset, k)}
         files = (
             tuple(
                 DatasetFileView(

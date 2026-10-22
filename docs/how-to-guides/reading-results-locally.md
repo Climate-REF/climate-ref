@@ -68,23 +68,42 @@ raises a `ValueError` telling you to supply one.
 
 ## Filters
 
-Each reader takes a `*Filter`, which you construct and pass in:
-`MetricValueFilter`, `ExecutionGroupFilter`, `DiagnosticFilter`, `ResourceFilter` and `DatasetFilter`.
-Every field is optional, and `None` means "do not constrain on this axis".
+Each reader method takes an optional filter object:
+`MetricValueFilter` for values, `ExecutionGroupFilter` for execution groups,
+`DiagnosticFilter` for diagnostics and statistics, `ResourceFilter` for resource usage,
+and `DatasetFilter` for datasets.
+Every field is optional, and leaving it out means "don't narrow on this".
+The same field works the same way on every filter that has it.
 
-The filters over executions are built from the same `*Scope` pieces,
-so a field means the same thing, with the same default, wherever it appears:
+| To keep | Set |
+| --- | --- |
+| one diagnostic or provider | `diagnostic_slug="enso_tel"`, `provider_slug="pmp"` |
+| diagnostics or providers whose name contains some text | `diagnostic_contains=["enso"]`, `provider_contains=["pmp"]` |
+| results from older diagnostic versions as well | `include_superseded=True` |
+| only each execution group's newest run | `latest_only=True` |
+| runs created in a date range | `created_after=...`, `created_before=...` |
+| retracted runs as well | `include_retracted=True` |
+| runs that used particular input datasets | `input_datasets=InputDatasetFilter(...)` |
 
-| Scope | Fields | Carried by |
-| --- | --- | --- |
-| `DiagnosticScope` | `diagnostic_slug`, `provider_slug`, `diagnostic_contains`, `provider_contains` | every filter except `DatasetFilter` |
-| `VersionScope` | `include_superseded` (default `False`, so only the promoted version) | values, resources, execution groups |
-| `ExecutionScope` | `include_retracted`, `latest_only`, `created_after`, `created_before` | values, resources |
-| `InputDatasetScope` | `input_datasets` | every filter except `DatasetFilter` |
+By default you get the current diagnostic version only, with retracted runs left out.
+When you narrow execution groups or diagnostics by `input_datasets`,
+a group matches only if its newest run used those datasets.
 
-A scope is never passed to a reader on its own.
-Readers over execution groups check `input_datasets` against each group's latest execution.
-`DatasetFilter` filters datasets rather than executions, so its `latest_only` means the latest dataset version.
+For example, the latest PMP values from runs created this year:
+
+```python
+import datetime
+
+from climate_ref.results import MetricValueFilter
+
+filters = MetricValueFilter(
+    provider_slug="pmp",
+    latest_only=True,
+    created_after=datetime.datetime(2026, 1, 1),
+)
+```
+
+`DatasetFilter` describes datasets rather than runs, so it has its own fields, covered under [Datasets](#datasets).
 
 ## Scalar and series values
 

@@ -13,7 +13,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
@@ -31,7 +31,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
     name = "Sea ice sensitivity"
     slug = "sea-ice-sensitivity"
     base_recipe = "recipe_seaice_sensitivity.yml"
-    version = 2
+    version = 3
 
     data_requirements = (
         (
@@ -109,7 +109,8 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     RequireFacets(
                         "variable_id",
                         required_facets=("siconc", "tas"),
-                        group_by=("source_id", "variant_label", "grid_label"),
+                        # CMIP7 grid labels differ per realm, so siconc and tas never share one.
+                        group_by=("source_id", "variant_label"),
                     ),
                     # The diagnostic script expects a single member per model; the REF
                     # otherwise feeds every ingested member into this one execution.
@@ -119,7 +120,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     RequireFacets(
                         "variable_id",
                         required_facets=("areacello",),
-                        group_by=("source_id", "grid_label"),
+                        group_by=("source_id",),
                     ),
                 ),
             ),
@@ -164,24 +165,38 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
-                            "variable_id": ["areacella", "areacello", "siconc", "tas"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "areacello_ti-u-hxy-u",
-                                "siconc_tavg-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
+                            "source_id": "UKESM1-3-LL",
+                            "variable_id": ["siconc", "tas"],
+                            "branding_suffix": [
+                                "tavg-u-hxy-u",
+                                "tavg-h2m-hxy-u",
                             ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1979", "2014"),
+                    ),
+                    # intake-esgf cannot filter fx files by time, so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": "historical",
+                            "source_id": "UKESM1-3-LL",
+                            "variable_id": ["areacella", "areacello"],
+                            "branding_suffix": [
+                                "ti-u-hxy-u",
+                            ],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),

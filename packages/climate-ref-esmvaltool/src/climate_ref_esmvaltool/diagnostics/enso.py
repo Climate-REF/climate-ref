@@ -11,7 +11,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -29,7 +29,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
     name = "ENSO Basic Climatology"
     slug = "enso-basic-climatology"
     base_recipe = "ref/recipe_enso_basicclimatology_CMIP7.yml"
-    version = 3
+    version = 4
 
     data_requirements = (
         (
@@ -90,7 +90,8 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+                # CMIP7 grid labels differ per realm, so pr, tauu and tos never share one.
+                group_by=("source_id", "experiment_id", "variant_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -257,18 +258,17 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
+                            "source_id": "UKESM1-3-LL",
                             "variable_id": ["pr", "tauu", "tos"],
-                            "branded_variable": [
-                                "pr_tavg-u-hxy-u",
-                                "tauu_tavg-u-hxy-u",
-                                "tos_tavg-u-hxy-sea",
+                            "branding_suffix": [
+                                "tavg-u-hxy-u",
+                                "tavg-u-hxy-sea",
                             ],
-                            "variant_label": "r1i1p1f1",
+                            "variant_label": "r1i1p1f2",
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -395,17 +395,17 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
+                            "source_id": "UKESM1-3-LL",
                             "variable_id": ["areacello", "tos"],
-                            "branded_variable": [
-                                "areacello_ti-u-hxy-u",
-                                "tos_tavg-u-hxy-sea",
+                            "branding_suffix": [
+                                "ti-u-hxy-u",
+                                "tavg-u-hxy-sea",
                             ],
-                            "variant_label": "r1i1p1f1",
+                            "variant_label": "r1i1p1f2",
                             "frequency": ["fx", "mon"],
                             "region": "glb",
                         },

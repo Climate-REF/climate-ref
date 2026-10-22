@@ -10,6 +10,7 @@ from climate_ref_core.constraints import (
     RequireFacets,
     RequireTimerange,
     SelectFirstMember,
+    SelectSingleGrid,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -115,6 +116,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     # The diagnostic script expects a single member per model; the REF
                     # otherwise feeds every ingested member into this one execution.
                     SelectFirstMember(member_facet="variant_label", group_by=("source_id",)),
+                    SelectSingleGrid(group_by=("source_id", "variant_label", "variable_id")),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                     AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP7),
                     RequireFacets(

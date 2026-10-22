@@ -303,25 +303,21 @@ cmip7_historical_CESM2-FV2_r1i1p1f1:
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.mon.tauu.tavg-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gn.v20191120
-  - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gr.v20191120
 cmip7_historical_CESM2-WACCM-FV2_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.mon.tauu.tavg-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gn.v20191120
-  - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gr.v20191120
 cmip7_historical_CESM2-WACCM_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20190415
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.mon.tauu.tavg-u-hxy-u.gn.v20190227
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gn.v20190808
-  - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gr.v20190808
 cmip7_historical_CESM2_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20190401
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.mon.tauu.tavg-u-hxy-u.gn.v20190308
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gn.v20190308
-  - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gr.v20190308
 cmip7_historical_CIESM_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.THU.CIESM.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gr.v20200417
@@ -352,13 +348,11 @@ cmip7_historical_CNRM-CM6-1_r1i1p1f2:
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.glb.mon.pr.tavg-u-hxy-u.gr.v20180917
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.glb.mon.tauu.tavg-u-hxy-u.gr.v20180917
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.glb.mon.tos.tavg-u-hxy-sea.gn.v20180917
-  - CMIP7.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.glb.mon.tos.tavg-u-hxy-sea.gr1.v20180917
 cmip7_historical_CNRM-ESM2-1_r1i1p1f2:
   cmip7:
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.glb.mon.pr.tavg-u-hxy-u.gr.v20181206
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.glb.mon.tauu.tavg-u-hxy-u.gr.v20181206
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.glb.mon.tos.tavg-u-hxy-sea.gn.v20181206
-  - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.glb.mon.tos.tavg-u-hxy-sea.gr1.v20181206
 cmip7_historical_CanESM5-1_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20190429
@@ -449,7 +443,6 @@ cmip7_historical_GFDL-ESM4_r1i1p1f1:
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gr1.v20190726
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.tauu.tavg-u-hxy-u.gr1.v20190726
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gn.v20190726
-  - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gr.v20190726
 cmip7_historical_GISS-E2-1-G-CC_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.NASA-GISS.GISS-E2-1-G-CC.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20190815
@@ -540,7 +533,6 @@ cmip7_historical_MIROC-ES2L_r1i1p1f2:
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.mon.pr.tavg-u-hxy-u.gn.v20190823
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.mon.tauu.tavg-u-hxy-u.gn.v20190823
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.mon.tos.tavg-u-hxy-sea.gn.v20190823
-  - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.mon.tos.tavg-u-hxy-sea.gr1.v20200731
 cmip7_historical_MIROC6_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.MIROC.MIROC6.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20181212
@@ -566,7 +558,6 @@ cmip7_historical_MRI-ESM2-0_r1i1p1f1:
   - CMIP7.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20190222
   - CMIP7.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.glb.mon.tauu.tavg-u-hxy-u.gn.v20190222
   - CMIP7.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gn.v20190904
-  - CMIP7.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gr.v20190904
 cmip7_historical_NESM3_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.NUIST.NESM3.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v20190630

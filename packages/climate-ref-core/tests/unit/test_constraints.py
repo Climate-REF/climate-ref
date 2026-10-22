@@ -18,6 +18,7 @@ from climate_ref_core.constraints import (
     RequireOverlappingTimerange,
     RequireTimerange,
     SelectFirstMember,
+    SelectSingleGrid,
     apply_constraint,
 )
 from climate_ref_core.datasets import SourceDatasetType
@@ -1606,3 +1607,58 @@ class TestSelectFirstMember:
 
     def test_is_group_constraint(self):
         assert isinstance(SelectFirstMember(), GroupConstraint)
+
+
+def _grid_rows(*rows: tuple[str, str, str, str | None]) -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            {
+                "source_id": source_id,
+                "variant_label": "r1i1p1f1",
+                "variable_id": variable_id,
+                "grid_label": grid_label,
+                "nominal_resolution": resolution,
+                "path": f"{source_id}_{variable_id}_{grid_label}.nc",
+            }
+            for source_id, variable_id, grid_label, resolution in rows
+        ]
+    )
+
+
+class TestSelectSingleGrid:
+    constraint = SelectSingleGrid(group_by=("source_id", "variant_label", "variable_id"))
+
+    def test_keeps_each_realm_on_its_own_grid(self):
+        data = _grid_rows(("UKESM1-3-LL", "pr", "g110", "250 km"), ("UKESM1-3-LL", "tos", "g126", "100 km"))
+        assert_frame_equal(self.constraint.apply(data, data), data)
+
+    def test_keeps_the_finest_grid(self):
+        data = _grid_rows(("CanESM6-0-MR", "ts", "g150", "100 km"), ("CanESM6-0-MR", "ts", "g147", "50 km"))
+        result = self.constraint.apply(data, data)
+        assert list(result["grid_label"]) == ["g147"]
+
+    def test_prefers_the_native_grid(self):
+        data = _grid_rows(("CNRM-CM6-1", "tos", "gr1", "100 km"), ("CNRM-CM6-1", "tos", "gn", "250 km"))
+        result = self.constraint.apply(data, data)
+        assert list(result["grid_label"]) == ["gn"]
+
+    def test_unknown_resolution_falls_back_to_grid_label(self):
+        data = _grid_rows(("MODEL", "ts", "g2", None), ("MODEL", "ts", "g1", None))
+        result = self.constraint.apply(data, data)
+        assert list(result["grid_label"]) == ["g1"]
+
+    def test_keeps_every_file_of_the_selected_grid(self):
+        data = _grid_rows(
+            ("MODEL", "ts", "g1", "50 km"), ("MODEL", "ts", "g1", "50 km"), ("MODEL", "ts", "g2", None)
+        )
+        assert list(self.constraint.apply(data, data)["grid_label"]) == ["g1", "g1"]
+
+    def test_without_nominal_resolution(self):
+        data = _grid_rows(("MODEL", "ts", "g2", None), ("MODEL", "ts", "g1", None)).drop(
+            columns="nominal_resolution"
+        )
+        assert list(self.constraint.apply(data, data)["grid_label"]) == ["g1"]
+
+    def test_empty_group(self):
+        data = pd.DataFrame(columns=["source_id", "variant_label", "variable_id", "grid_label", "path"])
+        assert self.constraint.apply(data, data).empty

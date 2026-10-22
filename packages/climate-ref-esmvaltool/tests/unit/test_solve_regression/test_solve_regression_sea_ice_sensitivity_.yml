@@ -209,7 +209,6 @@ cmip7_historical:
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.fx.areacella.ti-u-hxy-u.gn.v20190823
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.fx.areacello.ti-u-hxy-u.gn.v20190823
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.mon.siconc.tavg-u-hxy-u.gn.v20190823
-  - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.mon.siconc.tavg-u-hxy-u.gr1.v20200731
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.mon.tas.tavg-h2m-hxy-u.gn.v20190823
   - CMIP7.CMIP.MIROC.MIROC6.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190311
   - CMIP7.CMIP.MIROC.MIROC6.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gn.v20190311
@@ -257,9 +256,7 @@ cmip7_historical:
   - CMIP7.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v20191108
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr1.v20190726
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gn.v20190726
-  - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gr.v20190726
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.siconc.tavg-u-hxy-u.gn.v20190726
-  - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.siconc.tavg-u-hxy-u.gr.v20190726
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gr1.v20190726
   - CMIP7.CMIP.SNU.SAM0-UNICON.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190323
   - CMIP7.CMIP.SNU.SAM0-UNICON.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gn.v20190323

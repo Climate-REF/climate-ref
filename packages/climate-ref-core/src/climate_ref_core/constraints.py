@@ -691,3 +691,59 @@ class SelectFirstMember:
             first = min(members, key=_member_sort_key)
             keep.loc[subgroup.index[subgroup[self.member_facet] == first]] = True
         return group[keep]
+
+
+_RESOLUTION_KM_RE = re.compile(r"\s*([0-9.]+)\s*km\s*")
+
+
+def _grid_sort_key(grid_label: str, nominal_resolution: object) -> tuple[bool, float, str]:
+    """
+    Sort key that orders the grids a variable is published on, preferred grid first.
+
+    The CMIP6 native grid ``gn`` comes first, then the finest ``nominal_resolution``.
+    Resolutions that are missing or not given in km sort last,
+    and the grid label breaks any remaining tie.
+    """
+    match = _RESOLUTION_KM_RE.fullmatch(str(nominal_resolution))
+    resolution = float(match.group(1)) if match else float("inf")
+    return (grid_label != "gn", resolution, grid_label)
+
+
+@frozen
+class SelectSingleGrid:
+    """
+    Keep a single grid per variable within each group.
+
+    A model may publish one variable on several grids, such as its native grid and a regridded copy.
+    A group that spans realms cannot be split by ``grid_label``, because CMIP7 labels each realm's grid
+    separately, so this constraint drops the extra copies instead.
+    The CMIP6 native grid ``gn`` is kept if present, otherwise the finest ``nominal_resolution``.
+    """
+
+    group_by: tuple[str, ...] = field(converter=_to_tuple)
+    """The facets defining each variable of a model, within which a single grid is kept."""
+
+    def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Keep only the preferred grid within each group.
+        """
+        if group.empty or "grid_label" not in group.columns:
+            return group
+
+        resolutions = (
+            group["nominal_resolution"]
+            if "nominal_resolution" in group.columns
+            else pd.Series(None, index=group.index)
+        )
+        keep = pd.Series(False, index=group.index)
+        for _, subgroup in group.groupby(list(self.group_by), dropna=False):
+            grids = {
+                label: resolutions.loc[subgroup.index[subgroup["grid_label"] == label]].iloc[0]
+                for label in subgroup["grid_label"].dropna().unique()
+            }
+            if len(grids) <= 1:
+                keep.loc[subgroup.index] = True
+                continue
+            preferred = min(grids, key=lambda label: _grid_sort_key(label, grids[label]))
+            keep.loc[subgroup.index[subgroup["grid_label"] == preferred]] = True
+        return group[keep]

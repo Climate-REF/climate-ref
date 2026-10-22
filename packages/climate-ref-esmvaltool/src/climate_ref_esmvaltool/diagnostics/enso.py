@@ -8,6 +8,7 @@ from climate_ref_core.constraints import (
     RequireContiguousTimerange,
     RequireFacets,
     RequireOverlappingTimerange,
+    SelectSingleGrid,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -93,6 +94,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                 # CMIP7 grid labels differ per realm, so pr, tauu and tos never share one.
                 group_by=("source_id", "experiment_id", "variant_label"),
                 constraints=(
+                    SelectSingleGrid(group_by=("source_id", "experiment_id", "variant_label", "variable_id")),
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
                     RequireFacets(

@@ -57,8 +57,10 @@ Fields that take a list keep rows matching any of its values, so an empty list k
 An execution group can have several executions, one each time it is rerun.
 ``MetricValueFilter`` and ``ResourceFilter`` read single executions,
 so they have ``latest_only`` to keep only each group's newest one.
-``ExecutionGroupFilter`` and ``DiagnosticFilter`` always judge a group by its newest execution,
-so they do not need it.
+``ExecutionGroupFilter`` always judges a group by its newest execution, so it does not need it.
+``DiagnosticFilter`` judges groups the same way for the group counts in ``reader.diagnostics.list``.
+Its ``execution_count`` and ``reader.diagnostics.with_values`` count every kept execution,
+as the values and resources readers do.
 
 ## Filtering by input dataset
 
@@ -412,10 +414,10 @@ class ExecutionScope(BaseFilter):
     The creation window and the id lists apply before the newest execution is picked,
     so ``latest_only`` with ``created_before`` keeps each group's newest execution from before then.
 
-    Filters over execution groups or diagnostics judge each group by its newest execution that is kept.
+    Group filters, and the group counts of diagnostic filters, judge each group by its newest kept execution.
     A group whose newest execution is retracted is dropped, unless ``include_retracted=True``.
     It never falls back to an older execution, because the newer one replaced it.
-    With a window or id list set, a group with no kept execution is dropped.
+    With a window or ``execution_ids`` set, a group with no kept execution is dropped.
 
     Examples
     --------
@@ -516,7 +518,7 @@ class InputDatasetScope(BaseFilter):
     """
     Keep only executions that ran against matching datasets.
 
-    Filters over execution groups or diagnostics check each group's newest execution.
+    Group filters, and the group counts of diagnostic filters, check each group's newest execution.
     """
 
 

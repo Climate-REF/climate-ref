@@ -29,7 +29,7 @@ Other settings:
 `climate_ref.testing.synthetic` builds a database from it using the real migrations,
 so the indexes match production.
 It ships in the package so other projects, such as the API, can test against the same database.
-`ANALYZE` is not run, because the deployed database has no table statistics.
+Table statistics are gathered with `Database.optimize`, as a deployed database gets them after each ingest or solve.
 
 Refresh it from the deployed database with:
 

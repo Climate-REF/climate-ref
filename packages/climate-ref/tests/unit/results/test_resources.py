@@ -136,11 +136,11 @@ class TestProfiles:
         profile = _by_slug(Reader(db_with_resources).resources.profiles())["enso_tel"]
 
         assert profile.provider_slug == "pmp"
-        assert profile.n_samples == 10
-        assert profile.peak_memory_p50 == round(5.5 * GIB)
-        assert profile.peak_memory_p95 == round(9.55 * GIB)
-        assert profile.peak_memory_max == 10 * GIB
-        assert profile.wall_p95 == 100.0
+        assert profile.sample_count == 10
+        assert profile.peak_memory_bytes_p50 == round(5.5 * GIB)
+        assert profile.peak_memory_bytes_p95 == round(9.55 * GIB)
+        assert profile.peak_memory_bytes_max == 10 * GIB
+        assert profile.wall_seconds_p95 == 100.0
         assert profile.cpu_seconds_p95 == 110.0
         assert profile.parallelism_p95 == pytest.approx(1.1)
 
@@ -148,16 +148,16 @@ class TestProfiles:
         profile = _by_slug(Reader(db_with_resources).resources.profiles())["enso_tel"]
 
         # The 40 GiB shared reading and the sample missing a CPU time, and nothing else.
-        assert profile.n_excluded == 2
-        assert profile.n_failed == 1
-        assert profile.peak_memory_max == 10 * GIB
+        assert profile.excluded_execution_count == 2
+        assert profile.failed_execution_count == 1
+        assert profile.peak_memory_bytes_max == 10 * GIB
 
     def test_include_shared(self, db_with_resources):
         profile = _by_slug(Reader(db_with_resources).resources.profiles(exclusive_only=False))["enso_tel"]
 
-        assert profile.n_samples == 11
-        assert profile.peak_memory_max == 40 * GIB
-        assert profile.n_excluded == 1
+        assert profile.sample_count == 11
+        assert profile.peak_memory_bytes_max == 40 * GIB
+        assert profile.excluded_execution_count == 1
 
     def test_a_process_tree_reading_survives_a_busy_worker(self, db_seeded):
         """
@@ -191,18 +191,18 @@ class TestProfiles:
         profile = _by_slug(Reader(db_seeded).resources.profiles())["enso_tel"]
 
         assert profile.memory_source == "proc_tree"
-        assert profile.n_samples == 3
-        assert profile.n_excluded == 0
-        assert profile.peak_memory_max == 2 * GIB
+        assert profile.sample_count == 3
+        assert profile.excluded_execution_count == 0
+        assert profile.peak_memory_bytes_max == 2 * GIB
 
     def test_mixed_memory_sources_take_the_dominant_one(self, db_with_resources):
         profile = _by_slug(Reader(db_with_resources).resources.profiles())["enso-characteristics"]
 
         assert profile.memory_source == "cgroup"
-        assert profile.n_samples == 3
+        assert profile.sample_count == 3
         # The lone rusage reading is excluded rather than averaged into the cgroup ones.
-        assert profile.n_excluded == 1
-        assert profile.peak_memory_max == 4 * GIB
+        assert profile.excluded_execution_count == 1
+        assert profile.peak_memory_bytes_max == 4 * GIB
 
     def test_unmeasured_executions_are_absent(self, db_with_resources):
         profiles = _by_slug(Reader(db_with_resources).resources.profiles())
@@ -221,8 +221,8 @@ class TestProfiles:
 
         profile = _by_slug(Reader(db_seeded).resources.profiles())["enso_tel"]
 
-        assert profile.n_samples == 0
-        assert profile.n_failed == 1
+        assert profile.sample_count == 0
+        assert profile.failed_execution_count == 1
         assert profile.confidence == "none"
         assert profile.memory_source is None
         assert profile.headroom_ratio is None
@@ -260,9 +260,9 @@ class TestProfiles:
     def test_confidence_thresholds(self, db_with_resources):
         profiles = _by_slug(Reader(db_with_resources).resources.profiles())
 
-        assert profiles["enso_tel"].n_samples == 10
+        assert profiles["enso_tel"].sample_count == 10
         assert profiles["enso_tel"].confidence == "good"
-        assert profiles["extratropical-modes-of-variability-nao"].n_samples == 3
+        assert profiles["extratropical-modes-of-variability-nao"].sample_count == 3
         assert profiles["extratropical-modes-of-variability-nao"].confidence == "thin"
 
     def test_measured_failure_is_aggregated(self, db_seeded):
@@ -279,26 +279,26 @@ class TestProfiles:
 
         # A run that died at 40 GiB is the row that most needs to reach a recommendation.
         profile = _by_slug(Reader(db_seeded).resources.profiles())["enso_tel"]
-        assert profile.n_samples == 1
-        assert profile.n_failed == 1
-        assert profile.n_excluded == 0
-        assert profile.peak_memory_max == 40 * GIB
+        assert profile.sample_count == 1
+        assert profile.failed_execution_count == 1
+        assert profile.excluded_execution_count == 0
+        assert profile.peak_memory_bytes_max == 40 * GIB
 
     def test_filters(self, db_with_resources):
         reader = Reader(db_with_resources).resources
 
-        assert {p.diagnostic_slug for p in reader.profiles(provider_contains=["pmp"])} == {
+        assert {p.diagnostic_slug for p in reader.profiles(ResourceFilter(provider_contains=["pmp"]))} == {
             "enso_tel",
             "extratropical-modes-of-variability-nao",
         }
-        assert {p.diagnostic_slug for p in reader.profiles(diagnostic_contains=["nao"])} == {
+        assert {p.diagnostic_slug for p in reader.profiles(ResourceFilter(diagnostic_contains=["nao"]))} == {
             "extratropical-modes-of-variability-nao"
         }
 
     def test_since_excludes_older_rows(self, db_with_resources):
         future = datetime.datetime.now(tz=datetime.UTC).replace(tzinfo=None) + datetime.timedelta(days=1)
 
-        assert Reader(db_with_resources).resources.profiles(since=future) == ()
+        assert Reader(db_with_resources).resources.profiles(ResourceFilter(created_after=future)) == ()
 
     def test_empty_database(self, db_seeded):
         assert Reader(db_seeded).resources.profiles() == ()
@@ -319,13 +319,13 @@ class TestProviderRollUp:
         pmp = profiles["pmp"]
         assert pmp.diagnostic_slug is None
         # nao peaks at 20 GiB, enso_tel at 10 GiB, and a worker has to fit the larger one.
-        assert pmp.peak_memory_p95 == 20 * GIB
-        assert pmp.peak_memory_max == 20 * GIB
+        assert pmp.peak_memory_bytes_p95 == 20 * GIB
+        assert pmp.peak_memory_bytes_max == 20 * GIB
         # Cores take the p95 of the per-diagnostic parallelism (1.1 and 3.8), not the max.
         assert pmp.parallelism_p95 == pytest.approx(3.665)
         assert pmp.recommended_cpus == 4
-        assert pmp.n_samples == 13
-        assert pmp.n_failed == 1
+        assert pmp.sample_count == 13
+        assert pmp.failed_execution_count == 1
 
     def test_headroom_is_recomputed_against_the_roll_up(self, db_with_resources):
         rolled_up = Reader(db_with_resources).resources.profiles(group_by="provider")
@@ -359,13 +359,12 @@ class TestProviderRollUp:
         rolled_up = Reader(db_seeded).resources.profiles(group_by="provider")
         pmp = {p.provider_slug: p for p in rolled_up}["pmp"]
 
-        assert pmp.peak_memory_p95 == 20 * GIB
+        assert pmp.peak_memory_bytes_p95 == 20 * GIB
         assert pmp.memory_limit_seen == 64 * GIB
         assert pmp.over_limit is False
 
-    def test_does_not_mix_sources_across_diagnostics(self, db_with_resources):
-        # esmvaltool's only measured diagnostic is cgroup-sourced, so a rusage-only diagnostic
-        # alongside it must not contribute its far larger peak to the roll-up.
+    def test_keeps_a_diagnostic_measured_by_another_source(self, db_with_resources):
+        # A rusage-only diagnostic beside cgroup-sourced ones still sizes the worker.
         with db_with_resources.session.begin():
             diagnostic = (
                 db_with_resources.session.query(Diagnostic).filter_by(slug="sea-ice-area-basic").first()
@@ -384,9 +383,9 @@ class TestProviderRollUp:
         rolled_up = Reader(db_with_resources).resources.profiles(group_by="provider")
         esmvaltool = {p.provider_slug: p for p in rolled_up}["esmvaltool"]
 
-        assert esmvaltool.memory_source == "cgroup"
-        assert esmvaltool.peak_memory_max == 4 * GIB
-        assert esmvaltool.n_samples == 3
+        assert esmvaltool.memory_source == "rusage"
+        assert esmvaltool.peak_memory_bytes_max == 200 * GIB
+        assert esmvaltool.sample_count == 4
 
     def test_provider_with_no_samples(self, db_seeded):
         with db_seeded.session.begin():
@@ -401,7 +400,7 @@ class TestProviderRollUp:
         (profile,) = Reader(db_seeded).resources.profiles(group_by="provider")
 
         assert profile.provider_slug == "pmp"
-        assert profile.n_samples == 0
+        assert profile.sample_count == 0
         assert profile.confidence == "none"
 
 
@@ -555,15 +554,23 @@ class TestSuperseded:
             diagnostic.promoted_version = 2
         return db_with_resources
 
-    def test_counted_by_default(self, db_superseded):
+    def test_counted_when_asked(self, db_superseded):
         reader = Reader(db_superseded).resources
-        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel")) is not None
-        assert "enso_tel" in _by_slug(reader.profiles())
+        f = ResourceFilter(include_superseded=True)
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", include_superseded=True)) is not None
+        assert "enso_tel" in _by_slug(reader.profiles(f))
 
-    def test_excluded_when_asked(self, db_superseded):
+    def test_measurement_lookup_ignores_promotion(self, db_superseded):
         reader = Reader(db_superseded).resources
-        f = ResourceFilter(include_superseded=False)
-        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel", include_superseded=False)) is None
+        (row,) = reader.measurements(
+            ResourceFilter(diagnostic_slug="enso_tel", include_superseded=True), limit=1
+        )
+        assert reader.measurement(row.execution_id) is not None
+
+    def test_excluded_by_default(self, db_superseded):
+        reader = Reader(db_superseded).resources
+        f = ResourceFilter()
+        assert reader.summary(ResourceFilter(diagnostic_slug="enso_tel")) is None
         assert {m.diagnostic_slug for m in reader.measurements(f)} == {
             "extratropical-modes-of-variability-nao",
             "enso-characteristics",
@@ -605,12 +612,8 @@ class TestInputDatasets:
 
     def test_scopes_every_read(self, db_with_inputs):
         reader = Reader(db_with_inputs).resources
-        f = ResourceFilter(
-            input_datasets=InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-A"})
-        )
-        none = ResourceFilter(
-            input_datasets=InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "NO-SUCH-MODEL"})
-        )
+        f = ResourceFilter(input_datasets=InputDatasetFilter(facets={"source_id": "FACET-A"}))
+        none = ResourceFilter(input_datasets=InputDatasetFilter(facets={"source_id": "NO-SUCH-MODEL"}))
         summary = reader.summary(f)
         assert summary is not None
         assert summary.timed_execution_count == 1
@@ -618,6 +621,38 @@ class TestInputDatasets:
         assert len(reader.measurements(f)) == 1
         assert list(_by_slug(reader.profiles(f))) == ["extratropical-modes-of-variability-nao"]
         assert reader.summary(none) is None
+
+
+class TestSourceTypes:
+    @pytest.fixture
+    def db_with_types(self, db_with_resources):
+        session = db_with_resources.session
+        with session.begin():
+            nao = session.query(ExecutionGroup).filter_by(key="nao").one()
+            nao.selectors = {"cmip6": []}
+            chars = session.query(ExecutionGroup).filter_by(key="chars").one()
+            chars.selectors = {"cmip7": []}
+        return db_with_resources
+
+    def test_scopes_every_read(self, db_with_types):
+        reader = Reader(db_with_types).resources
+        f = ResourceFilter(source_types=[SourceDatasetType.CMIP6])
+        summary = reader.summary(f)
+        assert summary is not None
+        assert summary.timed_execution_count == 3
+        assert [s.diagnostic_slug for s in reader.summaries(f)] == ["extratropical-modes-of-variability-nao"]
+        assert {m.diagnostic_slug for m in reader.measurements(f)} == {
+            "extratropical-modes-of-variability-nao"
+        }
+        assert list(_by_slug(reader.profiles(f))) == ["extratropical-modes-of-variability-nao"]
+
+    def test_empty_matches_nothing_unless_or_no_model_input(self, db_with_types):
+        reader = Reader(db_with_types).resources
+        assert reader.summary(ResourceFilter(source_types=[])) is None
+        f = ResourceFilter(source_types=[], or_no_model_input=True)
+        slugs = {m.diagnostic_slug for m in reader.measurements(f)}
+        assert "enso_tel" in slugs
+        assert slugs.isdisjoint({"extratropical-modes-of-variability-nao", "enso-characteristics"})
 
 
 class TestRetracted:
@@ -670,20 +705,14 @@ class TestRetracted:
 
     def test_profiles_exclude_retracted_samples_by_default(self, db_with_retracted):
         (profile,) = Reader(db_with_retracted).resources.profiles()
-        assert profile.n_samples == 1
+        assert profile.sample_count == 1
 
     def test_profiles_take_a_filter(self, db_with_retracted):
         reader = Reader(db_with_retracted).resources
         (profile,) = reader.profiles(ResourceFilter(include_retracted=True))
-        assert profile.n_samples == 2
+        assert profile.sample_count == 2
         (latest,) = reader.profiles(ResourceFilter(latest_only=True, include_retracted=True))
-        assert latest.n_samples == 1
-
-    def test_profiles_reject_a_filter_with_loose_kwargs(self, db_with_retracted):
-        with pytest.raises(ValueError, match="not both"):
-            Reader(db_with_retracted).resources.profiles(
-                ResourceFilter(), since=datetime.datetime(2020, 1, 1)
-            )
+        assert latest.sample_count == 1
 
 
 class TestWithCount:

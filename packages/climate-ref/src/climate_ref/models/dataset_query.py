@@ -100,7 +100,7 @@ def select_datasets(
     un-deduplicated result.
     When both are set, rows are deduplicated with a
     ``RANK() OVER (PARTITION BY <latest_group_by> ORDER BY version_key DESC)`` window
-    (applied after all other filters/joins),
+    (applied after the other filters and joins, but before ``finalised`` and ``slug_contains``),
     keeping every row tied at the maximum ``version_key`` -- so ties are not silently dropped.
     Set ``latest_only=False`` to list every version; ``latest_group_by`` is then ignored.
 
@@ -127,9 +127,6 @@ def select_datasets(
         if column is None or facet not in entity.__mapper__.columns:
             raise ValueError(f"Unknown facet {facet!r} for {entity.__name__}")
         stmt = stmt.where(column.in_(values))
-
-    if filter.finalised is not None:
-        stmt = stmt.where(entity.finalised.is_(filter.finalised))
 
     # Both relationship axes reach through ``execution_datasets``
     # join it at most once so that setting ``execution_id`` and ``diagnostic_slug`` together
@@ -167,7 +164,11 @@ def select_datasets(
         # so the outer select only needs the entity and the id predicate.
         stmt = select(entity).where(entity.id.in_(latest_ids))
 
+    # After the window, so an older finalised version never stands in for a newer unfinalised one.
+    if filter.finalised is not None:
+        stmt = stmt.where(entity.finalised.is_(filter.finalised))
+
     if filter.slug_contains:
-        stmt = stmt.where(entity.slug.ilike(f"%{filter.slug_contains}%"))
+        stmt = stmt.where(entity.slug.icontains(filter.slug_contains, autoescape=True))
 
     return stmt.order_by(entity.updated_at.desc())

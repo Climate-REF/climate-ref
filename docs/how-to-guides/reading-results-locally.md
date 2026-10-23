@@ -68,6 +68,46 @@ with Database.from_config(config, read_only=True) as db:
 Constructing `Reader(db)` without a `results` root and then touching `reader.artifacts`
 raises a `ValueError` telling you to supply one.
 
+## Filters
+
+Each reader method takes an optional filter object:
+`MetricValueFilter` for values, `ExecutionGroupFilter` for execution groups,
+`DiagnosticFilter` for diagnostics and statistics, `ResourceFilter` for resource usage,
+and `DatasetFilter` for datasets.
+Every field is optional, and leaving it out means "don't narrow on this".
+The same field works the same way on every filter that has it.
+
+| To keep                                                | Set                                                         |
+| ------------------------------------------------------ | ----------------------------------------------------------- |
+| one diagnostic or provider                             | `diagnostic_slug="enso_tel"`, `provider_slug="pmp"`         |
+| diagnostics or providers whose name contains some text | `diagnostic_contains=["enso"]`, `provider_contains=["pmp"]` |
+| results from older diagnostic versions as well         | `include_superseded=True`                                   |
+| only each execution group's newest execution           | `latest_only=True`                                          |
+| executions created in a date range                     | `created_after=...`, `created_before=...`                   |
+| retracted executions as well                           | `include_retracted=True`                                    |
+| groups that draw on a source type                      | `source_types=[...]`                                        |
+| executions that used particular input datasets         | `input_datasets=InputDatasetFilter(...)`                    |
+
+By default you get the current diagnostic version only, with retracted executions left out.
+When you narrow execution groups or diagnostics by `input_datasets`,
+a group matches only if its newest execution used those datasets.
+
+For example, the latest PMP values from executions created this year:
+
+```python
+import datetime
+
+from climate_ref.results import MetricValueFilter
+
+filters = MetricValueFilter(
+    provider_slug="pmp",
+    latest_only=True,
+    created_after=datetime.datetime(2026, 1, 1),
+)
+```
+
+`DatasetFilter` describes datasets rather than executions, so it has its own fields, covered under [Datasets](#datasets).
+
 ## Scalar and series values
 
 `reader.values` reads the two shapes of metric value the REF stores:
@@ -173,7 +213,7 @@ with Database.from_config(config, read_only=True) as db:
 `reader.executions` reads execution groups and the individual executions within them.
 
 `groups()` returns an `ExecutionGroupCollection`;
-each `ExecutionGroupView` carries its `latest` execution (or `None` if it has never run):
+each `ExecutionGroupView` carries its `latest` execution (or `None` if it has no execution yet):
 
 ```python
 from climate_ref.results import ExecutionGroupFilter
@@ -206,17 +246,20 @@ with Database.from_config(config, read_only=True) as db:
     latest = reader.executions.latest_execution(execution_group_id=1)
 ```
 
-`group()`, `groups()`, `latest_execution()`, and `statistics()`
+`group()`, `groups()` and `latest_execution()`
 all agree on which execution is "latest" for a group
 (ranked by `created_at DESC, id DESC`).
 
-`statistics()` returns per-`(provider, diagnostic)` status counts as `ExecutionStats` objects:
+`reader.diagnostics.list()` returns per-diagnostic status counts in `DiagnosticView.groups`:
 
 ```python
+from climate_ref.results import DiagnosticFilter
+
 with Database.from_config(config, read_only=True) as db:
-    stats = Reader(db).executions.statistics(provider_contains=["esmvaltool"])
-    for row in stats:
-        print(row.provider, row.diagnostic, row.successful, row.failed, row.running)
+    diagnostics = Reader(db).diagnostics.list(DiagnosticFilter(provider_contains=["esmvaltool"]))
+    for d in diagnostics.items:
+        counts = d.groups
+        print(d.provider_slug, d.diagnostic_slug, counts.successful, counts.failed, counts.running)
 ```
 
 ## Datasets
@@ -273,7 +316,8 @@ with Database.from_config(config, read_only=True) as db:
     df = diagnostics.to_pandas()
 
     for diagnostic in diagnostics:
-        print(diagnostic.provider_slug, diagnostic.slug, diagnostic.successful, diagnostic.total)
+        groups = diagnostic.groups
+        print(diagnostic.provider_slug, diagnostic.diagnostic_slug, groups.successful, groups.total)
 ```
 
 ## Artifacts: resolving output paths

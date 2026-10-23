@@ -1,65 +1,99 @@
 """
-Data access layer for REF results.
+Read the results of diagnostic executions from a local REF database.
 
-This package is the single source of truth for how result data is filtered and queried.
-It serves notebooks / local users (via pandas-friendly, detached value objects) and,
-in future, the ref-app API (which can reuse the shared ``Select`` builders directly).
+The REF stores its local results across several database tables:
+diagnostics, execution groups, executions, metric values and datasets.
+A ``Reader`` joins these tables and skips retracted executions,
+so a read needs a filter rather than SQL.
 
-Layers:
+## Reading results
 
-* [_query][climate_ref.results._query] -- ``MetricValueFilter`` + ``select_*`` builders
-  (return a ``Select``; the source of truth for filter/join logic) + ``count_values`` +
-  ``latest_execution_for_group`` + ``select_latest_executions``.
-* [frames][climate_ref.results.frames] -- ``*_to_frame`` + ``collect_facets``.
-* [outliers][climate_ref.results.outliers] -- source-id-aware IQR outlier detection.
-* [values][climate_ref.results.values] -- typed DTOs + collections + the ``Reader`` facade.
-* [executions][climate_ref.results.executions] -- execution-group / execution DTOs + collection +
-  the ``ExecutionsReader`` facade.
-* [datasets][climate_ref.results.datasets] -- dataset DTOs + collection + the ``DatasetsReader``
-  facade, querying the polymorphic ``Dataset`` hierarchy directly.
-* [diagnostics][climate_ref.results.diagnostics] -- diagnostic DTOs + collection + the
-  ``DiagnosticsReader`` facade, querying ``Diagnostic -> Provider`` directly.
-* [resources][climate_ref.results.resources] -- ``ResourceFilter`` + resource DTOs +
-  the ``ResourcesReader`` facade, aggregating the per-execution resource columns into a
-  worker-sizing profile.
-* [artifacts][climate_ref.results.artifacts] -- the ``ArtifactsReader`` facade,
-  resolving execution output fragments into filesystem paths under a results root.
+Each property of a ``Reader`` reads one kind of result:
 
-The typical notebook entry point::
+* ``reader.values``: the metric values each execution produced, as single numbers or as series.
+* ``reader.executions``: the executions of each diagnostic and whether they succeeded.
+* ``reader.diagnostics``: the diagnostics, with how many of their execution groups succeeded or failed.
+* ``reader.datasets``: the datasets that have been ingested.
+* ``reader.resources``: how much CPU time and memory the executions used.
+* ``reader.artifacts``: where the output files of an execution are on disk.
 
-    from climate_ref.config import Config
-    from climate_ref.database import Database
-    from climate_ref.results import Reader
+Most reads return a collection.
+Loop over it, or call ``to_pandas()`` on it to get a DataFrame.
+A few, such as ``reader.resources.profiles``, return a plain tuple of views.
 
-    with Database.from_config(Config.default(), read_only=True) as db:
-        df = Reader(db).values.scalar_values().to_pandas()
+## Filtering
 
-Public surface convention
--------------------------
+Most reads take a filter, such as ``MetricValueFilter``, to choose which results come back.
+By default a filter keeps only each diagnostic's promoted version and leaves out retracted executions.
+Readers of single executions also take ``latest_only`` to keep only each group's newest execution.
+The filters are documented in [filters][climate_ref.results.filters].
 
-The top level exports only what a caller *names to make a call*,
-so the namespace stays small as domains are added:
+## Pagination
 
-* the ``Reader`` entry point,
-* filter objects you construct and pass in (``MetricValueFilter``, ``ExecutionGroupFilter``,
-  ``DatasetFilter``, ``DiagnosticFilter``, ``ResourceFilter``, ``InputDatasetFilter``),
-* value objects you pass in (``OutlierPolicy``).
+Reads that return many rows are paged with ``offset`` and ``limit``.
+By default ``limit`` is ``None``, which returns every matching row.
+A collection's ``total_count`` is how many rows match the filter across all pages.
+To get the next page, repeat the read with ``offset=page.offset + len(page)``.
 
-Everything the package *returns* -- DTOs, collections, views -- and the sub-reader classes reached
-via ``reader.values`` etc. live in their domain submodule (``climate_ref.results.values``, ...).
-Import them from there on the rare occasion you need to name one, e.g.
-``from climate_ref.results.values import ScalarValue``.
-The ``Select`` builders and other plumbing stay in ``climate_ref.results._query``
-and are not part of the public surface.
+## Plain objects instead of ORM objects
+
+A read returns frozen data objects, such as
+[ScalarValue][climate_ref.results.values.ScalarValue],
+rather than the SQLAlchemy ORM objects that the database uses.
+This is on purpose:
+
+* They keep working after the database session is closed.
+  An ORM object loads related rows lazily, so reading one of them after the session closes fails.
+* Reading a field never runs a hidden query, because everything is loaded during the read.
+* They cannot change the database. They are frozen and not attached to a session.
+* Their fields can stay the same when the database tables change, so code that uses them does not break.
+
+To work with the ORM objects, use the query builders in [queries][climate_ref.results.queries].
+Each builder takes the same filter as its reader and returns a SQLAlchemy ``Select``,
+which you can narrow further with ``.where()`` before running it in a session.
+
+## Examples
+
+Get the global mean values for two models as a DataFrame:
+
+```python
+from climate_ref.config import Config
+from climate_ref.database import Database
+from climate_ref.results import MetricValueFilter, Reader
+
+config = Config.default()
+filters = MetricValueFilter(
+    provider_slug="example",
+    diagnostic_slug="global-mean-timeseries",
+    dimensions={"source_id": ["ACCESS-ESM1-5", "CanESM5"]},
+)
+
+with Database.from_config(config, read_only=True) as db:
+    reader = Reader(db)
+    df = reader.values.scalar_values(filters).to_pandas()
+```
+
+Find the log file of execution 42.
+Reading files needs the results folder as well as the database:
+
+```python
+with Database.from_config(config, read_only=True) as db:
+    reader = Reader(db, results=config.paths.results)
+    execution = reader.executions.execution(execution_id=42)
+    log = reader.artifacts.log_file(execution.output_fragment)
+```
 """
 
-from climate_ref.results._query import InputDatasetFilter, MetricValueFilter
 from climate_ref.results.datasets import DatasetFilter
-from climate_ref.results.diagnostics import DiagnosticFilter
-from climate_ref.results.executions import ExecutionGroupFilter
+from climate_ref.results.filters import (
+    DiagnosticFilter,
+    ExecutionGroupFilter,
+    InputDatasetFilter,
+    MetricValueFilter,
+    ResourceFilter,
+)
 from climate_ref.results.outliers import OutlierPolicy
-from climate_ref.results.resources import ResourceFilter
-from climate_ref.results.values import Reader
+from climate_ref.results.reader import Reader
 
 __all__ = [
     "DatasetFilter",

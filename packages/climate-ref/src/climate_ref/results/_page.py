@@ -1,4 +1,8 @@
-"""The paging shape shared by every reader collection."""
+"""
+The paging shape shared by every reader collection.
+
+An offset and limit approach is used for all collections of results.
+"""
 
 from collections.abc import Iterator
 
@@ -10,8 +14,24 @@ class Page[T]:
     """
     An immutable page of items plus the paging that produced it.
 
-    ``total_count`` is the number of rows matching the filter before ``offset``/``limit``.
-    It is ``None`` only when the caller passed ``with_count=False``.
+    Every paged collection that a reader returns is a ``Page``.
+    ``ResourcesReader.summaries`` and ``ResourcesReader.profiles`` return plain tuples instead.
+    Loop over it, or use ``len()``, to get at its ``items``.
+
+    ``total_count`` is how many results match your filter in all.
+    This includes those left out by ``offset`` and ``limit``.
+    It is ``None`` only if you passed ``with_count=False``.
+
+    Examples
+    --------
+    >>> from climate_ref.results._page import Page
+    >>> page = Page(items=(10, 20, 30), total_count=7, offset=0, limit=3)
+    >>> len(page), list(page)
+    (3, [10, 20, 30])
+    >>> page.total_count > page.offset + len(page)
+    True
+
+    To get the next page, repeat the read with ``offset=page.offset + len(page)``.
     """
 
     items: tuple[T, ...]
@@ -20,10 +40,10 @@ class Page[T]:
     total_count: int | None
     """Total rows matching the filter before ``offset``/``limit``, or ``None`` when not counted."""
 
-    offset: int
+    offset: int = attrs.field(validator=attrs.validators.ge(0))
     """Rows skipped before this page."""
 
-    limit: int | None
+    limit: int | None = attrs.field(validator=attrs.validators.optional(attrs.validators.ge(0)))
     """Page size requested, or ``None`` when the whole result was returned."""
 
     def __iter__(self) -> Iterator[T]:

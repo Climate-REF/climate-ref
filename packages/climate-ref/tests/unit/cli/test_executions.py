@@ -396,6 +396,15 @@ class TestDeleteGroups:
         remaining_count = db_with_groups.session.query(ExecutionGroup).count()
         assert remaining_count < initial_count
 
+    def test_delete_groups_reaches_superseded_versions(self, db_with_groups, invoke_cli):
+        session = db_with_groups.session
+        with session.begin():
+            session.query(Diagnostic).filter_by(slug="enso_tel").one().promoted_version = 2
+
+        invoke_cli(["executions", "delete-groups", "--diagnostic", "enso_tel", "--force"])
+
+        assert session.query(ExecutionGroup).filter_by(key="key1").count() == 0
+
     def test_delete_groups_no_deletion_on_decline(self, db_with_groups, invoke_cli):
         initial_count = db_with_groups.session.query(ExecutionGroup).count()
 
@@ -475,7 +484,7 @@ class TestDeleteGroups:
         def _boom(*args, **kwargs):
             raise RuntimeError("db exploded")
 
-        with patch("climate_ref.results.executions.get_execution_group_and_latest_filtered", _boom):
+        with patch("climate_ref.results.executions.select_execution_groups", _boom):
             result = invoke_cli(
                 ["executions", "delete-groups", "--diagnostic", "enso", "--force"],
                 expected_exit_code=1,
@@ -808,8 +817,10 @@ class TestDeleteGroups:
 
 class TestExecutionStats:
     def test_stats_no_data(self, db_seeded, invoke_cli):
+        # Diagnostics without execution groups are listed with zero counts.
         result = invoke_cli(["executions", "stats"])
-        assert "No execution groups found." in result.stdout
+        assert "(total)" in result.stdout
+        assert "No execution groups found." not in result.stdout
 
     def test_stats_basic(self, db_with_groups, invoke_cli):
         result = invoke_cli(["executions", "stats"])
@@ -922,7 +933,7 @@ class TestExecutionInspect:
 
     def test_inspect_missing(self, invoke_cli):
         result = invoke_cli(["executions", "inspect", "999"], expected_exit_code=1)
-        assert "Execution not found: 999" in result.stderr
+        assert "Execution group not found: 999" in result.stderr
 
     def test_inspect_outputs_panel(self, sample_data_dir, db_seeded, invoke_cli, config):
         # Real on-disk results root so the directory-tree / log panels keep their existing behaviour.
@@ -1685,6 +1696,15 @@ class TestExecutionValues:
         assert "WILD" in result.stdout
         assert "ACCESS-CM2" not in result.stdout
 
+    @pytest.mark.parametrize("kind", ["scalar", "series"])
+    def test_no_match_json_is_an_empty_list(self, db_seeded, invoke_cli, kind):
+        group_id, _ = self._setup(db_seeded)
+
+        args = ["executions", "values", str(group_id), "--kind", kind, "-d", "source_id=nope"]
+        result = invoke_cli([*args, "--format", "json"])
+
+        assert json.loads(result.stdout) == []
+
     def test_unknown_dimension(self, db_seeded, invoke_cli):
         group_id, _ = self._setup(db_seeded)
 
@@ -1735,3 +1755,45 @@ class TestExecutionValues:
         result = invoke_cli(["executions", "values", "99999"], expected_exit_code=1)
 
         assert "Execution group not found" in result.stderr
+
+
+class TestSince:
+    @pytest.fixture
+    def db_with_old_runs(self, db_with_groups):
+        # key1 and key3 last ran in 2021, the rest ran now.
+        session = db_with_groups.session
+        with session.begin():
+            for key in ("key1", "key3"):
+                group = session.query(ExecutionGroup).filter_by(key=key).one()
+                for execution in group.executions:
+                    execution.created_at = datetime.datetime(2021, 1, 1)
+        return db_with_groups
+
+    def test_list_groups_keeps_groups_run_since(self, db_with_old_runs, invoke_cli):
+        result = invoke_cli(["executions", "list-groups", "--since", "30d", "--format", "json"])
+        assert {row["key"] for row in json.loads(result.stdout)} == {"key2", "key4", "key5"}
+
+    def test_stats_accepts_since(self, db_with_old_runs, invoke_cli):
+        result = invoke_cli(["executions", "stats", "--since", "2020-06-01", "--provider", "pmp"])
+        assert "enso_tel" in result.stdout
+
+    def test_requeue_skips_failures_before_since(self, db_with_old_runs, invoke_cli):
+        result = invoke_cli(["executions", "requeue", "--since", "30d", "--force"])
+        assert "No failed execution groups match" in result.stdout
+
+    def test_requeue_since_alone_is_a_filter(self, db_with_old_runs, invoke_cli):
+        invoke_cli(["executions", "requeue", "--since", "2020-06-01", "--force"])
+        group = db_with_old_runs.session.query(ExecutionGroup).filter_by(key="key3").one()
+        assert group.dirty is True
+
+    @pytest.mark.parametrize("command", ["list-groups", "stats", "requeue", "resources"])
+    def test_invalid_since_exits(self, db_with_old_runs, invoke_cli, command):
+        result = invoke_cli(["executions", command, "--since", "soon"], expected_exit_code=1)
+        assert "Invalid --since value" in result.stderr
+
+
+@pytest.mark.parametrize("command", ["list-groups", "delete-groups", "requeue"])
+def test_unknown_filter_key_exits(db_with_groups, invoke_cli, command):
+    force = [] if command == "list-groups" else ["--force"]
+    result = invoke_cli(["executions", command, "--filter", "nope=x", *force], expected_exit_code=1)
+    assert "Unknown selector 'nope'" in result.stderr

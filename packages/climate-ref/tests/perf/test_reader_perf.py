@@ -108,11 +108,6 @@ SCENARIOS = [
     ),
     # executions
     Scenario(
-        id="executions.statistics",
-        call=lambda r, t: r.executions.statistics(),
-        allowed_scans=_EVERY_EXECUTION,
-    ),
-    Scenario(
         id="executions.groups.diagnostic",
         call=lambda r, t: r.executions.groups(ExecutionGroupFilter(diagnostic_contains=[t.diagnostic_slug])),
     ),

@@ -1,5 +1,6 @@
 """Unit tests for the diagnostic read layer."""
 
+import attrs
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
@@ -9,9 +10,13 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import DiagnosticFilter, Reader
-from climate_ref.results._query import ExecutionScope
-from climate_ref.results.diagnostics import select_diagnostics, select_diagnostics_with_values
+from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, Reader
+from climate_ref.results.diagnostics import GroupCounts
+from climate_ref.results.queries import (
+    select_diagnostics,
+    select_diagnostics_with_values,
+    select_group_counts,
+)
 
 
 def test_import_smoke() -> None:
@@ -47,19 +52,36 @@ class TestSelectDiagnostics:
     def test_raw_rows_include_all_diagnostics(self, db_with_diagnostics):
         stmt = select_diagnostics()
         rows = db_with_diagnostics.session.execute(stmt).all()
-        slugs = {row.slug for row in rows}
+        slugs = {row.diagnostic_slug for row in rows}
         assert "enso_tel" in slugs
         assert "enso-characteristics" in slugs
 
-    def test_execution_group_counts(self, db_with_diagnostics):
+    def test_group_counts(self, db_with_diagnostics):
         stmt = select_diagnostics()
         rows = db_with_diagnostics.session.execute(stmt).all()
-        by_slug = {row.slug: row for row in rows}
+        by_slug = {row.diagnostic_slug: row for row in rows}
 
-        assert by_slug["enso_tel"].execution_group_count == 2
-        assert by_slug["extratropical-modes-of-variability-nao"].execution_group_count == 1
+        assert by_slug["enso_tel"].group_count == 2
+        assert by_slug["extratropical-modes-of-variability-nao"].group_count == 1
         # A diagnostic with zero execution groups still appears, with a count of 0.
-        assert by_slug["enso-characteristics"].execution_group_count == 0
+        assert by_slug["enso-characteristics"].group_count == 0
+
+    def test_select_group_counts_matches_list(self, db_with_diagnostics):
+        rows = db_with_diagnostics.session.execute(select_group_counts()).all()
+        views = Reader(db_with_diagnostics).diagnostics.list()
+        assert [(r.provider_slug, r.diagnostic_slug) for r in rows] == [
+            (v.provider_slug, v.diagnostic_slug) for v in views
+        ]
+        for row, view in zip(rows, views, strict=True):
+            assert (row.group_count, row.successful, row.failed, row.running, row.not_started, row.dirty) == (
+                view.groups.total,
+                view.groups.successful,
+                view.groups.failed,
+                view.groups.running,
+                view.groups.not_started,
+                view.groups.dirty,
+            )
+        assert any(r.group_count == 0 for r in rows)
 
     def test_provider_contains_filter(self, db_with_diagnostics):
         stmt = select_diagnostics(DiagnosticFilter(provider_contains=["pmp"]))
@@ -70,22 +92,28 @@ class TestSelectDiagnostics:
     def test_diagnostic_contains_filter(self, db_with_diagnostics):
         stmt = select_diagnostics(DiagnosticFilter(diagnostic_contains=["enso_tel"]))
         rows = db_with_diagnostics.session.execute(stmt).all()
-        slugs = {row.slug for row in rows}
+        slugs = {row.diagnostic_slug for row in rows}
         assert slugs == {"enso_tel"}
+
+    @pytest.mark.parametrize("search", ["%", "enso%", "ens_"])
+    def test_contains_treats_wildcards_literally(self, db_with_diagnostics, search):
+        stmt = select_diagnostics(DiagnosticFilter(diagnostic_contains=search, provider_contains=search))
+        assert db_with_diagnostics.session.execute(stmt).all() == []
+
+    def test_exact_slug_filter(self, db_with_diagnostics):
+        stmt = select_diagnostics(DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel"))
+        rows = db_with_diagnostics.session.execute(stmt).all()
+        assert {(row.provider_slug, row.diagnostic_slug) for row in rows} == {("pmp", "enso_tel")}
+
+    def test_exact_slug_is_not_a_substring(self, db_with_diagnostics):
+        stmt = select_diagnostics(DiagnosticFilter(diagnostic_slug="enso", provider_slug="pm"))
+        assert db_with_diagnostics.session.execute(stmt).all() == []
 
     def test_ordered_by_provider_then_diagnostic(self, db_with_diagnostics):
         stmt = select_diagnostics()
         rows = db_with_diagnostics.session.execute(stmt).all()
-        pairs = [(row.provider_slug, row.slug) for row in rows]
+        pairs = [(row.provider_slug, row.diagnostic_slug) for row in rows]
         assert pairs == sorted(pairs)
-
-    def test_bare_string_rejected_diagnostic_contains(self):
-        with pytest.raises(TypeError):
-            DiagnosticFilter(diagnostic_contains="enso")
-
-    def test_bare_string_rejected_provider_contains(self):
-        with pytest.raises(TypeError):
-            DiagnosticFilter(provider_contains="pmp")
 
 
 class TestDiagnosticsReaderList:
@@ -95,14 +123,59 @@ class TestDiagnosticsReaderList:
         assert len(coll) == 1
         view = coll.items[0]
         assert view.provider_slug == "pmp"
-        assert view.slug == "enso_tel"
+        assert view.diagnostic_slug == "enso_tel"
         assert view.name
         assert view.promoted_version == 1
-        assert view.execution_group_count == 2
+        assert view.groups == GroupCounts(total=2, successful=0, failed=0, running=0, not_started=2, dirty=0)
         # Both groups are at the promoted version with no executions yet.
-        assert view.total == 2
-        assert view.successful == 0
-        assert view.inflight == 0
+        assert view.execution_count == 0
+
+    def test_total_counts_every_execution(self, db_with_diagnostics):
+        session = db_with_diagnostics.session
+        with session.begin():
+            group_1 = session.query(ExecutionGroup).filter_by(key="key1").one()
+            group_2 = session.query(ExecutionGroup).filter_by(key="key2").one()
+            for n, retracted in enumerate([False, False, True]):
+                session.add(
+                    Execution(
+                        execution_group_id=group_1.id,
+                        output_fragment=f"run-{n}",
+                        dataset_hash=f"run-{n}",
+                        successful=False,
+                        retracted=retracted,
+                    )
+                )
+            session.add(
+                Execution(
+                    execution_group_id=group_2.id, output_fragment="b", dataset_hash="b", successful=True
+                )
+            )
+        reader = Reader(db_with_diagnostics)
+        enso = DiagnosticFilter(diagnostic_slug="enso_tel")
+
+        assert reader.diagnostics.list(enso).items[0].execution_count == 3
+        assert (
+            reader.diagnostics.list(attrs.evolve(enso, include_retracted=True)).items[0].execution_count == 4
+        )
+
+    def test_diagnostic_version(self, db_with_diagnostics):
+        session = db_with_diagnostics.session
+        with session.begin():
+            diagnostic = session.query(Diagnostic).filter_by(slug="enso_tel").one()
+            session.add(
+                ExecutionGroup(key="key4", diagnostic_id=diagnostic.id, diagnostic_version=2, selectors={})
+            )
+        reader = Reader(db_with_diagnostics)
+
+        def group_count(**fields):
+            return reader.diagnostics.list(DiagnosticFilter(diagnostic_slug="enso_tel", **fields)).items[0]
+
+        assert group_count().groups.total == 2
+        assert group_count(diagnostic_version=2).groups.total == 1
+        assert group_count(diagnostic_version=2, include_superseded=False).groups.total == 1
+        assert group_count(include_superseded=True).groups.total == 3
+        groups = reader.executions.groups(ExecutionGroupFilter(diagnostic_version=2))
+        assert [g.key for g in groups] == ["key4"]
 
     def test_promoted_version_status_counts(self, db_with_diagnostics):
         # enso_tel has two promoted-version groups (key1, key2); give key1 a successful latest
@@ -129,9 +202,9 @@ class TestDiagnosticsReaderList:
 
         reader = Reader(db_with_diagnostics)
         view = reader.diagnostics.list(DiagnosticFilter(diagnostic_contains=["enso_tel"])).items[0]
-        assert view.successful == 1
-        assert view.inflight == 1
-        assert view.total == 2
+        assert view.groups.successful == 1
+        assert view.groups.running == 1
+        assert view.execution_count == 2
 
     def test_filter_by_provider(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
@@ -143,14 +216,14 @@ class TestDiagnosticsReaderList:
         # The list-style filter parameter is named `filters`, matching the rest of the contract.
         reader = Reader(db_with_diagnostics)
         coll = reader.diagnostics.list(filters=DiagnosticFilter(diagnostic_contains=["enso_tel"]))
-        assert {d.slug for d in coll} == {"enso_tel"}
+        assert {d.diagnostic_slug for d in coll} == {"enso_tel"}
 
     def test_pagination_deterministic(self, db_with_diagnostics):
         # Full listing is ordered by (provider, diagnostic, id); adjacent pages must partition it.
         reader = Reader(db_with_diagnostics)
-        full = [(d.provider_slug, d.slug) for d in reader.diagnostics.list()]
-        page_1 = [(d.provider_slug, d.slug) for d in reader.diagnostics.list(offset=0, limit=2)]
-        page_2 = [(d.provider_slug, d.slug) for d in reader.diagnostics.list(offset=2, limit=2)]
+        full = [(d.provider_slug, d.diagnostic_slug) for d in reader.diagnostics.list()]
+        page_1 = [(d.provider_slug, d.diagnostic_slug) for d in reader.diagnostics.list(offset=0, limit=2)]
+        page_2 = [(d.provider_slug, d.diagnostic_slug) for d in reader.diagnostics.list(offset=2, limit=2)]
         assert set(page_1).isdisjoint(page_2)
         assert page_1 + page_2 == full[:4]
 
@@ -182,10 +255,13 @@ class TestDiagnosticsReaderList:
             "diagnostic",
             "name",
             "promoted_version",
-            "execution_group_count",
-            "successful",
-            "inflight",
-            "total",
+            "group_count",
+            "successful_group_count",
+            "failed_group_count",
+            "running_group_count",
+            "not_started_group_count",
+            "dirty_group_count",
+            "execution_count",
         ]
 
     def test_to_pandas_columns_when_empty(self, db_with_diagnostics):
@@ -197,43 +273,27 @@ class TestDiagnosticsReaderList:
             "diagnostic",
             "name",
             "promoted_version",
-            "execution_group_count",
-            "successful",
-            "inflight",
-            "total",
+            "group_count",
+            "successful_group_count",
+            "failed_group_count",
+            "running_group_count",
+            "not_started_group_count",
+            "dirty_group_count",
+            "execution_count",
         ]
         assert len(df) == 0
 
 
-class TestDiagnosticsReaderStats:
-    def test_delegates_to_execution_statistics(self, db_with_diagnostics):
+class TestGroupCounts:
+    def test_counts_by_diagnostic(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats()
-        by_diag = {s.diagnostic: s for s in stats}
+        by_diag = {d.diagnostic_slug: d.groups for d in reader.diagnostics.list()}
 
-        assert "enso_tel" in by_diag
         assert by_diag["enso_tel"].total == 2
         assert by_diag["enso_tel"].not_started == 2
+        assert by_diag["enso-characteristics"].total == 0
 
-    def test_matches_executions_statistics(self, db_with_diagnostics):
-        reader = Reader(db_with_diagnostics)
-        via_diagnostics = reader.diagnostics.stats()
-        via_executions = reader.executions.statistics()
-        assert via_diagnostics == via_executions
-
-    def test_provider_filter(self, db_with_diagnostics):
-        reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats(provider_contains=["pmp"])
-        providers = {s.provider for s in stats}
-        assert providers == {"pmp"}
-
-    def test_diagnostic_filter(self, db_with_diagnostics):
-        reader = Reader(db_with_diagnostics)
-        stats = reader.diagnostics.stats(diagnostic_contains=["enso_tel"])
-        diagnostics = {s.diagnostic for s in stats}
-        assert diagnostics == {"enso_tel"}
-
-    def test_retracted_latest_execution_still_counts(self, db_with_diagnostics):
+    def test_retracted_latest_execution_drops_the_group(self, db_with_diagnostics):
         session = db_with_diagnostics.session
         with session.begin():
             group = session.query(ExecutionGroup).filter_by(key="key1").one()
@@ -247,10 +307,14 @@ class TestDiagnosticsReaderStats:
                 )
             )
         reader = Reader(db_with_diagnostics)
-        by_diag = {s.diagnostic: s for s in reader.diagnostics.stats()}
-        assert by_diag["enso_tel"].successful == 1
-        assert by_diag["enso_tel"].not_started == 1
-        assert reader.diagnostics.stats() == reader.executions.statistics()
+        before = {
+            d.diagnostic_slug: d.groups
+            for d in reader.diagnostics.list(DiagnosticFilter(include_retracted=True))
+        }
+        after = {d.diagnostic_slug: d.groups for d in reader.diagnostics.list()}
+        assert before["enso_tel"].successful == 1
+        assert after["enso_tel"].successful == 0
+        assert after["enso_tel"].total == before["enso_tel"].total - 1
 
 
 @pytest.fixture
@@ -341,18 +405,12 @@ class TestDiagnosticsWithValues:
         filters = DiagnosticFilter(diagnostic_contains=["nao"])
         assert reader.diagnostics.with_values(MetricValueType.SCALAR, filters) == frozenset()
 
-    def test_execution_group_where(self, db_with_values):
-        stmt = select_diagnostics_with_values(
-            MetricValueType.SCALAR, execution_group_where=ExecutionGroup.key == "key2"
-        )
-        assert db_with_values.session.execute(stmt).all() == []
-
     def test_scope_includes_retracted(self, db_with_values):
         reader = Reader(db_with_values).diagnostics
         assert {slug for _, slug in reader.with_values(MetricValueType.SERIES)} == {
             "extratropical-modes-of-variability-nao"
         }
-        retracted = reader.with_values(MetricValueType.SERIES, scope=ExecutionScope(include_retracted=True))
+        retracted = reader.with_values(MetricValueType.SERIES, DiagnosticFilter(include_retracted=True))
         assert "enso-characteristics" in {slug for _, slug in retracted}
 
     def test_sqlite_plan_reads_only_the_composite_index(self, db_with_values):

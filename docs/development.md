@@ -357,8 +357,8 @@ The steps required are the following:
 
 1. Edit the draft release which has been created
    (see here: [project releases](https://github.com/Climate-REF/climate-ref/releases)).
-   Once you are happy with the release (removed placeholders, added key
-   announcements etc.) then hit 'Publish release'.
+   The release notes come from the changelog, led by its `highlights` fragment.
+   Once you are happy with the release, hit 'Publish release'.
    This triggers the [deploy workflow](https://github.com/Climate-REF/climate-ref/actions/workflows/deploy.yaml).
    This workflow deploys the built wheels and source distributions from the release to PyPI.
 

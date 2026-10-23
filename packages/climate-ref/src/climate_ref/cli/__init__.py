@@ -1,8 +1,11 @@
 """Entrypoint for the CLI"""
 
+import functools
 import importlib
 import importlib.util
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any
@@ -234,18 +237,21 @@ class _Subcommand:
     attr: str
     help: str
     """Short help shown in the root ``--help`` listing, so listing needs no import."""
+    requires: str | None = None
+    """Optional package that must be installed for the command to be available."""
 
     def load(self, name: str) -> Any:
         """Import the command and convert it to a Click command named ``name``."""
         target = getattr(importlib.import_module(self.module), self.attr)
-        # Register on a throwaway parent so a group with one command stays a group.
-        parent = typer.Typer()
-        parent.callback()(lambda: None)
+        command: Any
         if isinstance(target, typer.Typer):
-            parent.add_typer(target, name=name)
+            command = typer.main.get_group(target)
         else:
-            parent.command(name=name)(target)
-        return typer.main.get_command(parent).commands[name]  # type: ignore[attr-defined]
+            wrapper = typer.Typer(add_completion=False)
+            wrapper.command()(target)
+            command = typer.main.get_command(wrapper)
+        command.name = name
+        return command
 
 
 _SUBCOMMANDS: dict[str, _Subcommand] = {
@@ -262,23 +268,24 @@ _SUBCOMMANDS: dict[str, _Subcommand] = {
     "test-cases": _Subcommand(
         "climate_ref.cli.test_cases", "app", "Test data management commands for diagnostic development."
     ),
-    "celery": _Subcommand("climate_ref_celery.cli", "app", "Managing remote celery workers"),
+    "celery": _Subcommand(
+        "climate_ref_celery.cli", "app", "Managing remote celery workers", requires="climate_ref_celery"
+    ),
 }
 
 
-def _celery_available() -> bool:
-    return importlib.util.find_spec("climate_ref_celery") is not None
-
-
+@functools.cache
 def available_subcommands() -> dict[str, _Subcommand]:
     """
     Get the top-level commands that can run in this environment.
 
-    The Celery CLI is only available if the `climate-ref-celery` package is installed.
+    A command with ``requires`` set is only available if that package is installed.
     """
-    if _celery_available():
-        return _SUBCOMMANDS
-    return {name: sub for name, sub in _SUBCOMMANDS.items() if name != "celery"}
+    return {
+        name: sub
+        for name, sub in _SUBCOMMANDS.items()
+        if sub.requires is None or importlib.util.find_spec(sub.requires) is not None
+    }
 
 
 class _RootGroup(TyperGroup):
@@ -292,22 +299,34 @@ class _RootGroup(TyperGroup):
     _listing_help = False
 
     def list_commands(self, ctx: Any) -> list[str]:
-        return [*super().list_commands(ctx), *(n for n in available_subcommands() if n not in self.commands)]
+        return list(available_subcommands())
 
     def get_command(self, ctx: Any, cmd_name: str) -> Any:
-        subcommand = available_subcommands().get(cmd_name)
-        if cmd_name not in self.commands and subcommand is not None:
+        if cmd_name not in self.commands:
+            subcommand = available_subcommands().get(cmd_name)
+            if subcommand is None:
+                return None
             if self._listing_help:
                 return TyperCommand(name=cmd_name, help=subcommand.help)
             self.commands[cmd_name] = subcommand.load(cmd_name)
         return super().get_command(ctx, cmd_name)
 
-    def format_help(self, ctx: Any, formatter: Any) -> None:
+    @contextmanager
+    def _listing(self) -> Iterator[None]:
+        """Serve placeholders from `get_command` while only names and short help are needed."""
         self._listing_help = True
         try:
-            super().format_help(ctx, formatter)
+            yield
         finally:
             self._listing_help = False
+
+    def format_help(self, ctx: Any, formatter: Any) -> None:
+        with self._listing():
+            super().format_help(ctx, formatter)
+
+    def shell_complete(self, ctx: Any, incomplete: str) -> Any:
+        with self._listing():
+            return super().shell_complete(ctx, incomplete)
 
     def invoke(self, ctx: Any) -> Any:
         try:
@@ -393,7 +412,7 @@ def main(  # noqa: PLR0913
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
 
-    if not _celery_available():
+    if "celery" not in available_subcommands():
         logger.debug("Celery CLI not available")
 
     # Create context with lazy database initialization

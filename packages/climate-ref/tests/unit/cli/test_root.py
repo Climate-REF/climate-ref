@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 
 from climate_ref import __version__
-from climate_ref.cli import _SUBCOMMANDS, CLIContext, app
+from climate_ref.cli import _SUBCOMMANDS, CLIContext, app, available_subcommands
 from climate_ref_core import __version__ as __core_version__
 
 
@@ -96,37 +96,6 @@ def test_config_directory_append(config, invoke_cli):
     )
 
 
-def test_import_emits_no_debug_logs_without_celery():
-    """
-    Importing the CLI must not leak debug logs to stderr, even when an optional
-    dependency (the Celery CLI) is unavailable.
-
-    ``build_app()`` runs at import time before the ``main`` callback configures
-    the logging level so it must not emit any logs itself.
-    """
-    import subprocess
-    import sys
-
-    script = (
-        "import importlib\n"
-        "_real = importlib.import_module\n"
-        "def _fake(name, *args, **kwargs):\n"
-        "    if name.startswith('climate_ref_celery'):\n"
-        "        raise ImportError(name)\n"
-        "    return _real(name, *args, **kwargs)\n"
-        "importlib.import_module = _fake\n"
-        "import climate_ref.cli  # noqa: F401\n"
-    )
-    # Fixed args, trusted interpreter -- safe subprocess use.
-    result = subprocess.run(  # noqa: S603
-        [sys.executable, "-c", script], capture_output=True, text=True, check=False
-    )
-
-    assert result.returncode == 0, result.stderr
-    assert "Celery CLI not available" not in result.stderr
-    assert "DEBUG" not in result.stderr
-
-
 @pytest.fixture()
 def expected_commands() -> list[str]:
     return [
@@ -148,14 +117,17 @@ def _root_command_names() -> list[str]:
     return group.list_commands(typer.Context(group))
 
 
-def test_build_app(expected_commands):
+def test_root_commands(expected_commands):
     assert _root_command_names() == expected_commands
 
 
-def test_build_app_without_celery(mocker, expected_commands):
+def test_root_commands_without_celery(mocker, expected_commands):
     mocker.patch("climate_ref.cli.importlib.util.find_spec", return_value=None)
-
-    assert _root_command_names() == [name for name in expected_commands if name != "celery"]
+    available_subcommands.cache_clear()
+    try:
+        assert _root_command_names() == [name for name in expected_commands if name != "celery"]
+    finally:
+        available_subcommands.cache_clear()
 
 
 @pytest.mark.parametrize("name", list(_SUBCOMMANDS))
@@ -168,7 +140,7 @@ def test_subcommand_help_matches_command(name):
 
 
 def test_import_skips_subcommands():
-    """Importing the CLI must not import the subcommands or their heavy dependencies."""
+    """Importing the CLI must not import the subcommands or their heavy dependencies, or emit logs."""
     import subprocess
     import sys
 
@@ -184,6 +156,7 @@ def test_import_skips_subcommands():
     )
 
     assert result.stdout.strip() == "[]"
+    assert "DEBUG" not in result.stderr
 
 
 def test_cli_context_lazy_database(config, mocker):

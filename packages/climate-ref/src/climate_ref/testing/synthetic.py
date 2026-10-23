@@ -9,27 +9,59 @@ The schema comes from the real migrations, so every index matches a deployed dat
 Rows are written with raw `sqlite3` because the ORM is far too slow at this size.
 `ANALYZE` is deliberately not run, because deployed databases have no table statistics
 and the query planner behaves differently with them.
+
+Downstream projects such as the API use `cached_synthetic_database` to performance test their own reads,
+and `captured_statements` with `large_table_scans` to check those reads use an index.
 """
 
 import datetime
+import hashlib
 import json
 import random
+import re
 import sqlite3
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
 import attrs
+from sqlalchemy import event
 
+import climate_ref
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.models.dataset import Dataset
+from climate_ref.testing._files import build_cached_file
 from climate_ref_core.source_types import SourceDatasetType
 
 _EPOCH = datetime.datetime(2025, 6, 1)
 _SPAN_SECONDS = 400 * 24 * 3600
 _PROMOTED_VERSION = 2
 _OOM_FRACTION = 0.1
+
+DEFAULT_SHAPE = Path(__file__).parent / "shape.json"
+"""Shape profiled from the deployed database."""
+
+LARGE_TABLES = frozenset(
+    {
+        "metric_value",
+        "index_axis",
+        "execution",
+        "execution_group",
+        "execution_output",
+        "execution_dataset",
+        "dataset",
+        "dataset_file",
+        "cmip6_dataset",
+        "cmip7_dataset",
+        "obs4mips_dataset",
+    }
+)
+"""Tables large enough in production that reading every row is too slow for an interactive read."""
+
+_SCAN = re.compile(r"^SCAN (\w+)")
+_NAMED_SUBQUERY = re.compile(r"(\w+) AS \(|\) AS (\w+)")
 
 
 @attrs.frozen(kw_only=True)
@@ -146,6 +178,106 @@ def build_synthetic_database(path: Path, shape: Shape, *, scale: float = 1.0, se
         for _, sql in indexes:
             con.execute(sql)
     con.close()
+
+
+def cached_synthetic_database(cache_dir: Path, *, scale: float, shape_path: Path = DEFAULT_SHAPE) -> Path:
+    """
+    Return a synthetic database for this shape and scale, building it on first use.
+
+    The file name includes a hash of the shape, the scale, this generator and the migrations,
+    so a change to any of them builds a new database.
+    Old databases are not removed.
+
+    Parameters
+    ----------
+    cache_dir
+        Directory holding the built databases. It is created if missing.
+    scale
+        Multiplier for the row counts, passed to `build_synthetic_database`.
+    shape_path
+        JSON file written by `scripts/profile-database-shape.py`.
+
+    Returns
+    -------
+    :
+        Path to the SQLite file.
+    """
+    digest = hashlib.sha256()
+    digest.update(shape_path.read_bytes())
+    digest.update(str(scale).encode())
+    digest.update(Path(__file__).read_bytes())
+    for migration in sorted((Path(climate_ref.__file__).parent / "migrations" / "versions").glob("*.py")):
+        digest.update(migration.read_bytes())
+
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    path = cache_dir / f"synthetic-{scale:g}-{digest.hexdigest()[:12]}.db"
+    build_cached_file(
+        path, lambda tmp: build_synthetic_database(tmp, Shape.from_json(shape_path), scale=scale)
+    )
+    return path
+
+
+@contextmanager
+def captured_statements(database: Database) -> Iterator[list[tuple[str, Any]]]:
+    """
+    Collect the SQL and bound parameters of every statement run on ``database`` inside the block.
+
+    Pass the result to `large_table_scans`.
+    """
+    captured: list[tuple[str, Any]] = []
+
+    def _capture(  # noqa: PLR0913
+        conn: Any, cursor: Any, statement: str, parameters: Any, context: Any, many: bool
+    ) -> None:
+        captured.append((statement, parameters))
+
+    event.listen(database._engine, "before_cursor_execute", _capture)
+    try:
+        yield captured
+    finally:
+        event.remove(database._engine, "before_cursor_execute", _capture)
+
+
+def large_table_scans(path: Path, statements: Iterable[tuple[str, Any]]) -> frozenset[str]:
+    """
+    Return the large tables that any of these statements reads in full, from SQLite's query plans.
+
+    A full scan of one of a table's indexes counts as reading the table.
+
+    Parameters
+    ----------
+    path
+        The SQLite database the statements ran against.
+    statements
+        SQL and bound parameters, as collected by `captured_statements`.
+
+    Raises
+    ------
+    ValueError
+        If a plan scans a name that is neither a table nor a named subquery,
+        because an alias would otherwise hide a scan from this check.
+    """
+    # Without table statistics a plan does not depend on the bound values, so explain each statement once.
+    distinct = dict(statements)
+    con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    try:
+        tables = {name for (name,) in con.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+        scanned = {
+            # SQLAlchemy aliases a repeated table as ``<table>_<n>``.
+            re.sub(r"_\d+$", "", match.group(1))
+            for statement, parameters in distinct.items()
+            for row in con.execute(f"EXPLAIN QUERY PLAN {statement}", parameters or ())
+            if (match := _SCAN.match(row[3]))
+        }
+    finally:
+        con.close()
+
+    # A named subquery's own plan lists the tables it reads, so a scan of it adds nothing.
+    subqueries = {n for statement in distinct for m in _NAMED_SUBQUERY.findall(statement) for n in m if n}
+    unknown = {n for n in scanned - tables - subqueries if n != "CONSTANT" and not n.startswith("anon")}
+    if unknown:
+        raise ValueError(f"cannot map scanned names {sorted(unknown)} to tables")
+    return frozenset(scanned) & LARGE_TABLES
 
 
 class _Writer:
@@ -325,11 +457,21 @@ class _Writer:
                 for o in range(
                     round(rng.expovariate(1 / s.outputs_per_execution)) if s.outputs_per_execution else 0
                 ):
-                    yield eid, "Plot" if o % 3 else "Data", f"output_{o}.png", f"output-{o}"
+                    yield (
+                        eid,
+                        "Plot" if o % 3 else "Data",
+                        f"output_{o}.png",
+                        f"output-{o}",
+                        f"Output {o}",
+                        f"Description of output {o}",
+                    )
 
         _insert(self.con, "execution_dataset", ["execution_id", "dataset_id"], links())
         _insert(
-            self.con, "execution_output", ["execution_id", "output_type", "filename", "short_name"], outputs()
+            self.con,
+            "execution_output",
+            ["execution_id", "output_type", "filename", "short_name", "long_name", "description"],
+            outputs(),
         )
 
     def _values(self) -> None:
@@ -348,9 +490,7 @@ class _Writer:
                 for k in range(quota):
                     yield pool[k * len(pool) // max(quota, 1)]
 
-        labels = [
-            (s.dimension_fill[d], [f"{d}-{k}" for k in range(s.dimension_cardinality[d])]) for d in dims
-        ]
+        labels = [(s.dimension_fill[d], _dimension_values(d, s.dimension_cardinality[d])) for d in dims]
 
         def dimension_values() -> list[str | None]:
             return [pool[rng.randrange(len(pool))] if rng.random() < fill else None for fill, pool in labels]
@@ -404,6 +544,16 @@ class _Writer:
             *dims,
         ]
         _insert(self.con, "metric_value", columns, series_rows)
+
+
+def _dimension_values(dimension: str, cardinality: int) -> list[str]:
+    if dimension == "kind":
+        # The only values the CV allows.
+        return ["model", "reference"]
+    if dimension == "source_id":
+        # Shares the names given to datasets, so a model's values and datasets line up.
+        return [f"source-{k}" for k in range(cardinality)]
+    return [f"{dimension}-{k}" for k in range(cardinality)]
 
 
 def _facet(column: str, i: int) -> Any:

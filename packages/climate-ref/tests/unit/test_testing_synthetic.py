@@ -5,20 +5,25 @@ import pytest
 
 from climate_ref.database import Database
 from climate_ref.results import MetricValueFilter, Reader
+from climate_ref.testing.synthetic import (
+    DEFAULT_SHAPE,
+    Shape,
+    build_synthetic_database,
+    cached_synthetic_database,
+)
 
-SHAPE_PATH = Path(__file__).parent / "shape.json"
 SCALE = 0.001
 
 
 @pytest.fixture
-def shape(synthetic_module):
-    return synthetic_module.Shape.from_json(SHAPE_PATH)
+def shape():
+    return Shape.from_json(DEFAULT_SHAPE)
 
 
 @pytest.fixture
-def synthetic_db(tmp_path: Path, synthetic_module, shape) -> Path:
+def synthetic_db(tmp_path: Path, shape) -> Path:
     path = tmp_path / "synthetic.db"
-    synthetic_module.build_synthetic_database(path, shape, scale=SCALE)
+    build_synthetic_database(path, shape, scale=SCALE)
     return path
 
 
@@ -48,6 +53,15 @@ def test_reader_reads_the_database(synthetic_db, config):
     assert sum(s.total for s in stats) > 0
 
 
-def test_refuses_to_overwrite(synthetic_db, synthetic_module, shape):
+def test_refuses_to_overwrite(synthetic_db, shape):
     with pytest.raises(FileExistsError):
-        synthetic_module.build_synthetic_database(synthetic_db, shape, scale=SCALE)
+        build_synthetic_database(synthetic_db, shape, scale=SCALE)
+
+
+def test_cached_database_is_built_once(tmp_path: Path):
+    path = cached_synthetic_database(tmp_path, scale=SCALE)
+    built = path.stat().st_mtime_ns
+
+    assert cached_synthetic_database(tmp_path, scale=SCALE) == path
+    assert path.stat().st_mtime_ns == built
+    assert cached_synthetic_database(tmp_path, scale=SCALE * 2) != path

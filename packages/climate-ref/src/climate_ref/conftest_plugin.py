@@ -27,11 +27,10 @@ Provided fixtures
 from __future__ import annotations
 
 import atexit
-import fcntl
 import os
 import re
-from collections.abc import Callable, Generator, Iterator
-from contextlib import ExitStack, contextmanager
+from collections.abc import Callable, Iterator
+from contextlib import ExitStack
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
@@ -57,6 +56,8 @@ from climate_ref.testing import (
     TEST_DATA_DIR,
     fetch_sample_data,
 )
+from climate_ref.testing._files import build_cached_file as _build_cached_file
+from climate_ref.testing._files import exclusive_file_lock as _exclusive_file_lock
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.logging import add_log_handler, remove_log_handler
@@ -117,34 +118,6 @@ def shared_session_dir(tmp_path_factory: pytest.TempPathFactory, request: pytest
     if hasattr(request.config, "workerinput"):
         return base_temp.parent
     return base_temp
-
-
-@contextmanager
-def _exclusive_file_lock(path: Path) -> Generator[None]:
-    """Hold an advisory process lock for a shared test artifact."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w") as lock_file:
-        fcntl.flock(lock_file, fcntl.LOCK_EX)
-        try:
-            yield
-        finally:
-            fcntl.flock(lock_file, fcntl.LOCK_UN)
-
-
-def _build_cached_file[T](cache_path: Path, builder: Callable[[Path], T]) -> T | None:
-    """Build and atomically publish a file once across xdist workers."""
-    with _exclusive_file_lock(cache_path.with_suffix(".lock")):
-        if cache_path.exists():
-            return None
-
-        temporary_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
-        temporary_path.unlink(missing_ok=True)
-        try:
-            result = builder(temporary_path)
-            os.replace(temporary_path, cache_path)
-        finally:
-            temporary_path.unlink(missing_ok=True)
-        return result
 
 
 def _run_once(marker_path: Path, action: Callable[[], None]) -> None:

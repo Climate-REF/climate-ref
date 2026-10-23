@@ -11,14 +11,16 @@ a typed read layer over the REF database.
 It returns frozen, ORM-free value objects wrapped in collections that offer `to_pandas()`,
 so a DataFrame built inside a `with Database(...)` block keeps working after the session closes.
 
-!!! note
+/// note
 
-    This guide is not executed when the documentation is built,
-    because the documentation build ingests datasets but does not run any diagnostics,
-    so there are no execution results to read.
-    Every snippet below has been checked against the current source of
-    [`climate_ref.results`](../api/climate_ref/results/),
-    but you will need your own populated database to run them.
+This guide is not executed when the documentation is built,
+because the documentation build ingests datasets but does not run any diagnostics,
+so there are no execution results to read.
+Every snippet below has been checked against the current source of
+[`climate_ref.results`](../api/climate_ref/results/),
+but you will need your own populated database to run them.
+
+///
 
 ## Opening a database and constructing a `Reader`
 

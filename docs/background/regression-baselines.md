@@ -62,10 +62,13 @@ A `manifest.json` beside the bundle binds the two layers:
 
 Both version fields are monotonic and may never decrease.
 
-!!! note "An empty native set is a valid state"
-    Fork contributors cannot mint, because minting needs object-store write credentials.
-    A baseline with `native: {}` is still gated by its committed bundle.
-    The native layer adds replay verification when the blobs exist.
+/// note | An empty native set is a valid state
+
+Fork contributors cannot mint, because minting needs object-store write credentials.
+A baseline with `native: {}` is still gated by its committed bundle.
+The native layer adds replay verification when the blobs exist.
+
+///
 
 ## Lifecycle commands
 
@@ -220,18 +223,24 @@ A failing diagnostic does not stop the others.
 The successful ones are committed together, then the job fails and names the ones that did not mint.
 After pushing, the job calls `regression-diff-report.yaml`.
 
-!!! warning "The mint commit does not re-trigger the PR gate"
-    The push uses `GITHUB_TOKEN`, and GitHub does not start workflows for those pushes.
-    Push a follow-up commit, or re-run the PR gate from the Actions tab, to replay-verify the new baseline.
+/// warning | The mint commit does not re-trigger the PR gate
 
-!!! note "Required repository configuration"
-    Create a `native-baselines` Environment with required reviewers,
-    holding an object-scoped R2 token as two secrets:
+The push uses `GITHUB_TOKEN`, and GitHub does not start workflows for those pushes.
+Push a follow-up commit, or re-run the PR gate from the Actions tab, to replay-verify the new baseline.
 
-    - `R2_ACCESS_KEY_ID` -> `REF_NATIVE_STORE_ACCESS_KEY_ID`
-    - `R2_SECRET_ACCESS_KEY` -> `REF_NATIVE_STORE_SECRET_ACCESS_KEY`
+///
 
-    `REF_NATIVE_STORE_S3_ENDPOINT_URL` and `REF_NATIVE_STORE_BUCKET` override the production defaults.
+/// note | Required repository configuration
+
+Create a `native-baselines` Environment with required reviewers,
+holding an object-scoped R2 token as two secrets:
+
+- `R2_ACCESS_KEY_ID` -> `REF_NATIVE_STORE_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY` -> `REF_NATIVE_STORE_SECRET_ACCESS_KEY`
+
+`REF_NATIVE_STORE_S3_ENDPOINT_URL` and `REF_NATIVE_STORE_BUCKET` override the production defaults.
+
+///
 
 ### Diff report
 
@@ -254,10 +263,13 @@ gh workflow run regression-diff-report.yaml --ref <branch>
 uv run ref test-cases diff --base origin/main --html-dir out/
 ```
 
-!!! note "Required repository configuration"
-    The workflow needs an R2 user with read/write access to the reports bucket:
+/// note | Required repository configuration
 
-    - `R2_REPORTS_ACCESS_KEY_ID` -> `REF_REPORT_STORE_ACCESS_KEY_ID`
-    - `R2_REPORTS_SECRET_ACCESS_KEY` -> `REF_REPORT_STORE_SECRET_ACCESS_KEY`
+The workflow needs an R2 user with read/write access to the reports bucket:
 
-    `REF_REPORT_STORE_S3_ENDPOINT_URL`, `REF_REPORT_STORE_BUCKET` and `REF_REPORT_STORE_URL` override the defaults.
+- `R2_REPORTS_ACCESS_KEY_ID` -> `REF_REPORT_STORE_ACCESS_KEY_ID`
+- `R2_REPORTS_SECRET_ACCESS_KEY` -> `REF_REPORT_STORE_SECRET_ACCESS_KEY`
+
+`REF_REPORT_STORE_S3_ENDPOINT_URL`, `REF_REPORT_STORE_BUCKET` and `REF_REPORT_STORE_URL` override the defaults.
+
+///

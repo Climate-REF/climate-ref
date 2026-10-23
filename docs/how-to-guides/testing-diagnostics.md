@@ -463,7 +463,7 @@ def test_my_diagnostic(config, tmp_path):
     if paths is None or not paths.catalog.exists():
         pytest.skip("Test data not fetched; run `ref test-cases fetch` first")
 
-    runner = TestCaseRunner(config=config, datasets=load_datasets_from_yaml(paths.catalog))
+    runner = TestCaseRunner(config=config, datasets=load_datasets_from_yaml(paths.catalog, paths.catalog_paths))
     result = runner.run(diagnostic, "default", output_dir=tmp_path / "output")
 
     assert result.successful

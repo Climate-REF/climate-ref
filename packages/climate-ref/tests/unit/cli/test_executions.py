@@ -396,14 +396,46 @@ class TestDeleteGroups:
         remaining_count = db_with_groups.session.query(ExecutionGroup).count()
         assert remaining_count < initial_count
 
-    def test_delete_groups_reaches_superseded_versions(self, db_with_groups, invoke_cli):
+    def test_delete_groups_skips_superseded_versions_by_default(self, db_with_groups, invoke_cli):
         session = db_with_groups.session
         with session.begin():
             session.query(Diagnostic).filter_by(slug="enso_tel").one().promoted_version = 2
 
         invoke_cli(["executions", "delete-groups", "--diagnostic", "enso_tel", "--force"])
 
+        assert session.query(ExecutionGroup).filter_by(key="key1").count() == 1
+
+    def test_delete_groups_include_superseded(self, db_with_groups, invoke_cli):
+        session = db_with_groups.session
+        with session.begin():
+            session.query(Diagnostic).filter_by(slug="enso_tel").one().promoted_version = 2
+
+        invoke_cli(
+            ["executions", "delete-groups", "--diagnostic", "enso_tel", "--include-superseded", "--force"]
+        )
+
         assert session.query(ExecutionGroup).filter_by(key="key1").count() == 0
+
+    def test_delete_groups_dry_run(self, db_with_groups, invoke_cli):
+        initial_count = db_with_groups.session.query(ExecutionGroup).count()
+
+        with patch("climate_ref.cli.executions.typer.confirm") as mock_confirm:
+            result = invoke_cli(["executions", "delete-groups", "--diagnostic", "enso", "--dry-run"])
+
+        assert result.exit_code == 0
+        assert "Would delete" in result.stdout
+        mock_confirm.assert_not_called()
+        assert db_with_groups.session.query(ExecutionGroup).count() == initial_count
+
+    @pytest.mark.parametrize("option", ["--diagnostic", "--provider"])
+    @pytest.mark.parametrize("value", ["", "  "])
+    def test_delete_groups_rejects_blank_filter(self, db_with_groups, invoke_cli, option, value):
+        initial_count = db_with_groups.session.query(ExecutionGroup).count()
+
+        result = invoke_cli(["executions", "delete-groups", option, value, "--force"], expected_exit_code=2)
+
+        assert "must not be empty" in result.stderr
+        assert db_with_groups.session.query(ExecutionGroup).count() == initial_count
 
     def test_delete_groups_no_deletion_on_decline(self, db_with_groups, invoke_cli):
         initial_count = db_with_groups.session.query(ExecutionGroup).count()

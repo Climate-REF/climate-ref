@@ -85,16 +85,29 @@ class ResourceGroupBy(StrEnum):
     provider = "provider"
 
 
+def _reject_blank(values: list[str] | None) -> list[str] | None:
+    """Reject a blank substring, which would match every slug."""
+    if values and any(not value.strip() for value in values):
+        raise typer.BadParameter("must not be empty")
+    return values
+
+
 _DIAGNOSTIC_ARG = Annotated[
     list[str] | None,
     typer.Option(
-        help="Filter by diagnostic slug (substring match, case-insensitive). Multiple values can be provided."
+        help=(
+            "Filter by diagnostic slug (substring match, case-insensitive). Multiple values can be provided."
+        ),
+        callback=_reject_blank,
     ),
 ]
 _PROVIDER_ARG = Annotated[
     list[str] | None,
     typer.Option(
-        help="Filter by provider slug (substring match, case-insensitive). Multiple values can be provided."
+        help=(
+            "Filter by provider slug (substring match, case-insensitive). Multiple values can be provided."
+        ),
+        callback=_reject_blank,
     ),
 ]
 _SINCE_ARG = Annotated[
@@ -284,11 +297,25 @@ def delete_groups(  # noqa: PLR0912, PLR0913
             "These execution groups will be re-computed on the next run.",
         ),
     ] = None,
+    include_superseded: Annotated[
+        bool,
+        typer.Option(
+            "--include-superseded",
+            help="Also delete groups for diagnostic versions other than the promoted one.",
+        ),
+    ] = False,
     remove_outputs: bool = typer.Option(
         False,
         "--remove-outputs",
         help="Also remove output directories from the filesystem",
     ),
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Show what would be deleted without making changes.",
+        ),
+    ] = False,
     force: bool = typer.Option(False, help="Skip confirmation prompt"),
 ) -> None:
     """
@@ -297,6 +324,9 @@ def delete_groups(  # noqa: PLR0912, PLR0913
     This command will delete execution groups and their associated executions.
     Use filters to specify which groups to delete. At least one filter must be provided
     to prevent accidental deletion of all groups.
+
+    Only groups for each diagnostic's promoted version are deleted unless `--include-superseded` is given.
+    Groups whose latest execution is retracted are included.
 
     Filters can be combined using AND logic across filter types and OR logic within a filter type.
     """
@@ -315,7 +345,7 @@ def delete_groups(  # noqa: PLR0912, PLR0913
             successful=successful,
             dirty=dirty,
             include_retracted=True,
-            include_superseded=True,
+            include_superseded=include_superseded,
         )
 
     if not any([diagnostic, provider, selector_filters, successful is not None, dirty is not None]):
@@ -343,14 +373,13 @@ def delete_groups(  # noqa: PLR0912, PLR0913
         [
             {
                 "id": eg.id,
-                "key": eg.key,
                 "provider": eg.diagnostic.provider.slug,
                 "diagnostic": eg.diagnostic.slug,
-                "dirty": eg.dirty,
+                "version": eg.diagnostic_version,
+                "key": eg.key,
                 "successful": result.successful if result else None,
-                "created_at": eg.created_at,
-                "updated_at": eg.updated_at,
-                "selectors": eg.selectors,
+                "retracted": result.retracted if result else None,
+                "dirty": eg.dirty,
             }
             for eg, result in all_filtered_results
         ]
@@ -361,6 +390,10 @@ def delete_groups(  # noqa: PLR0912, PLR0913
     pretty_print_df(results_df, console=console)
 
     count = len(all_filtered_results)
+    if dry_run:
+        console.print(f"\nWould delete {count} execution group(s).")
+        return
+
     console.print(f"\nWill delete {count} execution group(s).")
 
     # Confirm unless force is set

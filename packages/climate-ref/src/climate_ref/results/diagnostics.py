@@ -35,7 +35,7 @@ from climate_ref.query import (
     select_diagnostics,
     select_diagnostics_with_values,
 )
-from climate_ref.results._page import Page
+from climate_ref.results._page import Page, check_paging
 
 
 @attrs.frozen(kw_only=True)
@@ -265,6 +265,7 @@ class DiagnosticsReader:
             print(df[["provider", "diagnostic", "successful_group_count", "group_count"]])
         ```
         """
+        check_paging(offset, limit)
         filters = filters or DiagnosticFilter()
 
         base_stmt = select_diagnostics(filters)

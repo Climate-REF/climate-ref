@@ -58,7 +58,7 @@ from climate_ref.query import (
     select_execution_outputs,
     select_latest_execution,
 )
-from climate_ref.results._page import Page
+from climate_ref.results._page import Page, check_paging
 
 
 @attrs.frozen(kw_only=True)
@@ -477,6 +477,7 @@ class ExecutionsReader:
             df = page.to_pandas()
         ```
         """
+        check_paging(offset, limit)
         filters = filters or ExecutionGroupFilter()
         if filters.selectors:
             all_results = self.group_rows(filters)

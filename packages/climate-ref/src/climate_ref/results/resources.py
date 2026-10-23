@@ -50,7 +50,7 @@ from climate_ref.query import (
     select_execution_resources,
     select_resource_summary,
 )
-from climate_ref.results._page import Page
+from climate_ref.results._page import Page, check_paging
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -798,6 +798,7 @@ class ResourcesReader:
             slowest = page.to_pandas().nlargest(10, "wall_seconds")
         ```
         """
+        check_paging(offset, limit)
         stmt = select_execution_resources(filters)
         total_count = count(self.session, stmt) if with_count else None
 

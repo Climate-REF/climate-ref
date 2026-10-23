@@ -276,6 +276,32 @@ class TestScalarValues:
         flagged = {v.dimensions["source_id"] for v in coll if v.is_outlier}
         assert flagged == {"WILD", "BROKEN"}
 
+    def test_outliers_use_each_diagnostics_own_dimensions(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            other = session.query(Diagnostic).filter(Diagnostic.id != dal_db.diagnostic_id).first()
+            group = ExecutionGroup(key="no-metric-key", diagnostic_id=other.id, selectors={})
+            session.add(group)
+            session.flush()
+            execution = Execution(
+                execution_group_id=group.id, output_fragment="no-metric", dataset_hash="h", successful=True
+            )
+            session.add(execution)
+            session.flush()
+            for i, value in enumerate([1.0, 2.0, 3.0, 4.0, 5.0, 1000.0]):
+                session.add(
+                    ScalarMetricValue.build(
+                        execution_id=execution.id,
+                        value=value,
+                        attributes=None,
+                        dimensions={"source_id": f"NOMETRIC-{i}"},
+                    )
+                )
+
+        coll = Reader(dal_db).values.scalar_values(outliers=OutlierPolicy(), include_unverified=True)
+        flagged = {v.dimensions["source_id"] for v in coll if v.is_outlier}
+        assert flagged == {"WILD", "BROKEN", "NOMETRIC-5"}
+
     def test_kind_model_matches_values_with_no_kind(self, dal_db):
         f = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id], dimensions={"kind": "model"})
         assert Reader(dal_db).values.scalar_values(f).total_count == 8

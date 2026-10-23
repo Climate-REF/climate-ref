@@ -48,7 +48,7 @@ from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models.dataset import Dataset
 from climate_ref.query import DatasetFilter, count, paginate, select_datasets
-from climate_ref.results._page import Page
+from climate_ref.results._page import Page, check_paging
 from climate_ref_core.source_types import SourceDatasetType
 
 
@@ -377,6 +377,7 @@ class DatasetsReader:
             df[["experiment_id", "member_id", "version"]]
         ```
         """
+        check_paging(offset, limit)
         base_stmt = self._base_statement(filters)
         total_count = count(self.session, base_stmt) if with_count else None
 

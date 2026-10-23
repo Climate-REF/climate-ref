@@ -396,25 +396,15 @@ class TestDeleteGroups:
         remaining_count = db_with_groups.session.query(ExecutionGroup).count()
         assert remaining_count < initial_count
 
-    def test_delete_groups_skips_superseded_versions_by_default(self, db_with_groups, invoke_cli):
+    @pytest.mark.parametrize(("extra_args", "remaining"), [([], 1), (["--include-superseded"], 0)])
+    def test_delete_groups_superseded_versions(self, db_with_groups, invoke_cli, extra_args, remaining):
         session = db_with_groups.session
         with session.begin():
             session.query(Diagnostic).filter_by(slug="enso_tel").one().promoted_version = 2
 
-        invoke_cli(["executions", "delete-groups", "--diagnostic", "enso_tel", "--force"])
+        invoke_cli(["executions", "delete-groups", "--diagnostic", "enso_tel", *extra_args, "--force"])
 
-        assert session.query(ExecutionGroup).filter_by(key="key1").count() == 1
-
-    def test_delete_groups_include_superseded(self, db_with_groups, invoke_cli):
-        session = db_with_groups.session
-        with session.begin():
-            session.query(Diagnostic).filter_by(slug="enso_tel").one().promoted_version = 2
-
-        invoke_cli(
-            ["executions", "delete-groups", "--diagnostic", "enso_tel", "--include-superseded", "--force"]
-        )
-
-        assert session.query(ExecutionGroup).filter_by(key="key1").count() == 0
+        assert session.query(ExecutionGroup).filter_by(key="key1").count() == remaining
 
     def test_delete_groups_dry_run(self, db_with_groups, invoke_cli):
         initial_count = db_with_groups.session.query(ExecutionGroup).count()
@@ -423,7 +413,7 @@ class TestDeleteGroups:
             result = invoke_cli(["executions", "delete-groups", "--diagnostic", "enso", "--dry-run"])
 
         assert result.exit_code == 0
-        assert "Would delete" in result.stdout
+        assert "Dry run: would delete" in result.stdout
         mock_confirm.assert_not_called()
         assert db_with_groups.session.query(ExecutionGroup).count() == initial_count
 

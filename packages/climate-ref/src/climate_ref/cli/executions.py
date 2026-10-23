@@ -390,11 +390,10 @@ def delete_groups(  # noqa: PLR0912, PLR0913
     pretty_print_df(results_df, console=console)
 
     count = len(all_filtered_results)
+    prefix = "[bold]Dry run:[/] would delete" if dry_run else "Will delete"
+    console.print(f"\n{prefix} {count} execution group(s).")
     if dry_run:
-        console.print(f"\nWould delete {count} execution group(s).")
         return
-
-    console.print(f"\nWill delete {count} execution group(s).")
 
     # Confirm unless force is set
     if not force:

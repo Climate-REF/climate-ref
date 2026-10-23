@@ -23,10 +23,10 @@ class Reader:
     Each kind of result has its own reader, available as a property:
 
     * [values][climate_ref.results.reader.Reader.values]: metric values, as single numbers or series.
-    * [executions][climate_ref.results.reader.Reader.executions]: execution groups, runs and output files.
+    * [executions][climate_ref.results.reader.Reader.executions]: groups, executions and output files.
     * [datasets][climate_ref.results.reader.Reader.datasets]: the datasets that have been ingested.
-    * [diagnostics][climate_ref.results.reader.Reader.diagnostics]: diagnostics and how many runs succeeded.
-    * [resources][climate_ref.results.reader.Reader.resources]: CPU and memory use of runs.
+    * [diagnostics][climate_ref.results.reader.Reader.diagnostics]: diagnostics and how many groups succeeded.
+    * [resources][climate_ref.results.reader.Reader.resources]: CPU and memory use of executions.
     * [artifacts][climate_ref.results.reader.Reader.artifacts]: paths of output files (needs ``results``).
 
     Parameters
@@ -90,7 +90,7 @@ class Reader:
 
     @functools.cached_property
     def diagnostics(self) -> DiagnosticsReader:
-        """Reader for diagnostics and their run counts."""
+        """Reader for diagnostics and their execution counts."""
         return DiagnosticsReader(self._db, session=self._session)
 
     @functools.cached_property

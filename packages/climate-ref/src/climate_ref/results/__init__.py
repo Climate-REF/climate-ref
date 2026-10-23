@@ -1,8 +1,7 @@
 """
-Read the results of diagnostic runs from a local REF database.
+Read the results of diagnostic executions from a local REF database.
 
-The REF stores its local results in a database
-The results are stored across several database tables:
+The REF stores its local results across several database tables:
 diagnostics, execution groups, executions, metric values and datasets.
 A ``Reader`` joins these tables, picks the latest execution in each group and skips retracted executions,
 so a read needs a filter rather than SQL.
@@ -11,12 +10,12 @@ so a read needs a filter rather than SQL.
 
 Each property of a ``Reader`` reads one kind of result:
 
-* ``reader.values``: the metric values each run produced, as single numbers or as series.
-* ``reader.executions``: the runs of each diagnostic and whether they succeeded.
-* ``reader.diagnostics``: the diagnostics, with how many of their runs succeeded or failed.
+* ``reader.values``: the metric values each execution produced, as single numbers or as series.
+* ``reader.executions``: the executions of each diagnostic and whether they succeeded.
+* ``reader.diagnostics``: the diagnostics, with how many of their execution groups succeeded or failed.
 * ``reader.datasets``: the datasets that have been ingested.
-* ``reader.resources``: how much CPU time and memory the runs used.
-* ``reader.artifacts``: where the output files of a run are on disk.
+* ``reader.resources``: how much CPU time and memory the executions used.
+* ``reader.artifacts``: where the output files of an execution are on disk.
 
 Every read returns a collection.
 Loop over it, or call ``to_pandas()`` on it to get a DataFrame.
@@ -72,7 +71,7 @@ with Database.from_config(config, read_only=True) as db:
     df = reader.values.scalar_values(filters).to_pandas()
 ```
 
-Find the log file of run 42.
+Find the log file of execution 42.
 Reading files needs the results folder as well as the database:
 
 ```python

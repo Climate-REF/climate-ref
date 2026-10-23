@@ -55,7 +55,7 @@ def _resolve(path: Path) -> Path:
 
 class ArtifactsReader:
     """
-    Find the files a run wrote, given the folder where REF keeps its outputs.
+    Find the files an execution wrote, given the folder where REF keeps its outputs.
 
     Create it with the results root, usually ``config.paths.results``.
     Each method takes the execution's ``output_fragment``, the path of its folder below that root,
@@ -103,7 +103,7 @@ class ArtifactsReader:
 
     def output_directory(self, output_fragment: str) -> Path:
         """
-        Which folder holds everything this run wrote?
+        Which folder holds everything this execution wrote?
 
         Parameters
         ----------
@@ -124,10 +124,10 @@ class ArtifactsReader:
 
     def log_file(self, output_fragment: str) -> Path:
         """
-        Where is the log of this run?
+        Where is the log of this execution?
 
-        The log is ``out.log`` in the run's output folder.
-        Read it to see why a run failed.
+        The log is ``out.log`` in the execution's output folder.
+        Read it to see why an execution failed.
 
         Returns
         -------
@@ -151,7 +151,7 @@ class ArtifactsReader:
 
     def bundle(self, output_fragment: str, bundle_path: str | None) -> Path | None:
         """
-        Where is the metadata file that describes this run's outputs?
+        Where is the metadata file that describes this execution's outputs?
 
         This is the bundle recorded for the execution, such as ``diagnostic.json``.
 
@@ -161,7 +161,7 @@ class ArtifactsReader:
             The execution's ``output_fragment``, the folder path below the results root.
         bundle_path
             The execution's ``path``, relative to its output folder.
-            ``None`` means the run recorded no bundle.
+            ``None`` means the execution recorded no bundle.
 
         Returns
         -------
@@ -190,7 +190,7 @@ class ArtifactsReader:
 
     def output_file(self, output_fragment: str, filename: str) -> Path:
         """
-        Where is the plot or data file that this run made?
+        Where is the plot or data file that this execution made?
 
         Parameters
         ----------

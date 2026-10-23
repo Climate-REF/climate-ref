@@ -16,7 +16,7 @@ It returns:
 
 ``DatasetFilter`` chooses which datasets to keep.
 Import it from ``climate_ref.results``.
-It describes datasets rather than runs, so it does not share fields with the filters in
+It describes datasets rather than executions, so it does not share fields with the filters in
 [climate_ref.results.filters][climate_ref.results.filters].
 
 Examples
@@ -268,7 +268,7 @@ class DatasetsReader:
     everything = DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False, include_retracted=True)
     ```
 
-    The datasets that one run (execution 42) used:
+    The datasets that execution 42 used:
 
     ```python
     used = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_id=42))

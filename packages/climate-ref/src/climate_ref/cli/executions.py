@@ -949,32 +949,21 @@ def stats(
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
 
-    stats_rows = reader.executions.statistics(
-        DiagnosticFilter(diagnostic_contains=diagnostic, provider_contains=provider)
+    diagnostics = reader.diagnostics.list(
+        DiagnosticFilter(diagnostic_contains=diagnostic, provider_contains=provider),
+        with_count=False,
     )
 
-    if not stats_rows:
+    if not diagnostics.items:
         console.print("No execution groups found.")
         return
 
-    rows = [
-        {
-            "provider": row.provider,
-            "diagnostic": row.diagnostic,
-            "running": row.running,
-            "failed": row.failed,
-            "successful": row.successful,
-            "not_started": row.not_started,
-            "dirty": row.dirty,
-            "total": row.total,
-        }
-        for row in stats_rows
-    ]
-
-    results_df = pd.DataFrame(rows)
+    status_cols = ["running", "failed", "successful", "not_started", "dirty", "total"]
+    results_df = diagnostics.to_pandas().rename(
+        columns={f"{c}_group_count": c for c in status_cols} | {"group_count": "total"}
+    )[["provider", "diagnostic", *status_cols]]
 
     # Add provider totals
-    status_cols = ["running", "failed", "successful", "not_started", "dirty", "total"]
     totals = results_df.groupby("provider")[status_cols].sum().reset_index()
     totals["diagnostic"] = "(total)"
 

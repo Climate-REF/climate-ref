@@ -628,6 +628,38 @@ class TestInputDatasets:
         assert reader.summary(none) is None
 
 
+class TestSourceTypes:
+    @pytest.fixture
+    def db_with_types(self, db_with_resources):
+        session = db_with_resources.session
+        with session.begin():
+            nao = session.query(ExecutionGroup).filter_by(key="nao").one()
+            nao.selectors = {"cmip6": []}
+            chars = session.query(ExecutionGroup).filter_by(key="chars").one()
+            chars.selectors = {"cmip7": []}
+        return db_with_resources
+
+    def test_scopes_every_read(self, db_with_types):
+        reader = Reader(db_with_types).resources
+        f = ResourceFilter(source_types=[SourceDatasetType.CMIP6])
+        summary = reader.summary(f)
+        assert summary is not None
+        assert summary.timed_execution_count == 3
+        assert [s.diagnostic_slug for s in reader.summaries(f)] == ["extratropical-modes-of-variability-nao"]
+        assert {m.diagnostic_slug for m in reader.measurements(f)} == {
+            "extratropical-modes-of-variability-nao"
+        }
+        assert list(_by_slug(reader.profiles(f))) == ["extratropical-modes-of-variability-nao"]
+
+    def test_empty_matches_nothing_unless_or_no_model_input(self, db_with_types):
+        reader = Reader(db_with_types).resources
+        assert reader.summary(ResourceFilter(source_types=[])) is None
+        f = ResourceFilter(source_types=[], or_no_model_input=True)
+        slugs = {m.diagnostic_slug for m in reader.measurements(f)}
+        assert "enso_tel" in slugs
+        assert slugs.isdisjoint({"extratropical-modes-of-variability-nao", "enso-characteristics"})
+
+
 class TestRetracted:
     @pytest.fixture
     def db_with_retracted(self, db_seeded):

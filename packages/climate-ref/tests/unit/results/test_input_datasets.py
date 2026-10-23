@@ -75,8 +75,8 @@ def db_with_inputs(db_seeded):
         cmip6_a, cmip6_b, cmip7_a = _cmip6("FACET-A"), _cmip6("FACET-B"), _cmip7("FACET-A")
         session.add_all([cmip6_a, cmip6_b, cmip7_a])
 
-        def add_group(key, diagnostic, executions):
-            group = ExecutionGroup(key=key, diagnostic_id=diagnostic.id, selectors={})
+        def add_group(key, diagnostic, executions, selectors):
+            group = ExecutionGroup(key=key, diagnostic_id=diagnostic.id, selectors=selectors)
             session.add(group)
             session.flush()
             for n, datasets in enumerate(executions):
@@ -99,10 +99,10 @@ def db_with_inputs(db_seeded):
                 )
             ids[key] = group.id
 
-        add_group("cmip6-a", diag_1, [[cmip6_a]])
-        add_group("cmip7-a", diag_1, [[cmip7_a]])
-        add_group("cmip6-b-old", diag_1, [[cmip6_b], []])
-        add_group("other-b", diag_2, [[cmip6_b]])
+        add_group("cmip6-a", diag_1, [[cmip6_a]], {"cmip6": []})
+        add_group("cmip7-a", diag_1, [[cmip7_a]], {"cmip7": []})
+        add_group("cmip6-b-old", diag_1, [[cmip6_b], []], {"cmip6": []})
+        add_group("other-b", diag_2, [[cmip6_b]], {"cmip6": []})
         ids["diag_1"] = (diag_1.provider.slug, diag_1.slug)
         ids["diag_2"] = (diag_2.provider.slug, diag_2.slug)
 
@@ -116,7 +116,7 @@ def db_with_obs_only(db_with_inputs):
     session = db_with_inputs.session
     with session.begin():
         diag_2 = session.query(Diagnostic).order_by(Diagnostic.id).offset(1).first()
-        group = ExecutionGroup(key="obs-only", diagnostic_id=diag_2.id, selectors={})
+        group = ExecutionGroup(key="obs-only", diagnostic_id=diag_2.id, selectors={"obs4mips": []})
         session.add(group)
         session.flush()
         execution = Execution(
@@ -131,7 +131,7 @@ def db_with_obs_only(db_with_inputs):
         )
         db_with_inputs.ids["obs-only"] = group.id
 
-        mixed = ExecutionGroup(key="mixed", diagnostic_id=diag_2.id, selectors={})
+        mixed = ExecutionGroup(key="mixed", diagnostic_id=diag_2.id, selectors={"cmip6": [], "cmip7": []})
         session.add(mixed)
         session.flush()
         execution = Execution(
@@ -154,8 +154,8 @@ def _group_ids(db, input_datasets, **kwargs):
     return {g.id for g in Reader(db).executions.groups(filters)}
 
 
-def _value_sources(db, input_datasets):
-    values = Reader(db).values.scalar_values(MetricValueFilter(input_datasets=input_datasets))
+def _value_sources(db, input_datasets=None, **kwargs):
+    values = Reader(db).values.scalar_values(MetricValueFilter(input_datasets=input_datasets, **kwargs))
     return {v.dimensions["source_id"] for v in values}
 
 
@@ -277,99 +277,122 @@ class TestDatasetIds:
         assert _group_ids(db_with_inputs, f) == set()
         assert _value_sources(db_with_inputs, f) == set()
 
-    @pytest.mark.parametrize("source_types", [(), (CMIP6, CMIP7)])
-    def test_empty_matches_nothing_with_no_model_input(self, db_with_obs_only, source_types):
-        f = InputDatasetFilter(source_types=source_types, dataset_ids=[], or_no_model_input=True)
-        assert _group_ids(db_with_obs_only, f) == set()
-        assert _value_sources(db_with_obs_only, f) == set()
+    def test_empty_matches_nothing_with_no_model_input(self, db_with_obs_only):
+        f = InputDatasetFilter(dataset_ids=[])
+        assert _group_ids(db_with_obs_only, f, source_types=BOTH_ERAS, or_no_model_input=True) == set()
 
     def test_values(self, db_with_inputs):
         f = InputDatasetFilter(dataset_ids=[self._dataset_id(db_with_inputs, CMIP6Dataset, "FACET-A")])
         assert _value_sources(db_with_inputs, f) == {"cmip6-a"}
 
 
-class TestIncludeWithoutInput:
-    def test_groups(self, db_with_obs_only):
+class TestSourceTypes:
+    def test_groups_by_source_type(self, db_with_obs_only):
         ids = db_with_obs_only.ids
-        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"}, or_no_model_input=True)
-        # cmip6-b-old matches through its newer execution, which has no inputs.
-        assert _group_ids(db_with_obs_only, f) == {
-            ids["cmip7-a"],
+        assert _group_ids(db_with_obs_only, None, source_types=[CMIP6]) == {
+            ids["cmip6-a"],
             ids["cmip6-b-old"],
-            ids["obs-only"],
+            ids["other-b"],
             ids["mixed"],
         }
+        assert _group_ids(db_with_obs_only, None, source_types=[CMIP7]) == {ids["cmip7-a"], ids["mixed"]}
 
-    def test_drops_cmip6_only_and_keeps_mixed(self, db_with_obs_only):
-        ids = db_with_obs_only.ids
-        f = InputDatasetFilter(source_types=[CMIP7], or_no_model_input=True)
-        assert _group_ids(db_with_obs_only, f) == {
-            ids["cmip7-a"],
-            ids["cmip6-b-old"],
-            ids["obs-only"],
-            ids["mixed"],
-        }
-
-    def test_mixed_without_a_facet_match_stays_out(self, db_with_obs_only):
-        ids = db_with_obs_only.ids
-        f = InputDatasetFilter(
-            source_types=[CMIP7], facets={"source_id": "NO-SUCH-MODEL"}, or_no_model_input=True
+    def test_a_single_type_needs_no_list(self, db_with_obs_only):
+        assert _group_ids(db_with_obs_only, None, source_types=CMIP7) == _group_ids(
+            db_with_obs_only, None, source_types=[CMIP7]
         )
-        assert _group_ids(db_with_obs_only, f) == {ids["cmip6-b-old"], ids["obs-only"]}
 
-    def test_default_excludes_executions_without_input(self, db_with_obs_only):
+    def test_mixed_group_matches_both(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        for source_type in BOTH_ERAS:
+            assert ids["mixed"] in _group_ids(db_with_obs_only, None, source_types=[source_type])
+
+    def test_obs_only_group_is_excluded_by_default(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        assert ids["obs-only"] not in _group_ids(db_with_obs_only, None, source_types=BOTH_ERAS)
+
+    def test_or_no_model_input_keeps_obs_only_groups(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        assert _group_ids(db_with_obs_only, None, source_types=[CMIP7], or_no_model_input=True) == {
+            ids["cmip7-a"],
+            ids["mixed"],
+            ids["obs-only"],
+        }
+
+    def test_empty_matches_nothing_unless_or_no_model_input(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        assert _group_ids(db_with_obs_only, None, source_types=[]) == set()
+        assert _group_ids(db_with_obs_only, None, source_types=[], or_no_model_input=True) == {
+            ids["obs-only"]
+        }
+
+    def test_none_is_unconstrained(self, db_with_obs_only):
+        assert _group_ids(db_with_obs_only, None, source_types=None, or_no_model_input=True) == _group_ids(
+            db_with_obs_only, None
+        )
+
+    def test_combines_with_input_datasets(self, db_with_obs_only):
         ids = db_with_obs_only.ids
         f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"})
-        assert _group_ids(db_with_obs_only, f) == {ids["cmip7-a"], ids["mixed"]}
+        assert _group_ids(db_with_obs_only, f, source_types=[CMIP7], or_no_model_input=True) == {
+            ids["cmip7-a"],
+            ids["mixed"],
+        }
 
     def test_groups_without_a_selected_execution_stay_out(self, db_with_obs_only):
-        ids = db_with_obs_only.ids
         session = db_with_obs_only.session
         with session.begin():
             diag_2 = session.query(Diagnostic).order_by(Diagnostic.id).offset(1).first()
-            never_run = ExecutionGroup(key="never-run", diagnostic_id=diag_2.id, selectors={})
-            session.add(never_run)
-            session.flush()
-            only_failed = ExecutionGroup(key="only-failed", diagnostic_id=diag_2.id, selectors={})
-            session.add(only_failed)
-            session.flush()
-            session.add(
-                Execution(
-                    execution_group_id=only_failed.id,
-                    output_fragment="only-failed",
-                    dataset_hash="only-failed",
-                    successful=False,
-                )
-            )
-        f = InputDatasetFilter(source_types=[CMIP7], or_no_model_input=True)
-        reader = Reader(db_with_obs_only)
-        groups = reader.executions.groups(ExecutionGroupFilter(input_datasets=f))
-        assert never_run.id not in {g.id for g in groups}
+            session.add(ExecutionGroup(key="never-run", diagnostic_id=diag_2.id, selectors={}))
+        groups = Reader(db_with_obs_only).executions.groups(
+            ExecutionGroupFilter(source_types=[CMIP7], or_no_model_input=True)
+        )
+        assert {g.key for g in groups} == {"cmip7-a", "mixed", "obs-only"}
         assert groups.total_count == len(groups.items)
-        latest_successful = _group_ids(db_with_obs_only, f, latest_successful=True)
-        assert only_failed.id not in latest_successful
-        assert ids["obs-only"] in latest_successful
-        stats = {
-            (s.provider, s.diagnostic): s
-            for s in reader.executions.statistics(DiagnosticFilter(input_datasets=f))
-        }
-        assert stats[ids["diag_2"]].not_started == 0
-        listed = {
-            (d.provider_slug, d.slug): d.execution_group_count
-            for d in reader.diagnostics.list(DiagnosticFilter(input_datasets=f)).items
-        }
-        assert listed[ids["diag_2"]] == stats[ids["diag_2"]].total
 
-    def test_values_are_per_execution(self, db_with_obs_only):
-        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"}, or_no_model_input=True)
-        values = Reader(db_with_obs_only).values.scalar_values(MetricValueFilter(input_datasets=f))
-        # The older cmip6-b-old execution ran against CMIP6, so it stays out.
-        assert sorted((v.dimensions["source_id"], v.value) for v in values) == [
-            ("cmip6-b-old", 1.0),
-            ("cmip7-a", 0.0),
-            ("mixed", 0.0),
-            ("obs-only", 0.0),
-        ]
+    def test_values(self, db_with_obs_only):
+        assert _value_sources(db_with_obs_only, source_types=[CMIP7]) == {"cmip7-a", "mixed"}
+        assert _value_sources(db_with_obs_only, source_types=[CMIP7], or_no_model_input=True) == {
+            "cmip7-a",
+            "mixed",
+            "obs-only",
+        }
+        assert _value_sources(db_with_obs_only, source_types=[]) == set()
+        assert _value_sources(db_with_obs_only, source_types=[], or_no_model_input=True) == {"obs-only"}
+
+    def test_latest_only_values(self, db_with_obs_only):
+        values = _value_sources(db_with_obs_only, source_types=[CMIP6], latest_only=True)
+        assert "cmip6-a" in values
+        assert "obs-only" not in values
+
+    @staticmethod
+    def _counts(reader, filters):
+        # Diagnostics with no matching group are listed with zeros.
+        counts = {(d.provider_slug, d.diagnostic_slug): d.groups.total for d in reader.list(filters)}
+        return {key: n for key, n in counts.items() if n}
+
+    def test_diagnostics(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        reader = Reader(db_with_obs_only).diagnostics
+        assert self._counts(reader, DiagnosticFilter(source_types=[CMIP7])) == {
+            ids["diag_1"]: 1,
+            ids["diag_2"]: 1,
+        }
+        obs = DiagnosticFilter(source_types=[], or_no_model_input=True)
+        assert self._counts(reader, obs) == {ids["diag_2"]: 1}
+
+    def test_with_values(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        reader = Reader(db_with_obs_only).diagnostics
+        scalar = MetricValueType.SCALAR
+        assert reader.with_values(scalar, DiagnosticFilter(source_types=[CMIP7])) == {
+            ids["diag_1"],
+            ids["diag_2"],
+        }
+        assert reader.with_values(scalar, DiagnosticFilter(source_types=[], or_no_model_input=True)) == {
+            ids["diag_2"]
+        }
+        assert reader.with_values(scalar, DiagnosticFilter(source_types=[])) == set()
 
 
 class TestMetricValues:
@@ -394,22 +417,26 @@ class TestDiagnostics:
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "FACET-A"})
         items = Reader(db_with_inputs).diagnostics.list(DiagnosticFilter(input_datasets=f)).items
-        assert [(d.provider_slug, d.slug) for d in items] == [ids["diag_1"]]
+        assert [(d.provider_slug, d.diagnostic_slug) for d in items] == [ids["diag_1"]]
         (view,) = items
-        assert (view.execution_group_count, view.total, view.successful) == (2, 2, 2)
+        assert (view.groups.total, view.execution_count, view.groups.successful) == (
+            2,
+            2,
+            2,
+        )
 
     def test_combines_with_diagnostic_contains(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
         filters = DiagnosticFilter(input_datasets=f, diagnostic_contains=[ids["diag_2"][1]])
         items = Reader(db_with_inputs).diagnostics.list(filters).items
-        assert [(d.provider_slug, d.slug, d.execution_group_count) for d in items] == [(*ids["diag_2"], 1)]
+        assert [(d.provider_slug, d.diagnostic_slug, d.groups.total) for d in items] == [(*ids["diag_2"], 1)]
 
     def test_stats_scoped(self, db_with_inputs):
         ids = db_with_inputs.ids
         f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
-        stats = Reader(db_with_inputs).executions.statistics(DiagnosticFilter(input_datasets=f))
-        assert {(s.provider, s.diagnostic): s.total for s in stats} == {ids["diag_2"]: 1}
+        items = Reader(db_with_inputs).diagnostics.list(DiagnosticFilter(input_datasets=f)).items
+        assert {(d.provider_slug, d.diagnostic_slug): d.groups.total for d in items} == {ids["diag_2"]: 1}
 
     def test_with_values_scoped(self, db_with_inputs):
         ids = db_with_inputs.ids

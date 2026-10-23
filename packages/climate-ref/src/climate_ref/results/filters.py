@@ -14,7 +14,7 @@ Each reader method takes one kind of filter:
 * [ExecutionGroupFilter][climate_ref.results.filters.ExecutionGroupFilter]:
   ``reader.executions.groups`` and ``group_rows``.
 * [DiagnosticFilter][climate_ref.results.filters.DiagnosticFilter]:
-  ``reader.diagnostics.list`` and ``reader.executions.statistics``.
+  ``reader.diagnostics.list`` and ``with_values``.
 * [ResourceFilter][climate_ref.results.filters.ResourceFilter]:
   ``reader.resources.measurements``, ``summary``, ``summaries`` and ``profiles``.
 * [DatasetFilter][climate_ref.models.dataset_query.DatasetFilter]:
@@ -43,13 +43,14 @@ They are grouped into scopes, and each filter is built from the scopes it needs:
 * [VersionScope][climate_ref.results.filters.VersionScope]: which diagnostic versions
   (``include_superseded``, ``diagnostic_version``).
 * [ExecutionScope][climate_ref.results.filters.ExecutionScope]: which executions
-  (``include_retracted``, ``created_after``, ``created_before``, ``execution_ids``, ``execution_group_ids``).
+  (``include_retracted``, ``created_after``, ``created_before``, ``execution_ids``, ``execution_group_ids``,
+  ``source_types``, ``or_no_model_input``).
 * [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: which input datasets the executions used
   (``input_datasets``).
 
 ## Latest execution only
 
-An execution group can have several executions, one per rerun.
+An execution group can have several executions, one each time it is rerun.
 ``MetricValueFilter`` and ``ResourceFilter`` read single executions,
 so they have ``latest_only`` to keep only each group's newest one.
 ``ExecutionGroupFilter`` and ``DiagnosticFilter`` always judge a group by its newest execution,
@@ -63,7 +64,7 @@ Pass it as ``input_datasets`` on any filter.
 
 Examples
 --------
-The latest PMP values from runs created this year:
+The latest PMP values from executions created this year:
 
 >>> import datetime
 >>> from climate_ref.results import MetricValueFilter
@@ -95,7 +96,7 @@ import datetime
 from collections.abc import Mapping, Sequence
 
 import attrs
-from sqlalchemy import ColumnElement, Select, and_, false, or_, select, true
+from sqlalchemy import ColumnElement, Select, and_, exists, false, or_, select, true
 
 from climate_ref.models.dataset_query import _as_facets, _entity_for
 from climate_ref.models.diagnostic import Diagnostic
@@ -103,6 +104,7 @@ from climate_ref.models.execution import (
     Execution,
     ExecutionFailureReason,
     ExecutionGroup,
+    ExecutionGroupSourceType,
     execution_datasets,
 )
 from climate_ref.models.metric_value import MetricValue
@@ -141,6 +143,9 @@ class BaseFilter:
     """
 
 
+_MODEL_SOURCE_TYPES = tuple(t for t in SourceDatasetType if t.is_model_output)
+
+
 @attrs.frozen(kw_only=True)
 class InputDatasetFilter:
     """
@@ -164,7 +169,7 @@ class InputDatasetFilter:
 
     Examples
     --------
-    Runs that used ACCESS-CM2 data, from either CMIP6 or CMIP7:
+    Executions that used ACCESS-CM2 data, from either CMIP6 or CMIP7:
 
     >>> from climate_ref.results import InputDatasetFilter, MetricValueFilter
     >>> from climate_ref_core.source_types import SourceDatasetType
@@ -179,14 +184,15 @@ class InputDatasetFilter:
     >>> access.facets
     {'source_id': ('ACCESS-CM2',)}
 
-    Runs that used particular datasets, of any type:
+    Executions that used particular datasets, of any type:
 
     >>> InputDatasetFilter(dataset_ids=[12, 13]).dataset_ids
     (12, 13)
 
-    CMIP6 runs plus the observation-only runs, which use no model data:
+    ``source_types`` says which dataset tables the facets live on.
+    To keep executions by the source types their group draws on, use ``source_types`` on the filter itself:
 
-    >>> cmip6 = InputDatasetFilter(source_types=[SourceDatasetType.CMIP6], or_no_model_input=True)
+    >>> filters = MetricValueFilter(source_types=[SourceDatasetType.CMIP6], or_no_model_input=True)
 
     A facet that is not a column on any of the types is rejected:
 
@@ -212,9 +218,6 @@ class InputDatasetFilter:
 
     Values for one facet are alternatives. Every facet must match.
     """
-
-    or_no_model_input: bool = False
-    """Also match executions with no model input dataset, such as observation-only ones."""
 
     def __attrs_post_init__(self) -> None:
         if not self.source_types and self.dataset_ids is None:
@@ -245,15 +248,10 @@ class InputDatasetFilter:
             if self.dataset_ids is not None:
                 conditions.append(entity.id.in_(self.dataset_ids))
             branches.append(Execution.datasets.of_type(entity).any(and_(true(), *conditions)))
-        if self.or_no_model_input:
-            model_types = (t for t in SourceDatasetType if t.is_model_output)
-            absent = (~Execution.datasets.of_type(_entity_for(t)).any() for t in model_types)
-            branches.append(and_(*absent))
         # An empty or_() emits no predicate, which would match every execution.
         if not branches:
             return false()
-        # An outer-joined missing execution would pass the no-model-input branch.
-        return and_(Execution.id.is_not(None), or_(*branches))
+        return or_(*branches)
 
 
 @attrs.frozen(kw_only=True, slots=False)
@@ -369,7 +367,7 @@ class ExecutionScope(BaseFilter):
 
     Examples
     --------
-    Values from each group's newest run in March 2026, retracted runs included:
+    Values from each group's newest execution in March 2026, retracted executions included:
 
     >>> import datetime
     >>> from climate_ref.results import MetricValueFilter
@@ -396,6 +394,16 @@ class ExecutionScope(BaseFilter):
     execution_group_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
     """Keep only executions in these groups."""
 
+    source_types: tuple[SourceDatasetType, ...] | None = attrs.field(default=None, converter=_as_source_types)
+    """
+    Keep executions whose group draws on any of these source types.
+
+    Pass one type or a list. An empty list matches nothing, unless ``or_no_model_input`` is set.
+    """
+
+    or_no_model_input: bool = False
+    """Also keep groups that use no model source type, such as observation-only ones."""
+
     def execution_clauses(self) -> list[ColumnElement[bool]]:
         """Clauses over ``Execution`` that narrow which executions count, before the newest is picked."""
         clauses: list[ColumnElement[bool]] = []
@@ -407,13 +415,25 @@ class ExecutionScope(BaseFilter):
             clauses.append(Execution.id.in_(self.execution_ids))
         if self.execution_group_ids is not None:
             clauses.append(Execution.execution_group_id.in_(self.execution_group_ids))
+        if self.source_types is not None:
+            branches = [_group_uses(self.source_types) if self.source_types else false()]
+            if self.or_no_model_input:
+                branches.append(~_group_uses(_MODEL_SOURCE_TYPES))
+            clauses.append(or_(*branches))
         return clauses
+
+
+def _group_uses(source_types: Sequence[SourceDatasetType]) -> ColumnElement[bool]:
+    return exists().where(
+        ExecutionGroupSourceType.execution_group_id == Execution.execution_group_id,
+        ExecutionGroupSourceType.source_type.in_(source_types),
+    )
 
 
 @attrs.frozen(kw_only=True, slots=False)
 class InputDatasetScope(BaseFilter):
     """
-    A group of fields shared by every filter: which input datasets the runs used.
+    A group of fields shared by every filter: which input datasets the executions used.
 
     See [InputDatasetFilter][climate_ref.results.filters.InputDatasetFilter] for examples.
     """
@@ -516,7 +536,7 @@ class ResourceFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDataset
 
     Examples
     --------
-    ESMValTool runs from the last 30 days, across every diagnostic version:
+    ESMValTool executions from the last 30 days, across every diagnostic version:
 
     >>> import datetime
     >>> from climate_ref.results import ResourceFilter
@@ -545,7 +565,7 @@ class ExecutionGroupFilter(DiagnosticScope, VersionScope, ExecutionScope, InputD
 
     Examples
     --------
-    PMP groups whose newest run failed inside the diagnostic:
+    PMP groups whose newest execution failed inside the diagnostic:
 
     >>> from climate_ref.models.execution import ExecutionFailureReason
     >>> from climate_ref.results import ExecutionGroupFilter
@@ -555,7 +575,7 @@ class ExecutionGroupFilter(DiagnosticScope, VersionScope, ExecutionScope, InputD
     ...     failure_reasons=[ExecutionFailureReason.DiagnosticError],
     ... )
 
-    Groups selected for one model, with their newest successful run:
+    Groups selected for one model, with their newest successful execution:
 
     >>> filters = ExecutionGroupFilter(selectors={"source_id": "ACCESS-CM2"}, latest_successful=True)
 
@@ -590,7 +610,7 @@ class ExecutionGroupFilter(DiagnosticScope, VersionScope, ExecutionScope, InputD
     Keep groups by the facets they were selected with, e.g. ``{"source_id": ["ACCESS-CM2"]}``.
 
     A key is a bare facet such as ``source_id``, or ``<dataset_type>.<facet>`` for one dataset type.
-    Unlike ``input_datasets``, this checks how the group was selected, not the datasets its runs used.
+    Unlike ``input_datasets``, this checks how the group was selected, not the datasets its executions used.
     """
 
     failure_reasons: tuple[ExecutionFailureReason, ...] | None = attrs.field(
@@ -602,16 +622,15 @@ class ExecutionGroupFilter(DiagnosticScope, VersionScope, ExecutionScope, InputD
 @attrs.frozen(kw_only=True)
 class DiagnosticFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatasetScope):
     """
-    Filter for diagnostics and their run counts.
+    Filter for diagnostics and their execution counts.
 
-    Pass it to ``reader.diagnostics.list``, ``reader.diagnostics.with_values``
-    or ``reader.executions.statistics``.
+    Pass it to ``reader.diagnostics.list`` or ``reader.diagnostics.with_values``.
     It has no fields of its own, only those of
     [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
     [VersionScope][climate_ref.results.filters.VersionScope],
     [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
     [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
-    With ``input_datasets`` only groups whose newest run matches are counted,
+    With ``input_datasets`` only groups whose newest execution matches are counted,
     and a diagnostic left with no groups is dropped.
 
     Examples

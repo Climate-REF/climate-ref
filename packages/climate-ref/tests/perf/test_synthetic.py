@@ -42,10 +42,10 @@ def test_reader_reads_the_database(synthetic_db, config):
     with Database.from_config(config, read_only=True) as db:
         reader = Reader(db)
         values = reader.values.scalar_values(MetricValueFilter(include_retracted=True), limit=10)
-        stats = reader.executions.statistics()
+        diagnostics = reader.diagnostics.list()
 
     assert len(values) == 10
-    assert sum(s.total for s in stats) > 0
+    assert sum(d.groups.total for d in diagnostics) > 0
 
 
 def test_refuses_to_overwrite(synthetic_db, synthetic_module, shape):

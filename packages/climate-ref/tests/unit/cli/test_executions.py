@@ -808,8 +808,10 @@ class TestDeleteGroups:
 
 class TestExecutionStats:
     def test_stats_no_data(self, db_seeded, invoke_cli):
+        # Diagnostics without execution groups are listed with zero counts.
         result = invoke_cli(["executions", "stats"])
-        assert "No execution groups found." in result.stdout
+        assert "(total)" in result.stdout
+        assert "No execution groups found." not in result.stdout
 
     def test_stats_basic(self, db_with_groups, invoke_cli):
         result = invoke_cli(["executions", "stats"])

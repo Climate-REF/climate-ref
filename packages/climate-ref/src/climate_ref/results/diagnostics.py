@@ -1,11 +1,11 @@
 """
-Find out which diagnostics exist, how their runs are going and which have results.
+Find out which diagnostics exist, how their executions are going and which have results.
 
 [DiagnosticsReader][climate_ref.results.diagnostics.DiagnosticsReader] is reached via
 [Reader.diagnostics][climate_ref.results.reader.Reader.diagnostics].
 It returns:
 
-* [DiagnosticView][climate_ref.results.diagnostics.DiagnosticView]: one diagnostic, with run counts.
+* [DiagnosticView][climate_ref.results.diagnostics.DiagnosticView]: one diagnostic, with execution counts.
 * [DiagnosticCollection][climate_ref.results.diagnostics.DiagnosticCollection]:
   a page of diagnostics, with ``to_pandas()``.
 
@@ -39,9 +39,45 @@ from climate_ref.results.queries import (
 
 
 @attrs.frozen(kw_only=True)
+class GroupCounts:
+    """
+    How many execution groups of one diagnostic are running, failed, succeeded or not started.
+
+    Each group is counted once, by the outcome of its newest execution.
+    So ``successful + failed + running + not_started == total``.
+    ``dirty`` is counted separately and overlaps the others.
+
+    Examples
+    --------
+    >>> from climate_ref.results.diagnostics import GroupCounts
+    >>> counts = GroupCounts(total=13, successful=10, failed=2, running=1, not_started=0, dirty=3)
+    >>> counts.successful / counts.total
+    0.7692307692307693
+    """
+
+    total: int
+    """Execution groups that the filter keeps."""
+
+    successful: int
+    """Groups whose newest execution succeeded."""
+
+    failed: int
+    """Groups whose newest execution failed."""
+
+    running: int
+    """Groups whose newest execution has not finished."""
+
+    not_started: int
+    """Groups with no execution yet."""
+
+    dirty: int
+    """Groups whose inputs have changed and need to be run again."""
+
+
+@attrs.frozen(kw_only=True)
 class DiagnosticView:
     """
-    One diagnostic, with its current version and how many of its runs have succeeded.
+    One diagnostic, with its current version and how its execution groups are going.
 
     Every count covers the groups and executions the filter keeps, by default those at the promoted version.
 
@@ -49,30 +85,26 @@ class DiagnosticView:
 
     Examples
     --------
-    >>> from climate_ref.results.diagnostics import DiagnosticView
+    >>> from climate_ref.results.diagnostics import DiagnosticView, GroupCounts
     >>> diagnostic = DiagnosticView(
     ...     provider_slug="pmp",
-    ...     slug="enso_tel",
+    ...     diagnostic_slug="enso_tel",
     ...     name="ENSO teleconnections",
     ...     promoted_version=2,
-    ...     execution_group_count=24,
-    ...     successful=18,
-    ...     inflight=2,
-    ...     total=31,
+    ...     groups=GroupCounts(total=24, successful=18, failed=2, running=2, not_started=2, dirty=1),
+    ...     execution_count=31,
     ... )
 
-    Groups whose newest run failed or that have not run yet, and the reruns on top of one run per group:
+    The executions beyond one per group are reruns:
 
-    >>> diagnostic.execution_group_count - diagnostic.successful - diagnostic.inflight
-    4
-    >>> diagnostic.total - diagnostic.execution_group_count
+    >>> diagnostic.execution_count - diagnostic.groups.total
     7
     """
 
     provider_slug: str
     """Owning provider's slug."""
 
-    slug: str
+    diagnostic_slug: str
     """The diagnostic's own slug, unique within its provider."""
 
     name: str
@@ -81,17 +113,11 @@ class DiagnosticView:
     promoted_version: int
     """The promoted version of the diagnostic."""
 
-    execution_group_count: int
-    """Execution groups for the diagnostic that the filter keeps."""
+    groups: GroupCounts
+    """Counts of the execution groups that the filter keeps, by the outcome of their newest execution."""
 
-    successful: int
-    """Groups whose newest execution succeeded."""
-
-    inflight: int
-    """Groups whose newest execution is still running."""
-
-    total: int
-    """Executions that the filter keeps, counting every rerun of every group."""
+    execution_count: int
+    """Executions that the filter keeps, counting every execution of every group, reruns included."""
 
 
 @attrs.frozen(kw_only=True)
@@ -118,7 +144,9 @@ class DiagnosticCollection(Page[DiagnosticView]):
         Convert to a pandas DataFrame with the same columns as ``ref diagnostics list``.
 
         The columns are ``provider``, ``diagnostic``, ``name``, ``promoted_version``,
-        ``execution_group_count``, ``successful``, ``inflight`` and ``total``.
+        ``group_count``, ``successful_group_count``, ``failed_group_count``,
+        ``running_group_count``, ``not_started_group_count``,
+        ``dirty_group_count`` and ``execution_count``.
         They are present even when the collection is empty.
         """
         columns = [
@@ -126,21 +154,27 @@ class DiagnosticCollection(Page[DiagnosticView]):
             "diagnostic",
             "name",
             "promoted_version",
-            "execution_group_count",
-            "successful",
-            "inflight",
-            "total",
+            "group_count",
+            "successful_group_count",
+            "failed_group_count",
+            "running_group_count",
+            "not_started_group_count",
+            "dirty_group_count",
+            "execution_count",
         ]
         records = [
             {
                 "provider": d.provider_slug,
-                "diagnostic": d.slug,
+                "diagnostic": d.diagnostic_slug,
                 "name": d.name,
                 "promoted_version": d.promoted_version,
-                "execution_group_count": d.execution_group_count,
-                "successful": d.successful,
-                "inflight": d.inflight,
-                "total": d.total,
+                "group_count": d.groups.total,
+                "successful_group_count": d.groups.successful,
+                "failed_group_count": d.groups.failed,
+                "running_group_count": d.groups.running,
+                "not_started_group_count": d.groups.not_started,
+                "dirty_group_count": d.groups.dirty,
+                "execution_count": d.execution_count,
             }
             for d in self.items
         ]
@@ -149,7 +183,7 @@ class DiagnosticCollection(Page[DiagnosticView]):
 
 class DiagnosticsReader:
     """
-    Look up diagnostics, how many of their runs succeeded and which have results.
+    Look up diagnostics, how many of their execution groups succeeded and which have results.
 
     Reach it as ``Reader(db).diagnostics``.
 
@@ -178,13 +212,18 @@ class DiagnosticsReader:
     def _to_view(self, row: Any) -> DiagnosticView:
         return DiagnosticView(
             provider_slug=row.provider_slug,
-            slug=row.slug,
+            diagnostic_slug=row.diagnostic_slug,
             name=row.name,
             promoted_version=row.promoted_version,
-            execution_group_count=row.execution_group_count,
-            successful=row.successful,
-            inflight=row.running,
-            total=row.execution_count,
+            groups=GroupCounts(
+                total=row.group_count,
+                successful=row.successful,
+                failed=row.failed,
+                running=row.running,
+                not_started=row.not_started,
+                dirty=row.dirty,
+            ),
+            execution_count=row.execution_count,
         )
 
     def list(
@@ -196,7 +235,7 @@ class DiagnosticsReader:
         with_count: bool = True,
     ) -> DiagnosticCollection:
         """
-        Which diagnostics are there, and how many of their runs succeeded?
+        Which diagnostics are there, and how many of their execution groups succeeded?
 
         Parameters
         ----------
@@ -218,7 +257,7 @@ class DiagnosticsReader:
 
         Examples
         --------
-        The ENSO diagnostics and how their runs are going, as a table:
+        The ENSO diagnostics and how their executions are going, as a table:
 
         ```python
         from climate_ref.results import DiagnosticFilter, Reader
@@ -250,15 +289,15 @@ class DiagnosticsReader:
         Use it to find diagnostics worth querying, for example those with time series
         before calling ``reader.values.series_values``.
         By default only results from each diagnostic's current (promoted) version count,
-        and retracted runs do not.
+        and retracted executions do not.
 
         Parameters
         ----------
         value_type
             ``MetricValueType.SCALAR`` for single numbers, or ``MetricValueType.SERIES`` for time series.
         filters
-            Narrow which diagnostics and runs are considered. ``None`` considers all of them.
-            Use ``include_retracted=True`` to count retracted runs,
+            Narrow which diagnostics and executions are considered. ``None`` considers all of them.
+            Use ``include_retracted=True`` to count retracted executions,
             or ``created_after`` and ``created_before`` to limit by date.
 
         Returns
@@ -268,7 +307,7 @@ class DiagnosticsReader:
 
         Examples
         --------
-        PMP diagnostics with time series from runs created this year:
+        PMP diagnostics with time series from executions created this year:
 
         ```python
         import datetime

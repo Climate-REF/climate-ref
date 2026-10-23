@@ -15,8 +15,14 @@ def _as_failure_reasons(
     return None if value is None else tuple(value)
 
 
-def _as_source_types(value: Sequence[SourceDatasetType]) -> tuple[SourceDatasetType, ...]:
-    """Convert the dataset types of an ``InputDatasetFilter`` to a tuple."""
+def _as_source_types(
+    value: SourceDatasetType | Sequence[SourceDatasetType] | None,
+) -> tuple[SourceDatasetType, ...] | None:
+    """Convert a source type or a sequence of them to a tuple, leaving ``None`` as is."""
+    if value is None:
+        return None
+    if isinstance(value, SourceDatasetType):
+        return (value,)
     return tuple(value)
 
 

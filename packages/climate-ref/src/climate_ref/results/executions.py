@@ -1,5 +1,5 @@
 """
-Find out which diagnostic runs happened, which failed and why, and what files they produced.
+Find out which diagnostic executions happened, which failed and why, and what files they produced.
 
 [ExecutionsReader][climate_ref.results.executions.ExecutionsReader] is reached via
 [Reader.executions][climate_ref.results.reader.Reader.executions].
@@ -10,7 +10,6 @@ It returns:
   a group, with its newest execution in ``latest``.
 * [ExecutionView][climate_ref.results.executions.ExecutionView]: one execution.
 * [OutputView][climate_ref.results.executions.OutputView]: one file or plot an execution produced.
-* [ExecutionStats][climate_ref.results.executions.ExecutionStats]: run counts for one diagnostic.
 * [ExecutionGroupCollection][climate_ref.results.executions.ExecutionGroupCollection]:
   a page of groups, with ``to_pandas()``.
 
@@ -23,7 +22,7 @@ To read results, use [groups][climate_ref.results.executions.ExecutionsReader.gr
 
 Examples
 --------
-Which runs of the ENSO diagnostic failed, and why?
+Which executions of the ENSO diagnostic failed, and why?
 
 ```python
 from climate_ref.results import ExecutionGroupFilter, Reader
@@ -50,7 +49,7 @@ from climate_ref.models.execution import (
     ExecutionGroup,
 )
 from climate_ref.results._page import Page
-from climate_ref.results.filters import DiagnosticFilter, ExecutionGroupFilter
+from climate_ref.results.filters import ExecutionGroupFilter
 from climate_ref.results.queries import (
     count,
     filter_by_selectors,
@@ -58,7 +57,6 @@ from climate_ref.results.queries import (
     select_execution_group_ids,
     select_execution_groups,
     select_execution_outputs,
-    select_execution_statistics,
     select_latest_execution,
 )
 
@@ -66,7 +64,7 @@ from climate_ref.results.queries import (
 @attrs.frozen(kw_only=True)
 class ExecutionView:
     """
-    One run of a diagnostic.
+    One execution of a diagnostic.
 
     Get one from [ExecutionsReader.execution][climate_ref.results.executions.ExecutionsReader.execution],
     or from ``latest`` on an [ExecutionGroupView][climate_ref.results.executions.ExecutionGroupView].
@@ -200,8 +198,7 @@ class ExecutionGroupView:
 
     This is the execution that
     [ExecutionsReader.latest_execution][climate_ref.results.executions.ExecutionsReader.latest_execution]
-    returns, and the one
-    [ExecutionsReader.statistics][climate_ref.results.executions.ExecutionsReader.statistics] counts.
+    returns.
     With ``latest_successful=True`` on the filter it is the newest successful execution instead.
     """
 
@@ -214,60 +211,6 @@ class ExecutionGroupView:
     def failure_reason(self) -> str | None:
         """Why the newest execution failed, or ``None``. See ``ExecutionView.failure_reason``."""
         return self.latest.failure_reason if self.latest else None
-
-
-@attrs.frozen(kw_only=True)
-class ExecutionStats:
-    """
-    How many runs of one diagnostic are running, failed, succeeded or not started.
-
-    Each execution group is counted once, by the outcome of its newest execution.
-    So ``running + failed + successful + not_started == total``.
-    ``dirty`` is counted separately and overlaps the others.
-    Only groups at the diagnostic's promoted (current) version are counted.
-
-    Get them from [ExecutionsReader.statistics][climate_ref.results.executions.ExecutionsReader.statistics].
-
-    Examples
-    --------
-    >>> from climate_ref.results.executions import ExecutionStats
-    >>> stats = ExecutionStats(
-    ...     provider="pmp",
-    ...     diagnostic="enso_tel",
-    ...     running=1,
-    ...     failed=2,
-    ...     successful=10,
-    ...     not_started=0,
-    ...     dirty=3,
-    ...     total=13,
-    ... )
-    >>> stats.successful / stats.total
-    0.7692307692307693
-    """
-
-    provider: str
-    """Provider slug."""
-
-    diagnostic: str
-    """Diagnostic slug."""
-
-    running: int
-    """Groups whose newest execution has not finished."""
-
-    failed: int
-    """Groups whose newest execution failed."""
-
-    successful: int
-    """Groups whose newest execution succeeded."""
-
-    not_started: int
-    """Groups with no execution yet."""
-
-    dirty: int
-    """Groups whose inputs have changed and need to be run again."""
-
-    total: int
-    """Execution groups counted, at the diagnostic's promoted version."""
 
 
 @attrs.frozen(kw_only=True)
@@ -390,7 +333,7 @@ class ExecutionsReader:
     with Database.from_config(config, read_only=True) as db:
         reader = Reader(db)
 
-        # Runs whose newest execution failed, 20 at a time
+        # Groups whose newest execution failed, 20 at a time
         page = reader.executions.groups(ExecutionGroupFilter(successful=False), limit=20)
         print(page.total_count)
 
@@ -484,7 +427,7 @@ class ExecutionsReader:
         with_count: bool = True,
     ) -> ExecutionGroupCollection:
         """
-        Which runs of a diagnostic match, and how did their newest execution go?
+        Which execution groups match, and how did their newest execution go?
 
         Each group comes with its newest execution, so you can see whether it succeeded and why not.
         The results are plain objects that stay usable after the database is closed.
@@ -492,7 +435,7 @@ class ExecutionsReader:
         [group_rows][climate_ref.results.executions.ExecutionsReader.group_rows].
 
         ``successful`` and ``latest_successful`` ask different questions.
-        Say a model's run failed last week but succeeded the week before.
+        Say a model's execution failed last week but succeeded the week before.
         With ``successful=False`` the group matches, because its newest execution failed.
         With ``latest_successful=True`` the group matches too, but its ``latest`` is now
         the execution from the week before, because that is the newest one that succeeded.
@@ -517,7 +460,7 @@ class ExecutionsReader:
 
         Examples
         --------
-        The second page of PMP runs that failed inside the diagnostic:
+        The second page of PMP groups whose newest execution failed inside the diagnostic:
 
         ```python
         from climate_ref.models.execution import ExecutionFailureReason
@@ -547,37 +490,9 @@ class ExecutionsReader:
 
         return ExecutionGroupCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
-    def statistics(self, filters: DiagnosticFilter | None = None) -> tuple[ExecutionStats, ...]:
-        """
-        How many runs does each diagnostic have, and how many succeeded or failed?
-
-        Parameters
-        ----------
-        filters
-            Which diagnostics to count. ``None`` counts all of them.
-
-        Returns
-        -------
-        tuple[ExecutionStats, ...]
-            One entry per diagnostic that has at least one group, ordered by provider then diagnostic.
-            See [ExecutionStats][climate_ref.results.executions.ExecutionStats] for what each count means.
-
-        Examples
-        --------
-        ```python
-        from climate_ref.results import DiagnosticFilter, Reader
-
-        with Database.from_config(config, read_only=True) as db:
-            for s in Reader(db).executions.statistics(DiagnosticFilter(provider_slug="pmp")):
-                print(f"{s.diagnostic}: {s.successful}/{s.total} succeeded, {s.failed} failed")
-        ```
-        """
-        rows = self.session.execute(select_execution_statistics(filters)).all()
-        return tuple(ExecutionStats(**row._asdict()) for row in rows)
-
     def latest_execution(self, execution_group_id: int) -> ExecutionView | None:
         """
-        Find the newest run of this group, whether or not it succeeded.
+        Find the newest execution of this group, whether or not it succeeded.
 
         The newest execution is the one created last.
         To get the newest successful execution instead, filter ``groups`` with ``latest_successful=True``.

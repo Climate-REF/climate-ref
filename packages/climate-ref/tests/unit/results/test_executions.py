@@ -21,7 +21,7 @@ from climate_ref.results import (
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results.queries import select_execution_outputs, select_execution_statistics
+from climate_ref.results.queries import select_diagnostics, select_execution_outputs
 
 
 def test_import_smoke() -> None:
@@ -532,30 +532,18 @@ class TestGroupLatestMapping:
         assert view.successful is None
 
 
-class TestSelectExecutionStatistics:
+class TestSelectDiagnosticCounts:
     def test_raw_rows(self, db_with_groups):
-        stmt = select_execution_statistics()
+        stmt = select_diagnostics()
         rows = db_with_groups.session.execute(stmt).all()
-        by_diag = {row.diagnostic: row for row in rows}
+        by_diag = {row.diagnostic_slug: row for row in rows}
         assert "enso_tel" in by_diag
         row = by_diag["enso_tel"]
-        assert row.total == 1
+        assert row.group_count == 1
         assert row.successful == 1
         assert row.failed == 0
         assert row.running == 0
         assert row.not_started == 0
-
-    def test_raw_rows_provider_filter(self, db_with_groups):
-        stmt = select_execution_statistics(DiagnosticFilter(provider_contains=["pmp"]))
-        rows = db_with_groups.session.execute(stmt).all()
-        providers = {row.provider for row in rows}
-        assert providers == {"pmp"}
-
-    def test_raw_rows_diagnostic_filter(self, db_with_groups):
-        stmt = select_execution_statistics(DiagnosticFilter(diagnostic_contains=["enso"]))
-        rows = db_with_groups.session.execute(stmt).all()
-        diagnostics = {row.diagnostic for row in rows}
-        assert diagnostics == {"enso_tel", "enso-characteristics"}
 
     def test_tied_created_at_does_not_double_count(self, db_with_groups):
         """Two executions in the same group tied on ``created_at`` must not double-count that
@@ -587,20 +575,19 @@ class TestSelectExecutionStatistics:
                 )
             )
 
-        stmt = select_execution_statistics(DiagnosticFilter(diagnostic_contains=["enso_tel"]))
+        stmt = select_diagnostics(DiagnosticFilter(diagnostic_contains=["enso_tel"]))
         rows = db_with_groups.session.execute(stmt).all()
-        by_diag = {row.diagnostic: row for row in rows}
+        by_diag = {row.diagnostic_slug: row for row in rows}
         row = by_diag["enso_tel"]
-        # Still one execution group, still one status count -- not doubled by the tie.
-        assert row.total == 1
+        # Still one execution group, still one status count, not doubled by the tie.
+        assert row.group_count == 1
         assert row.successful == 1
 
 
-class TestStatistics:
+class TestStatusCounts:
     def test_status_counts(self, db_with_groups):
         reader = Reader(db_with_groups)
-        stats = reader.executions.statistics()
-        by_diag = {s.diagnostic: s for s in stats}
+        by_diag = {d.diagnostic_slug: d.groups for d in reader.diagnostics.list()}
 
         # sea-ice-area-basic has key4 (successful), key5 (successful, dirty),
         # key6 (not started), key7 (running).
@@ -611,26 +598,6 @@ class TestStatistics:
         assert sea_ice.running == 1
         assert sea_ice.dirty == 1
         assert sea_ice.failed == 0
-
-    def test_provider_substring_filter(self, db_with_groups):
-        reader = Reader(db_with_groups)
-        stats = reader.executions.statistics(DiagnosticFilter(provider_contains=["esmvaltool"]))
-        providers = {s.provider for s in stats}
-        assert providers == {"esmvaltool"}
-
-    def test_diagnostic_substring_filter(self, db_with_groups):
-        reader = Reader(db_with_groups)
-        stats = reader.executions.statistics(DiagnosticFilter(diagnostic_contains=["enso"]))
-        diagnostics = {s.diagnostic for s in stats}
-        assert diagnostics == {"enso_tel", "enso-characteristics"}
-
-    def test_exact_slug_filter(self, db_with_groups):
-        reader = Reader(db_with_groups)
-        stats = reader.executions.statistics(
-            DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel")
-        )
-        assert {(s.provider, s.diagnostic) for s in stats} == {("pmp", "enso_tel")}
-        assert reader.executions.statistics(DiagnosticFilter(diagnostic_slug="enso")) == ()
 
 
 class TestLatestExecution:
@@ -777,7 +744,7 @@ class TestReaderArtifactsGating:
 
 
 class TestSharedExecutionScope:
-    """Groups, statistics and diagnostics keep the same groups for the same shared fields."""
+    """Groups and diagnostics keep the same groups for the same shared fields."""
 
     @staticmethod
     def _retract_latest(db, key):
@@ -797,9 +764,8 @@ class TestSharedExecutionScope:
     @staticmethod
     def _counts(reader, **fields):
         groups = reader.executions.groups(ExecutionGroupFilter(**fields)).total_count
-        stats = sum(s.total for s in reader.executions.statistics(DiagnosticFilter(**fields)))
-        listed = sum(d.execution_group_count for d in reader.diagnostics.list(DiagnosticFilter(**fields)))
-        return groups, stats, listed
+        listed = sum(d.groups.total for d in reader.diagnostics.list(DiagnosticFilter(**fields)))
+        return groups, listed
 
     def test_retracted_latest_drops_the_group_everywhere(self, db_with_groups):
         self._retract_latest(db_with_groups, "key1")
@@ -813,7 +779,7 @@ class TestSharedExecutionScope:
     def test_window_drops_groups_without_a_run_in_it(self, db_with_groups):
         reader = Reader(db_with_groups)
         future = datetime.datetime(2999, 1, 1)
-        assert self._counts(reader, created_after=future) == (0, 0, 0)
+        assert self._counts(reader, created_after=future) == (0, 0)
 
         everything = self._counts(reader)
         ran = self._counts(reader, created_before=future)

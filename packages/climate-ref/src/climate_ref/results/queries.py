@@ -20,7 +20,6 @@ Builders that count or summarise select labelled columns, listed on each builder
 
 * [select_diagnostics][climate_ref.results.queries.select_diagnostics] and
   [select_diagnostics_with_values][climate_ref.results.queries.select_diagnostics_with_values].
-* [select_execution_statistics][climate_ref.results.queries.select_execution_statistics].
 * [select_execution_resources][climate_ref.results.queries.select_execution_resources] and
   [select_resource_summary][climate_ref.results.queries.select_resource_summary].
 
@@ -243,15 +242,20 @@ def paginate(stmt: Select[Any], offset: int, limit: int | None) -> Select[Any]:
 
 _SUCCESSFUL_COUNT = func.sum(case((Execution.successful.is_(True), 1), else_=0))
 _RUNNING_COUNT = func.sum(case((Execution.successful.is_(None) & Execution.id.isnot(None), 1), else_=0))
+_FAILED_COUNT = func.sum(case((Execution.successful.is_(False), 1), else_=0))
+_NOT_STARTED_COUNT = func.sum(case((Execution.id.is_(None), 1), else_=0))
+_DIRTY_COUNT = func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0))
 
 
 def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     """
     Build the ``Select`` for diagnostics joined to their provider, with group and execution counts.
 
-    ``execution_group_count`` counts the diagnostic's groups that the filter keeps,
+    ``group_count`` counts the diagnostic's groups that the filter keeps,
     the same groups as [select_execution_groups][climate_ref.results.queries.select_execution_groups].
-    ``successful`` and ``running`` count those whose newest execution succeeded or has not finished.
+    ``successful``, ``failed`` and ``running`` count those whose newest execution succeeded, failed or has not
+    finished.
+    ``not_started`` counts those with no execution and ``dirty`` those marked to be rerun.
     ``execution_count`` counts every execution of those diagnostics that the filter keeps,
     the same executions as
     [select_execution_resources][climate_ref.results.queries.select_execution_resources].
@@ -262,9 +266,12 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
 
     group_count_stmt = select(
         ExecutionGroup.diagnostic_id,
-        func.count(ExecutionGroup.id).label("execution_group_count"),
+        func.count(ExecutionGroup.id).label("group_count"),
         _SUCCESSFUL_COUNT.label("successful"),
         _RUNNING_COUNT.label("running"),
+        _FAILED_COUNT.label("failed"),
+        _NOT_STARTED_COUNT.label("not_started"),
+        _DIRTY_COUNT.label("dirty"),
     ).select_from(ExecutionGroup)
     group_count_stmt = _join_latest_execution(group_count_stmt, filters)
     group_count_subquery = group_count_stmt.group_by(ExecutionGroup.diagnostic_id).subquery()
@@ -281,12 +288,15 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     stmt = (
         select(
             Provider.slug.label("provider_slug"),
-            Diagnostic.slug.label("slug"),
+            Diagnostic.slug.label("diagnostic_slug"),
             Diagnostic.name.label("name"),
             Diagnostic.promoted_version.label("promoted_version"),
-            func.coalesce(group_count_subquery.c.execution_group_count, 0).label("execution_group_count"),
+            func.coalesce(group_count_subquery.c.group_count, 0).label("group_count"),
             func.coalesce(group_count_subquery.c.successful, 0).label("successful"),
             func.coalesce(group_count_subquery.c.running, 0).label("running"),
+            func.coalesce(group_count_subquery.c.failed, 0).label("failed"),
+            func.coalesce(group_count_subquery.c.not_started, 0).label("not_started"),
+            func.coalesce(group_count_subquery.c.dirty, 0).label("dirty"),
             func.coalesce(execution_count_subquery.c.execution_count, 0).label("execution_count"),
         )
         .join(Provider, Diagnostic.provider_id == Provider.id)
@@ -340,44 +350,6 @@ def select_diagnostics_with_values(
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
     return stmt.where(*filters.diagnostic_clauses())
-
-
-def select_execution_statistics(filters: DiagnosticFilter | None = None) -> Select[Any]:
-    """
-    Build the ``Select`` that counts execution groups by status for each (provider, diagnostic).
-
-    The covered diagnostics can be filtered using
-    [DiagnosticFilter][climate_ref.results.filters.DiagnosticFilter].
-    It counts the groups that [select_execution_groups][climate_ref.results.queries.select_execution_groups]
-    keeps for the same diagnostic, version, execution and input-dataset fields.
-
-    The status columns are:
-
-    * ``running``: the latest execution has not finished.
-    * ``failed``: the latest execution failed.
-    * ``successful``: the latest execution succeeded.
-    * ``not_started``: the group has no execution.
-    * ``dirty``: the group is marked to be rerun.
-    """
-    filters = filters or DiagnosticFilter()
-
-    stmt = (
-        select(
-            Provider.slug.label("provider"),
-            Diagnostic.slug.label("diagnostic"),
-            func.count().label("total"),
-            _RUNNING_COUNT.label("running"),
-            func.sum(case((Execution.successful.is_(False), 1), else_=0)).label("failed"),
-            _SUCCESSFUL_COUNT.label("successful"),
-            func.sum(case((Execution.id.is_(None), 1), else_=0)).label("not_started"),
-            func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0)).label("dirty"),
-        )
-        .select_from(ExecutionGroup)
-        .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-        .join(Provider, Diagnostic.provider_id == Provider.id)
-    )
-    stmt = _join_latest_execution(stmt, filters)
-    return stmt.group_by(Provider.slug, Diagnostic.slug).order_by(Provider.slug, Diagnostic.slug)
 
 
 def select_execution_outputs(execution_id: int) -> Select[Any]:

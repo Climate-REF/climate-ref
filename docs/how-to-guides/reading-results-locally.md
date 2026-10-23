@@ -77,21 +77,22 @@ and `DatasetFilter` for datasets.
 Every field is optional, and leaving it out means "don't narrow on this".
 The same field works the same way on every filter that has it.
 
-| To keep | Set |
-| --- | --- |
-| one diagnostic or provider | `diagnostic_slug="enso_tel"`, `provider_slug="pmp"` |
+| To keep                                                | Set                                                         |
+| ------------------------------------------------------ | ----------------------------------------------------------- |
+| one diagnostic or provider                             | `diagnostic_slug="enso_tel"`, `provider_slug="pmp"`         |
 | diagnostics or providers whose name contains some text | `diagnostic_contains=["enso"]`, `provider_contains=["pmp"]` |
-| results from older diagnostic versions as well | `include_superseded=True` |
-| only each execution group's newest run | `latest_only=True` |
-| runs created in a date range | `created_after=...`, `created_before=...` |
-| retracted runs as well | `include_retracted=True` |
-| runs that used particular input datasets | `input_datasets=InputDatasetFilter(...)` |
+| results from older diagnostic versions as well         | `include_superseded=True`                                   |
+| only each execution group's newest execution           | `latest_only=True`                                          |
+| executions created in a date range                     | `created_after=...`, `created_before=...`                   |
+| retracted executions as well                           | `include_retracted=True`                                    |
+| groups that draw on a source type                      | `source_types=[...]`                                        |
+| executions that used particular input datasets         | `input_datasets=InputDatasetFilter(...)`                    |
 
-By default you get the current diagnostic version only, with retracted runs left out.
+By default you get the current diagnostic version only, with retracted executions left out.
 When you narrow execution groups or diagnostics by `input_datasets`,
-a group matches only if its newest run used those datasets.
+a group matches only if its newest execution used those datasets.
 
-For example, the latest PMP values from runs created this year:
+For example, the latest PMP values from executions created this year:
 
 ```python
 import datetime
@@ -105,7 +106,7 @@ filters = MetricValueFilter(
 )
 ```
 
-`DatasetFilter` describes datasets rather than runs, so it has its own fields, covered under [Datasets](#datasets).
+`DatasetFilter` describes datasets rather than executions, so it has its own fields, covered under [Datasets](#datasets).
 
 ## Scalar and series values
 
@@ -212,7 +213,7 @@ with Database.from_config(config, read_only=True) as db:
 `reader.executions` reads execution groups and the individual executions within them.
 
 `groups()` returns an `ExecutionGroupCollection`;
-each `ExecutionGroupView` carries its `latest` execution (or `None` if it has never run):
+each `ExecutionGroupView` carries its `latest` execution (or `None` if it has no execution yet):
 
 ```python
 from climate_ref.results import ExecutionGroupFilter
@@ -245,19 +246,20 @@ with Database.from_config(config, read_only=True) as db:
     latest = reader.executions.latest_execution(execution_group_id=1)
 ```
 
-`group()`, `groups()`, `latest_execution()`, and `statistics()`
+`group()`, `groups()` and `latest_execution()`
 all agree on which execution is "latest" for a group
 (ranked by `created_at DESC, id DESC`).
 
-`statistics()` returns per-`(provider, diagnostic)` status counts as `ExecutionStats` objects:
+`reader.diagnostics.list()` returns per-diagnostic status counts in `DiagnosticView.groups`:
 
 ```python
 from climate_ref.results import DiagnosticFilter
 
 with Database.from_config(config, read_only=True) as db:
-    stats = Reader(db).executions.statistics(DiagnosticFilter(provider_contains=["esmvaltool"]))
-    for row in stats:
-        print(row.provider, row.diagnostic, row.successful, row.failed, row.running)
+    diagnostics = Reader(db).diagnostics.list(DiagnosticFilter(provider_contains=["esmvaltool"]))
+    for d in diagnostics.items:
+        counts = d.groups
+        print(d.provider_slug, d.diagnostic_slug, counts.successful, counts.failed, counts.running)
 ```
 
 ## Datasets

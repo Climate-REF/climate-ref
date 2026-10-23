@@ -1,5 +1,5 @@
 """
-How much time, CPU and memory did diagnostic runs use?
+How much time, CPU and memory did diagnostic executions use?
 
 Each execution can record how long it took, the CPU time it used and its peak memory.
 
@@ -105,7 +105,7 @@ class ResourceMeasurementView:
     The time, CPU and memory one execution used.
 
     Every measured field is ``None`` when the execution did not record it.
-    These are the individual runs behind a [ResourceProfile][climate_ref.results.resources.ResourceProfile].
+    These are the executions behind a [ResourceProfile][climate_ref.results.resources.ResourceProfile].
     Get them from [ResourcesReader.measurements][climate_ref.results.resources.ResourcesReader.measurements]
     or [ResourcesReader.measurement][climate_ref.results.resources.ResourcesReader.measurement].
 
@@ -206,7 +206,7 @@ class ResourceSummary:
     """
     Sum of wall clock time across the timed executions, in seconds.
 
-    Executions often run in parallel, so this can be more than the elapsed time of the run.
+    Executions often run in parallel, so this can be more than the elapsed time of the whole batch.
     """
 
     wall_seconds_mean: float
@@ -304,7 +304,7 @@ class ResourceProfile:
     """
     How much memory and how many cores does this diagnostic need?
 
-    A profile combines every measured run of one diagnostic, or of one provider as a whole.
+    A profile combines every measured execution of one diagnostic, or of one provider as a whole.
     Read the answer from these properties:
 
     * ``recommended_memory_bytes``: the memory to request.
@@ -314,16 +314,16 @@ class ResourceProfile:
 
     Get profiles from [ResourcesReader.profiles][climate_ref.results.resources.ResourcesReader.profiles].
 
-    The "p95" fields are 95th percentiles over runs.
+    The "p95" fields are 95th percentiles over executions.
     Every percentile is computed over the *usable samples* only.
     A usable sample is an execution that recorded a wall time, a CPU time and a peak memory figure,
     whose memory source matches ``memory_source``,
     and whose peak is attributable to it alone when ``exclusive_only`` was requested.
     This rules out a memory reading taken from a container shared with other jobs.
     Executions that recorded nothing at all are absent from both counts,
-    because an unmeasured run is not a run that used no memory.
+    because an unmeasured execution is not one that used no memory.
 
-    A run that failed is aggregated like any other, provided it recorded a measurement.
+    An execution that failed is aggregated like any other, provided it recorded a measurement.
     A diagnostic that reached 40 GiB before dying is the row that most needs to reach a recommendation.
 
     Examples
@@ -384,7 +384,7 @@ class ResourceProfile:
     """
     Executions that were measured but not usable.
 
-    A run lands here when its memory reading came from a container shared with other jobs,
+    An execution lands here when its memory reading came from a container shared with other jobs,
     when it was missing a figure,
     or when it carried a memory source other than ``memory_source``.
     """
@@ -403,7 +403,7 @@ class ResourceProfile:
     """
     Provenance of every peak memory figure aggregated here, or ``None`` when there are no samples.
 
-    A cgroup reading and a rusage reading for the same run can differ by a factor of two,
+    A cgroup reading and a rusage reading for the same execution can differ by a factor of two,
     so they are never mixed.
     When a group's executions carry more than one source,
     the source contributing the most samples wins and the rest land in ``n_excluded``.
@@ -600,7 +600,7 @@ def _build_profile(
     Aggregate one diagnostic's rows into a profile.
 
     Success is not a filter.
-    A failed run that recorded a peak is the most informative row available,
+    A failed execution that recorded a peak is the most informative row available,
     because a diagnostic outgrowing its container fails at the size it needs reported.
     """
     n_failed = sum(1 for row in rows if row.successful is False)
@@ -724,7 +724,7 @@ def _roll_up(provider_slug: str, profiles: Sequence[ResourceProfile]) -> Resourc
 
 class ResourcesReader:
     """
-    Reads how much time, CPU and memory diagnostic runs used.
+    Reads how much time, CPU and memory diagnostic executions used.
 
     Reach it as ``reader.resources`` rather than constructing it directly.
 
@@ -795,7 +795,7 @@ class ResourcesReader:
 
         Examples
         --------
-        The ten slowest runs of one diagnostic:
+        The ten slowest executions of one diagnostic:
 
         ```python
         with Database.from_config(config, read_only=True) as db:
@@ -924,13 +924,13 @@ class ResourcesReader:
         ``over_limit`` on each [ResourceProfile][climate_ref.results.resources.ResourceProfile].
 
         A memory peak read from a container that ran four jobs at once measures all four, not one.
-        So ``exclusive_only`` defaults to ``True`` and leaves those runs out.
+        So ``exclusive_only`` defaults to ``True`` and leaves those executions out.
         They are counted in ``n_excluded`` rather than dropped silently.
         It costs nothing for other memory sources,
-        which only look at the run's own processes and stay accurate however busy the worker was.
+        which only look at the execution's own processes and stay accurate however busy the worker was.
 
         Failed executions that recorded a measurement are aggregated alongside successful ones.
-        A run that died at 40 GiB is the strongest evidence there is about what the diagnostic needs.
+        An execution that died at 40 GiB is the strongest evidence there is about what the diagnostic needs.
 
         Peaks from different memory sources are never mixed.
         Within each group the source contributing the most samples wins,

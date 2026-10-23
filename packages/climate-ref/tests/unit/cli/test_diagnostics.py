@@ -42,26 +42,40 @@ class TestDiagnosticsList:
         result = invoke_cli(["diagnostics", "list"])
 
         assert "enso_tel" in result.stdout
-        assert "extratropical-modes-of-variability-nao" in result.stdout
         assert "pmp" in result.stdout
-        assert "execution_group_count" in result.stdout
+
+    def test_list_json_has_nao(self, db_with_diagnostics, invoke_cli):
+        result = invoke_cli(["diagnostics", "list", "--format", "json"])
+
+        assert "extratropical-modes-of-variability-nao" in {
+            row["diagnostic"] for row in json.loads(result.stdout)
+        }
 
     def test_list_shows_counts(self, db_with_diagnostics, invoke_cli):
         result = invoke_cli(["diagnostics", "list", "--format", "json"])
 
         payload = json.loads(result.stdout)
         by_slug = {row["diagnostic"]: row for row in payload}
-        assert by_slug["enso_tel"]["execution_group_count"] == 2
-        assert by_slug["extratropical-modes-of-variability-nao"]["execution_group_count"] == 1
-        # No executions seeded, so `total` is 0.
-        assert by_slug["enso_tel"]["total"] == 0
-        assert by_slug["enso_tel"]["successful"] == 0
-        assert by_slug["enso_tel"]["inflight"] == 0
+        assert by_slug["enso_tel"]["group_count"] == 2
+        assert by_slug["extratropical-modes-of-variability-nao"]["group_count"] == 1
+        # No executions seeded, so every group is not started.
+        assert by_slug["enso_tel"]["execution_count"] == 0
+        assert by_slug["enso_tel"]["successful_group_count"] == 0
+        assert by_slug["enso_tel"]["running_group_count"] == 0
+        assert by_slug["enso_tel"]["not_started_group_count"] == 2
 
     def test_list_help_documents_columns(self, invoke_cli):
         result = invoke_cli(["diagnostics", "list", "--help"])
 
-        for column in ("execution_group_count", "successful", "inflight", "total"):
+        for column in (
+            "group_count",
+            "successful_group_count",
+            "failed_group_count",
+            "running_group_count",
+            "not_started_group_count",
+            "dirty_group_count",
+            "execution_count",
+        ):
             assert column in result.stdout
 
     def test_filter_by_provider(self, db_with_diagnostics, invoke_cli):

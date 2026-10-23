@@ -1,7 +1,7 @@
 """
 Outlier detection for scalar metric values.
 
-Hide values from a model that are far off the others, so one broken run does not dominate a comparison.
+Hide values from a model that are far off the others, so one broken execution does not dominate a comparison.
 
 Configure detection with an [OutlierPolicy][climate_ref.results.outliers.OutlierPolicy]
 and pass it as ``outliers`` to [scalar_values][climate_ref.results.values.ValuesReader.scalar_values].
@@ -56,7 +56,7 @@ class OutlierPolicy:
     [ValuesReader.scalar_values][climate_ref.results.values.ValuesReader.scalar_values].
     The defaults run the model-aware IQR test described in
     [climate_ref.results.outliers][], with ``factor=10.0``, separately for each statistic and metric.
-    That is loose enough to catch only gross errors, such as a unit mistake or a broken run.
+    That is loose enough to catch only gross errors, such as a unit mistake or a broken execution.
     Lower ``factor`` to flag more values.
 
     Raises

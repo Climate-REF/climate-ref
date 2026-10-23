@@ -119,10 +119,10 @@ class ScalarValue:
     """Id of the value in the REF database."""
 
     execution_id: int
-    """The run (execution) that produced the value."""
+    """The execution that produced the value."""
 
     execution_group_id: int
-    """The execution group of that run."""
+    """The execution group of that execution."""
 
     value: float | None
     """The scalar value, which can be ``None`` or NaN."""

@@ -51,7 +51,7 @@ from climate_ref.query import (
     select_series_values,
     select_value_ids,
 )
-from climate_ref.results._page import Page
+from climate_ref.results._page import Page, check_paging
 from climate_ref.results.frames import (
     collect_facets,
     facets_from_columns,
@@ -464,6 +464,7 @@ class ValuesReader:
         df = collection.to_pandas()
         ```
         """
+        check_paging(offset, limit)
         filters = filters or MetricValueFilter()
         policy = outliers or OutlierPolicy(method="off")
 
@@ -543,8 +544,11 @@ class ValuesReader:
             }
         )
 
-        # Diagnostics measure different things under the same metric names, so never pool them.
-        is_outlier = flag_outliers(frame, attrs.evolve(policy, group_by=("diagnostic_id", *policy.group_by)))
+        # Diagnostics measure different things under the same metric names and dimensions, so test each alone.
+        is_outlier = np.zeros(len(frame), dtype=bool)
+        for positions in frame.groupby("diagnostic_id", sort=False).indices.values():
+            diagnostic_frame = frame.iloc[positions].drop(columns="diagnostic_id").reset_index(drop=True)
+            is_outlier[positions] = flag_outliers(diagnostic_frame, policy)
         outlier_count = int(is_outlier.sum())
         kept = np.arange(len(scalar_rows)) if include_unverified else np.flatnonzero(~is_outlier)
 
@@ -665,6 +669,7 @@ class ValuesReader:
         df = collection.to_pandas()
         ```
         """
+        check_paging(offset, limit)
         filters = filters or MetricValueFilter()
 
         base_stmt = select_series_values(filters)

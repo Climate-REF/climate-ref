@@ -62,6 +62,11 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
             for name in _THREAD_LIMIT_VARS:
                 self.env_overrides[name] = _DEFAULT_THREAD_LIMIT
 
+        # Dask's threaded scheduler can deadlock on xarray's CombinedLock (pydata/xarray#11645).
+        # Remove once a released xarray includes that fix.
+        if "DASK_SCHEDULER" not in os.environ:
+            self.env_overrides["DASK_SCHEDULER"] = "synchronous"
+
     def fetch_data(self, config: Any) -> None:
         """Fetch PMP climatology data."""
         registry = dataset_registry_manager[_REGISTRY_NAME]

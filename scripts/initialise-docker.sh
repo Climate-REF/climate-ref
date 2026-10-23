@@ -9,4 +9,4 @@ docker compose build
 docker compose run --rm climate-ref config list
 
 # Initialise the conda containers
-docker compose run --rm climate-ref providers setup --skip-data
+docker compose run --rm climate-ref providers setup --skip-data --skip-validate

@@ -61,7 +61,9 @@ LARGE_TABLES = frozenset(
 """Tables large enough in production that reading every row is too slow for an interactive read."""
 
 _SCAN = re.compile(r"^SCAN (\w+)")
-_NAMED_SUBQUERY = re.compile(r"(\w+) AS \(|\) AS (\w+)")
+_NAMED_SUBQUERY = re.compile(r"(\w+)\s+AS\s*\(|\)\s*AS\s+(\w+)", re.IGNORECASE)
+# SQLAlchemy aliases a repeated table as ``<table>_<n>``.
+_ALIAS_SUFFIX = re.compile(r"_\d+$")
 
 
 @attrs.frozen(kw_only=True)
@@ -257,15 +259,13 @@ def large_table_scans(path: Path, statements: Iterable[tuple[str, Any]]) -> froz
         If a plan scans a name that is neither a table nor a named subquery,
         because an alias would otherwise hide a scan from this check.
     """
-    # Without table statistics a plan does not depend on the bound values, so explain each statement once.
-    distinct = dict(statements)
+    statements = list(statements)
     con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     try:
         tables = {name for (name,) in con.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
         scanned = {
-            # SQLAlchemy aliases a repeated table as ``<table>_<n>``.
-            re.sub(r"_\d+$", "", match.group(1))
-            for statement, parameters in distinct.items()
+            _ALIAS_SUFFIX.sub("", match.group(1))
+            for statement, parameters in statements
             for row in con.execute(f"EXPLAIN QUERY PLAN {statement}", parameters or ())
             if (match := _SCAN.match(row[3]))
         }
@@ -273,7 +273,13 @@ def large_table_scans(path: Path, statements: Iterable[tuple[str, Any]]) -> froz
         con.close()
 
     # A named subquery's own plan lists the tables it reads, so a scan of it adds nothing.
-    subqueries = {n for statement in distinct for m in _NAMED_SUBQUERY.findall(statement) for n in m if n}
+    subqueries = {
+        _ALIAS_SUFFIX.sub("", n)
+        for statement, _ in statements
+        for m in _NAMED_SUBQUERY.findall(statement)
+        for n in m
+        if n
+    }
     unknown = {n for n in scanned - tables - subqueries if n != "CONSTANT" and not n.startswith("anon")}
     if unknown:
         raise ValueError(f"cannot map scanned names {sorted(unknown)} to tables")

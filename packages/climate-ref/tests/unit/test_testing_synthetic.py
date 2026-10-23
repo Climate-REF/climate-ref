@@ -10,6 +10,7 @@ from climate_ref.testing.synthetic import (
     Shape,
     build_synthetic_database,
     cached_synthetic_database,
+    large_table_scans,
 )
 
 SCALE = 0.001
@@ -65,3 +66,13 @@ def test_cached_database_is_built_once(tmp_path: Path):
     assert cached_synthetic_database(tmp_path, scale=SCALE) == path
     assert path.stat().st_mtime_ns == built
     assert cached_synthetic_database(tmp_path, scale=SCALE * 2) != path
+
+
+def test_large_table_scans_accepts_multiline_cte(synthetic_db):
+    # SQLAlchemy puts a line break between ``AS`` and the CTE body.
+    sql = (
+        "WITH busiest AS\n(SELECT execution_id, count(*) AS n FROM metric_value"
+        " WHERE id = 1 GROUP BY execution_id)"
+        "\nSELECT * FROM busiest JOIN execution ON execution.id = busiest.execution_id"
+    )
+    assert large_table_scans(synthetic_db, [(sql, ())]) == frozenset()

@@ -15,8 +15,8 @@ build:
     - asdf install uv latest
     - asdf global uv latest
     - uv sync --frozen
-    # Fetch test data from ESGF (needed by notebooks)
-    - make fetch-test-data
+    # Notebooks only use the sample data, not the ilamb-test registry
+    - uv run ref datasets fetch-sample-data
     - uv run ref datasets ingest --source-type cmip6 $READTHEDOCS_REPOSITORY_PATH/tests/test-data/sample-data/CMIP6
     # Run a strict build
     - NO_COLOR=1 uv run mkdocs build --site-dir $READTHEDOCS_OUTPUT/html

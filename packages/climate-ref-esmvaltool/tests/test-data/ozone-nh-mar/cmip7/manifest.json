@@ -1,11 +1,11 @@
 {
-  "catalog_hash": "8b4ead7c8fea8266641e7bb44ad65e12eea4f4ee",
+  "catalog_hash": "4759bade121d696f2128238322f1974cea295500",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "a8589880fc34c8a12ab98fdccf5c893dc58c8d6ba76a72338c8297eb375af1f4",
-    "series.json": "e1a51946fcb6fb541cc907cc22adbf48d97e82c9e08597269efe3db93e84a8a9"
+    "series.json": "7404a1019e5d37551724effb83582453f45bffaf82643a1a6738c61951e6f0a7"
   },
-  "diagnostic_version": 3,
+  "diagnostic_version": 4,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -16,26 +16,26 @@
       "size": 13052
     },
     "executions/recipe/plots/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.png": {
-      "sha256": "df3d914aabe06bce1de8c22979df349531e9829d9c9365d5069da9469fbbba2a",
-      "size": 89531
+      "sha256": "288ef6c7e5afc8af40f3cef579d71df750aefd8cf5d8fe2e95f51006e45ad5b4",
+      "size": 96202
     },
     "executions/recipe/run/polar_cap_time_series_NH/plot/diagnostic_provenance.yml": {
-      "sha256": "099fb2f195cbb6fd4b40a688dd6e135a0a9b843ccf3797b33f46cf1b170108f1",
-      "size": 658
+      "sha256": "46e90246984be898da4fc858d7015ade09e3976446061e100631f8fa91a3a791",
+      "size": 661
     },
     "executions/recipe/work/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.nc": {
-      "sha256": "5a8abed8f37c7ac4386d4ff805c011917521d4d7fe6637f169198f4efb0f82e2",
-      "size": 10310
+      "sha256": "c03e489da06670973862e6aaabc56ab98d6ece6f7db56e962cee3ab6d841b2e3",
+      "size": 10752
     },
     "output.json": {
       "sha256": "20c4d99738604059dacdadc537600c2b0fbbcb5be3574734f855ab022cac4c86",
       "size": 1394
     },
     "series.json": {
-      "sha256": "510a6b90c9cf1159c6014de0db874cb9ac910b67de80ed0668fd75198b57e1e7",
-      "size": 4139
+      "sha256": "aa9e35482317d1173dfe5c140232c3e34f4b8a70690e6dc108731c3d83f7b6bc",
+      "size": 5613
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

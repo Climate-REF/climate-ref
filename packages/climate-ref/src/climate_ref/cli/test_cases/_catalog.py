@@ -67,6 +67,29 @@ def _build_catalog(dataset_adapter: DatasetAdapter, file_paths: list[Path]) -> p
     return pd.concat(catalog_dfs, ignore_index=True)
 
 
+def _datasets_matching_request(
+    request: ESGFRequest, datasets: tuple[dict[str, Any], ...]
+) -> tuple[dict[str, Any], ...]:
+    """
+    Select the recorded datasets that a request's facets match.
+
+    A test case may split one source type across requests, such as time series and fixed fields.
+    Facets that a record does not carry are not compared.
+    """
+    facets: dict[str, Any] = getattr(request, "facets", {})
+
+    def matches(dataset: dict[str, Any]) -> bool:
+        for key, value in facets.items():
+            if key not in dataset:
+                continue
+            allowed = {value} if isinstance(value, str) else set(value)
+            if dataset[key] not in allowed:
+                return False
+        return True
+
+    return tuple(dataset for dataset in datasets if matches(dataset))
+
+
 def _pin_requests_to_catalog(
     requests: tuple[ESGFRequest, ...],
     recorded: dict[str, tuple[dict[str, Any], ...]],
@@ -93,7 +116,7 @@ def _pin_requests_to_catalog(
     pinned_source_types: set[str] = set()
 
     for request in requests:
-        datasets = recorded.get(request.source_type)
+        datasets = _datasets_matching_request(request, recorded.get(request.source_type, ()))
         if not datasets:
             logger.debug(f"    No recorded datasets for {request.slug} ({request.source_type})")
             pinned_requests.append(request)

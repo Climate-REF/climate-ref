@@ -379,6 +379,16 @@ class TestIngest:
         assert db.session.query(CMIP6Dataset).count() == expected_dataset_count
         assert db.session.query(DatasetFile).count() == expected_dataset_count
 
+    @pytest.mark.parametrize(("args", "expected"), [([], 1), (["--dry-run"], 0)])
+    def test_ingest_refreshes_statistics(self, sample_data_dir, db, invoke_cli, mocker, args, expected):
+        optimize = mocker.patch("climate_ref.database.Database.optimize")
+
+        invoke_cli(
+            ["datasets", "ingest", str(sample_data_dir / self.data_dir), "--source-type", "cmip6", *args]
+        )
+
+        assert optimize.call_count == expected
+
     def test_ingest_drs_reports_deferred_finalisation(self, sample_data_dir, db, invoke_cli, monkeypatch):
         """The DRS parser defers work to the first solve, so ingest has to say so."""
         monkeypatch.setenv("REF_CMIP6_PARSER", "drs")

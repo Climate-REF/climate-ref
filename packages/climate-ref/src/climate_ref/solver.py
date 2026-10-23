@@ -36,6 +36,7 @@ from climate_ref.executor.result_handling import mark_execution_failed
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup, Solve, SolveStage, SolveStatus
 from climate_ref.models import Provider as ProviderModel
+from climate_ref.models.base import utcnow
 from climate_ref.models.diagnostic import recompute_promoted_version
 from climate_ref.models.execution import Execution, ExecutionFailureReason
 from climate_ref.provider_registry import ProviderRegistry
@@ -738,16 +739,11 @@ class ExecutionSolver:
 DEFAULT_STALE_EXECUTION_AGE_SECONDS = 6 * 60 * 60
 
 
-def _utcnow() -> datetime.datetime:
-    """Naive UTC timestamp, matching how the database stores times."""
-    return datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
-
-
 def _stale_execution_cutoff(
     stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
 ) -> datetime.datetime:
     """Naive UTC timestamp before which an in-progress execution is considered abandoned."""
-    return _utcnow() - datetime.timedelta(seconds=stale_after_seconds)
+    return utcnow() - datetime.timedelta(seconds=stale_after_seconds)
 
 
 def fail_stale_in_progress_executions(
@@ -945,7 +941,7 @@ def fail_stale_solves(
                     Solve.started_at < cutoff,
                     Solve.id != exclude_solve_id,
                 )
-                .values(status=SolveStatus.Failed, error="abandoned", finished_at=_utcnow())
+                .values(status=SolveStatus.Failed, error="abandoned", finished_at=utcnow())
                 .returning(Solve.id)
             )
             .scalars()
@@ -962,7 +958,7 @@ def _start_solve(db: Database, options: dict[str, typing.Any]) -> int:
         solve = Solve(
             status=SolveStatus.Running,
             stage=SolveStage.Preflight,
-            started_at=_utcnow(),
+            started_at=utcnow(),
             options=options,
             skipped_providers=[],
             ref_version=__version__,
@@ -1259,6 +1255,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 pending_definition, pending_execution = pending
                 submitted_ids.append(pending_execution.id)
                 stage = SolveStage.Queuing
+                _update_solve(db, solve_id, stage=stage)
                 try:
                     executor.run(
                         definition=pending_definition,
@@ -1275,6 +1272,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                         detail=f"submit to the executor failed: {exc!r}",
                     )
                 stage = SolveStage.Solving
+                _update_solve(db, solve_id, stage=stage)
 
             if limit_reached:
                 logger.info(f"Reached execution limit of {limit}")
@@ -1282,6 +1280,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
 
         if submitted_ids:
             stage = SolveStage.Queuing
+            _update_solve(db, solve_id, stage=stage)
         logger.info("Solve complete")
         logger.info(f"Found {sum(diagnostic_count.values())} new executions")
         for diag, count in diagnostic_count.items():
@@ -1318,7 +1317,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             status=SolveStatus.Failed,
             stage=stage,
             error=str(exc) or type(exc).__name__,
-            finished_at=_utcnow(),
+            finished_at=utcnow(),
         )
         raise
 
@@ -1329,6 +1328,6 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         stage=stage,
         # Clears an "abandoned" verdict from a concurrent solve, because this one did finish.
         error=None,
-        finished_at=_utcnow(),
+        finished_at=utcnow(),
     )
     return outcome

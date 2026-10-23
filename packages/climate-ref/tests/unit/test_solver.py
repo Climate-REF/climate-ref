@@ -2390,6 +2390,22 @@ class TestSolveRecording:
         assert solve.status == SolveStatus.Failed
         assert solve.stage == SolveStage.Queuing
 
+    def test_queuing_is_persisted_while_submitting(
+        self, mock_metric_execution, mock_executor, db_seeded, solver
+    ):
+        solver.solve.return_value = [mock_metric_execution]
+        stages = []
+
+        def record_stage(**kwargs):
+            with db_seeded.session.begin():
+                stages.append(db_seeded.session.query(Solve.stage).scalar())
+
+        mock_executor.return_value.run.side_effect = record_stage
+
+        solve_required_executions(db_seeded, solver=solver, wait=False)
+
+        assert stages == [SolveStage.Queuing]
+
     def test_finishing_overrides_abandoned_verdict(
         self, mock_metric_execution, mock_executor, db_seeded, solver
     ):

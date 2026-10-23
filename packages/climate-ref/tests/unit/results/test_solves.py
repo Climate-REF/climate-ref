@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import update
 
 from climate_ref.models import Dataset, Execution, ExecutionGroup, Solve, SolveStage, SolveStatus
+from climate_ref.models.dataset import Obs4MIPsDataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.results import Reader
@@ -13,6 +14,24 @@ from climate_ref.results import Reader
 T0 = datetime.datetime(2026, 1, 1)
 T1 = datetime.datetime(2026, 2, 1)
 T2 = datetime.datetime(2026, 3, 1)
+REFERENCE_STRING_COLUMNS = (
+    "activity_id",
+    "frequency",
+    "grid",
+    "grid_label",
+    "institution_id",
+    "nominal_resolution",
+    "realm",
+    "product",
+    "source_id",
+    "source_type",
+    "units",
+    "variable_id",
+    "variant_label",
+    "version",
+    "source_version_number",
+    "instance_id",
+)
 
 
 def _solve(started_at: datetime.datetime, **kwargs) -> Solve:
@@ -192,3 +211,24 @@ def test_window_datasets_limit(db_with_solves):
 
 def test_window_datasets_missing_solve(db_seeded):
     assert Reader(db_seeded).solves.new_datasets(9999).total_count == 0
+
+
+def test_dataset_created_just_after_solve_start_belongs_to_next_solve(db_seeded):
+    with db_seeded.session.begin():
+        first = _solve(datetime.datetime.now(datetime.UTC).replace(tzinfo=None))
+        db_seeded.session.add(first)
+    # Usually lands in the same whole second as the solve start.
+    with db_seeded.session.begin():
+        dataset = Obs4MIPsDataset(
+            slug="just-after",
+            **{column: "x" for column in REFERENCE_STRING_COLUMNS},
+            vertical_levels=1,
+        )
+        db_seeded.session.add(dataset)
+    with db_seeded.session.begin():
+        second = _solve(datetime.datetime.now(datetime.UTC).replace(tzinfo=None))
+        db_seeded.session.add(second)
+    reader = Reader(db_seeded).solves
+
+    assert dataset.id not in {d.id for d in reader.new_datasets(first.id)}
+    assert [d.id for d in reader.new_datasets(second.id)] == [dataset.id]

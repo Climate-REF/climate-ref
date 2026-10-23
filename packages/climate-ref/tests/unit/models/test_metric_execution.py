@@ -1,15 +1,19 @@
 import datetime
 
 import pytest
+from sqlalchemy import select
 
+from climate_ref.models import Diagnostic, Provider
 from climate_ref.models.execution import (
     Execution,
     ExecutionFailureReason,
     ExecutionGroup,
+    ExecutionGroupSourceType,
     ExecutionOutput,
     ResultOutputType,
     SkipReason,
 )
+from climate_ref_core.source_types import SourceDatasetType
 
 
 def test_reprs_name_the_execution():
@@ -293,3 +297,72 @@ class TestSkipReason:
         group.executions = []
 
         assert ExecutionGroup.skip_reason(group, "dataset_hash") is None
+
+
+class TestExecutionGroupSourceTypes:
+    @pytest.fixture
+    def diagnostic_id(self, db) -> int:
+        provider = Provider(slug="test-provider", name="Test Provider", version="1.0.0")
+        db.session.add(provider)
+        db.session.flush()
+        diagnostic = Diagnostic(slug="test-diagnostic", name="Test Diagnostic", provider_id=provider.id)
+        db.session.add(diagnostic)
+        db.session.flush()
+        return diagnostic.id
+
+    def _stored(self, db, group: ExecutionGroup) -> set[SourceDatasetType]:
+        rows = db.session.scalars(
+            select(ExecutionGroupSourceType.source_type).where(
+                ExecutionGroupSourceType.execution_group_id == group.id
+            )
+        )
+        return set(rows)
+
+    def test_rows_follow_selector_keys(self, db, diagnostic_id):
+        group = ExecutionGroup(
+            diagnostic_id=diagnostic_id,
+            key="k",
+            selectors={"cmip6": [["source_id", "ACCESS-ESM1-5"]], "obs4mips": []},
+        )
+        db.session.add(group)
+        db.session.flush()
+
+        assert self._stored(db, group) == {SourceDatasetType.CMIP6, SourceDatasetType.obs4MIPs}
+
+    def test_reassigning_selectors_resyncs(self, db, diagnostic_id):
+        group = ExecutionGroup(diagnostic_id=diagnostic_id, key="k", selectors={"cmip6": [], "obs4mips": []})
+        db.session.add(group)
+        db.session.flush()
+
+        group.selectors = {"cmip7": [], "obs4mips": []}
+        db.session.flush()
+
+        assert self._stored(db, group) == {SourceDatasetType.CMIP7, SourceDatasetType.obs4MIPs}
+
+    def test_deleting_unloaded_group_removes_rows(self, db, diagnostic_id):
+        # SQLite does not enforce foreign keys here, so the ORM has to delete the rows.
+        group = ExecutionGroup(diagnostic_id=diagnostic_id, key="k", selectors={"cmip6": []})
+        db.session.add(group)
+        db.session.flush()
+        group_id = group.id
+        db.session.expire_all()
+
+        db.session.delete(db.session.get(ExecutionGroup, group_id))
+        db.session.flush()
+
+        remaining = db.session.scalars(
+            select(ExecutionGroupSourceType).where(ExecutionGroupSourceType.execution_group_id == group_id)
+        ).all()
+        assert remaining == []
+
+    def test_filter_groups_by_source_type(self, db, diagnostic_id):
+        cmip6 = ExecutionGroup(diagnostic_id=diagnostic_id, key="a", selectors={"cmip6": []})
+        obs_only = ExecutionGroup(diagnostic_id=diagnostic_id, key="b", selectors={"obs4mips": []})
+        db.session.add_all([cmip6, obs_only])
+        db.session.flush()
+
+        matched = db.session.scalars(
+            select(ExecutionGroup).where(ExecutionGroup.source_types.any(source_type=SourceDatasetType.CMIP6))
+        ).all()
+
+        assert matched == [cmip6]

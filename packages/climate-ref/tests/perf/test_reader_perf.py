@@ -25,6 +25,8 @@ from climate_ref.results import (
 from climate_ref_core.source_types import SourceDatasetType
 
 _EVERY_EXECUTION = frozenset({"execution", "execution_group"})
+# An unfiltered read checks every group for its promoted, non-retracted execution.
+_EVERY_GROUP = frozenset({"execution_group"})
 
 
 @attrs.frozen(kw_only=True)
@@ -101,6 +103,7 @@ SCENARIOS = [
     Scenario(
         id="values.scalar.all-page",
         call=lambda r, t: r.values.scalar_values(limit=100, with_facets=False),
+        allowed_scans=_EVERY_GROUP,
     ),
     # notebooks: a whole diagnostic as a DataFrame
     Scenario(
@@ -132,7 +135,11 @@ SCENARIOS = [
         id="executions.groups.diagnostic",
         call=lambda r, t: r.executions.groups(ExecutionGroupFilter(diagnostic_contains=[t.diagnostic_slug])),
     ),
-    Scenario(id="executions.groups.page", call=lambda r, t: r.executions.groups(limit=50)),
+    Scenario(
+        id="executions.groups.page",
+        call=lambda r, t: r.executions.groups(limit=50),
+        allowed_scans=_EVERY_GROUP,
+    ),
     Scenario(id="executions.group", call=lambda r, t: r.executions.group(t.execution_group_id)),
     Scenario(
         id="executions.latest-execution",

@@ -25,6 +25,7 @@ from climate_ref.results import (
 from climate_ref_core.source_types import SourceDatasetType
 
 _EVERY_EXECUTION = frozenset({"execution", "execution_group"})
+_EVERY_GROUP = frozenset({"execution_group"})
 
 
 @attrs.frozen(kw_only=True)
@@ -60,6 +61,27 @@ SCENARIOS = [
         budget_seconds=5.0,
     ),
     Scenario(
+        id="values.scalar.diagnostic-page-iqr-unverified",
+        call=lambda r, t: r.values.scalar_values(
+            _diagnostic(t), outliers=OutlierPolicy(method="iqr"), include_unverified=True, limit=100
+        ),
+        budget_seconds=5.0,
+    ),
+    Scenario(
+        id="values.scalar.diagnostic-deep-page-iqr",
+        call=lambda r, t: r.values.scalar_values(
+            _diagnostic(t), outliers=OutlierPolicy(method="iqr"), offset=10_000, limit=100
+        ),
+        budget_seconds=5.0,
+    ),
+    Scenario(
+        id="values.scalar.provider-page-iqr",
+        call=lambda r, t: r.values.scalar_values(
+            MetricValueFilter(provider_slug=t.provider_slug), outliers=OutlierPolicy(method="iqr"), limit=100
+        ),
+        budget_seconds=10.0,
+    ),
+    Scenario(
         id="values.scalar.diagnostic-dimension-filter",
         call=lambda r, t: r.values.scalar_values(
             _diagnostic(t, dimensions={"source_id": t.source_id}), limit=100
@@ -80,6 +102,8 @@ SCENARIOS = [
     Scenario(
         id="values.scalar.all-page",
         call=lambda r, t: r.values.scalar_values(limit=100, with_facets=False),
+        # No filter, so every group is checked for a promoted, non-retracted execution.
+        allowed_scans=_EVERY_GROUP,
     ),
     # notebooks: a whole diagnostic as a DataFrame
     Scenario(
@@ -111,7 +135,12 @@ SCENARIOS = [
         id="executions.groups.diagnostic",
         call=lambda r, t: r.executions.groups(ExecutionGroupFilter(diagnostic_contains=[t.diagnostic_slug])),
     ),
-    Scenario(id="executions.groups.page", call=lambda r, t: r.executions.groups(limit=50)),
+    Scenario(
+        id="executions.groups.page",
+        call=lambda r, t: r.executions.groups(limit=50),
+        # No filter, so every group is checked for a promoted, non-retracted execution.
+        allowed_scans=_EVERY_GROUP,
+    ),
     Scenario(id="executions.group", call=lambda r, t: r.executions.group(t.execution_group_id)),
     Scenario(
         id="executions.latest-execution",

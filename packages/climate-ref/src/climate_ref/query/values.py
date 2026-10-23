@@ -59,11 +59,21 @@ def _apply_common(
     return stmt
 
 
+def _reject_reference_only(filters: MetricValueFilter) -> None:
+    if filters.reference_only is not None:
+        raise ValueError("`reference_only` applies to series values only")
+
+
 def select_scalar_values(filters: MetricValueFilter | None = None) -> Select[tuple[ScalarMetricValue]]:
     """
     Build a ``Select`` over ``ScalarMetricValue`` for the filter, or for every value if there is none.
 
     Rows are ordered by id, so ``offset`` and ``limit`` give stable pages.
+
+    Raises
+    ------
+    ValueError
+        If the filter sets ``reference_only``, which applies to series only.
 
     Examples
     --------
@@ -73,6 +83,7 @@ def select_scalar_values(filters: MetricValueFilter | None = None) -> Select[tup
     ```
     """
     filters = filters or MetricValueFilter()
+    _reject_reference_only(filters)
     stmt = _apply_common(select(ScalarMetricValue), ScalarMetricValue, filters)
     return stmt.order_by(ScalarMetricValue.id)
 
@@ -128,6 +139,8 @@ def select_value_ids(
     With ``isolate_ids`` it uses joins instead, because looking those ids up directly is cheaper.
     """
     filters = filters or MetricValueFilter()
+    if value_type is MetricValueType.SCALAR:
+        _reject_reference_only(filters)
     scoped = not filters.isolate_ids and bool(filters.matches_any or filters.execution_group_ids)
     if scoped:
         stmt = _apply_common(select(MetricValue.id), MetricValue, filters, subquery_type=value_type)

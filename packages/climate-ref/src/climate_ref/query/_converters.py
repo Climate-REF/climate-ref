@@ -50,6 +50,11 @@ def _as_failure_reasons(
     return _as_enum_tuple(ExecutionFailureReason, value)
 
 
+def _as_source_type(value: SourceDatasetType | str) -> SourceDatasetType:
+    """Convert a source type, its value or its name to a ``SourceDatasetType``."""
+    return _as_member(SourceDatasetType, value)
+
+
 def _as_source_types(
     value: SourceDatasetType | str | Sequence[SourceDatasetType | str] | None,
 ) -> tuple[SourceDatasetType, ...] | None:
@@ -148,3 +153,25 @@ def _as_facets(
     if value is None:
         return None
     return {k: _as_str_tuple(v) or () for k, v in value.items()}
+
+
+def _as_dimensions(
+    value: Mapping[str, str | Sequence[str]] | None,
+) -> Mapping[str, tuple[str, ...]] | None:
+    """
+    Copy a dimensions mapping into a ``dict`` of ``tuple`` values.
+
+    A string is one alternative. Anything other than a string, list or tuple is rejected,
+    because a set has no order and any other iterable would be read as one value.
+
+    Examples
+    --------
+    >>> _as_dimensions({"source_id": "TEST-MODEL", "experiment_id": ["a", "b"]})
+    {'source_id': ('TEST-MODEL',), 'experiment_id': ('a', 'b')}
+    """
+    if value is None:
+        return None
+    for key, wanted in value.items():
+        if not isinstance(wanted, str | list | tuple):
+            raise TypeError(f"Dimension {key!r} must be a string, list or tuple, not {type(wanted).__name__}")
+    return _as_facets(value)

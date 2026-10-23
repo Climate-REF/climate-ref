@@ -2,7 +2,7 @@
 Builders over the resources executions used.
 """
 
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 from sqlalchemy import Select, func, null, or_, select
 
@@ -14,6 +14,12 @@ from climate_ref.query.filters import ResourceFilter
 
 GroupBy = Literal["diagnostic", "provider"]
 """How resource summaries are grouped: one row per diagnostic, or per provider."""
+
+
+def check_group_by(group_by: str | None) -> None:
+    """Raise ``ValueError`` for a ``group_by`` that is neither ``None`` nor a ``GroupBy``."""
+    if group_by is not None and group_by not in get_args(GroupBy):
+        raise ValueError(f"group_by must be one of {get_args(GroupBy)}, not {group_by!r}")
 
 
 def select_execution_resources(filters: ResourceFilter | None = None) -> Select[Any]:
@@ -29,7 +35,8 @@ def select_execution_resources(filters: ResourceFilter | None = None) -> Select[
     Parameters
     ----------
     filters
-        Restricts the executions considered. ``None`` means no restriction.
+        Restricts the executions considered.
+        ``None`` uses the default filter: promoted versions only, with retracted executions left out.
 
     Returns
     -------
@@ -100,7 +107,8 @@ def select_resource_summary(
     Parameters
     ----------
     filters
-        Restricts the executions considered. ``None`` means no restriction.
+        Restricts the executions considered.
+        ``None`` uses the default filter: promoted versions only, with retracted executions left out.
     group_by
         ``diagnostic`` or ``provider`` for one row per group, ordered by slug.
         ``None`` for a single row over every matching execution.
@@ -109,7 +117,13 @@ def select_resource_summary(
     -------
     :
         A ``Select`` yielding ``provider_slug``, ``diagnostic_slug`` and the aggregate columns.
+
+    Raises
+    ------
+    ValueError
+        If ``group_by`` is not ``None``, ``"diagnostic"`` or ``"provider"``.
     """
+    check_group_by(group_by)
     provider: Any = Provider.slug if group_by is not None else null()
     diagnostic: Any = Diagnostic.slug if group_by == "diagnostic" else null()
     stmt = select(

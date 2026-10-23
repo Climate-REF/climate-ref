@@ -115,10 +115,12 @@ from climate_ref.models.execution import (
 from climate_ref.models.metric_value import MetricValue
 from climate_ref.models.provider import Provider
 from climate_ref.query._converters import (
+    _as_dimensions,
     _as_facets,
     _as_failure_reasons,
     _as_id_tuple,
     _as_naive_utc,
+    _as_source_type,
     _as_source_types,
     _as_str_tuple,
 )
@@ -558,15 +560,25 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
     Keep only values from each execution group's newest execution.
 
     A group whose newest execution is retracted gives nothing, unless ``include_retracted=True``.
+    ``input_datasets`` is applied after the newest execution is picked.
     """
 
-    dimensions: Mapping[str, str | Sequence[str]] | None = None
+    dimensions: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_dimensions)
     """
     Keep values by CV dimension, e.g. ``{"statistic": "mean", "source_id": ["CanESM5", "MIROC6"]}``.
 
     A string must match exactly, and a list matches any of its values.
-    An unknown dimension raises ``KeyError`` when the query runs.
+    Values are copied into tuples, so changing the caller's mapping later has no effect.
+    An unknown dimension raises ``ValueError``, and so does a value that is not a string, list or tuple.
     """
+
+    def __attrs_post_init__(self) -> None:
+        super().__attrs_post_init__()
+        # Registered at database start up, so the check is skipped before then.
+        known = MetricValue._cv_dimensions
+        for key in self.dimensions or {}:
+            if known and key not in known:
+                raise ValueError(f"Unknown dimension column {key!r}")
 
     isolate_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
     """Keep only these value ids. This wins over ``exclude_ids``."""
@@ -575,7 +587,11 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
     """Drop these value ids. Ignored when ``isolate_ids`` is set."""
 
     reference_only: bool | None = None
-    """Series only: ``True`` keeps the reference series, ``False`` keeps the model series."""
+    """
+    Series only: ``True`` keeps the reference series, ``False`` keeps the model series.
+
+    Setting it on a scalar read raises ``ValueError``.
+    """
 
     def dimension_clauses(self, entity: type[MetricValue]) -> list[ColumnElement[bool]]:
         """
@@ -583,17 +599,15 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
 
         Raises
         ------
-        KeyError
+        ValueError
             If a key is not a registered CV dimension on ``entity``.
         """
         clauses: list[ColumnElement[bool]] = []
         for key, value in (self.dimensions or {}).items():
             if key not in entity._cv_dimensions:
-                raise KeyError(f"Unknown dimension column {key!r}")
+                raise ValueError(f"Unknown dimension column {key!r}")
             col = getattr(entity, key)
-            wanted: list[Any] = (
-                [value] if isinstance(value, str) or not isinstance(value, Sequence) else list(value)
-            )
+            wanted: list[Any] = list(value)
             if key == "kind" and "model" in wanted:
                 # A value with no ``kind`` reads as "model".
                 wanted.append(None)
@@ -713,8 +727,9 @@ class DiagnosticFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatas
     [VersionScope][climate_ref.query.filters.VersionScope],
     [ExecutionScope][climate_ref.query.filters.ExecutionScope] and
     [InputDatasetScope][climate_ref.query.filters.InputDatasetScope].
-    With ``input_datasets`` only groups whose newest execution matches are counted,
-    and a diagnostic left with no groups is dropped.
+    With ``input_datasets`` only groups whose newest execution matches are counted.
+    A diagnostic left with no groups is dropped when any of ``input_datasets``, ``source_types``,
+    ``execution_group_ids``, a creation window or ``execution_ids`` narrows the groups.
 
     Examples
     --------
@@ -726,7 +741,7 @@ class DiagnosticFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatas
 
 
 @attrs.frozen(kw_only=True)
-class DatasetFilter(DiagnosticScope):
+class DatasetFilter(DiagnosticScope, VersionScope):
     """
     Filter for datasets, passed to ``reader.datasets.list`` and to ``select_datasets``.
 
@@ -736,6 +751,10 @@ class DatasetFilter(DiagnosticScope):
 
     The [DiagnosticScope][climate_ref.query.filters.DiagnosticScope] fields keep datasets
     that an execution of a matching diagnostic used.
+    Like every other filter, only executions that are not retracted and whose group is at the promoted
+    diagnostic version count, see [VersionScope][climate_ref.query.filters.VersionScope]
+    and ``include_retracted_executions``.
+    ``execution_ids`` is exact and ignores both limits.
 
     Examples
     --------
@@ -751,7 +770,7 @@ class DatasetFilter(DiagnosticScope):
     <SourceDatasetType.CMIP6: 'cmip6'>
     """
 
-    source_type: SourceDatasetType = attrs.field(converter=SourceDatasetType)
+    source_type: SourceDatasetType = attrs.field(converter=_as_source_type)
     """The dataset type to read."""
 
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
@@ -778,11 +797,18 @@ class DatasetFilter(DiagnosticScope):
     This is about dataset versions, unlike ``latest_only`` on the execution filters.
     """
 
+    include_retracted_executions: bool = False
+    """Also count retracted executions when matching the diagnostic fields, unlike ``include_retracted``."""
+
     include_retracted: bool = False
     """
-    Also keep retracted datasets, those with a ``retracted_at``.
+    Also keep retracted datasets, those with a ``retracted_at``, unlike ``include_retracted_executions``.
 
     This is about datasets, unlike ``include_retracted`` on the execution filters.
     The default matches what the solver can use.
+    With ``latest_only`` on, a retracted newer version is dropped before the latest is chosen,
+    so it never hides an older live one.
+    With ``include_retracted`` on, a retracted newer version can be the latest and hide an older live one,
+    so set ``latest_only=False`` to see every version.
     Provenance and history reads, such as ``ref datasets list``, pass ``True``.
     """

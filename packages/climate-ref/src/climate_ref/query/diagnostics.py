@@ -28,7 +28,8 @@ def select_group_counts(filters: DiagnosticFilter | None = None) -> Select[Any]:
     Selects ``provider_slug``, ``diagnostic_slug``, ``group_count``, ``successful``, ``running``, ``failed``,
     ``not_started`` and ``dirty``, counted as in
     [select_diagnostics][climate_ref.query.diagnostics.select_diagnostics].
-    Diagnostics with no groups are kept at zero, unless ``filters.input_datasets`` is set.
+    Diagnostics with no groups are kept at zero, unless the filter narrows the groups:
+    ``input_datasets``, ``source_types``, ``execution_group_ids``, a creation window or ``execution_ids``.
     Ordered by ``(Provider.slug, Diagnostic.slug, Diagnostic.id)``.
     """
     filters = filters or DiagnosticFilter()
@@ -42,6 +43,12 @@ def select_group_counts(filters: DiagnosticFilter | None = None) -> Select[Any]:
         _DIRTY_COUNT.label("dirty"),
     ).select_from(ExecutionGroup)
     counts = _join_latest_execution(count_stmt, filters).group_by(ExecutionGroup.diagnostic_id).subquery()
+    narrows_groups = bool(
+        filters.input_datasets
+        or filters.source_types is not None
+        or filters.execution_group_ids is not None
+        or filters.narrows_executions
+    )
     stmt = (
         select(
             Provider.slug.label("provider_slug"),
@@ -49,7 +56,7 @@ def select_group_counts(filters: DiagnosticFilter | None = None) -> Select[Any]:
             *(func.coalesce(c, 0).label(c.name) for c in counts.c if c.name != "diagnostic_id"),
         )
         .join(Provider, Diagnostic.provider_id == Provider.id)
-        .join(counts, Diagnostic.id == counts.c.diagnostic_id, isouter=not filters.input_datasets)
+        .join(counts, Diagnostic.id == counts.c.diagnostic_id, isouter=not narrows_groups)
         .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
     return stmt.where(*filters.diagnostic_clauses())
@@ -64,10 +71,12 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     ``successful``, ``failed`` and ``running`` count those whose newest execution succeeded, failed or has not
     finished.
     ``not_started`` counts those with no execution and ``dirty`` those marked to be rerun.
-    ``execution_count`` counts every execution of those diagnostics that the filter keeps,
-    the same executions as
-    [select_execution_resources][climate_ref.query.resources.select_execution_resources].
-    With ``filters.input_datasets`` diagnostics with no matching group are dropped.
+    ``execution_count`` counts every execution of those diagnostics that the filter keeps.
+    This can exceed the count of
+    [select_execution_resources][climate_ref.query.resources.select_execution_resources],
+    which keeps only executions with a recorded wall time or peak memory, or that failed.
+    When the filter narrows the groups (``input_datasets``, ``source_types``, ``execution_group_ids``,
+    a creation window or ``execution_ids``), diagnostics with no matching group are dropped.
     Ordered by ``(Provider.slug, Diagnostic.slug, Diagnostic.id)``, so paging is stable.
     """
     filters = filters or DiagnosticFilter()

@@ -28,35 +28,31 @@ from climate_ref_core.source_types import SourceDatasetType
 app = typer.Typer(help=__doc__)
 
 
+_BASE_ONLY_COLUMNS = ["id", "slug", "dataset_type", "finalised", "created_at", "updated_at"]
+_FILE_COLUMNS = ["path", "start_time", "end_time"]
+
+
 def _collection_to_dataframe(collection: DatasetCollection, *, include_files: bool) -> pd.DataFrame:
     """
     Build the ``datasets list`` DataFrame from a dataset collection.
 
-    Without ``include_files`` this is one row per dataset with its facet columns.
-    With ``include_files`` each dataset is exploded to one row per file,
+    Without ``include_files`` this is ``collection.to_pandas()``, one row per dataset.
+    With ``include_files`` each dataset row is exploded to one row per file,
     with the file columns (``path``, ``start_time``, ``end_time``) added.
-
-    Every row carries ``retracted_at`` (``None``/``NaT`` while active)
-    regardless of whether the caller queried with ``include_retracted=True``,
-    so retraction state is always visible when a retracted row does appear.
+    Either way the base columns (``id``, ``slug``, ``retracted_at`` and so on) are present, even when empty.
     """
+    datasets = collection.to_pandas()
     if not include_files:
-        return pd.DataFrame.from_records(
-            [{**dict(ds.facets), "retracted_at": ds.retracted_at} for ds in collection]
-        )
+        return datasets
 
     records = [
-        {
-            **dict(ds.facets),
-            "retracted_at": ds.retracted_at,
-            "path": f.path,
-            "start_time": f.start_time,
-            "end_time": f.end_time,
-        }
-        for ds in collection
+        {**row, "path": f.path, "start_time": f.start_time, "end_time": f.end_time}
+        for row, ds in zip(datasets.to_dict("records"), collection)
         for f in ds.files
     ]
-    return pd.DataFrame.from_records(records)
+    return pd.DataFrame.from_records(
+        records, columns=None if records else [*datasets.columns, *_FILE_COLUMNS]
+    )
 
 
 @app.command(name="list")
@@ -103,7 +99,7 @@ def list_(  # noqa: PLR0913
     """
     List the datasets that have been ingested
 
-    The data catalog is sorted by the date that the dataset was ingested (first = newest).
+    The data catalog is sorted by slug.
 
     By default only the latest, non-retracted version of each dataset is listed, matching what
     the solver would select. Pass ``--include-retracted`` to also see retracted datasets (see
@@ -139,16 +135,13 @@ def list_(  # noqa: PLR0913
         logger.error(str(e))
         raise typer.Exit(code=1)
 
-    data_catalog = _collection_to_dataframe(collection, include_files=include_files)
+    full = _collection_to_dataframe(collection, include_files=include_files)
+    n_files = len(full)
     if include_files:
-        data_catalog = data_catalog.head(limit)
+        full = full.head(limit)
 
     if column:
-        # Validate/select against a frame that includes base fields (id, slug, ...).
-        # For --include-files the file columns live only on the exploded frame, so use
-        # that; otherwise use the empty-safe base+facet frame from the collection.
-        selectable = data_catalog if include_files else collection.to_pandas()
-        missing = set(column) - set(selectable.columns)
+        missing = set(column) - set(full.columns)
         if missing:
 
             def format_(columns: Iterable[str]) -> str:
@@ -157,14 +150,18 @@ def list_(  # noqa: PLR0913
             logger.error(
                 f"Column{'s' if len(missing) > 1 else ''} "
                 f"{format_(missing)} not found in data catalog. "
-                f"Choose from: {format_(selectable.columns)}"
+                f"Choose from: {format_(full.columns)}"
             )
             raise typer.Exit(code=1)
-        data_catalog = selectable[column].sort_values(by=column)
+        data_catalog = full[column].sort_values(by=column)
+    else:
+        data_catalog = full.drop(columns=_BASE_ONLY_COLUMNS)
 
     render_dataframe(data_catalog, console=console, output_format=output_format)
 
-    if not include_files and (collection.total_count or 0) > limit:
+    if include_files and n_files > limit:
+        logger.warning(f"Displaying {limit} of {n_files} files. Use the `--limit` option to display more.")
+    elif not include_files and (collection.total_count or 0) > limit:
         logger.warning(
             f"Displaying {limit} of {collection.total_count} filtered results. "
             f"Use the `--limit` option to display more."

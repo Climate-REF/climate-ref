@@ -14,7 +14,12 @@ It returns:
   a page of groups, with ``to_pandas()``.
 
 A group's newest execution is the one created last.
-Every method and count here uses that same definition.
+[group][climate_ref.results.executions.ExecutionsReader.group] and
+[latest_execution][climate_ref.results.executions.ExecutionsReader.latest_execution]
+take it from all of the group's executions.
+[groups][climate_ref.results.executions.ExecutionsReader.groups] and the counts apply the filter first,
+so a group whose newest execution is retracted is dropped,
+and a time window, ``execution_ids`` or ``latest_successful`` can change the pick.
 
 Code that changes groups, such as deleting or requeuing them, uses
 [group_rows][climate_ref.results.executions.ExecutionsReader.group_rows].
@@ -196,10 +201,11 @@ class ExecutionGroupView:
     """
     The group's newest execution, or ``None`` if it has never been run.
 
-    This is the execution that
+    From ``groups()`` this is the newest execution the filter keeps,
+    which can differ from what
     [ExecutionsReader.latest_execution][climate_ref.results.executions.ExecutionsReader.latest_execution]
-    returns.
-    With ``latest_successful=True`` on the filter it is the newest successful execution instead.
+    returns, because that ignores retraction and version scope.
+    With ``latest_successful=True``, a time window or ``execution_ids`` it is the newest matching execution.
     """
 
     @property
@@ -339,8 +345,9 @@ class ExecutionsReader:
 
         # One group, its newest execution and the files that execution produced
         group = reader.executions.group(page.items[0].id)
-        for output in reader.executions.outputs(group.latest.id):
-            print(output.output_type, output.filename)
+        if group.latest is not None:
+            for output in reader.executions.outputs(group.latest.id):
+                print(output.output_type, output.filename)
     ```
     """
 
@@ -394,7 +401,8 @@ class ExecutionsReader:
         Parameters
         ----------
         filters
-            Which groups to return. ``None`` returns all of them.
+            Which groups to return. ``None`` uses the default filter:
+            promoted diagnostic versions only, and groups whose newest execution is retracted excluded.
 
         Returns
         -------
@@ -444,7 +452,8 @@ class ExecutionsReader:
         Parameters
         ----------
         filters
-            Which groups to return. ``None`` returns all of them at their promoted diagnostic version.
+            Which groups to return. ``None`` uses the default filter:
+            promoted diagnostic versions only, and groups whose newest execution is retracted dropped.
         offset
             Groups to skip, in id order.
         limit
@@ -559,6 +568,7 @@ class ExecutionsReader:
         Which plots and data files did an execution produce?
 
         The outputs are ordered by type, then id.
+        ``OutputView.filename`` is ``None`` when the output has no file.
         Pass ``output_fragment`` and ``filename`` to ``reader.artifacts.output_file`` to get a path on disk.
 
         Examples

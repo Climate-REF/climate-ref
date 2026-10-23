@@ -18,6 +18,8 @@ from climate_ref.models.metric_value import (
     SeriesMetricValue,
 )
 from climate_ref.query import (
+    count,
+    paginate,
     select_latest_execution,
     select_latest_executions,
     select_scalar_values,
@@ -32,6 +34,7 @@ from climate_ref.results import (
 )
 from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
 from climate_ref.results.outliers import flag_outliers
+from climate_ref.results.values import SeriesValue
 
 
 @pytest.fixture
@@ -220,6 +223,10 @@ class TestScalarValues:
         assert len(coll) == 3
         assert coll.total_count == 8
 
+    def test_total_count_ignores_an_already_paged_select(self, dal_db):
+        stmt = paginate(select_scalar_values(MetricValueFilter()), 1, 2)
+        assert count(dal_db.session, stmt) == Reader(dal_db).values.scalar_values().total_count
+
     def test_pagination_deterministic_across_tied_timestamps(self, dal_db):
         # Every scalar row here shares one execution (one created_at), so ordering must fall back to
         # the value id. Two adjacent pages must partition the result with no overlap and no gap.
@@ -307,7 +314,7 @@ class TestScalarValues:
         assert Reader(dal_db).values.scalar_values(f).total_count == 8
 
     def test_unknown_outlier_group_by_raises(self, dal_db):
-        with pytest.raises(KeyError, match="bogus"):
+        with pytest.raises(ValueError, match="bogus"):
             Reader(dal_db).values.scalar_values(outliers=OutlierPolicy(group_by=("bogus",)))
 
     @pytest.mark.parametrize("field", ["execution_ids", "execution_group_ids", "isolate_ids"])
@@ -324,8 +331,21 @@ class TestScalarValues:
 
     def test_unknown_dimension_raises(self, dal_db):
         ref = Reader(dal_db)
-        with pytest.raises(KeyError, match="not_a_dim"):
+        with pytest.raises(ValueError, match="not_a_dim"):
             ref.values.scalar_values(MetricValueFilter(dimensions={"not_a_dim": "x"}))
+
+    def test_reference_only_on_scalars_raises(self, dal_db):
+        ref = Reader(dal_db)
+        with pytest.raises(ValueError, match="series values only"):
+            ref.values.scalar_values(MetricValueFilter(reference_only=True))
+        with pytest.raises(ValueError, match="series values only"):
+            select_value_ids(MetricValueType.SCALAR, MetricValueFilter(reference_only=False))
+
+    def test_empty_frame_keeps_base_columns(self, dal_db):
+        coll = Reader(dal_db).values.scalar_values(MetricValueFilter(execution_ids=[-1]))
+        df = coll.to_pandas()
+        assert df.empty
+        assert "value" in df.columns
 
     def test_include_context_adds_slugs(self, dal_db):
         ref = Reader(dal_db)
@@ -380,6 +400,26 @@ class TestSeriesValues:
         assert len(df) == 6
         for col in ("value", "index", "index_name", "source_id", "reference_id"):
             assert col in df.columns
+
+    def test_empty_frames_keep_base_columns(self, dal_db):
+        coll = Reader(dal_db).values.series_values(MetricValueFilter(execution_ids=[-1]))
+        assert {"value", "index", "index_name"} <= set(coll.to_pandas(explode=True).columns)
+        assert {"values", "index"} <= set(coll.to_pandas(explode=False).columns)
+
+    def test_missing_index_name_stays_none(self):
+        series = SeriesValue(
+            id=1,
+            execution_id=1,
+            execution_group_id=1,
+            values=[1.0],
+            index=[0],
+            index_name=None,
+            reference_id=None,
+            kind="model",
+            dimensions={},
+            attributes={},
+        )
+        assert series_values_to_frame([series])["index_name"].isna().all()
 
 
 class TestWithCount:
@@ -1022,6 +1062,8 @@ class TestValueIdsMatchRows:
 
     def test_scalar_ids(self, scoped_db, make_filter):
         f = make_filter(scoped_db.scope)
+        if f.reference_only is not None:
+            pytest.skip("reference_only is series only")
         session = scoped_db.session
         rows = [v.id for v in session.execute(select_scalar_values(f)).scalars()]
         ids = session.execute(select_value_ids(MetricValueType.SCALAR, f)).scalars().all()
@@ -1036,6 +1078,8 @@ class TestValueIdsMatchRows:
 
     def test_scalar_count_and_facets(self, scoped_db, make_filter):
         f = make_filter(scoped_db.scope)
+        if f.reference_only is not None:
+            pytest.skip("reference_only is series only")
         values = Reader(scoped_db).values
         expected_facets = collect_facets(scoped_db.session, select_scalar_values(f), ScalarMetricValue)
 

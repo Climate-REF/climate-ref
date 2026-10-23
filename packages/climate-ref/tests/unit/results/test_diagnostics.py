@@ -1,5 +1,7 @@
 """Unit tests for the diagnostic read layer."""
 
+import datetime
+
 import attrs
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
@@ -315,6 +317,22 @@ class TestGroupCounts:
         assert before["enso_tel"].successful == 1
         assert after["enso_tel"].successful == 0
         assert after["enso_tel"].total == before["enso_tel"].total - 1
+
+    @pytest.mark.parametrize(
+        "filters",
+        [
+            {"created_after": datetime.datetime(2000, 1, 1)},
+            {"created_before": datetime.datetime(2100, 1, 1)},
+            {"execution_group_ids": [1, 2]},
+            {"execution_ids": [1]},
+            {"source_types": ["cmip6"]},
+        ],
+    )
+    def test_narrowing_filter_drops_empty_diagnostics(self, db_with_diagnostics, filters):
+        reader = Reader(db_with_diagnostics)
+        slugs = {d.diagnostic_slug for d in reader.diagnostics.list(DiagnosticFilter(**filters))}
+        assert "enso-characteristics" not in slugs
+        assert "enso-characteristics" in {d.diagnostic_slug for d in reader.diagnostics.list()}
 
 
 @pytest.fixture

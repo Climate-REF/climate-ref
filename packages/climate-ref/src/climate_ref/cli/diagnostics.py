@@ -52,13 +52,15 @@ def list_(  # noqa: PLR0913
     - diagnostic: the diagnostic slug.
     - name: the human-readable diagnostic name.
     - promoted_version: the currently promoted diagnostic version.
-    - group_count: execution groups at the promoted version.
+    - group_count: execution groups at the promoted version, excluding groups whose newest execution is
+      retracted.
     - successful_group_count: groups whose latest execution succeeded.
     - failed_group_count: groups whose latest execution failed.
     - running_group_count: groups whose latest execution is still running.
     - not_started_group_count: groups with no execution yet.
     - dirty_group_count: groups marked to be rerun.
-    - execution_count: number of executions at the promoted version, counting every rerun.
+    - execution_count: number of executions at the promoted version, counting every rerun
+      and excluding retracted executions.
     """
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)

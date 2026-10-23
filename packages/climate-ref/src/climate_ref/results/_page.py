@@ -14,7 +14,8 @@ class Page[T]:
     """
     An immutable page of items plus the paging that produced it.
 
-    Every collection that a reader returns is a ``Page``.
+    Every paged collection that a reader returns is a ``Page``.
+    ``ResourcesReader.summaries`` and ``ResourcesReader.profiles`` return plain tuples instead.
     Loop over it, or use ``len()``, to get at its ``items``.
 
     ``total_count`` is how many results match your filter in all.

@@ -315,6 +315,7 @@ def delete_groups(  # noqa: PLR0912, PLR0913
             successful=successful,
             dirty=dirty,
             include_retracted=True,
+            include_superseded=True,
         )
 
     if not any([diagnostic, provider, selector_filters, successful is not None, dirty is not None]):

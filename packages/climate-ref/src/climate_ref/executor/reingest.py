@@ -32,8 +32,8 @@ from climate_ref.models.execution import (
     ExecutionGroup,
     execution_datasets,
 )
+from climate_ref.query.filters import ExecutionGroupFilter
 from climate_ref.results.executions import ExecutionsReader
-from climate_ref.results.filters import ExecutionGroupFilter
 from climate_ref_core.datasets import (
     DatasetCollection,
     ExecutionDatasetCollection,

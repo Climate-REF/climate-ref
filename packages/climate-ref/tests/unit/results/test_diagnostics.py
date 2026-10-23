@@ -10,13 +10,13 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, Reader
-from climate_ref.results.diagnostics import GroupCounts
-from climate_ref.results.queries import (
+from climate_ref.query import (
     select_diagnostics,
     select_diagnostics_with_values,
     select_group_counts,
 )
+from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, Reader
+from climate_ref.results.diagnostics import GroupCounts
 
 
 def test_import_smoke() -> None:

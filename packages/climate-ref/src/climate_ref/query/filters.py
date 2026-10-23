@@ -2,28 +2,29 @@
 Filters that choose which results a read returns.
 
 Build a filter and pass it to a reader method, or to the matching builder in
-[queries][climate_ref.results.queries].
+[climate_ref.query][climate_ref.query].
 Filters are frozen [attrs](https://www.attrs.org) classes, so one filter can be reused across reads.
 
 ## Which filter to use
 
 Each reader method takes one kind of filter:
 
-* [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]:
+* [MetricValueFilter][climate_ref.query.filters.MetricValueFilter]:
   ``reader.values.scalar_values`` and ``series_values``.
-* [ExecutionGroupFilter][climate_ref.results.filters.ExecutionGroupFilter]:
+* [ExecutionGroupFilter][climate_ref.query.filters.ExecutionGroupFilter]:
   ``reader.executions.groups`` and ``group_rows``.
-* [DiagnosticFilter][climate_ref.results.filters.DiagnosticFilter]:
+* [DiagnosticFilter][climate_ref.query.filters.DiagnosticFilter]:
   ``reader.diagnostics.list`` and ``with_values``.
-* [ResourceFilter][climate_ref.results.filters.ResourceFilter]:
+* [ResourceFilter][climate_ref.query.filters.ResourceFilter]:
   ``reader.resources.measurements``, ``summary``, ``summaries`` and ``profiles``.
-* [DatasetFilter][climate_ref.models.dataset_query.DatasetFilter]:
+* [DatasetFilter][climate_ref.query.filters.DatasetFilter]:
   ``reader.datasets``. It filters the datasets themselves rather than executions.
 
 ## Defaults
 
 Every field is optional, and a field left as ``None`` does not narrow the result.
-Two defaults still apply to an empty filter, on every filter except ``DatasetFilter``:
+Two defaults still apply to an empty filter, on every filter except ``DatasetFilter``,
+which has its own:
 
 * Only results from each diagnostic's promoted version are kept.
   Pass ``include_superseded=True`` for every version.
@@ -37,15 +38,15 @@ So ``MetricValueFilter()`` matches every value from a promoted, non-retracted ex
 Most fields mean the same thing, with the same default, on every filter that has them.
 They are grouped into scopes, and each filter is built from the scopes it needs:
 
-* [DiagnosticScope][climate_ref.results.filters.DiagnosticScope]: which diagnostics and providers,
+* [DiagnosticScope][climate_ref.query.filters.DiagnosticScope]: which diagnostics and providers,
   by exact slug (``diagnostic_slug``, ``provider_slug``)
   or by substring (``diagnostic_contains``, ``provider_contains``).
-* [VersionScope][climate_ref.results.filters.VersionScope]: which diagnostic versions
+* [VersionScope][climate_ref.query.filters.VersionScope]: which diagnostic versions
   (``include_superseded``, ``diagnostic_version``).
-* [ExecutionScope][climate_ref.results.filters.ExecutionScope]: which executions
+* [ExecutionScope][climate_ref.query.filters.ExecutionScope]: which executions
   (``include_retracted``, ``created_after``, ``created_before``, ``execution_ids``, ``execution_group_ids``,
   ``source_types``, ``or_no_model_input``).
-* [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: which input datasets the executions used
+* [InputDatasetScope][climate_ref.query.filters.InputDatasetScope]: which input datasets the executions used
   (``input_datasets``).
 
 Fields that take a list keep rows matching any of its values, so an empty list keeps nothing.
@@ -61,7 +62,7 @@ so they do not need it.
 
 ## Filtering by input dataset
 
-[InputDatasetFilter][climate_ref.results.filters.InputDatasetFilter] keeps executions by the datasets they ran
+[InputDatasetFilter][climate_ref.query.filters.InputDatasetFilter] keeps executions by the datasets they ran
 against, such as a ``source_id`` or a list of dataset ids.
 Pass it as ``input_datasets`` on any filter.
 
@@ -95,13 +96,12 @@ and a list matches any of its values:
 
 import datetime
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
+from typing import Any, cast
 
 import attrs
 from sqlalchemy import ColumnElement, Select, and_, exists, false, or_, select, true
 
 from climate_ref.models.dataset import Dataset
-from climate_ref.models.dataset_query import _as_facets, _entity_for
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
     Execution,
@@ -112,7 +112,8 @@ from climate_ref.models.execution import (
 )
 from climate_ref.models.metric_value import MetricValue
 from climate_ref.models.provider import Provider
-from climate_ref.results._converters import (
+from climate_ref.query._converters import (
+    _as_facets,
     _as_failure_reasons,
     _as_id_tuple,
     _as_naive_utc,
@@ -148,6 +149,11 @@ class BaseFilter:
 
 
 _MODEL_SOURCE_TYPES = tuple(t for t in SourceDatasetType if t.is_model_output)
+
+
+def _entity_for(source_type: SourceDatasetType) -> type[Dataset]:
+    """Resolve a source type to its concrete ``Dataset`` subclass via the polymorphic map."""
+    return cast(type[Dataset], Dataset.__mapper__.polymorphic_map[source_type].class_)
 
 
 def _dataset_types() -> tuple[SourceDatasetType, ...]:
@@ -503,7 +509,7 @@ class InputDatasetScope(BaseFilter):
     """
     A group of fields shared by every filter: which input datasets the executions used.
 
-    See [InputDatasetFilter][climate_ref.results.filters.InputDatasetFilter] for examples.
+    See [InputDatasetFilter][climate_ref.query.filters.InputDatasetFilter] for examples.
     """
 
     input_datasets: InputDatasetFilter | None = None
@@ -520,10 +526,10 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
     Filter for metric values, passed to ``reader.values.scalar_values`` and ``series_values``.
 
     It also has every field of
-    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
-    [VersionScope][climate_ref.results.filters.VersionScope],
-    [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
-    [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
+    [DiagnosticScope][climate_ref.query.filters.DiagnosticScope],
+    [VersionScope][climate_ref.query.filters.VersionScope],
+    [ExecutionScope][climate_ref.query.filters.ExecutionScope] and
+    [InputDatasetScope][climate_ref.query.filters.InputDatasetScope].
 
     Examples
     --------
@@ -600,10 +606,10 @@ class ResourceFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDataset
     Filter for the executions whose resource use is read by ``reader.resources``.
 
     It also has every field of
-    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
-    [VersionScope][climate_ref.results.filters.VersionScope],
-    [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
-    [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
+    [DiagnosticScope][climate_ref.query.filters.DiagnosticScope],
+    [VersionScope][climate_ref.query.filters.VersionScope],
+    [ExecutionScope][climate_ref.query.filters.ExecutionScope] and
+    [InputDatasetScope][climate_ref.query.filters.InputDatasetScope].
 
     Examples
     --------
@@ -629,10 +635,10 @@ class ExecutionGroupFilter(DiagnosticScope, VersionScope, ExecutionScope, InputD
 
     Each group is judged by its newest execution.
     It also has every field of
-    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
-    [VersionScope][climate_ref.results.filters.VersionScope],
-    [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
-    [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
+    [DiagnosticScope][climate_ref.query.filters.DiagnosticScope],
+    [VersionScope][climate_ref.query.filters.VersionScope],
+    [ExecutionScope][climate_ref.query.filters.ExecutionScope] and
+    [InputDatasetScope][climate_ref.query.filters.InputDatasetScope].
 
     Examples
     --------
@@ -701,10 +707,10 @@ class DiagnosticFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatas
 
     Pass it to ``reader.diagnostics.list`` or ``reader.diagnostics.with_values``.
     It has no fields of its own, only those of
-    [DiagnosticScope][climate_ref.results.filters.DiagnosticScope],
-    [VersionScope][climate_ref.results.filters.VersionScope],
-    [ExecutionScope][climate_ref.results.filters.ExecutionScope] and
-    [InputDatasetScope][climate_ref.results.filters.InputDatasetScope].
+    [DiagnosticScope][climate_ref.query.filters.DiagnosticScope],
+    [VersionScope][climate_ref.query.filters.VersionScope],
+    [ExecutionScope][climate_ref.query.filters.ExecutionScope] and
+    [InputDatasetScope][climate_ref.query.filters.InputDatasetScope].
     With ``input_datasets`` only groups whose newest execution matches are counted,
     and a diagnostic left with no groups is dropped.
 
@@ -714,4 +720,67 @@ class DiagnosticFilter(DiagnosticScope, VersionScope, ExecutionScope, InputDatas
 
     >>> from climate_ref.results import DiagnosticFilter
     >>> filters = DiagnosticFilter(diagnostic_contains=["enso"])
+    """
+
+
+@attrs.frozen(kw_only=True)
+class DatasetFilter(DiagnosticScope):
+    """
+    Filter for datasets, passed to ``reader.datasets.list`` and to ``select_datasets``.
+
+    It filters the datasets themselves rather than executions.
+    ``source_type`` is required, because it picks the dataset table and so which facets can be filtered on.
+    One source type at a time keeps the rows the same shape, so they can be collapsed into a DataFrame.
+
+    The [DiagnosticScope][climate_ref.query.filters.DiagnosticScope] fields keep datasets
+    that an execution of a matching diagnostic used.
+
+    Examples
+    --------
+    The latest CMIP6 ACCESS-CM2 datasets used by the PMP diagnostics:
+
+    >>> from climate_ref.results import DatasetFilter
+    >>> filters = DatasetFilter(
+    ...     source_type="cmip6",
+    ...     facets={"source_id": "ACCESS-CM2"},
+    ...     provider_slug="pmp",
+    ... )
+    >>> filters.source_type
+    <SourceDatasetType.CMIP6: 'cmip6'>
+    """
+
+    source_type: SourceDatasetType = attrs.field(converter=SourceDatasetType)
+    """The dataset type to read."""
+
+    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
+    """Dataset attributes to match, e.g. ``{"variable_id": ["tas", "pr"]}``. Every facet must match."""
+
+    finalised: bool | None = None
+    """Keep only finalised datasets for ``True``, or only unfinalised ones for ``False``."""
+
+    execution_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
+    """Keep only datasets used by these executions."""
+
+    slug_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """
+    Keep datasets whose slug contains any of these, ignoring case.
+
+    Applied after the ``latest_only`` window,
+    so it narrows the latest versions rather than picking a new latest.
+    """
+
+    latest_only: bool = True
+    """
+    Keep only the latest version of each dataset.
+
+    This is about dataset versions, unlike ``latest_only`` on the execution filters.
+    """
+
+    include_retracted: bool = False
+    """
+    Also keep retracted datasets, those with a ``retracted_at``.
+
+    This is about datasets, unlike ``include_retracted`` on the execution filters.
+    The default matches what the solver can use.
+    Provenance and history reads, such as ``ref datasets list``, pass ``True``.
     """

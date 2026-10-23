@@ -48,9 +48,8 @@ from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
 )
-from climate_ref.results._page import Page
-from climate_ref.results.filters import ExecutionGroupFilter
-from climate_ref.results.queries import (
+from climate_ref.query import (
+    ExecutionGroupFilter,
     count,
     filter_by_selectors,
     paginate,
@@ -59,6 +58,7 @@ from climate_ref.results.queries import (
     select_execution_outputs,
     select_latest_execution,
 )
+from climate_ref.results._page import Page
 
 
 @attrs.frozen(kw_only=True)
@@ -439,7 +439,7 @@ class ExecutionsReader:
         With ``successful=False`` the group matches, because its newest execution failed.
         With ``latest_successful=True`` the group matches too, but its ``latest`` is now
         the execution from the week before, because that is the newest one that succeeded.
-        See [ExecutionGroupFilter][climate_ref.results.filters.ExecutionGroupFilter].
+        See [ExecutionGroupFilter][climate_ref.query.filters.ExecutionGroupFilter].
 
         Parameters
         ----------

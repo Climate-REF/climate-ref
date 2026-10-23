@@ -1,79 +1,21 @@
 """
-Query builder for the polymorphic ``Dataset`` hierarchy.
+Builder over the polymorphic ``Dataset`` hierarchy.
 
-[select_datasets][climate_ref.models.dataset_query.select_datasets]
-is the cononical definition for selecting datasets consistently.
-It backs both ``climate_ref.datasets`` (``DatasetAdapter.load_catalog``) and
-the ``climate_ref.results`` read layer (``reader.datasets``), so the two cannot drift apart.
+[select_datasets][climate_ref.query.datasets.select_datasets]
+is the one definition of which datasets a filter selects.
+It backs both the solver's catalogue load (``DatasetAdapter.load_catalog``)
+and ``reader.datasets``, so the two cannot drift apart.
 """
 
-from collections.abc import Mapping, Sequence
-from typing import Any, cast
+from collections.abc import Sequence
+from typing import Any
 
-import attrs
 import sqlalchemy as sa
 from sqlalchemy import Select, select
 from sqlalchemy.orm import configure_mappers
 
-from climate_ref.models.dataset import Dataset
-from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup, execution_datasets
-from climate_ref_core.source_types import SourceDatasetType
-
-
-def _as_facets(
-    value: Mapping[str, Sequence[str]] | None,
-) -> Mapping[str, tuple[str, ...]] | None:
-    """
-    Copy a facets mapping into an immutable ``dict`` of immutable ``tuple`` values.
-
-    A bare ``str`` value is itself a ``Sequence[str]``, so without this guard a caller passing
-    ``facets={"source_id": "TEST-MODEL"}`` would have it iterated character-by-character
-    (``"TEST-MODEL"`` -> ``T``, ``E``, ``S``, ...) before it ever reaches the ``IN`` clause.
-    """
-    if value is None:
-        return None
-    return {k: (v,) if isinstance(v, str) else tuple(v) for k, v in value.items()}
-
-
-@attrs.frozen(kw_only=True)
-class DatasetFilter:
-    """
-    Declarative filter over datasets.
-
-    ``source_type`` is required.
-    It selects which which facet columns the query can target.
-    This limits our filtering to a single source type at a time to ensure that the files can be
-    collapsed into a dataframe.
-
-    Every other field is optional with ``None`` meaning "do not constrain on this axis".
-    """
-
-    source_type: SourceDatasetType
-    facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
-    finalised: bool | None = None
-    execution_id: int | None = None
-    diagnostic_slug: str | None = None
-    slug_contains: str | None = None
-    """
-    Case-insensitive substring match on the dataset slug.
-
-    Applied after the ``latest_only`` window,
-    so it narrows the latest versions rather than picking a new latest.
-    """
-    latest_only: bool = True
-    include_retracted: bool = False
-    """
-    Whether retracted datasets (``Dataset.retracted_at`` is not ``None``) are included.
-
-    Defaults to ``False`` so an unqualified query matches solve-time eligibility.
-    Provenance, history and inspection reads (e.g. ``ref datasets list``) pass ``True`` explicitly.
-    """
-
-
-def _entity_for(source_type: SourceDatasetType) -> type[Dataset]:
-    """Resolve a source type to its concrete ``Dataset`` subclass via the polymorphic map."""
-    return cast(type[Dataset], Dataset.__mapper__.polymorphic_map[source_type].class_)
+from climate_ref.query.filters import DatasetFilter, _contains_any, _entity_for
 
 
 def select_datasets(
@@ -92,8 +34,7 @@ def select_datasets(
 
     ``latest_group_by`` is the adapter's ``dataset_id_metadata``,
     which is used as the partition columns for the latest-version window.
-    It is passed in rather than looked up here because ``select_datasets`` lives in the models layer
-    and must not import the adapter registry, so it cannot resolve it itself; callers pass it through.
+    It is passed in because ``climate_ref.query`` must not import the adapter registry.
 
     ``latest_group_by`` is required whenever ``filter.latest_only`` is True (the default):
     passing ``latest_only=True`` without it raises ``ValueError`` rather than silently returning an
@@ -101,8 +42,8 @@ def select_datasets(
     When both are set, rows are deduplicated with a
     ``RANK() OVER (PARTITION BY <latest_group_by> ORDER BY version_key DESC)`` window
     (applied after the other filters and joins, but before ``finalised`` and ``slug_contains``),
-    keeping every row tied at the maximum ``version_key`` -- so ties are not silently dropped.
-    Set ``latest_only=False`` to list every version; ``latest_group_by`` is then ignored.
+    keeping every row tied at the maximum ``version_key``, so ties are not silently dropped.
+    Set ``latest_only=False`` to list every version. ``latest_group_by`` is then ignored.
 
     Raises
     ------
@@ -128,22 +69,19 @@ def select_datasets(
             raise ValueError(f"Unknown facet {facet!r} for {entity.__name__}")
         stmt = stmt.where(column.in_(values))
 
-    # Both relationship axes reach through ``execution_datasets``
-    # join it at most once so that setting ``execution_id`` and ``diagnostic_slug`` together
-    # does not emit a duplicate, unaliased self-join (invalid SQL).
-    needs_execution_join = filter.execution_id is not None or filter.diagnostic_slug is not None
+    # Both relationship axes reach through ``execution_datasets``, so it is joined at most once.
+    needs_execution_join = filter.execution_ids is not None or filter.matches_any
     if needs_execution_join:
         stmt = stmt.join(execution_datasets, entity.id == execution_datasets.c.dataset_id)
 
-    if filter.execution_id is not None:
-        stmt = stmt.where(execution_datasets.c.execution_id == filter.execution_id)
+    if filter.execution_ids is not None:
+        stmt = stmt.where(execution_datasets.c.execution_id.in_(filter.execution_ids))
 
-    if filter.diagnostic_slug is not None:
+    if filter.matches_any:
         stmt = (
             stmt.join(Execution, Execution.id == execution_datasets.c.execution_id)
             .join(ExecutionGroup, ExecutionGroup.id == Execution.execution_group_id)
-            .join(Diagnostic, Diagnostic.id == ExecutionGroup.diagnostic_id)
-            .where(Diagnostic.slug == filter.diagnostic_slug)
+            .where(ExecutionGroup.diagnostic_id.in_(filter.diagnostic_ids()))
         )
 
     if needs_execution_join:
@@ -168,7 +106,7 @@ def select_datasets(
     if filter.finalised is not None:
         stmt = stmt.where(entity.finalised.is_(filter.finalised))
 
-    if filter.slug_contains:
-        stmt = stmt.where(entity.slug.icontains(filter.slug_contains, autoescape=True))
+    if filter.slug_contains is not None:
+        stmt = stmt.where(_contains_any(entity.slug, filter.slug_contains))
 
     return stmt.order_by(entity.updated_at.desc())

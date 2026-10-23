@@ -165,6 +165,12 @@ layers = [
     "climate_ref_core",
 ]
 
+[[tool.importlinter.contracts]]
+name = "Readers over query builders over models"
+type = "layers"
+containers = ["climate_ref"]
+layers = ["results", "query", "models"]
+
 [tool.jupytext]
 formats = "ipynb,py:percent"
 

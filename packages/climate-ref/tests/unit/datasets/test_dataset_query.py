@@ -20,9 +20,9 @@ from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
 from climate_ref.models.dataset import CMIP6Dataset, Dataset, DatasetFile
-from climate_ref.models.dataset_query import DatasetFilter, select_datasets
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup, execution_datasets
+from climate_ref.query import DatasetFilter, select_datasets
 from climate_ref_core.source_types import SourceDatasetType
 
 
@@ -91,6 +91,7 @@ def db_with_versions(db_seeded):
     }
     db_seeded.dq_execution_id = execution.id
     db_seeded.dq_diagnostic_slug = diag.slug
+    db_seeded.dq_provider_slug = diag.provider.slug
     return db_seeded
 
 
@@ -152,7 +153,7 @@ class TestSelectDatasetsLatestVersionDedup:
         stmt = select_datasets(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
-                execution_id=db_with_versions.dq_execution_id,
+                execution_ids=db_with_versions.dq_execution_id,
                 diagnostic_slug=db_with_versions.dq_diagnostic_slug,
             ),
             latest_group_by=ID_COLS,
@@ -222,6 +223,26 @@ class TestSlugContains:
         )
         rows = db_with_versions.session.execute(stmt).scalars().unique().all()
         assert {r.id for r in rows} == {db_with_versions.dq_ids["v2"]}
+
+    def test_any_of_a_list(self, db_with_versions):
+        stmt = select_datasets(
+            DatasetFilter(
+                source_type=SourceDatasetType.CMIP6,
+                slug_contains=["tas.v2", "pr.latest"],
+                latest_only=False,
+            )
+        )
+        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
+        assert {r.id for r in rows} == {
+            db_with_versions.dq_ids["v2"],
+            db_with_versions.dq_ids["nonconforming"],
+        }
+
+    def test_empty_list_matches_nothing(self, db_with_versions):
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, slug_contains=[], latest_only=False)
+        )
+        assert db_with_versions.session.execute(stmt).scalars().unique().all() == []
 
 
 class TestRetractedFiltering:
@@ -382,3 +403,30 @@ def test_get_dataset_adapter_covers_all_four_subclasses():
     ):
         adapter = get_dataset_adapter(source_type.value)
         assert adapter.dataset_id_metadata
+
+
+class TestDiagnosticAndExecutionFields:
+    def _ids(self, db, **kwargs):
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False, **kwargs)
+        )
+        return {r.id for r in db.session.execute(stmt).scalars().unique().all()}
+
+    def test_execution_ids(self, db_with_versions):
+        ids = self._ids(db_with_versions, execution_ids=[db_with_versions.dq_execution_id, 999999])
+        assert ids == {db_with_versions.dq_ids["v10"]}
+
+    def test_empty_execution_ids_match_nothing(self, db_with_versions):
+        assert self._ids(db_with_versions, execution_ids=[]) == set()
+
+    def test_provider_slug(self, db_with_versions):
+        ids = self._ids(db_with_versions, provider_slug=db_with_versions.dq_provider_slug)
+        assert db_with_versions.dq_ids["v10"] in ids
+        assert self._ids(db_with_versions, provider_slug="no-such-provider") == set()
+
+    def test_diagnostic_contains(self, db_with_versions):
+        search = db_with_versions.dq_diagnostic_slug[1:].upper()
+        assert db_with_versions.dq_ids["v10"] in self._ids(db_with_versions, diagnostic_contains=search)
+
+    def test_source_type_from_string(self):
+        assert DatasetFilter(source_type="cmip6").source_type is SourceDatasetType.CMIP6

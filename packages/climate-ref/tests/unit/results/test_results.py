@@ -10,13 +10,19 @@ import pytest
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 from climate_ref.models import Execution, ExecutionGroup
-from climate_ref.models import execution as models_execution
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.metric_value import (
     MetricValueType,
     ScalarMetricValue,
     SeriesIndex,
     SeriesMetricValue,
+)
+from climate_ref.query import (
+    select_latest_execution,
+    select_latest_executions,
+    select_scalar_values,
+    select_series_values,
+    select_value_ids,
 )
 from climate_ref.results import (
     ExecutionGroupFilter,
@@ -26,13 +32,6 @@ from climate_ref.results import (
 )
 from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
 from climate_ref.results.outliers import flag_outliers
-from climate_ref.results.queries import (
-    select_latest_execution,
-    select_latest_executions,
-    select_scalar_values,
-    select_series_values,
-    select_value_ids,
-)
 
 
 @pytest.fixture
@@ -595,9 +594,6 @@ class TestSelectLatestExecutions:
         session = dal_db.session
         rows = session.execute(select_latest_executions([Execution.output_fragment == "no-such"])).all()
         assert rows == []
-
-    def test_results_re_exports_the_models_builder(self):
-        assert select_latest_executions is models_execution.select_latest_executions
 
 
 class TestLatestOnly:

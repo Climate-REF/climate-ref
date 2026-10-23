@@ -106,7 +106,8 @@ filters = MetricValueFilter(
 )
 ```
 
-`DatasetFilter` describes datasets rather than executions, so it has its own fields, covered under [Datasets](#datasets).
+`DatasetFilter` describes datasets rather than executions.
+It shares the diagnostic and provider fields, and its other fields are covered under [Datasets](#datasets).
 
 ## Scalar and series values
 
@@ -289,6 +290,14 @@ whose `filters` argument is optional and defaults to "everything".
 By default `DatasetFilter.latest_only` is `True`,
 so a listing returns exactly one row per dataset — the latest version — rather than every version,
 deduplicated with that source type's version key.
+
+`DatasetFilter.include_retracted` and `DatasetFilter.latest_only` are about datasets,
+not executions, unlike the fields with the same names on the other filters.
+
+`execution_ids` keeps the datasets those executions used.
+The diagnostic fields (`diagnostic_slug`, `provider_slug`, `diagnostic_contains`, `provider_contains`)
+keep the datasets used by an execution of a matching diagnostic.
+`slug_contains` takes one string or a list and keeps datasets whose slug contains any of them.
 
 `get(slug)` fetches a single dataset by slug, returning the latest version on a tie
 (or `None` when no dataset has that slug):

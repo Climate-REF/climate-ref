@@ -36,6 +36,7 @@ from climate_ref.models.execution import (
     ExecutionFailureReason,
     execution_datasets,
 )
+from climate_ref.query import select_group_counts
 from climate_ref.results import (
     DiagnosticFilter,
     ExecutionGroupFilter,
@@ -45,7 +46,6 @@ from climate_ref.results import (
     ResourceFilter,
 )
 from climate_ref.results.executions import OutputView
-from climate_ref.results.queries import select_group_counts
 from climate_ref.results.resources import ResourceProfile
 from climate_ref.results.values import ValuesReader
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME

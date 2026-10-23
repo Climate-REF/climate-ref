@@ -14,6 +14,7 @@ from climate_ref.models.execution import (
     ResultOutputType,
 )
 from climate_ref.provider_registry import _register_provider
+from climate_ref.query import select_diagnostics, select_execution_outputs
 from climate_ref.results import (
     DiagnosticFilter,
     ExecutionGroupFilter,
@@ -21,7 +22,6 @@ from climate_ref.results import (
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results.queries import select_diagnostics, select_execution_outputs
 
 
 def test_import_smoke() -> None:

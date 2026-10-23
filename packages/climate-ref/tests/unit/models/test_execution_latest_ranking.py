@@ -16,8 +16,8 @@ from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
 )
+from climate_ref.query import select_execution_groups
 from climate_ref.results import ExecutionGroupFilter
-from climate_ref.results.queries import select_execution_groups
 
 _T0 = datetime.datetime(2024, 1, 1, 0, 0, 0)
 

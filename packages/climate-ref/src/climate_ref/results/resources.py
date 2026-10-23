@@ -42,15 +42,15 @@ from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
 from climate_ref.models.execution import Execution
-from climate_ref.results._page import Page
-from climate_ref.results.filters import ResourceFilter
-from climate_ref.results.queries import (
+from climate_ref.query import (
     GroupBy,
+    ResourceFilter,
     count,
     paginate,
     select_execution_resources,
     select_resource_summary,
 )
+from climate_ref.results._page import Page
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -720,7 +720,7 @@ class ResourcesReader:
     Reach it as ``reader.resources`` rather than constructing it directly.
 
     Every method takes an optional
-    [ResourceFilter][climate_ref.results.filters.ResourceFilter] to choose which executions count.
+    [ResourceFilter][climate_ref.query.filters.ResourceFilter] to choose which executions count.
     Pick the method by how much to combine:
 
     * ``measurements`` and ``measurement`` return one record per execution.

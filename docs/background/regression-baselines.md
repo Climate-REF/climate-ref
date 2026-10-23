@@ -174,6 +174,35 @@ flowchart TD
 `ref test-cases ci-gate` exits non-zero if any case is `fail`.
 Its `--json` output drives the `replay` jobs in CI.
 
+## Test-case catalogs
+
+Each test case's datasets are recorded in two files.
+
+- `catalog.yaml` holds the dataset metadata: instance IDs, facets and selectors.
+  It sits beside the test case, is in git and is the same on every machine.
+- `catalog.paths.yaml` holds the local path of each dataset.
+  It lives in the dataset cache at
+  `$REF_DATASET_CACHE_DIR/test-case-paths/{provider}/{diagnostic}/{test_case}/`,
+  or under `climate_ref/test-case-paths/` in the user cache directory when that is unset.
+
+The paths point into the caches that hold the data,
+so the paths file lives with those caches rather than with a checkout.
+Every checkout on the machine shares it, and a fresh checkout cannot lose it.
+`ref test-cases fetch` rewrites it after each successful fetch, even when the catalog is unchanged,
+which repairs partial path maps and paths to old cache locations.
+The fetch, run and mint commands and the drift tests check that every catalog row
+resolves to an existing file before running a diagnostic.
+
+CI runs `ref test-cases fetch --strict`.
+This attempts every selected case and exits non-zero if any cannot be resolved.
+It also rejects catalog changes that a downstream job's fresh checkout would not receive.
+Changes only to the stored catalog hash or to the row order do not trigger this.
+
+Provider test jobs set `REF_TEST_CASES_STRICT=true`,
+so a missing catalog or baseline fails instead of being skipped.
+Diagnostics listed in `REF_TEST_CASES_SKIP` are still skipped.
+Local runs keep the default skip behaviour.
+
 ## Continuous integration
 
 Four workflows run the lifecycle.

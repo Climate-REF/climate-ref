@@ -7,7 +7,7 @@ so a synthetic database can match production without copying any of its data.
 
 The schema comes from the real migrations, so every index matches a deployed database.
 Rows are written with raw `sqlite3` because the ORM is far too slow at this size.
-Statistics are gathered with `PRAGMA optimize`, as `Database.optimize` does after an ingest or a solve,
+Statistics are gathered with `Database.optimize`, as after an ingest or a solve,
 because the query planner behaves differently without them.
 """
 
@@ -145,9 +145,13 @@ def build_synthetic_database(path: Path, shape: Shape, *, scale: float = 1.0, se
         _Writer(con, shape, scale, rng).write()
         for _, sql in indexes:
             con.execute(sql)
-    con.execute("PRAGMA optimize")
-    con.commit()
     con.close()
+
+    config = Config()
+    config.db.database_url = f"sqlite:///{path}"
+    database = Database.from_config(config, run_migrations=False)
+    database.optimize()
+    database.close()
 
 
 class _Writer:

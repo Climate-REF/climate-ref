@@ -376,9 +376,15 @@ class Database:
         """
         if self._engine.dialect.name != "sqlite":
             return
+        # 0x10002 checks every table, not only those this connection has queried, and needs SQLite 3.46.
+        if sqlite3.sqlite_version_info >= (3, 46):
+            statements = ["PRAGMA optimize=0x10002"]
+        else:
+            statements = ["PRAGMA analysis_limit=1000", "ANALYZE"]
         try:
             with self._engine.begin() as connection:
-                connection.exec_driver_sql("PRAGMA optimize")
+                for statement in statements:
+                    connection.exec_driver_sql(statement)
         except SQLAlchemyError as exc:
             logger.warning(f"Could not refresh SQLite statistics: {exc}")
 

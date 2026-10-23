@@ -142,6 +142,29 @@ def test_optimize_gathers_sqlite_statistics(db):
     assert "provider" in tables
 
 
+@pytest.mark.parametrize("version", [(3, 46, 0), (3, 45, 0)])
+def test_optimize_refreshes_stale_statistics(tmp_path, config, mocker, version):
+    # Each CLI command opens a fresh connection, so a grown table must be re-analysed without query history.
+    mocker.patch("climate_ref.database.sqlite3.sqlite_version_info", version)
+    path = tmp_path / "stale.db"
+    with sqlite3.connect(path) as con:
+        con.execute("CREATE TABLE t (a INTEGER)")
+        con.execute("CREATE INDEX ix_t_a ON t (a)")
+        con.executemany("INSERT INTO t VALUES (?)", ((i,) for i in range(100)))
+        con.execute("ANALYZE")
+        con.executemany("INSERT INTO t VALUES (?)", ((i,) for i in range(100_000)))
+    con.close()
+
+    database = Database(f"sqlite:///{path}")
+    database.optimize()
+    database.close()
+
+    with sqlite3.connect(path) as con:
+        (stat,) = con.execute("SELECT stat FROM sqlite_stat1 WHERE idx = 'ix_t_a'").fetchone()
+    con.close()
+    assert int(stat.split()[0]) == 100_100
+
+
 def test_optimize_logs_instead_of_raising(db, mocker):
     mocker.patch.object(
         db._engine, "begin", side_effect=DatabaseError("PRAGMA optimize", {}, Exception("malformed"))

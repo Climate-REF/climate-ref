@@ -27,7 +27,7 @@ Other settings:
 
 `shape.json` holds row counts and distributions, never row contents.
 `synthetic.py` builds a database from it using the real migrations, so the indexes match production.
-Table statistics are gathered with `PRAGMA optimize`, as a deployed database gets them after each ingest or solve.
+Table statistics are gathered with `Database.optimize`, as a deployed database gets them after each ingest or solve.
 
 Refresh it from the deployed database with:
 

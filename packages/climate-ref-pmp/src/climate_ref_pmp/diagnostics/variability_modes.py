@@ -13,7 +13,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
@@ -150,7 +150,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                 source_type="obs4REF",
                                 facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
                             ),
-                            CMIP7Request(
+                            ConvertedCMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",
                                 facets={
                                     "source_id": "ACCESS-ESM1-5",
@@ -204,7 +204,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                 slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
                                 facets={"source_id": "20CR-V2", "variable_id": "psl"},
                             ),
-                            CMIP7Request(
+                            ConvertedCMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",
                                 facets={
                                     "source_id": "ACCESS-ESM1-5",

@@ -1,120 +1,196 @@
 """
-Typed, detached read surface for datasets.
+Which datasets are in the database?
 
+Use this to find the model, observation or reanalysis datasets that REF has ingested,
+for example all CMIP6 datasets for a given model, or the files of one dataset.
 [DatasetsReader][climate_ref.results.datasets.DatasetsReader] is reached via
-[Reader.datasets][climate_ref.results.values.Reader.datasets]. It executes the shared
-[select_datasets][climate_ref.models.dataset_query.select_datasets] query (also used by
-``adapter.load_catalog``) and maps the rows into detached DTOs that outlive the session.
+[Reader.datasets][climate_ref.results.reader.Reader.datasets].
+It lists one source type at a time (CMIP6, CMIP7, obs4MIPs and so on).
 
-The filter and query builder live in the models layer
-([climate_ref.models.dataset_query][climate_ref.models.dataset_query]); ``DatasetFilter`` is
-re-exported here so callers construct it from ``climate_ref.results``.
+It returns:
+
+* [DatasetCollection][climate_ref.results.datasets.DatasetCollection]: a list of datasets,
+  with ``to_pandas()`` for a table.
+* [DatasetView][climate_ref.results.datasets.DatasetView]: one dataset.
+* [DatasetFileView][climate_ref.results.datasets.DatasetFileView]: one file of a dataset.
+
+``DatasetFilter`` chooses which datasets to keep.
+Import it from ``climate_ref.results``.
+It describes datasets rather than executions, so it does not share fields with the filters in
+[climate_ref.results.filters][climate_ref.results.filters].
+
+Examples
+--------
+All CMIP6 datasets in the database, as a table:
+
+```python
+from climate_ref.results import DatasetFilter, Reader
+from climate_ref_core.source_types import SourceDatasetType
+
+with Database.from_config(config, read_only=True) as db:
+    reader = Reader(db)
+    cmip6 = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6))
+    df = cmip6.to_pandas()
+```
 """
 
-from collections.abc import Iterator, Mapping
+import functools
+from collections.abc import Mapping
 from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy import Select, func, select
+from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, selectin_polymorphic, selectinload
 
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models.dataset import Dataset
-from climate_ref.models.dataset_query import DatasetFilter, select_datasets
+from climate_ref.models.dataset_query import DatasetFilter
+from climate_ref.results._page import Page
+from climate_ref.results.queries import count, paginate, select_datasets
 from climate_ref_core.source_types import SourceDatasetType
 
-__all__ = ["DatasetFilter", "select_datasets"]
+__all__ = ["DatasetFilter"]
 
 
 @attrs.frozen(kw_only=True)
 class DatasetFileView:
-    """A single dataset file, detached from the ORM. Times are raw stored strings (no cftime)."""
+    """
+    One netCDF file of a dataset.
+
+    Times are the strings stored in the database, not parsed dates.
+    Get these from ``DatasetView.files``, which is only filled by ``list(..., include_files=True)``.
+
+    Examples
+    --------
+    The files of every CMIP6 ``tas`` dataset for ACCESS-CM2:
+
+    ```python
+    filters = DatasetFilter(
+        source_type=SourceDatasetType.CMIP6,
+        facets={"source_id": "ACCESS-CM2", "variable_id": "tas"},
+    )
+    for dataset in reader.datasets.list(filters, include_files=True):
+        for file in dataset.files:
+            print(file.path, file.start_time, file.end_time)
+    ```
+    """
 
     path: str
-    """Path to the file."""
+    """Path to the file on disk."""
 
     start_time: str | None
-    """Start of the file's time range, as a raw stored string."""
+    """Start of the file's time range, as the text stored in the database."""
 
     end_time: str | None
-    """End of the file's time range, as a raw stored string."""
+    """End of the file's time range, as the text stored in the database."""
 
     tracking_id: str | None
-    """The file's tracking ID, when present."""
+    """The file's ``tracking_id`` global attribute, when present."""
 
 
 @attrs.frozen(kw_only=True)
 class DatasetView:
-    """A single dataset, detached from the ORM."""
+    """
+    One dataset, such as one CMIP6 model, experiment, member, table, variable and grid at one version.
+
+    Returned by [DatasetsReader.get][climate_ref.results.datasets.DatasetsReader.get]
+    and held in a [DatasetCollection][climate_ref.results.datasets.DatasetCollection].
+
+    Examples
+    --------
+    Look up one dataset and print its model and experiment:
+
+    ```python
+    with Database.from_config(config, read_only=True) as db:
+        dataset = Reader(db).datasets.get(slug)
+        if dataset is not None:
+            print(dataset.facets["source_id"], dataset.facets["experiment_id"])
+    ```
+    """
 
     id: int
-    """Primary key of the underlying ``Dataset`` row."""
+    """The dataset's id in the database."""
 
     slug: str
-    """The dataset's slug."""
+    """
+    The dataset's unique name.
+
+    For example ``"CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Omon.tos.gn.v20210318"``.
+    """
 
     dataset_type: SourceDatasetType
-    """The dataset's source type (e.g. CMIP6, obs4MIPs)."""
+    """The dataset's source type, e.g. ``SourceDatasetType.CMIP6`` or ``SourceDatasetType.obs4MIPs``."""
 
     finalised: bool
-    """Whether the dataset was registered via the complete (netCDF-opening) parser."""
+    """
+    ``True`` if REF read the metadata from inside every file.
+
+    ``False`` means it used only the file and folder names.
+    """
 
     retracted_at: Any
-    """When the dataset was retracted, or ``None`` while it is active."""
+    """When the dataset was retracted, or ``None`` if it has not been."""
 
     created_at: Any
-    """Timestamp the dataset was created."""
+    """When the dataset was first ingested, as a ``datetime``."""
 
     updated_at: Any
-    """Timestamp the dataset was last updated."""
+    """When the dataset's record was last changed, as a ``datetime``."""
 
     facets: Mapping[str, object]
-    """Dataset-specific metadata, keyed by the adapter's ``dataset_specific_metadata`` fields."""
+    """
+    The dataset's facets by name, e.g. ``source_id``, ``experiment_id`` and ``member_id`` for CMIP6.
+
+    The names depend on ``dataset_type``.
+    """
 
     files: tuple[DatasetFileView, ...]
-    """The dataset's files; empty unless requested with ``include_files=True``."""
+    """The dataset's files. This is empty unless the dataset came from ``list(..., include_files=True)``."""
 
 
 @attrs.frozen(kw_only=True)
-class DatasetCollection:
+class DatasetCollection(Page[DatasetView]):
     """
-    An immutable page of datasets plus collection-level metadata.
+    The datasets that ``reader.datasets.list`` found.
 
-    ``total_count`` is the number of datasets matching the filter *before* pagination, so a caller
-    can tell there are more rows than the returned page. ``offset``/``limit`` echo back the
-    pagination applied to produce ``items`` (``limit`` is ``None`` when the whole result was
-    returned).
+    Loop over it, or use ``len()``, to get the [DatasetView][climate_ref.results.datasets.DatasetView]
+    objects on this page.
+    Call ``to_pandas()`` to get a table.
+    ``total_count`` is the number of matching datasets before ``offset`` and ``limit``.
+
+    Examples
+    --------
+    The first 20 CMIP6 datasets, and how many there are in all:
+
+    ```python
+    with Database.from_config(config, read_only=True) as db:
+        page = Reader(db).datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6), limit=20)
+        print(len(page), "of", page.total_count)
+        for dataset in page:
+            print(dataset.slug)
+    ```
     """
-
-    items: tuple[DatasetView, ...]
-    """The datasets on this page."""
-
-    total_count: int
-    """Total datasets matching the filter before ``offset``/``limit``."""
-
-    offset: int
-    """Rows skipped before this page."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[DatasetView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
 
     def to_pandas(self) -> pd.DataFrame:
         """
-        DataFrame with one row per dataset; columns are base fields plus the facet dict expanded.
+        Put the datasets in a pandas table with one row per dataset.
 
-        The base columns (``id, slug, dataset_type, finalised, retracted_at, created_at, updated_at``)
-        are emitted explicitly even when the collection is empty,
-        so callers can select columns / build an empty table without special-casing.
-        Facet columns are dynamic (they depend on the source type queried)
-        and so are only present when at least one row has them.
+        The columns are ``id``, ``slug``, ``dataset_type``, ``finalised``, ``retracted_at``,
+        ``created_at`` and ``updated_at``, followed by one column per facet.
+        ``dataset_type`` holds the string value, such as ``"cmip6"``.
+        An empty collection still has the base columns, so you can select from it without a special case.
+        Facet columns depend on the source type, so an empty collection has none.
+
+        Examples
+        --------
+        Pick out the model and experiment of each dataset:
+
+        ```python
+        df = page.to_pandas()
+        df[["slug", "source_id", "experiment_id"]]
+        ```
         """
         base_columns = ["id", "slug", "dataset_type", "finalised", "retracted_at", "created_at", "updated_at"]
         records = []
@@ -133,6 +209,12 @@ class DatasetCollection:
         return pd.DataFrame.from_records(records, columns=base_columns if not records else None)
 
 
+@functools.cache
+def _dataset_specific_metadata(source_type: str) -> tuple[str, ...]:
+    # Building an adapter loads the default config, too slow to repeat for every row.
+    return tuple(get_dataset_adapter(source_type).dataset_specific_metadata)
+
+
 def _dataset_subtypes() -> list[type[Dataset]]:
     """Every concrete ``Dataset`` subclass, for polymorphic eager-loading."""
     return [m.class_ for m in Dataset.__mapper__.polymorphic_map.values()]
@@ -140,17 +222,57 @@ def _dataset_subtypes() -> list[type[Dataset]]:
 
 class DatasetsReader:
     """
-    Dataset read domain.
+    Which datasets has REF ingested?
 
-    Constructed from a [Database][climate_ref.database.Database], which owns the session.
+    Reach it as ``Reader(db).datasets``.
+    Use ``list`` to search by source type and facets, and ``get`` to fetch one dataset by its slug.
+    The results can be used after the database is closed.
 
-    All read methods return detached DTOs that outlive the session.
+    ``list`` needs a ``DatasetFilter`` with a ``source_type``, unlike the other readers,
+    whose ``filters`` argument is optional.
+    Each source type has different facets, so a listing has to choose one.
+    ``get`` takes only a slug, because a slug identifies a dataset of any source type.
 
-    ``list`` requires a ``DatasetFilter`` (with its required ``source_type``), so unlike the other
-    readers -- whose ``filters`` argument is optional and defaults to "everything" -- there is no
-    useful all-datasets default here. This is a deliberate, documented divergence from that shared
-    contract: dataset facet columns are per-type, so a typed listing has to choose the type. ``get``
-    keeps taking a bare slug, which is globally unique and needs no ``source_type``.
+    Examples
+    --------
+    Describe which datasets you want with a [DatasetFilter][climate_ref.models.dataset_query.DatasetFilter].
+    Only ``source_type`` is required, and this does not need a database.
+    A single facet value can be a string, and several values are alternatives:
+
+    >>> from climate_ref.results import DatasetFilter
+    >>> from climate_ref_core.source_types import SourceDatasetType
+    >>> filters = DatasetFilter(
+    ...     source_type=SourceDatasetType.CMIP6,
+    ...     facets={"source_id": "ACCESS-ESM1-5", "experiment_id": ["historical", "ssp126"]},
+    ...     slug_contains="Omon",
+    ... )
+    >>> filters.latest_only
+    True
+    >>> filters.facets
+    {'source_id': ('ACCESS-ESM1-5',), 'experiment_id': ('historical', 'ssp126')}
+
+    By default ``latest_only`` is ``True``, so you get the newest version of each dataset.
+    Pass the filter to ``list`` to get the matching datasets and their files:
+
+    ```python
+    with Database.from_config(config, read_only=True) as db:
+        reader = Reader(db)
+        page = reader.datasets.list(filters, limit=50, include_files=True)
+        for dataset in page:
+            print(dataset.slug, [f.path for f in dataset.files])
+    ```
+
+    Every version of each dataset, including retracted ones (``include_retracted``):
+
+    ```python
+    everything = DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False, include_retracted=True)
+    ```
+
+    The datasets that execution 42 used:
+
+    ```python
+    used = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_id=42))
+    ```
     """
 
     def __init__(self, database: Database, *, session: Session | None = None) -> None:
@@ -163,8 +285,8 @@ class DatasetsReader:
         return self._session if self._session is not None else self._db.session
 
     def _to_view(self, dataset: Dataset, *, include_files: bool) -> DatasetView:
-        adapter = get_dataset_adapter(dataset.dataset_type.value)
-        facets = {k: getattr(dataset, k) for k in adapter.dataset_specific_metadata if hasattr(dataset, k)}
+        fields = _dataset_specific_metadata(dataset.dataset_type.value)
+        facets = {k: getattr(dataset, k) for k in fields if hasattr(dataset, k)}
         files = (
             tuple(
                 DatasetFileView(
@@ -189,10 +311,10 @@ class DatasetsReader:
 
     def _base_statement(self, filter: DatasetFilter) -> Select[Any]:  # noqa: A002
         """
-        Build the (unpaginated, unordered) ``SELECT`` over the concrete entity for the filter.
+        Build the unpaginated ``SELECT`` over the dataset class for the filter's source type.
 
-        Deduplication to the latest version happens in SQL via a ``RANK`` window keyed off the
-        concrete adapter's ``dataset_id_metadata`` (inert when ``filter.latest_only`` is ``False``).
+        Keeping only the latest version is done in SQL, partitioned by the adapter's ``dataset_id_metadata``.
+        It does nothing when ``filter.latest_only`` is ``False``.
         """
         adapter = get_dataset_adapter(filter.source_type.value)
         return select_datasets(filter, latest_group_by=adapter.dataset_id_metadata)
@@ -204,42 +326,98 @@ class DatasetsReader:
         offset: int = 0,
         limit: int | None = None,
         include_files: bool = False,
+        with_count: bool = True,
     ) -> DatasetCollection:
         """
-        Query one source type's datasets, optionally scoped to an execution or diagnostic.
+        Which datasets of one source type are in the database?
 
-        ``filters`` is required (its ``source_type`` picks the concrete type and hence the facet
-        columns). Deduplication to the latest version (``filters.latest_only``, the default) happens
-        in SQL via a ``RANK`` window keyed off the adapter's ``dataset_id_metadata``, so the default
-        call returns exactly one row per dataset rather than every version.
+        The ``source_type`` of ``filters`` picks the type, and so the facets you can filter on.
+        By default only the latest version of each dataset is returned.
+        Set ``latest_only=False`` on the filter to get every version.
 
-        Pagination (``offset``/``limit``) is applied in SQL after dedup, over rows ordered by
-        ``(slug, id)`` so paging is deterministic even when two datasets share a slug. ``total_count``
-        is computed from a separate unpaged count over the same deduplicated statement.
+        Datasets are sorted by slug, so paging is stable.
+        ``offset`` and ``limit`` apply after older versions are dropped.
+
+        Parameters
+        ----------
+        filters
+            Which datasets to keep, e.g. a source type plus ``facets={"source_id": "ACCESS-CM2"}``.
+            Only ``source_type`` is required.
+        offset
+            Number of datasets to skip.
+        limit
+            Maximum number of datasets to return, or ``None`` for all of them.
+        include_files
+            Also fill ``DatasetView.files`` with each dataset's files.
+        with_count
+            Fill ``total_count`` with the number of matches before ``offset`` and ``limit``.
+            Pass ``False`` to skip counting on a large database, which leaves ``total_count`` as ``None``.
+
+        Returns
+        -------
+        DatasetCollection
+            The datasets on this page.
+
+        Raises
+        ------
+        ValueError
+            If a name in ``filters.facets`` is not a facet of the source type.
+
+        Examples
+        --------
+        Which CMIP6 ``tas`` datasets for ACCESS-CM2 are in the database?
+
+        ```python
+        with Database.from_config(config, read_only=True) as db:
+            found = Reader(db).datasets.list(
+                DatasetFilter(
+                    source_type=SourceDatasetType.CMIP6,
+                    facets={"source_id": "ACCESS-CM2", "variable_id": "tas"},
+                )
+            )
+            df = found.to_pandas()
+            df[["experiment_id", "member_id", "version"]]
+        ```
         """
         base_stmt = self._base_statement(filters)
-        count_stmt = select(func.count()).select_from(base_stmt.subquery())
-        total_count = self.session.execute(count_stmt).scalar_one()
+        total_count = count(self.session, base_stmt) if with_count else None
 
         stmt = base_stmt.order_by(None).order_by(Dataset.slug, Dataset.id)
         if include_files:
             stmt = stmt.options(selectinload(Dataset.files))  # type: ignore[attr-defined]
-        if limit is not None:
-            stmt = stmt.offset(offset).limit(limit)
-        elif offset:
-            stmt = stmt.offset(offset)
 
-        rows = list(self.session.execute(stmt).scalars().unique().all())
+        rows = list(self.session.execute(paginate(stmt, offset, limit)).scalars().unique().all())
         items = tuple(self._to_view(r, include_files=include_files) for r in rows)
 
         return DatasetCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
     def get(self, slug: str) -> DatasetView | None:
         """
-        Fetch one dataset by slug, or ``None`` when no dataset has that slug.
+        Is this dataset in the database?
 
-        When multiple rows share a slug (different versions), the latest is returned, ranked by
-        ``version_key`` then ``id`` so the choice is deterministic on a version tie.
+        Returns the dataset with this slug, or ``None`` when there is none.
+        If several versions share the slug, the newest is returned.
+        The files are not loaded, so ``DatasetView.files`` is empty.
+        Use ``list(..., include_files=True)`` when you need them.
+
+        Parameters
+        ----------
+        slug
+            The dataset's unique name.
+
+        Returns
+        -------
+        DatasetView or None
+            The dataset, or ``None`` if no dataset has that slug.
+
+        Examples
+        --------
+        ```python
+        with Database.from_config(config, read_only=True) as db:
+            dataset = Reader(db).datasets.get(
+                "CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Omon.tos.gn.v20210318"
+            )
+        ```
         """
         stmt = (
             select(Dataset)

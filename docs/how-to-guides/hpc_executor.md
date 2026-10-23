@@ -36,46 +36,46 @@ The HPCExecutor will use the slurm provider and srun launch from parsl to submit
 2. Edit the `ref.toml` under the config directory if not create one.
 3. Change the ref executor to HPCExecutor as follows:
 
-```toml
-[executor]
-executor = "climate_ref.executor.HPCExecutor"
-```
+    ```toml
+    [executor]
+    executor = "climate_ref.executor.HPCExecutor"
+    ```
 
 4. Add the configuration or options for the HPCExecutor based on your system and your account. The example of configuration used in the DOE Perlmutter HPC is as follows:
 
-```toml
-[executor.config]
-scheduler = "slurm"
-account = "m2467"
-req_nodes = 1
-walltime = "00:30:00"
-username = "minxu"
-qos = "debug"
-scheduler_options = "#SBATCH -C cpu"
-cores_per_worker = 1
-max_workers_per_node = 64
-```
+    ```toml
+    [executor.config]
+    scheduler = "slurm"
+    account = "m2467"
+    req_nodes = 1
+    walltime = "00:30:00"
+    username = "your-username"
+    qos = "debug"
+    scheduler_options = "#SBATCH -C cpu"
+    cores_per_worker = 1
+    max_workers_per_node = 64
+    ```
 
-If you are using NCI Gadi, you can use the following configuration:
+    If you are using NCI Gadi, you can use the following configuration:
 
-```toml
-[executor.config]
-scheduler = "pbs"
-account = "m1234"
-queue = "normal"
-walltime = "00:30:00"
-username = "minxu"
-ncpus = 1
-mem = "4GB"
-jobfs = "10GB"
-storage = "/scratch/XX" # Make sure you have access to the storage
-scheduler_options = ""
-cores_per_worker = 1
-max_workers_per_node = 64
-```
+    ```toml
+    [executor.config]
+    scheduler = "pbs"
+    account = "m1234"
+    queue = "normal"
+    walltime = "00:30:00"
+    username = "your-username"
+    ncpus = 1
+    mem = "4GB"
+    jobfs = "10GB"
+    storage = "/scratch/XX" # Make sure you have access to the storage
+    scheduler_options = ""
+    cores_per_worker = 1
+    max_workers_per_node = 64
+    ```
 
-1. Run `ref solve` in the session of `screen` or `tmux` or directly on the login nodes. It will have a master process running on the login nodes to monitor and submit jobs to run the real diagnostics on compute nodes.
-2. Check the logs under the `runinfo` directory and `${REF_CONFIGURATION}/log` to see if there are any errors. Once the master process is done, please run `ref executions list-groups` to check the results or `ref executions inspect id` to see the error message from the providers.
+5. Run `ref solve` in the session of `screen` or `tmux` or directly on the login nodes. It will have a master process running on the login nodes to monitor and submit jobs to run the real diagnostics on compute nodes.
+6. Check the logs under the `runinfo` directory and `${REF_CONFIGURATION}/log` to see if there are any errors. Once the master process is done, please run `ref executions list-groups` to check the results or `ref executions inspect id` to see the error message from the providers.
 
 /// admonition | Note
 

@@ -22,7 +22,7 @@ from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import Reader
+from climate_ref.results import Reader, ResourceFilter
 from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import (
     DataRequirement,
@@ -254,11 +254,13 @@ class TestAggregation:
                 key=f"agg-{repeat}",
             )
 
-        profiles = Reader(db_with_spending_provider).resources.profiles(provider_contains=["spending"])
+        profiles = Reader(db_with_spending_provider).resources.profiles(
+            ResourceFilter(provider_contains=["spending"])
+        )
 
         assert len(profiles) == 1
         profile = profiles[0]
-        assert profile.n_samples == 2
-        assert profile.n_excluded == 0
-        assert profile.peak_memory_p95 > 0
-        assert profile.recommended_memory_bytes >= profile.peak_memory_p95
+        assert profile.sample_count == 2
+        assert profile.excluded_execution_count == 0
+        assert profile.peak_memory_bytes_p95 > 0
+        assert profile.recommended_memory_bytes >= profile.peak_memory_bytes_p95

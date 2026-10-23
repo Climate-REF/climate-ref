@@ -190,7 +190,8 @@ see [Configuration](configuration.md) and the [Executors how-to guide](how-to-gu
 After a successful execution, its outputs are stored and made available through an API, a web interface, or the CLI.
 An [example API and frontend](https://github.com/Climate-REF/ref-app) is under active development
 and is intended to be deployable at modelling centres as well as used to surface results via ESGF.
-A Python API for querying a local set of results is also planned.
+A Python API for querying a local set of results is described in
+[Reading results locally](how-to-guides/reading-results-locally.md).
 For how to locate result files on disk today, see [Visualise](getting-started/05-visualise.md).
 
 ## Where to next

@@ -8,10 +8,20 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import ExecutionOutput, ResultOutputType
+from climate_ref.models.execution import (
+    ExecutionFailureReason,
+    ExecutionOutput,
+    ResultOutputType,
+)
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import ExecutionGroupFilter, MetricValueFilter, OutlierPolicy, Reader
-from climate_ref.results.executions import select_execution_outputs, select_execution_statistics
+from climate_ref.results import (
+    DiagnosticFilter,
+    ExecutionGroupFilter,
+    MetricValueFilter,
+    OutlierPolicy,
+    Reader,
+)
+from climate_ref.results.queries import select_diagnostics, select_execution_outputs
 
 
 def test_import_smoke() -> None:
@@ -154,6 +164,23 @@ class TestGroupsFilter:
         assert "key2" in keys
         assert "key3" not in keys
 
+    def test_exact_diagnostic_slug(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        coll = reader.executions.groups(ExecutionGroupFilter(diagnostic_slug="enso_tel"))
+        assert {g.diagnostic_slug for g in coll} == {"enso_tel"}
+        assert reader.executions.groups(ExecutionGroupFilter(diagnostic_slug="enso")).total_count == 0
+
+    def test_exact_provider_slug(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        coll = reader.executions.groups(ExecutionGroupFilter(provider_slug="pmp"))
+        assert {g.provider_slug for g in coll} == {"pmp"}
+        assert reader.executions.groups(ExecutionGroupFilter(provider_slug="pm")).total_count == 0
+
+    def test_exact_and_contains_combine(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        filters = ExecutionGroupFilter(provider_slug="pmp", diagnostic_contains=["enso"])
+        assert {g.key for g in reader.executions.groups(filters)} == {"key1"}
+
     def test_dirty(self, db_with_groups):
         reader = Reader(db_with_groups)
         coll = reader.executions.groups(ExecutionGroupFilter(dirty=True))
@@ -182,23 +209,15 @@ class TestGroupsFilter:
 
     def test_facet_bare_key(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"source_id": ["GFDL-ESM4"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"source_id": ["GFDL-ESM4"]}))
         keys = {g.key for g in coll}
         assert keys == {"key1"}
 
     def test_facet_dataset_type_scoped_key(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"cmip6.source_id": ["GFDL-ESM4"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"cmip6.source_id": ["GFDL-ESM4"]}))
         keys = {g.key for g in coll}
         assert keys == {"key1"}
-
-    def test_bare_string_rejected_diagnostic_contains(self):
-        with pytest.raises(TypeError):
-            ExecutionGroupFilter(diagnostic_contains="enso")
-
-    def test_bare_string_rejected_provider_contains(self):
-        with pytest.raises(TypeError):
-            ExecutionGroupFilter(provider_contains="pmp")
 
 
 class TestGroupsPromotedVersion:
@@ -258,6 +277,78 @@ class TestGroupsPagination:
         assert page_1 + page_2 + page_3 == full_ids  # no overlap, no gap
 
 
+GROUP_FILTERS = {
+    "unfiltered": (ExecutionGroupFilter(), 7),
+    "diagnostic_contains": (ExecutionGroupFilter(diagnostic_contains=["ENSO"]), 2),
+    "provider_contains": (ExecutionGroupFilter(provider_contains=["esmvaltool"]), 5),
+    "diagnostic_and_provider": (
+        ExecutionGroupFilter(diagnostic_contains=["enso"], provider_contains=["pmp"]),
+        1,
+    ),
+    "dirty": (ExecutionGroupFilter(dirty=True), 1),
+    "not_dirty": (ExecutionGroupFilter(dirty=False), 6),
+    "successful": (ExecutionGroupFilter(successful=True), 4),
+    "not_successful": (ExecutionGroupFilter(successful=False), 3),
+    "latest_successful": (ExecutionGroupFilter(latest_successful=True), 4),
+    "latest_successful_and_successful": (ExecutionGroupFilter(latest_successful=True, successful=True), 4),
+    "failure_reasons": (ExecutionGroupFilter(failure_reasons=[ExecutionFailureReason.DiagnosticError]), 1),
+    "other_failure_reasons": (ExecutionGroupFilter(failure_reasons=[ExecutionFailureReason.SystemError]), 0),
+    "provider_successful_not_dirty": (
+        ExecutionGroupFilter(provider_contains=["esmvaltool"], successful=True, dirty=False),
+        1,
+    ),
+    "include_superseded": (ExecutionGroupFilter(include_superseded=True), 7),
+}
+
+
+@pytest.fixture
+def db_with_failure(db_with_groups):
+    """``db_with_groups`` with key3's failed execution given a failure reason."""
+    session = db_with_groups.session
+    with session.begin_nested() if session.in_transaction() else session.begin():
+        execution = (
+            session.query(Execution).filter_by(execution_group_id=db_with_groups.group_ids["key3"]).one()
+        )
+        execution.failure_reason = ExecutionFailureReason.DiagnosticError.value
+    return db_with_groups
+
+
+@pytest.mark.parametrize(("filters", "expected"), GROUP_FILTERS.values(), ids=list(GROUP_FILTERS))
+class TestGroupsSqlPaging:
+    """Without ``selectors``, ``groups()`` counts and pages in SQL, separately from ``group_rows()``."""
+
+    def test_count_matches_rows(self, db_with_failure, filters, expected):
+        reader = Reader(db_with_failure).executions
+        rows = reader.group_rows(filters)
+        coll = reader.groups(filters)
+
+        assert coll.total_count == len(coll) == len(rows) == expected
+        assert [g.id for g in coll] == [eg.id for eg, _ in rows]
+        assert [g.latest.id if g.latest else None for g in coll] == [
+            latest.id if latest else None for _, latest in rows
+        ]
+
+    def test_pages_are_slices_of_the_full_list(self, db_with_failure, filters, expected):
+        reader = Reader(db_with_failure).executions
+        full = reader.groups(filters)
+
+        for offset in range(len(full) + 1):
+            page = reader.groups(filters, offset=offset, limit=2)
+            assert page.total_count == expected
+            assert page.items == full.items[offset : offset + 2]
+        assert reader.groups(filters, offset=2).items == full.items[2:]
+
+
+class TestGroupsWithCount:
+    def test_without_count(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        full = reader.executions.groups(limit=3)
+        page = reader.executions.groups(limit=3, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+
+
 class TestGroupsLatestSuccessful:
     def test_latest_successful_surfaces_earlier_success(self, db_with_groups):
         # key3's only execution failed. Add an earlier successful run: successful=True (post-rank)
@@ -285,6 +376,30 @@ class TestGroupsLatestSuccessful:
         assert view.latest is not None
         assert view.latest.successful is True
         assert view.latest.output_fragment == "key3-ok"
+
+
+class TestGroupRows:
+    def test_matches_groups(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        filters = ExecutionGroupFilter(provider_contains=["pmp"])
+        rows = reader.executions.group_rows(filters)
+        views = reader.executions.groups(filters)
+        assert [eg.id for eg, _ in rows] == [g.id for g in views]
+        assert [latest.id if latest else None for _, latest in rows] == [
+            g.latest.id if g.latest else None for g in views
+        ]
+
+    def test_returns_live_orm_rows(self, db_with_groups):
+        rows = Reader(db_with_groups).executions.group_rows()
+        assert rows
+        for eg, latest in rows:
+            assert isinstance(eg, ExecutionGroup)
+            assert latest is None or isinstance(latest, Execution)
+            assert eg in db_with_groups.session
+
+    def test_ordered_by_group_id(self, db_with_groups):
+        ids = [eg.id for eg, _ in Reader(db_with_groups).executions.group_rows()]
+        assert ids == sorted(ids)
 
 
 class TestGroupAndExecutionById:
@@ -377,7 +492,7 @@ class TestGroupsToPandas:
 class TestGroupLatestMapping:
     def test_latest_none_when_no_executions(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"experiment_id": ["ssp126"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"experiment_id": ["ssp126"]}))
         assert len(coll) == 1
         assert coll.items[0].latest is None
         assert coll.items[0].successful is None
@@ -401,7 +516,7 @@ class TestGroupLatestMapping:
 
     def test_latest_running(self, db_with_groups):
         reader = Reader(db_with_groups)
-        coll = reader.executions.groups(ExecutionGroupFilter(facets={"experiment_id": ["ssp245"]}))
+        coll = reader.executions.groups(ExecutionGroupFilter(selectors={"experiment_id": ["ssp245"]}))
         assert len(coll) == 1
         view = coll.items[0]
         assert view.latest is not None
@@ -409,30 +524,18 @@ class TestGroupLatestMapping:
         assert view.successful is None
 
 
-class TestSelectExecutionStatistics:
+class TestSelectDiagnosticCounts:
     def test_raw_rows(self, db_with_groups):
-        stmt = select_execution_statistics()
+        stmt = select_diagnostics()
         rows = db_with_groups.session.execute(stmt).all()
-        by_diag = {row.diagnostic: row for row in rows}
+        by_diag = {row.diagnostic_slug: row for row in rows}
         assert "enso_tel" in by_diag
         row = by_diag["enso_tel"]
-        assert row.total == 1
+        assert row.group_count == 1
         assert row.successful == 1
         assert row.failed == 0
         assert row.running == 0
         assert row.not_started == 0
-
-    def test_raw_rows_provider_filter(self, db_with_groups):
-        stmt = select_execution_statistics(provider_contains=["pmp"])
-        rows = db_with_groups.session.execute(stmt).all()
-        providers = {row.provider for row in rows}
-        assert providers == {"pmp"}
-
-    def test_raw_rows_diagnostic_filter(self, db_with_groups):
-        stmt = select_execution_statistics(diagnostic_contains=["enso"])
-        rows = db_with_groups.session.execute(stmt).all()
-        diagnostics = {row.diagnostic for row in rows}
-        assert diagnostics == {"enso_tel", "enso-characteristics"}
 
     def test_tied_created_at_does_not_double_count(self, db_with_groups):
         """Two executions in the same group tied on ``created_at`` must not double-count that
@@ -464,20 +567,19 @@ class TestSelectExecutionStatistics:
                 )
             )
 
-        stmt = select_execution_statistics(diagnostic_contains=["enso_tel"])
+        stmt = select_diagnostics(DiagnosticFilter(diagnostic_contains=["enso_tel"]))
         rows = db_with_groups.session.execute(stmt).all()
-        by_diag = {row.diagnostic: row for row in rows}
+        by_diag = {row.diagnostic_slug: row for row in rows}
         row = by_diag["enso_tel"]
-        # Still one execution group, still one status count -- not doubled by the tie.
-        assert row.total == 1
+        # Still one execution group, still one status count, not doubled by the tie.
+        assert row.group_count == 1
         assert row.successful == 1
 
 
-class TestStatistics:
+class TestStatusCounts:
     def test_status_counts(self, db_with_groups):
         reader = Reader(db_with_groups)
-        stats = reader.executions.statistics()
-        by_diag = {s.diagnostic: s for s in stats}
+        by_diag = {d.diagnostic_slug: d.groups for d in reader.diagnostics.list()}
 
         # sea-ice-area-basic has key4 (successful), key5 (successful, dirty),
         # key6 (not started), key7 (running).
@@ -488,18 +590,6 @@ class TestStatistics:
         assert sea_ice.running == 1
         assert sea_ice.dirty == 1
         assert sea_ice.failed == 0
-
-    def test_provider_substring_filter(self, db_with_groups):
-        reader = Reader(db_with_groups)
-        stats = reader.executions.statistics(provider_contains=["esmvaltool"])
-        providers = {s.provider for s in stats}
-        assert providers == {"esmvaltool"}
-
-    def test_diagnostic_substring_filter(self, db_with_groups):
-        reader = Reader(db_with_groups)
-        stats = reader.executions.statistics(diagnostic_contains=["enso"])
-        diagnostics = {s.diagnostic for s in stats}
-        assert diagnostics == {"enso_tel", "enso-characteristics"}
 
 
 class TestLatestExecution:
@@ -643,3 +733,83 @@ class TestReaderArtifactsGating:
     def test_works_with_paths(self, db_with_groups, tmp_path):
         reader = Reader(db_with_groups, results=tmp_path)
         assert reader.artifacts is not None
+
+
+class TestSharedExecutionScope:
+    """Groups and diagnostics keep the same groups for the same shared fields."""
+
+    @staticmethod
+    def _retract_latest(db, key):
+        session = db.session
+        with session.begin_nested() if session.in_transaction() else session.begin():
+            group = session.query(ExecutionGroup).filter_by(key=key).one()
+            session.add(
+                Execution(
+                    execution_group_id=group.id,
+                    successful=True,
+                    output_fragment=f"{key}-retracted",
+                    dataset_hash=f"{key}-retracted",
+                    retracted=True,
+                )
+            )
+
+    @staticmethod
+    def _counts(reader, **fields):
+        groups = reader.executions.groups(ExecutionGroupFilter(**fields)).total_count
+        listed = sum(d.groups.total for d in reader.diagnostics.list(DiagnosticFilter(**fields)))
+        return groups, listed
+
+    def test_retracted_latest_drops_the_group_everywhere(self, db_with_groups):
+        self._retract_latest(db_with_groups, "key1")
+        reader = Reader(db_with_groups)
+
+        kept = self._counts(reader, include_retracted=True)
+        assert self._counts(reader) == tuple(n - 1 for n in kept)
+        keys = {g.key for g in reader.executions.groups()}
+        assert "key1" not in keys
+
+    def test_window_drops_groups_without_a_run_in_it(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        future = datetime.datetime(2999, 1, 1)
+        assert self._counts(reader, created_after=future) == (0, 0)
+
+        everything = self._counts(reader)
+        ran = self._counts(reader, created_before=future)
+        assert ran == tuple(n - 1 for n in everything)  # key6 has never run
+
+
+class TestGroupRules:
+    def test_group_ids_keep_a_group_that_never_ran(self, db_with_groups):
+        group_id = db_with_groups.group_ids["key6"]
+        coll = Reader(db_with_groups).executions.groups(ExecutionGroupFilter(execution_group_ids=group_id))
+        assert [g.id for g in coll] == [group_id]
+        assert coll.items[0].latest is None
+
+    def test_latest_successful_skips_a_retracted_success(self, db_with_groups):
+        session = db_with_groups.session
+        group_id = db_with_groups.group_ids["key1"]
+        session.query(Execution).filter_by(execution_group_id=group_id).one().retracted = True
+        session.add(
+            Execution(
+                execution_group_id=group_id,
+                successful=True,
+                output_fragment="key1-older",
+                dataset_hash="h",
+                created_at=datetime.datetime(2020, 1, 1),
+            )
+        )
+        session.commit()
+        coll = Reader(db_with_groups).executions.groups(
+            ExecutionGroupFilter(latest_successful=True, execution_group_ids=group_id)
+        )
+        assert coll.items[0].latest.output_fragment == "key1-older"
+
+    @pytest.mark.parametrize("field", ["diagnostic_contains", "provider_contains", "failure_reasons"])
+    def test_an_empty_list_matches_nothing(self, db_with_groups, field):
+        coll = Reader(db_with_groups).executions.groups(ExecutionGroupFilter(**{field: []}))
+        assert len(coll) == 0
+
+    @pytest.mark.parametrize("paging", [{"offset": -1}, {"limit": -1}])
+    def test_negative_paging_raises(self, db_with_groups, paging):
+        with pytest.raises(ValueError, match="must be >= 0"):
+            Reader(db_with_groups).executions.groups(**paging)

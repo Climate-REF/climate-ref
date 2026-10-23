@@ -1,0 +1,201 @@
+{
+  "catalog_hash": "9374499b493a2875e32529a6e50a5bda32b3e095",
+  "committed": {
+    "diagnostic.json": "d29f92348896edc9f3472d7634b0fa95c5ed766674fcf22fa75a907dee98e4cf",
+    "output.json": "1cf2f8e81e0949d72ce35dc30573f9523a599631162b86256634d8c5ff40e064",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "diagnostic_version": 3,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "913e331894808ce8854978ec0ee9b117ea06ef37659dfbf1a93112d58c442fd8",
+      "size": 1184
+    },
+    "executions/recipe/index.html": {
+      "sha256": "88de2b6d78d0081b45bd721a6e5e2193b329ab15efe1c1b1563f26e4f0fd2174",
+      "size": 52278
+    },
+    "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/UKESM1-3-LL_14duration_divedown.png": {
+      "sha256": "dd811e7a0107909b0158db874fdb3d954558a34555f71eebb9d57dd0004340a3",
+      "size": 119877
+    },
+    "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/UKESM1-3-LL_15diversity_divedown.png": {
+      "sha256": "ddf517265c041c9df48bf135ae6c380d8156b360f17cb782bba6db154007c30c",
+      "size": 211849
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/UKESM1-3-LL_10lifecycle_level_2.png": {
+      "sha256": "0c7a3acaa64154aec8f132b0430b1738430e9044c8de02335fa5db67496ec15c",
+      "size": 113044
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/UKESM1-3-LL_10lifecycle_level_3.png": {
+      "sha256": "4aacc5541e821a84cef9f319cbbe073149cfa43a213e5b3aea8607b72203ba2f",
+      "size": 178241
+    },
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/UKESM1-3-LL_10lifecycle_level_4.png": {
+      "sha256": "54a1ae0700375d3866ee229f0f5fbd4ebc43f2ea3e1c01b54e4525b552aaebe1",
+      "size": 264378
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/UKESM1-3-LL_09pattern.png": {
+      "sha256": "f8d1d91926aab63453a65615ef78a7384cfd1352941d6f2496c8824e6a42539b",
+      "size": 188989
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/UKESM1-3-LL_10lifecycle.png": {
+      "sha256": "9a2a0b45cd4678178ec3056a0bea5d97652b291a6244caecce1f3de7906d7846",
+      "size": 144889
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/UKESM1-3-LL_11amplitude.png": {
+      "sha256": "4e65e2089d6e5e2b93960709f570411a16fa1a1d48311560438bd90c65e269b1",
+      "size": 93302
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/UKESM1-3-LL_12seasonality.png": {
+      "sha256": "1dcdf991f5fb4373800656e855e2d7be223296e316c92fa5ead13d4c3be7e32a",
+      "size": 83108
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/UKESM1-3-LL_13asymmetry.png": {
+      "sha256": "b1423e88d15880bd4c4dedc8107c193816f5f687ec04ff6d0332b8178418eb0f",
+      "size": 83168
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/UKESM1-3-LL_14duration.png": {
+      "sha256": "7bc4c793d89663ad3ebdfebdbbd8934a1df5310f64fcec06a97b53defa602917",
+      "size": 86845
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/UKESM1-3-LL_15diversity.png": {
+      "sha256": "d84bd064f387f08d0389ad8082b2a9b8e2677a02a95bb25228df59e06e93e021",
+      "size": 92650
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/UKESM1-3-LL_09pattern_level_2.png": {
+      "sha256": "45539f7c19d60b3c010312c3fa1a86787e469c07a4e15cb12c8d643ab593fd36",
+      "size": 529019
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/UKESM1-3-LL_09pattern_level_3.png": {
+      "sha256": "fab8803e1602bac63260acd14e0e548816840cb5c8602b056c06d70448ae872e",
+      "size": 237713
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/UKESM1-3-LL_09pattern_level_4.png": {
+      "sha256": "2e507a0310d158379623fdbd332b0db517d8370dfc12c6e8bdcb8ae32e689fb6",
+      "size": 1155523
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/UKESM1-3-LL_11amplitude_level_2.png": {
+      "sha256": "77f4ac9e3d260f5f993b81c92b695fffd3713d67cd2f1d3ed960e86a0ed2f730",
+      "size": 168436
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/UKESM1-3-LL_11amplitude_level_3.png": {
+      "sha256": "e5541a31d506c79b9d374141d41222680d529422834246542c493e9a54ce7391",
+      "size": 520231
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/UKESM1-3-LL_12seasonality_level_2.png": {
+      "sha256": "1d1ece531c6589fe7cf38ed872943b277b7c8a1b5c676543abc496cbf3284568",
+      "size": 166031
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/UKESM1-3-LL_12seasonality_level_3.png": {
+      "sha256": "6406f0d5865a26be985becb9f6d9a9a47b31c34507e53bc616190bd9f1453408",
+      "size": 465173
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/UKESM1-3-LL_12seasonality_level_4.png": {
+      "sha256": "7b47c3d90e9f41eaf2c6ea85bddfde8610d6feca731458980fbc1944f89f2bbb",
+      "size": 284132
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/UKESM1-3-LL_12seasonality_level_5.png": {
+      "sha256": "81740d353e594fca5a18ca6eddc1fac35ec62b1d78d39e1e50526d8cd23d5f4c",
+      "size": 906450
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/UKESM1-3-LL_13asymmetry_level_2.png": {
+      "sha256": "7327390c6be63563dbfd3307282bbb90af599b77e8f36e529a1ca8aee354a73d",
+      "size": 180328
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/UKESM1-3-LL_13asymmetry_level_3.png": {
+      "sha256": "25c2d6d4d4d0a6be2fa82111a722fd0d770bc4907614799c07710660994ee69b",
+      "size": 833053
+    },
+    "executions/recipe/run/diagnostic_metrics/durationdiversity_script/diagnostic_provenance.yml": {
+      "sha256": "8c17f7ca4a30e5ba5089ffa6f33bf094fa380b39bed055ddd0ab11a0d9eff6be",
+      "size": 1909
+    },
+    "executions/recipe/run/diagnostic_metrics/lifecycle_script/diagnostic_provenance.yml": {
+      "sha256": "ca86a881946bdf08158cbb7307e45c5f9713e93fe2361edf49bd479c30c37541",
+      "size": 3166
+    },
+    "executions/recipe/run/diagnostic_metrics/metrics_script/diagnostic_provenance.yml": {
+      "sha256": "c8b9a23fe158c98f897a61d2b47c7d7b14f99cdd48a695d22805ab9beb929dee",
+      "size": 28921
+    },
+    "executions/recipe/run/diagnostic_metrics/pattern_script/diagnostic_provenance.yml": {
+      "sha256": "b29daeffd79b42257b9e9c16085579bfd9b2e84a50680cca5b5d8cfea966bc51",
+      "size": 3814
+    },
+    "executions/recipe/run/diagnostic_seas_skew_amp/seas_asym_amp_script/diagnostic_provenance.yml": {
+      "sha256": "9178ee3e446c5f5979743c0a05da80616a214b8860d1a5e240f12be4e1dc16e2",
+      "size": 10341
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_09pattern.nc": {
+      "sha256": "33d1b69e23958cea446f4ed55ce3390921642ac5d933342fc66d6541a86a3e45",
+      "size": 13318
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_10lifecycle.nc": {
+      "sha256": "1f280d22d2080449a044c2163e8b653fdc284cf9864ded2be14a7a3d75c1fe5b",
+      "size": 7196
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_11amplitude.nc": {
+      "sha256": "d2544b3cfc02008141866e7fc0ca3f3dd6111d2db098af7e6145c2c7858fefff",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_12seasonality.nc": {
+      "sha256": "70b962ebd754fd0f422812fad9a63226a36ea714a5d4b9ceb4e502cd779db355",
+      "size": 2951
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_13asymmetry.nc": {
+      "sha256": "7a58c9059af640bb485f0c958df5f497bb73c238c629353a1f3ede7270bcfc48",
+      "size": 3012
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_14duration.nc": {
+      "sha256": "5cec28fa7b8c0b9830e4d55a47891a9c8945f6e1ba3456745db0fd0d4a782e83",
+      "size": 2896
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_15diversity.nc": {
+      "sha256": "ff8ff65ee1f20d2ad06fcb156abf348fd2d9ec0dd1a84d653ad6abc27f5855f8",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/UKESM1-3-LL_tos_09pattern.nc": {
+      "sha256": "6e69b307a6c2d1a5a68ae5a5d514feeb81a29820baa8ecb669be9e4508d14d82",
+      "size": 13318
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/UKESM1-3-LL_tos_10lifecycle.nc": {
+      "sha256": "92834804e189ceae5b2632e3fb828d44f35a976d550ce1cb076a0ed409860a05",
+      "size": 7196
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/UKESM1-3-LL_tos_11amplitude.nc": {
+      "sha256": "f66dbc5d81ad647c1ca9efbbff2aa6ecbfb0d58bd8f16f83c6e36ae933cb7abe",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/UKESM1-3-LL_tos_12seasonality.nc": {
+      "sha256": "5da92453a238187989ee12eaddf8350b5824135121ce1a0b7921236ec4055db7",
+      "size": 2951
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/UKESM1-3-LL_tos_13asymmetry.nc": {
+      "sha256": "3b288ed618bce70d18d2045912f6dce7324d8dffd2b15552755bd170ce2324d4",
+      "size": 3012
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/UKESM1-3-LL_tos_14duration.nc": {
+      "sha256": "eb4c51f70611816342764a1cd1f00dc9301f1e64cb7c6c11066f558c5b4a76b3",
+      "size": 2896
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/UKESM1-3-LL_tos_15diversity.nc": {
+      "sha256": "ce190e3e3b979266ae7c95c3f9ad089298e4273c259c9eae71518f7ef18cb281",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/matrix.csv": {
+      "sha256": "d567a644adfdbc23eed3eaf83f846ea0d47cb59550df19fbee02d29641629aae",
+      "size": 301
+    },
+    "output.json": {
+      "sha256": "c480d81a91ade6b524c326134df1cd0e539b18e288bac618680eba399089b082",
+      "size": 17346
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 2,
+  "test_case_version": 2
+}

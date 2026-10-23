@@ -712,6 +712,7 @@ class TestLifecycleHooks:
         # These should not raise
         provider.setup_environment(mock_config)
         provider.fetch_data(mock_config)
+        assert provider.data_to_ingest(mock_config) == []
 
     def test_validate_setup_default_returns_true(self, mocker):
         """Test that default validate_setup returns True."""

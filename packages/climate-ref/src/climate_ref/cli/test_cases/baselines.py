@@ -178,7 +178,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
     ] = False,
     bump_version: Annotated[
         bool,
-        typer.Option(help="Increment test_case_version when authoring the manifest"),
+        typer.Option(help="Always increment test_case_version (else only when the committed bundle changes)"),
     ] = False,
     dry_run: Annotated[
         bool,
@@ -190,6 +190,9 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
 
     Runs each test case, stores its native snapshot in the writable store,
     and authors the committed ``manifest.json``'s ``native`` block.
+
+    The ``test_case_version`` is bumped when the committed bundle changed versus the previous manifest,
+    or always with ``--bump-version``.
 
     This requires write credentials and is generally run by the CI.
 
@@ -305,7 +308,8 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
         # is written ONLY here.
         promote_to_baseline(slot, paths)
         if previous is not None:
-            version = previous.test_case_version + 1 if bump_version else previous.test_case_version
+            bundle_changed = committed != previous.committed
+            version = previous.test_case_version + (1 if bump_version or bundle_changed else 0)
         else:
             version = 1
         _write_test_case_manifest(

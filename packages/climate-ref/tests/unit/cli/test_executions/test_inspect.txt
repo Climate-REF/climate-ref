@@ -4,6 +4,7 @@
 │ Provider: example                                                                                                                                                                                    │
 │ Dirty: False                                                                                                                                                                                         │
 │ Successful: True                                                                                                                                                                                     │
+│ Retracted: False                                                                                                                                                                                     │
 │ Failure reason: -                                                                                                                                                                                    │
 │ Created At: 2021-01-01 00:00:00                                                                                                                                                                      │
 │ Updated At: 2021-02-01 00:00:00                                                                                                                                                                      │

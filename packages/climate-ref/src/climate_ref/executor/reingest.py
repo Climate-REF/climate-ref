@@ -31,8 +31,9 @@ from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
     execution_datasets,
-    get_execution_group_and_latest_filtered,
 )
+from climate_ref.results.executions import ExecutionsReader
+from climate_ref.results.filters import ExecutionGroupFilter
 from climate_ref_core.datasets import (
     DatasetCollection,
     ExecutionDatasetCollection,
@@ -397,12 +398,13 @@ def get_executions_for_reingest(
         List of (ExecutionGroup, oldest Execution) tuples
     """
     # Use the existing filtered query to identify matching execution groups
-    results = get_execution_group_and_latest_filtered(
-        database.session,
-        diagnostic_filters=diagnostic_filters,
-        provider_filters=provider_filters,
-        successful=None if include_failed else True,
-        include_superseded=True,
+    results = ExecutionsReader(database).group_rows(
+        ExecutionGroupFilter(
+            diagnostic_contains=diagnostic_filters,
+            provider_contains=provider_filters,
+            successful=None if include_failed else True,
+            include_superseded=True,
+        )
     )
 
     # Filter by execution group IDs if provided

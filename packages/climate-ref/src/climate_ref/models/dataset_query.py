@@ -13,6 +13,7 @@ from typing import Any, cast
 import attrs
 import sqlalchemy as sa
 from sqlalchemy import Select, select
+from sqlalchemy.orm import configure_mappers
 
 from climate_ref.models.dataset import Dataset
 from climate_ref.models.diagnostic import Diagnostic
@@ -53,6 +54,13 @@ class DatasetFilter:
     finalised: bool | None = None
     execution_id: int | None = None
     diagnostic_slug: str | None = None
+    slug_contains: str | None = None
+    """
+    Case-insensitive substring match on the dataset slug.
+
+    Applied after the ``latest_only`` window,
+    so it narrows the latest versions rather than picking a new latest.
+    """
     latest_only: bool = True
     include_retracted: bool = False
     """
@@ -92,7 +100,7 @@ def select_datasets(
     un-deduplicated result.
     When both are set, rows are deduplicated with a
     ``RANK() OVER (PARTITION BY <latest_group_by> ORDER BY version_key DESC)`` window
-    (applied after all other filters/joins),
+    (applied after the other filters and joins, but before ``finalised`` and ``slug_contains``),
     keeping every row tied at the maximum ``version_key`` -- so ties are not silently dropped.
     Set ``latest_only=False`` to list every version; ``latest_group_by`` is then ignored.
 
@@ -103,6 +111,8 @@ def select_datasets(
         or if a key in ``filter.facets`` is not a mapped column on the target entity.
     """
     entity = _entity_for(filter.source_type)
+    # Callers eager-load the ``files`` backref, which only exists once the mappers are configured.
+    configure_mappers()
 
     if filter.latest_only and not latest_group_by:
         raise ValueError("`latest_group_by` must be provided when `latest_only` is True")
@@ -117,9 +127,6 @@ def select_datasets(
         if column is None or facet not in entity.__mapper__.columns:
             raise ValueError(f"Unknown facet {facet!r} for {entity.__name__}")
         stmt = stmt.where(column.in_(values))
-
-    if filter.finalised is not None:
-        stmt = stmt.where(entity.finalised.is_(filter.finalised))
 
     # Both relationship axes reach through ``execution_datasets``
     # join it at most once so that setting ``execution_id`` and ``diagnostic_slug`` together
@@ -151,10 +158,17 @@ def select_datasets(
             partition_by=[getattr(entity, c) for c in latest_group_by],
             order_by=entity.version_key.desc(),
         )
-        inner = stmt.add_columns(rank.label("_rank")).subquery()
+        inner = stmt.with_only_columns(entity.id, rank.label("_rank")).subquery()
         latest_ids = select(inner.c.id).where(inner.c._rank == 1)
         # The id membership already encodes every filter/join from above,
         # so the outer select only needs the entity and the id predicate.
         stmt = select(entity).where(entity.id.in_(latest_ids))
+
+    # After the window, so an older finalised version never stands in for a newer unfinalised one.
+    if filter.finalised is not None:
+        stmt = stmt.where(entity.finalised.is_(filter.finalised))
+
+    if filter.slug_contains:
+        stmt = stmt.where(entity.slug.icontains(filter.slug_contains, autoescape=True))
 
     return stmt.order_by(entity.updated_at.desc())

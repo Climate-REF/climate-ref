@@ -21,12 +21,12 @@ This makes it easier to query and filter datasets for further processing.
 The collection of metadata, also known as a data catalog, is stored in a local SQLite database.
 This database is used to query and filter datasets for further processing.
 
-For CMIP6 datasets, the default DRS parser extracts metadata from file paths and directory names
-without opening each file. This makes ingestion very fast, even for archives with tens of thousands of files.
-Any remaining metadata (such as exact time ranges) is extracted automatically at solve time
-for datasets that match a diagnostic's data requirements.
-If you need all metadata upfront, you can set `cmip6_parser: "complete"` in your configuration file,
-though this will be significantly slower for large archives.
+For CMIP6 datasets, the default `complete` parser opens every file to extract its metadata.
+This is slow for large archives on parallel file systems.
+Set `cmip6_parser = "drs"` in `ref.toml` to read metadata from file paths and directory names instead.
+The remaining metadata (such as exact time ranges) is then extracted at solve time,
+only for datasets that match a diagnostic's data requirements.
+See [Using the DRS parser](../getting-started/03-ingest.md#using-the-drs-parser-for-large-collections).
 
 ## Ingesting Datasets
 

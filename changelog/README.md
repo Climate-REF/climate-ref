@@ -19,6 +19,7 @@ Terminal summary statistics now use multiple colors.
 
 Each file should have a name of the form `<PR>.<TYPE>.md`, where `<PR>` is the pull request number, and `<TYPE>` is one of:
 
+* `highlights`: a short summary of the release, written once per release.
 * `feature`: new user facing features, like new command-line options and new behaviour.
 * `improvement`: improvement of existing functionality, usually without requiring user intervention
 * `fix`: fixes a bug.

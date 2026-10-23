@@ -8,6 +8,11 @@ underlines = ["", "", ""]
 issue_format = "[#{issue}](https://github.com/Climate-REF/climate-ref/pull/{issue})"
 
   [[tool.towncrier.type]]
+  directory = "highlights"
+  name = "Highlights"
+  showcontent = true
+
+  [[tool.towncrier.type]]
   directory = "breaking"
   name = "Breaking Changes"
   showcontent = true

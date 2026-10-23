@@ -8,10 +8,10 @@ This module provides classes for searching and fetching datasets from ESGF
 from climate_ref_core.esgf.base import (
     ESGFRequest,
     IntakeESGFMixin,
-    enable_ceda_solr_index,
 )
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 from climate_ref_core.esgf.cmip7 import CMIP7Request
+from climate_ref_core.esgf.cmip7_converted import ConvertedCMIP7Request
 from climate_ref_core.esgf.fetcher import ESGFFetcher
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.esgf.registry import RegistryRequest
@@ -19,10 +19,10 @@ from climate_ref_core.esgf.registry import RegistryRequest
 __all__ = [
     "CMIP6Request",
     "CMIP7Request",
+    "ConvertedCMIP7Request",
     "ESGFFetcher",
     "ESGFRequest",
     "IntakeESGFMixin",
     "Obs4MIPsRequest",
     "RegistryRequest",
-    "enable_ceda_solr_index",
 ]

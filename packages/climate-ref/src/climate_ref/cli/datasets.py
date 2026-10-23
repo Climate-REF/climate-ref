@@ -80,6 +80,7 @@ def list_(  # noqa: PLR0913
     ),
     limit: int = typer.Option(
         100,
+        min=0,
         help=(
             "Limit the number of datasets (or files when using --include-files) to display to this number."
         ),
@@ -163,7 +164,7 @@ def list_(  # noqa: PLR0913
 
     render_dataframe(data_catalog, console=console, output_format=output_format)
 
-    if not include_files and collection.total_count > limit:
+    if not include_files and (collection.total_count or 0) > limit:
         logger.warning(
             f"Displaying {limit} of {collection.total_count} filtered results. "
             f"Use the `--limit` option to display more."
@@ -436,6 +437,9 @@ def ingest(  # noqa
             dry_run=dry_run,
             check_health=check_health,
         ).ok
+
+    if not dry_run:
+        db.optimize()
 
     if failed_dirs:
         logger.error(

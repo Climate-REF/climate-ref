@@ -1,59 +1,195 @@
 {
   "catalog_hash": "fd3b4919d9d19410d908da71d1aaf7093932e7b1",
   "committed": {
-    "diagnostic.json": "cb37b068f9091511576d75c83e086dedf71a41409a2b6633cebc595dc8bbbdc7",
-    "output.json": "334cac04275b2581ab1129356f1242164d3bb5eaade4fc3de27fb9b89772f1a5",
+    "diagnostic.json": "7df6d29fa381bdcd66e2a1fa084272c942393c93b96b4484f7c257a5d82bf56e",
+    "output.json": "f4e5689e245cf6258b6a06a1ba529e3fe2f0cbd67850adc5075d0b3937f0833c",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
-      "sha256": "63803d2c8776cb1a2d869405aaac5513e512a08d0c36a92d1e7eba4351091024",
-      "size": 1030
+      "sha256": "20be13ac63b8daa33e457c87bd799fd254801c4244c0e9a5562dfa5aa4b53101",
+      "size": 1165
     },
     "executions/recipe/index.html": {
-      "sha256": "3fa35cf8ab6b51e8ff675392de1705caab696574697271a616f4b85053e763ba",
-      "size": 19265
+      "sha256": "54629b2bb004573965837dd9dedf1f3f9e24187692bf59e59d80acda2072feb7",
+      "size": 51614
     },
-    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_09pattern.png": {
-      "sha256": "0d7c24e3267e89f36b9c0a633177bf1d913d0c0e8e2c1d91948ce532a70ddc8b",
-      "size": 179964
+    "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/CanESM5_14duration_divedown.png": {
+      "sha256": "e5b8e1d9f03cfb8163a971c48757888000d43b15c35f5e9d5c4d85e2dae07546",
+      "size": 117861
     },
-    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_10lifecycle.png": {
-      "sha256": "f98bd02a19aa69830a2c82bffb189b8b867ef2c6353c7cfdc9961eb54bf7a06e",
-      "size": 140971
+    "executions/recipe/plots/diagnostic_metrics/durationdiversity_script/png/CanESM5_15diversity_divedown.png": {
+      "sha256": "e2db941f44ae0f767d7ddbc91a46d9b069ac70468f41b95791bdfe5ace3c5d40",
+      "size": 206636
     },
-    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_11amplitude.png": {
-      "sha256": "5fed159d6a5148bad005792ed552948bde14804306db19129bf50736da705934",
-      "size": 94589
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_2.png": {
+      "sha256": "b6e3cedd7c780d6cffcafb69da0d0032f5a2998ea80d278935de0c62ed8cf805",
+      "size": 111934
     },
-    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_12seasonality.png": {
-      "sha256": "ed01ae76982ebe54a217176c11389ec19e7049669475ebcb644e6cec2d7f0ca5",
-      "size": 82322
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_3.png": {
+      "sha256": "a0e4998023ea607c2300d42e7568af1a4ac7d8441dbf3159d23d9422cb81f503",
+      "size": 172563
     },
-    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_13asymmetry.png": {
-      "sha256": "ee296cc9fbc4206888520104aca94a663a36586b8000b71fe72604517b96668d",
-      "size": 84971
+    "executions/recipe/plots/diagnostic_metrics/lifecycle_script/png/CanESM5_10lifecycle_level_4.png": {
+      "sha256": "aeb4eef0b223f5eb7da5c76c6d0015845451b3fc38e6646c2ff98e8b7746f3e1",
+      "size": 251714
     },
-    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_14duration.png": {
-      "sha256": "585e20ff343d557cc92ea173a7f6ba62225750833d45e821c77559e76c772cb2",
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_09pattern.png": {
+      "sha256": "b1045630cb35f5958711a359740bea419d8e8bf6198f48824228c994c51655f2",
+      "size": 181118
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_10lifecycle.png": {
+      "sha256": "565bbcf7f9a89256f318bbe76e6b89e71a9ce0c55c6fbbed572f491547d3d64e",
+      "size": 141521
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_11amplitude.png": {
+      "sha256": "f76d8dec59ffba14115b75e51bed54a881cece3ccff3bf5c411d4ed6daf86990",
+      "size": 90228
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_12seasonality.png": {
+      "sha256": "e85aab5b6582b963bf24e57dec00369cff655703272d7b87b6ea0eb0180f72fa",
+      "size": 81716
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_13asymmetry.png": {
+      "sha256": "0e94bb9b286495e7c1575025bfc9370caae53c60dfc0b2df203e1deee7b8cd5f",
+      "size": 102739
+    },
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_14duration.png": {
+      "sha256": "0c8c2d284052d14c9284d9ebaf1a6677dc4a257b4a2dbffbc7e00aca947240a4",
       "size": 82138
     },
-    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_15diversity.png": {
-      "sha256": "f2e32bf13a836c1f46c8a67243b4d46f28267d39356944cb830d1ecb01a657ef",
-      "size": 80304
+    "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_15diversity.png": {
+      "sha256": "08af30b4570c832bb01f2e3432dd59dacdbad975327a6097b1a4532c58dbd086",
+      "size": 86005
     },
-    "executions/recipe/run/diagnostic_metrics/plot_script/diagnostic_provenance.yml": {
-      "sha256": "f84b7ecd7d520dd32a0c05505ded00118c37fdbb253c86f53d891b0daf3ee7e4",
-      "size": 16178
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_2.png": {
+      "sha256": "327d96d3c4ce763b0ae244965819dd617df6145c3b71b9b9f4afef3d5f03f11d",
+      "size": 537975
     },
-    "executions/recipe/work/diagnostic_metrics/plot_script/matrix.csv": {
-      "sha256": "94f51601581a57591e9941db285a08ecead9a84d8bb597067a9e7bd7f3ac3938",
-      "size": 267
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_3.png": {
+      "sha256": "84272b97738aca2e7dd51ad49773ff07c7dc0fe8effbae7a4f8b646172a2434f",
+      "size": 229320
+    },
+    "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_4.png": {
+      "sha256": "33c5be741328f328cfbc9d31a8fc0022adaa98497c08ae96219c7f339ae0de59",
+      "size": 1160021
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_2.png": {
+      "sha256": "77d0c40ecf4cc4de56ddc031d585805d39f97bb8e737275cd5f7d8ee90a2baa0",
+      "size": 166647
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_3.png": {
+      "sha256": "bc735ba708f1d4f5dd79bf9cfdbf8b5d55147dc43d0ac2188fb40182a3ad6ea6",
+      "size": 518435
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_2.png": {
+      "sha256": "43fd18ef5a5d0c34c5aaee4b8a8fcecdcabb80b60eaf48cfafd7fef93231bb5e",
+      "size": 149009
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_3.png": {
+      "sha256": "a55cfbf48c0a805d4a3cce31d9b915fda30d38af4398050bb8c33e00d45c0c11",
+      "size": 421342
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_4.png": {
+      "sha256": "556d4a1b8e470992f46bfe7084793720384f9282b8e19d4227d9e0dd56f3cef7",
+      "size": 270182
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_5.png": {
+      "sha256": "06bbebf94357d79178401f07ec7b73137365f1d9b0aa4fbd54a5934dc33681fa",
+      "size": 914361
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_2.png": {
+      "sha256": "4e6b9d3db767a10e6da8c91e4193b9c1df1fde46b54870f47b0532c2091000b7",
+      "size": 181410
+    },
+    "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_3.png": {
+      "sha256": "5ab3465705c2209e68f801a472b2eb7755ea5bbdb5f7505d3262ec5b26daf675",
+      "size": 894539
+    },
+    "executions/recipe/run/diagnostic_metrics/durationdiversity_script/diagnostic_provenance.yml": {
+      "sha256": "6a97e39c00171cf6e3c0009f45b5ea6fd86f4f9afd6b1dd58f010f34b923feb0",
+      "size": 1847
+    },
+    "executions/recipe/run/diagnostic_metrics/lifecycle_script/diagnostic_provenance.yml": {
+      "sha256": "10ccd6959d03b0f36ad6eb65bc87795fc96196914eab0f9a251fc0f267f01f56",
+      "size": 3046
+    },
+    "executions/recipe/run/diagnostic_metrics/metrics_script/diagnostic_provenance.yml": {
+      "sha256": "07d86f7924945a012e87a34ff167330de0966b73631ee9936bc58c6b3b1728a0",
+      "size": 27695
+    },
+    "executions/recipe/run/diagnostic_metrics/pattern_script/diagnostic_provenance.yml": {
+      "sha256": "e14004f2c2f2ea41eeafebfa9d0cd1b218fd18da801938d3cb1492f0ddb58ae7",
+      "size": 3640
+    },
+    "executions/recipe/run/diagnostic_seas_skew_amp/seas_asym_amp_script/diagnostic_provenance.yml": {
+      "sha256": "86470710561b8110ef0d5cf85dac5dc1048e7885c6db87d46487c3eea4b41c44",
+      "size": 9913
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_09pattern.nc": {
+      "sha256": "6b111a4f5bd75b2a08c5747a48eb816b5d5fb178f6d8dfe5ff8a46981df160b6",
+      "size": 13318
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_10lifecycle.nc": {
+      "sha256": "72319fe97cb94e7e3fd6f36f6ad5d1d835fa6b1e89072d5d91d00556288ae97d",
+      "size": 7196
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_11amplitude.nc": {
+      "sha256": "fe7ca48f8c72e4b5ba1aad5931106dc700df3baf66300b16a9c3af530f493c3f",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_12seasonality.nc": {
+      "sha256": "7b3a6ec3b48a6fe33dc37a2658be78c1ed99e6abc0316155eb797fc80640d5df",
+      "size": 2951
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_13asymmetry.nc": {
+      "sha256": "1f0a110f2cb0b158017b5895fd65a61c95e8eedbe66a8eeb98f7ab7eeee5c9a5",
+      "size": 3012
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_14duration.nc": {
+      "sha256": "4ed7b60bb72d74427d2c401e7509a36ba098a83305cabad320e6d21c97aa24b1",
+      "size": 2896
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_15diversity.nc": {
+      "sha256": "cc7426a32377b92f5f2bf57bf7fd4aa5991d4faed71184ca07df2a5e540c5519",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_09pattern.nc": {
+      "sha256": "33d1b69e23958cea446f4ed55ce3390921642ac5d933342fc66d6541a86a3e45",
+      "size": 13318
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_10lifecycle.nc": {
+      "sha256": "1f280d22d2080449a044c2163e8b653fdc284cf9864ded2be14a7a3d75c1fe5b",
+      "size": 7196
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_11amplitude.nc": {
+      "sha256": "d2544b3cfc02008141866e7fc0ca3f3dd6111d2db098af7e6145c2c7858fefff",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_12seasonality.nc": {
+      "sha256": "70b962ebd754fd0f422812fad9a63226a36ea714a5d4b9ceb4e502cd779db355",
+      "size": 2951
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_13asymmetry.nc": {
+      "sha256": "7a58c9059af640bb485f0c958df5f497bb73c238c629353a1f3ede7270bcfc48",
+      "size": 3012
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_14duration.nc": {
+      "sha256": "5cec28fa7b8c0b9830e4d55a47891a9c8945f6e1ba3456745db0fd0d4a782e83",
+      "size": 2896
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_15diversity.nc": {
+      "sha256": "ff8ff65ee1f20d2ad06fcb156abf348fd2d9ec0dd1a84d653ad6abc27f5855f8",
+      "size": 6933
+    },
+    "executions/recipe/work/diagnostic_metrics/metrics_script/matrix.csv": {
+      "sha256": "8db1252010da26b81ab9e9387ac894124ccfa2277e1b74748f82dc15b6c628df",
+      "size": 271
     },
     "output.json": {
-      "sha256": "8f738f219115b53d72bfa0fef2a915bff06877b301ee5e8f93b296c43e98b5d8",
-      "size": 4056
+      "sha256": "90cc64e3ac47483de632416dc195e15759e98e0eaea24a64c81526a37fc02aab",
+      "size": 17106
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -61,5 +197,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 4
 }

@@ -1,0 +1,213 @@
+{
+  "catalog_hash": "32151e03cdf155680df90c8de1d865ac0127b116",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "9010e6308f79ffce73b1326533bfe5696f76fd5c049abab73ccc60ce458fccb5",
+    "series.json": "f0af580040bbe855973e157e6fb8cae2886c774708698fa4627988393dae7c76"
+  },
+  "diagnostic_version": 4,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "c85cfe67107836d61cf26e100d076c83c92de575c8873535be0384fcc4399624",
+      "size": 48645
+    },
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel2_script/png/UKESM1-3-LL_pr_map_bias_level2.png": {
+      "sha256": "3e2688f99de06f32c1979a5f435a90969ef2d8daa8007a32ba846b4a55b1daa6",
+      "size": 390173
+    },
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel2_script/png/UKESM1-3-LL_pr_map_sea_cyclel2.png": {
+      "sha256": "942ff1801670cca01055e3f5c9e80098fe2b26123d8a6d60ca1f2dfa5d2a0275",
+      "size": 388167
+    },
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel2_script/png/UKESM1-3-LL_tauu_map_bias_level2.png": {
+      "sha256": "53639d7f17993737d9f2e83bd4689b9e62604dd462151eb7f86c5ecd65a37ed5",
+      "size": 362661
+    },
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel2_script/png/UKESM1-3-LL_tos_map_bias_level2_sea.png": {
+      "sha256": "55e9f025a3bd0b4534acc928a2b440f71ef5176f6d5c8a1faa8497d727dd9d3b",
+      "size": 381043
+    },
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel3_script/png/UKESM1-3-LL_doubleITCZ_seacycle_level3.png": {
+      "sha256": "1835717e8dc50d4e1d76a2d405d269dfb9fba5a3cdca08df434b997c6be72414",
+      "size": 467672
+    },
+    "executions/recipe/plots/diagnostic_divedowns/plotlevel3_script/png/UKESM1-3-LL_pr_seacycle_level3.png": {
+      "sha256": "5c26e2efe69d29ea1cb9a8be8295a3a37b5227a53d7f18609002c4e38cea9c08",
+      "size": 315711
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/UKESM1-3-LL_eq_pr_bias.png": {
+      "sha256": "e160d4d4ee263135b953672334a551c272cae65ae8621142a651b85d08c95de9",
+      "size": 179065
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/UKESM1-3-LL_eq_pr_seacycle.png": {
+      "sha256": "e4c2290291fbfb50359c3bb8aa7f820b0eefd024867908554174c10461b1309c",
+      "size": 191688
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/UKESM1-3-LL_eq_sst_bias.png": {
+      "sha256": "4fdb7b68286bd040afac347c04b5f4014e62b84281e73820b3f20a2635d09493",
+      "size": 194676
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/UKESM1-3-LL_eq_sst_seacycle.png": {
+      "sha256": "cb6763184f1d6c2b69ca9af8694d439daf8060e959a95f3ea7b321f75dd19ca5",
+      "size": 192873
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/UKESM1-3-LL_eq_tauu_bias.png": {
+      "sha256": "ee1dc073e1d3b53d2efee81f0143e01500c6dafda03e5db80b53418e0bb4a407",
+      "size": 220670
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/UKESM1-3-LL_eq_tauu_seacycle.png": {
+      "sha256": "dacc9fbd831bc82d1d962bcef25c164dc41edf9a61982c8cd44d27c7e4522601",
+      "size": 208849
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/UKESM1-3-LL_pr_double.png": {
+      "sha256": "9b0aa2f86aa3c9ca500d070a8bd0bec018d270f91241e91c6e7ad35774b766d4",
+      "size": 197262
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/UKESM1-3-LL_pr_double_seacycle.png": {
+      "sha256": "d43cc7ac585aa1e15cf7abc2689c3ddb81bc3c8d2782398cc63f5766c428963c",
+      "size": 215331
+    },
+    "executions/recipe/run/diagnostic_divedowns/plotlevel2_script/diagnostic_provenance.yml": {
+      "sha256": "0d8ad62bb236e90d4fea1481e98976e05dd2102ab8b464bad2d8bff11a263763",
+      "size": 9394
+    },
+    "executions/recipe/run/diagnostic_divedowns/plotlevel3_script/diagnostic_provenance.yml": {
+      "sha256": "365f4111d43e3686e79abcaf9a33bed738c8eb86390ff71f3c52cfff2d99e203",
+      "size": 4923
+    },
+    "executions/recipe/run/diagnostic_metrics/plot_script/diagnostic_provenance.yml": {
+      "sha256": "61327ea513b8497558e330640d636a92a6393a9de79814db28f3a5572d97cfd2",
+      "size": 18972
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/GPCP-V3.3_pr_map_bias_level2.nc": {
+      "sha256": "45a8ad7f31e97cad0bfc5a766ea2b43b8426becccfc1c640e50684d08fe02689",
+      "size": 37279
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/GPCP-V3.3_pr_map_sea_cyclel2.nc": {
+      "sha256": "1068fca7071f64d35b1036a1ac26e1739d8f3c9ef5d85aa309fb0f5ff7b3e2df",
+      "size": 37309
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/TROPFLUX_tauu_map_bias_level2.nc": {
+      "sha256": "ff5154ac80f9c6db4948039ef2cf0b0ab7b992e66ab7fd16325b03aad3aa6441",
+      "size": 34151
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/TROPFLUX_tos_map_bias_level2_sea.nc": {
+      "sha256": "30c0bf9fda746a847c926be49cdc8f61d7f83778393abaae025d48bee0ef342d",
+      "size": 34246
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/UKESM1-3-LL_pr_map_bias_level2.nc": {
+      "sha256": "7819ed070d15ef62b56d4ba42d2ddb6779049294620702768a2b848ebef72627",
+      "size": 42503
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/UKESM1-3-LL_pr_map_sea_cyclel2.nc": {
+      "sha256": "5ecee073aaeee965a98401a786fc9c1b27709ccd5e5ecd7a21a819fd9d0366c8",
+      "size": 42500
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/UKESM1-3-LL_tauu_map_bias_level2.nc": {
+      "sha256": "983eb2583027d29cb75f07d37db651a2fb1f8a2bcff268a4893575436f16b019",
+      "size": 42495
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel2_script/UKESM1-3-LL_tos_map_bias_level2_sea.nc": {
+      "sha256": "1fda1ba4b2ac69e02efce186d402a5543ee25df4d03f06ca5fd40fb8302d2cac",
+      "size": 42556
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel3_script/GPCP-V3.3_pr_doubleITCZ_seacycle_level3.nc": {
+      "sha256": "e9ba1dbde3fcdd8839ec5a8908f16250a436701aac45c505a78d5bcd0afbc0d1",
+      "size": 19706
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel3_script/GPCP-V3.3_pr_pr_seacycle_level3.nc": {
+      "sha256": "8eba21c1d7d9110c42412cd3fb2410a164166d932f78bcfa4447374da5a9bcac",
+      "size": 24442
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel3_script/UKESM1-3-LL_pr_doubleITCZ_seacycle_level3.nc": {
+      "sha256": "b2c887fb12c9179108b898deaf2e28c127e1298248b1e462033b7c9458cdb516",
+      "size": 24867
+    },
+    "executions/recipe/work/diagnostic_divedowns/plotlevel3_script/UKESM1-3-LL_pr_pr_seacycle_level3.nc": {
+      "sha256": "4beaeb322d4dceb1ebbce104c44112c2e061882096427546029d1e66d9663d89",
+      "size": 29808
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V3.3_eq_pr_bias.nc": {
+      "sha256": "75d7fc525c7cd2fd15aec944bfd8869773c6f79b7f34cf0415abd019ccc83d4e",
+      "size": 20340
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V3.3_eq_pr_seacycle.nc": {
+      "sha256": "5276ac7f9d6575859f2beb6d2537a37f4a6da1625d64549a9479093b0d4717a3",
+      "size": 19599
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V3.3_pr_double.nc": {
+      "sha256": "443b7574f86d52345382d0659e93d3a8374456718575ae376e9a5e26ce5ac972",
+      "size": 18278
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V3.3_pr_double_seacycle.nc": {
+      "sha256": "22dacff5b04d3e28c804a9d8aa86a2565a179b783bac7125266083069d3f9105",
+      "size": 18249
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_bias.nc": {
+      "sha256": "877054af786ad11def9c28cdda763c25f9b05d7c4019dded8233b8ccf66b1a63",
+      "size": 17275
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_seacycle.nc": {
+      "sha256": "74fb4390f8cca764c3533464817dbf518998046bfce1a2741d494d4bcc257e7d",
+      "size": 16509
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_bias.nc": {
+      "sha256": "fbc919d563614bcbce406c80a8be7e90644f157dc2a8bebe3eaf12243205a406",
+      "size": 17257
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_seacycle.nc": {
+      "sha256": "99fb3e7b58aea1c61330e10316cc2d482390623a9f53021c48277aa27af60f48",
+      "size": 16503
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/UKESM1-3-LL_eq_pr_bias.nc": {
+      "sha256": "57e03e2738f74a2c7ab53b3ee601961676381fefb74ef9313a3689e97fe669c0",
+      "size": 25548
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/UKESM1-3-LL_eq_pr_seacycle.nc": {
+      "sha256": "b23272b23c56c102fa3a44d67c75f7a9eb87d6e5f8d82b1a7c6bdfc0cc5f172c",
+      "size": 22645
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/UKESM1-3-LL_eq_sst_bias.nc": {
+      "sha256": "cd14144904a0643ed5450c1ea9e2fcbe5e4130be5ae7e42e1a02cb5f5b1f4bb3",
+      "size": 25592
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/UKESM1-3-LL_eq_sst_seacycle.nc": {
+      "sha256": "2109ba65d5ba21125af39e1c5e9abd995b74904e3c472c3c3ddb7d648c5b2fc3",
+      "size": 24684
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/UKESM1-3-LL_eq_tauu_bias.nc": {
+      "sha256": "d7b3de1f689bd9b4e9c6d8af289af492944aaed860b593aa1111a4a27b8c5744",
+      "size": 25580
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/UKESM1-3-LL_eq_tauu_seacycle.nc": {
+      "sha256": "1bbf6d78ce1bcc099213e0b734a1f7ece9ccfb09cc04991946b52909100cef4b",
+      "size": 22818
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/UKESM1-3-LL_pr_double.nc": {
+      "sha256": "9f0a750eabe69dcf05d59eb7345ab7e22eefaa7f16c0f03b381e2acd348384f0",
+      "size": 23469
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/UKESM1-3-LL_pr_double_seacycle.nc": {
+      "sha256": "26b19037777278599e8c35172b9effae421e2d59ce978c1664ad0167be52f08d",
+      "size": 21429
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/matrix.csv": {
+      "sha256": "e3d3f11bc0adfe62a9b0fcf12ecc9f8527166ae587ced851bb497a53491ba828",
+      "size": 361
+    },
+    "output.json": {
+      "sha256": "8b913d290a22378a736aae4b735ee146b8a78fb95f74c659e47fac69a20d2546",
+      "size": 22059
+    },
+    "series.json": {
+      "sha256": "0abd095a3951ccdca7960cf02a798739d0c327d58e175a21eb8c6456c80557a8",
+      "size": 73853
+    }
+  },
+  "schema": 2,
+  "test_case_version": 2
+}

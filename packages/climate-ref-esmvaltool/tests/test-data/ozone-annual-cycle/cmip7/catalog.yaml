@@ -1,50 +1,50 @@
 _metadata:
-  hash: 8b4ead7c8fea8266641e7bb44ad65e12eea4f4ee
+  hash: 4759bade121d696f2128238322f1974cea295500
 cmip7:
   slug_column: instance_id
   selector:
     experiment_id: historical
-    grid_label: gr1
-    source_id: GFDL-ESM4
-    variant_label: r1i1p1f1
+    grid_label: g110
+    source_id: UKESM1-3-LL
+    variant_label: r1i1p1f2
   datasets:
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 36500.0
+    branch_time_in_parent: 90000.0
     branded_variable: toz_tavg-u-hxy-u
     branding_suffix: tavg-u-hxy-u
-    calendar: noleap
-    end_time: '2014-12-16 12:00:00'
+    calendar: 360_day
+    end_time: '2021-12-16 00:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: toz_tavg-u-hxy-u_mon_glb_gr1_GFDL-ESM4_historical_r1i1p1f1_195001-201412.nc
+    filename: toz_tavg-u-hxy-u_mon_glb_g110_UKESM1-3-LL_historical_r1i1p1f2_195001-202112.nc
     finalised: true
     frequency: mon
-    grid_label: gr1
-    instance_id: CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.toz.tavg-u-hxy-u.gr1.v0
-    institution_id: NOAA-GFDL
+    grid_label: g110
+    instance_id: CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r1i1p1f2.glb.mon.toz.tavg-u-hxy-u.g110.v20261004
+    institution_id: UKNCSP
     license_id: CC-BY-4.0
-    long_name: Total Ozone Column
+    long_name: Total Column Ozone
     mip_era: CMIP7
-    nominal_resolution: 100 km
+    nominal_resolution: 250 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: GFDL-ESM4
-    parent_time_units: days since 0001-1-1
+    parent_mip_era: CMIP7
+    parent_source_id: UKESM1-3-LL
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: aerosol
     region: glb
-    source_id: GFDL-ESM4
+    source_id: UKESM1-3-LL
     standard_name: equivalent_thickness_at_stp_of_atmosphere_ozone_content
-    start_time: '1950-01-16 12:00:00'
-    time_range: 1950-01-16 12:00:00-2014-12-16 12:00:00
+    start_time: '1950-01-16 00:00:00'
+    time_range: 1950-01-16 00:00:00-2021-12-16 00:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/ccf937b0-ede1-51c8-9f62-c0b86d710807
+    tracking_id: hdl:21.14107/2d63aa06-aebb-42a0-9d09-29b8c41504f3
     units: m
     variable_id: toz
-    variant_label: r1i1p1f1
-    version: v0
+    variant_label: r1i1p1f2
+    version: v20261004
 obs4mips:
   slug_column: instance_id
   selector:

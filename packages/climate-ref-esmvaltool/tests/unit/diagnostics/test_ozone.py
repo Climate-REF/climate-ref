@@ -8,7 +8,7 @@ from climate_ref_core.exceptions import InvalidDiagnosticException
 
 
 def _cmip7_o3_catalog(
-    *, end: str = "2014-12-31", branded_variable: str = "o3_tavg-p19-hxy-air"
+    *, end: str = "2000-12-31", branded_variable: str = "o3_tavg-p19-hxy-air"
 ) -> pd.DataFrame:
     return pd.DataFrame(
         [
@@ -25,7 +25,7 @@ def _cmip7_o3_catalog(
                 "branded_variable": branded_variable,
                 "frequency": "mon",
                 "region": "glb",
-                "start_time": pd.Timestamp("2000-01-01"),
+                "start_time": pd.Timestamp("1990-01-01"),
                 "end_time": pd.Timestamp(end),
                 "path": "o3.nc",
             },
@@ -40,7 +40,7 @@ def _ozone_zonal():
 def test_ozone_zonal_solves_with_cmip7_o3() -> None:
     """Accept CMIP7 pressure-level ozone covering the diagnostic's averaging period."""
     diagnostic = _ozone_zonal()
-    assert diagnostic.version == 5
+    assert diagnostic.version == 6
     assert [requirements[0].source_type for requirements in diagnostic.data_requirements] == [
         SourceDatasetType.CMIP6,
         SourceDatasetType.CMIP7,
@@ -60,13 +60,13 @@ def test_ozone_zonal_solves_with_cmip7_o3() -> None:
 
 
 def test_ozone_zonal_rejects_cmip7_o3_without_full_period() -> None:
-    """Require CMIP7 ozone through December 2014, as the recipe does."""
+    """Require CMIP7 ozone through December 2000, as the recipe does."""
     diagnostic = _ozone_zonal()
 
     with pytest.raises(InvalidDiagnosticException, match="No data catalog matches"):
         list(
             solve_executions(
-                {SourceDatasetType.CMIP7: _cmip7_o3_catalog(end="2014-11-30")},
+                {SourceDatasetType.CMIP7: _cmip7_o3_catalog(end="2000-11-30")},
                 diagnostic,
                 diagnostic.provider,
             )

@@ -102,6 +102,21 @@ def index_dataset_labels(dataset: xr.Dataset) -> xr.Dataset:
     return dataset
 
 
+def series_values(dataset: xr.Dataset, name: str) -> xr.DataArray:
+    """Get the values of a series from an ESMValTool output file.
+
+    A multi-dataset file names its variable after its first dataset, which may be a reference
+    with a different variable name, so a file holding a single variable falls back to that variable.
+    """
+    if name in dataset:
+        return dataset[name]
+    bounds = {dataset[coord].attrs.get("bounds") for coord in dataset.variables}
+    candidates = [var for var in dataset.data_vars if var not in bounds and not str(var).endswith("_bnds")]
+    if len(candidates) != 1:
+        raise KeyError(f"No variable named {name!r} in file with variables {list(dataset.data_vars)}")
+    return dataset[candidates[0]]
+
+
 class ESMValToolDiagnostic(CommandLineDiagnostic):
     """ESMValTool Diagnostic base class."""
 
@@ -572,9 +587,10 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 attributes["caption"] = caption
                 attributes["values_name"] = series_def.values_name
                 attributes["index_name"] = series_def.index_name
+                values = series_values(dataset, series_def.values_name)
                 for attr in variable_attributes:
-                    if attr in dataset[series_def.values_name].attrs:
-                        attributes[f"value_{attr}"] = dataset[series_def.values_name].attrs[attr]
+                    if attr in values.attrs:
+                        attributes[f"value_{attr}"] = values.attrs[attr]
                     if attr in dataset[series_def.index_name].attrs:
                         attributes[f"index_{attr}"] = dataset[series_def.index_name].attrs[attr]
                 # TODO: Handle masked values in the index
@@ -597,7 +613,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                     SeriesMetricValue(
                         dimensions={**input_selectors, **series_def.dimensions},
                         kind=kind,
-                        values=fillvalues_to_nan(dataset[series_def.values_name].values).tolist(),
+                        values=fillvalues_to_nan(values.values).tolist(),
                         index=index,
                         index_name=series_def.index_name,
                         attributes=attributes,

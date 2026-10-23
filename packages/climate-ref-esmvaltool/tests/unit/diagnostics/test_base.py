@@ -7,7 +7,7 @@ import pandas
 import pytest
 import xarray as xr
 import yaml
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, series_values
 from climate_ref_esmvaltool.diagnostics.regional_historical_changes import (
     RegionalHistoricalTimeSeries,
     _region_to_filename,
@@ -562,3 +562,22 @@ def test_reduce_recipe_for_regression_fixture_noop_for_production(mocker):
 
     assert recipe["preprocessors"]["pp"]["extract_shape"]["ids"]["Name"] == full_regions
     assert recipe["preprocessors"]["pp_200"]["extract_shape"]["ids"]["Name"] == full_regions
+
+
+def test_series_values_falls_back_to_the_only_variable():
+    ds = xr.Dataset(
+        {"sic": ("time", [1.0, 2.0]), "time_bnds": (("time", "bnds"), [[0, 1], [1, 2]])},
+        coords={"time": ("time", [0.5, 1.5], {"bounds": "time_bnds"})},
+    )
+    assert series_values(ds, "siconc").values.tolist() == [1.0, 2.0]
+
+
+def test_series_values_prefers_the_named_variable():
+    ds = xr.Dataset({"siconc": ("time", [1.0]), "sic": ("time", [2.0])})
+    assert series_values(ds, "siconc").values.tolist() == [1.0]
+
+
+def test_series_values_rejects_ambiguous_files():
+    ds = xr.Dataset({"a": ("time", [1.0]), "b": ("time", [2.0])})
+    with pytest.raises(KeyError, match="No variable named 'siconc'"):
+        series_values(ds, "siconc")

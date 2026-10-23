@@ -1,19 +1,19 @@
 {
   "data": {
-    "executions/recipe/work/antarctic/sea_ice_sensitivity_script/plotted_values.csv": {
+    "executions/recipe/work/antarctic/sea_ice_sensitivity_script/data_values.csv": {
       "description": "",
       "dimensions": {
         "region": "antarctic"
       },
-      "filename": "executions/recipe/work/antarctic/sea_ice_sensitivity_script/plotted_values.csv",
+      "filename": "executions/recipe/work/antarctic/sea_ice_sensitivity_script/data_values.csv",
       "long_name": "Annual (not decadal) figures"
     },
-    "executions/recipe/work/arctic/sea_ice_sensitivity_script/plotted_values.csv": {
+    "executions/recipe/work/arctic/sea_ice_sensitivity_script/data_values.csv": {
       "description": "",
       "dimensions": {
         "region": "arctic"
       },
-      "filename": "executions/recipe/work/arctic/sea_ice_sensitivity_script/plotted_values.csv",
+      "filename": "executions/recipe/work/arctic/sea_ice_sensitivity_script/data_values.csv",
       "long_name": "Annual (not decadal) figures"
     }
   },
@@ -51,7 +51,7 @@
         "region": "arctic"
       },
       "filename": "executions/recipe/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice sensitivity.png",
-      "long_name": "Sensitivity of sea ice area to annual mean global warming.Mean (dashed), standard deviation (shaded) and plausible values from 1979-2014."
+      "long_name": "Sensitivity of sea ice area to annual mean global warming.\nMean (dashed), standard deviation (shaded) and plausible (dotted) values from 1979-2014 are shown in grey."
     },
     "executions/recipe/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice trends.png": {
       "description": "",

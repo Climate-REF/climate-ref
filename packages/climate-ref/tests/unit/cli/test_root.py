@@ -133,6 +133,8 @@ def test_root_commands_without_celery(mocker, expected_commands):
 @pytest.mark.parametrize("name", list(_SUBCOMMANDS))
 def test_subcommand_help_matches_command(name):
     """The listing help is duplicated so ``ref --help`` needs no import, so it must not drift."""
+    if _SUBCOMMANDS[name].requires:
+        pytest.importorskip(_SUBCOMMANDS[name].requires)
     command = _SUBCOMMANDS[name].load(name)
 
     assert command.name == name

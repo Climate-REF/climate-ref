@@ -10,6 +10,7 @@ import pytest
 import sqlalchemy
 from loguru import logger
 from sqlalchemy import inspect
+from sqlalchemy.exc import OperationalError
 
 from climate_ref.database import (
     REDACTED,
@@ -128,6 +129,28 @@ def test_invalid_urls(config, database_url, tmp_path):
 def test_database(db):
     assert db._engine
     assert db.session.is_active
+
+
+def test_optimize_gathers_sqlite_statistics(db):
+    db.session.add(Provider(slug="p", name="P", version="1"))
+    db.session.commit()
+
+    db.optimize()
+
+    with db._engine.connect() as connection:
+        tables = connection.exec_driver_sql("SELECT DISTINCT tbl FROM sqlite_stat1").scalars().all()
+    assert "provider" in tables
+
+
+def test_optimize_logs_instead_of_raising(db, mocker):
+    mocker.patch.object(
+        db._engine, "begin", side_effect=OperationalError("PRAGMA optimize", {}, Exception("locked"))
+    )
+    warning = mocker.patch("climate_ref.database.logger.warning")
+
+    db.optimize()
+
+    warning.assert_called_once()
 
 
 def test_database_migrate_with_old_revision(db, mocker, config):

@@ -165,6 +165,15 @@ def test_optimize_refreshes_stale_statistics(tmp_path, config, mocker, version):
     assert int(stat.split()[0]) == 100_100
 
 
+def test_optimize_skips_other_backends(db, mocker):
+    mocker.patch.object(db._engine.dialect, "name", "postgresql")
+    begin = mocker.spy(db._engine, "begin")
+
+    db.optimize()
+
+    begin.assert_not_called()
+
+
 def test_optimize_logs_instead_of_raising(db, mocker):
     mocker.patch.object(
         db._engine, "begin", side_effect=DatabaseError("PRAGMA optimize", {}, Exception("malformed"))

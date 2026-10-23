@@ -10,6 +10,7 @@ from sqlalchemy import (
     Enum,
     Float,
     ForeignKey,
+    Index,
     String,
     Table,
     UniqueConstraint,
@@ -306,6 +307,8 @@ class Execution(CreatedUpdatedMixin, Base):
     """
 
     __tablename__ = "execution"
+    # Lets each group's newest execution be read from the index without sorting the group's executions.
+    __table_args__ = (Index("ix_execution_group_created_at", "execution_group_id", "created_at", "id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
 

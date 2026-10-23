@@ -2,7 +2,8 @@
 
 <!--- --8<-- [start:description] -->
 
-**Status**: This project is in active development
+Looking for results? Evaluations of CMIP7 data are published on the [REF dashboard](https://dashboard.climate-ref.org).
+This documentation is for people running the REF or developing diagnostics for it.
 
 The Rapid Evaluation Framework(REF) is a set of Python packages that provide the ability to manage the execution of calculations against climate datasets.
 The aim is to be able to evaluate climate data against a set of reference data in near-real time as datasets are published,

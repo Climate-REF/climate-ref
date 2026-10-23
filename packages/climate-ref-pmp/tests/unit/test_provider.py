@@ -115,6 +115,7 @@ class TestPMPProviderHooks:
         """Test that configure sets the required environment variables."""
         for name in _THREAD_LIMIT_VARS:
             monkeypatch.delenv(name, raising=False)
+        monkeypatch.delenv("DASK_SCHEDULER", raising=False)
         test_provider, mock_config = configured_provider(mocker, tmp_path)
 
         assert "PCMDI_CONDA_EXE" in test_provider.env_overrides
@@ -126,6 +127,7 @@ class TestPMPProviderHooks:
         assert test_provider.env_overrides["FI_PROVIDER"] == "tcp"
         for name in _THREAD_LIMIT_VARS:
             assert test_provider.env_overrides[name] == _DEFAULT_THREAD_LIMIT
+        assert test_provider.env_overrides["DASK_SCHEDULER"] == "synchronous"
 
     def test_configure_keeps_user_thread_limits(self, mocker, tmp_path, monkeypatch):
         """One thread limit in the environment suppresses the default for all of them."""
@@ -134,6 +136,12 @@ class TestPMPProviderHooks:
 
         for name in _THREAD_LIMIT_VARS:
             assert name not in test_provider.env_overrides
+
+    def test_configure_keeps_user_dask_scheduler(self, mocker, tmp_path, monkeypatch):
+        monkeypatch.setenv("DASK_SCHEDULER", "threads")
+        test_provider, _ = configured_provider(mocker, tmp_path)
+
+        assert "DASK_SCHEDULER" not in test_provider.env_overrides
 
     def test_data_to_ingest_path_not_exists(self, mocker, caplog):
         """Test data_to_ingest logs warning when data path doesn't exist."""

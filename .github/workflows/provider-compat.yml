@@ -34,6 +34,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# Dask's threaded scheduler can deadlock on xarray's CombinedLock (pydata/xarray#11645).
+# Remove once a released xarray includes that fix.
+env:
+  DASK_SCHEDULER: synchronous
+
 jobs:
   provider-compat:
     runs-on: ubuntu-latest

@@ -29,5 +29,13 @@ def test_execution_scope_window():
     scope = ExecutionScope(
         created_after=datetime.datetime(2026, 1, 1), created_before=datetime.datetime(2027, 1, 1)
     )
-    assert len(scope.created_clauses()) == 2
-    assert ExecutionScope().created_clauses() == []
+    assert len(scope.execution_clauses()) == 2
+    assert ExecutionScope().execution_clauses() == []
+
+
+@pytest.mark.parametrize("cls", READER_FILTERS)
+def test_execution_ids_on_every_reader_filter(cls):
+    f = cls(execution_ids=[1, 2], execution_group_ids=[3])
+    assert f.execution_ids == (1, 2)
+    assert f.execution_group_ids == (3,)
+    assert len(f.execution_clauses()) == 2

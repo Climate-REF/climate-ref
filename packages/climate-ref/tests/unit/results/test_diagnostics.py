@@ -400,12 +400,6 @@ class TestDiagnosticsWithValues:
         filters = DiagnosticFilter(diagnostic_contains=["nao"])
         assert reader.diagnostics.with_values(MetricValueType.SCALAR, filters) == frozenset()
 
-    def test_execution_group_where(self, db_with_values):
-        stmt = select_diagnostics_with_values(
-            MetricValueType.SCALAR, execution_group_where=ExecutionGroup.key == "key2"
-        )
-        assert db_with_values.session.execute(stmt).all() == []
-
     def test_scope_includes_retracted(self, db_with_values):
         reader = Reader(db_with_values).diagnostics
         assert {slug for _, slug in reader.with_values(MetricValueType.SERIES)} == {

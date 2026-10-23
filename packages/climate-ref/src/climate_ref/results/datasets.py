@@ -2,7 +2,7 @@
 Which datasets are in the database?
 
 Use this to find the model, observation or reanalysis datasets that REF has ingested,
-for example all CMIP6 datasets for ACCESS-CM2, or the files of one dataset.
+for example all CMIP6 datasets for a given model, or the files of one dataset.
 [DatasetsReader][climate_ref.results.datasets.DatasetsReader] is reached via
 [Reader.datasets][climate_ref.results.reader.Reader.datasets].
 It lists one source type at a time (CMIP6, CMIP7, obs4MIPs and so on).

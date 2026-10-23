@@ -1,5 +1,5 @@
 """
-Where is the plot, log or data file that a run made?
+Where is the plot, log or data file that an execution made?
 
 REF writes each execution's outputs into a folder under the results root, ``config.paths.results``.
 The database stores only the part of the path below that root.

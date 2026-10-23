@@ -1,29 +1,59 @@
 """
-Read the results of a REF run into pandas.
+Read the results of diagnostic runs from a local REF database.
 
-``Reader`` provides an interface to query and filter the results in a local REF database.
-Each read returns a collection that you can loop over or turn into a DataFrame with ``to_pandas()``.
-The results are plain Python objects, so you can keep them after the database is closed.
+The REF stores its local results in a database
+The results are stored across several database tables:
+diagnostics, execution groups, executions, metric values and datasets.
+A ``Reader`` joins these tables, picks the latest execution in each group and skips retracted executions,
+so a read needs a filter rather than SQL.
 
-What you can read, as properties of ``Reader``:
+## Reading results
 
-* ``reader.values``: metric values, as scalars or series, in [values][climate_ref.results.values].
-* ``reader.executions``: execution groups, executions and their output files,
-  in [executions][climate_ref.results.executions].
-* ``reader.datasets``: the datasets that have been ingested, in [datasets][climate_ref.results.datasets].
-* ``reader.diagnostics``: the diagnostics and how many of their runs succeeded or failed,
-  in [diagnostics][climate_ref.results.diagnostics].
-* ``reader.resources``: CPU and memory use of runs, in [resources][climate_ref.results.resources].
-* ``reader.artifacts``: paths of the output files of a run, in [artifacts][climate_ref.results.artifacts].
+Each property of a ``Reader`` reads one kind of result:
 
-Narrow a read with the filters in [filters][climate_ref.results.filters].
-Flag unusual scalar values with [outliers][climate_ref.results.outliers].
-The DataFrame layout is set in [frames][climate_ref.results.frames].
-To get database rows instead of reader objects, use the builders in [queries][climate_ref.results.queries].
+* ``reader.values``: the metric values each run produced, as single numbers or as series.
+* ``reader.executions``: the runs of each diagnostic and whether they succeeded.
+* ``reader.diagnostics``: the diagnostics, with how many of their runs succeeded or failed.
+* ``reader.datasets``: the datasets that have been ingested.
+* ``reader.resources``: how much CPU time and memory the runs used.
+* ``reader.artifacts``: where the output files of a run are on disk.
 
-Examples
---------
-Compare two models on one diagnostic, as a table:
+Every read returns a collection.
+Loop over it, or call ``to_pandas()`` on it to get a DataFrame.
+
+## Filtering
+
+Most reads take a filter, such as ``MetricValueFilter``, to choose which results come back.
+By default a filter keeps only the latest diagnostic version and leaves out retracted executions.
+The filters are documented in [filters][climate_ref.results.filters].
+
+## Pagination
+
+Reads that return many rows are paged with ``offset`` and ``limit``.
+By default ``limit`` is ``None``, which returns every matching row.
+A collection's ``total_count`` is how many rows match the filter across all pages.
+To get the next page, repeat the read with ``offset=page.offset + len(page)``.
+
+## Plain objects instead of ORM objects
+
+A read returns frozen data objects, such as
+[ScalarValue][climate_ref.results.values.ScalarValue],
+rather than the SQLAlchemy ORM objects that the database uses.
+This is on purpose:
+
+* They keep working after the database session is closed.
+  An ORM object loads related rows lazily, so reading one of them after the session closes fails.
+* Reading a field never runs a hidden query, because everything is loaded during the read.
+* They cannot change the database. They are frozen and not attached to a session.
+* Their fields can stay the same when the database tables change, so code that uses them does not break.
+
+To work with the ORM objects, use the query builders in [queries][climate_ref.results.queries].
+Each builder takes the same filter as its reader and returns a SQLAlchemy ``Select``,
+which you can narrow further with ``.where()`` before running it in a session.
+
+## Examples
+
+Get the global mean values for two models as a DataFrame:
 
 ```python
 from climate_ref.config import Config
@@ -40,10 +70,10 @@ filters = MetricValueFilter(
 with Database.from_config(config, read_only=True) as db:
     reader = Reader(db)
     df = reader.values.scalar_values(filters).to_pandas()
-    groups = reader.executions.groups().to_pandas()
 ```
 
-Find where the log of a run is. This needs the results folder:
+Find the log file of run 42.
+Reading files needs the results folder as well as the database:
 
 ```python
 with Database.from_config(config, read_only=True) as db:
@@ -51,20 +81,6 @@ with Database.from_config(config, read_only=True) as db:
     execution = reader.executions.execution(execution_id=42)
     log = reader.artifacts.log_file(execution.output_fragment)
 ```
-
-Public surface convention
--------------------------
-The top level exports only what you name to make a call:
-
-* the ``Reader`` entry point,
-* the filters you construct and pass in:
-  ``MetricValueFilter``, ``ExecutionGroupFilter``, ``DatasetFilter``, ``DiagnosticFilter``,
-  ``ResourceFilter`` and ``InputDatasetFilter``,
-* the ``OutlierPolicy`` value object.
-
-Everything a reader returns lives in its own submodule.
-Import it from there when you need to name it,
-e.g. ``from climate_ref.results.values import ScalarValue``.
 """
 
 from climate_ref.results.datasets import DatasetFilter

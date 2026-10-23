@@ -19,6 +19,7 @@ from climate_ref.models.metric_value import (
     SeriesMetricValue,
 )
 from climate_ref.results import (
+    ExecutionGroupFilter,
     MetricValueFilter,
     OutlierPolicy,
     Reader,
@@ -618,6 +619,21 @@ class TestCreatedWindow:
         values = Reader(dal_db).values.scalar_values(f)
         assert newer_execution not in {v.execution_id for v in values.items}
         assert len(values) == 8
+
+    def test_latest_only_picks_latest_among_execution_ids(self, dal_db, newer_execution):
+        reader = Reader(dal_db)
+        older = reader.values.scalar_values(MetricValueFilter(created_before=datetime.datetime(2029, 1, 1)))
+        (older_id,) = {v.execution_id for v in older.items}
+        values = reader.values.scalar_values(MetricValueFilter(latest_only=True, execution_ids=[older_id]))
+        assert {v.execution_id for v in values.items} == {older_id}
+        assert len(values) == 8
+
+    def test_groups_judged_by_newest_of_execution_ids(self, dal_db, newer_execution):
+        reader = Reader(dal_db)
+        older = reader.values.scalar_values(MetricValueFilter(created_before=datetime.datetime(2029, 1, 1)))
+        (older_id,) = {v.execution_id for v in older.items}
+        groups = reader.executions.groups(ExecutionGroupFilter(execution_ids=[older_id]))
+        assert [(g.id, g.latest.id) for g in groups] == [(dal_db.execution_group_id, older_id)]
 
 
 class TestRetracted:

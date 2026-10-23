@@ -1,15 +1,5 @@
 """
 ``attrs`` field converters for the results filters.
-
-They turn the list a caller passes into the tuple a frozen filter stores.
-
-Examples
---------
->>> from climate_ref.results._converters import _as_id_tuple, _as_str_tuple
->>> _as_id_tuple([3, 1, 2])
-(3, 1, 2)
->>> _as_str_tuple(["enso"])
-('enso',)
 """
 
 from collections.abc import Sequence

@@ -467,7 +467,7 @@ class ValuesReader:
                 include_context=include_context,
             )
 
-        # No detection: page and count in SQL so we never materialise the whole table.
+        # No outlier detection: page and count in SQL so we never materialise the whole table.
         base_stmt = select_scalar_values(filters)
         value_ids = select_value_ids(MetricValueType.SCALAR, filters)
         facets = self._facets(value_ids) if with_facets else ()

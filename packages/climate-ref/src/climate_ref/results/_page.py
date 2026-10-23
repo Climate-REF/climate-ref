@@ -1,4 +1,8 @@
-"""The paging shape shared by every reader collection."""
+"""
+The paging shape shared by every reader collection.
+
+An offset and limit approach is used for all collections of results.
+"""
 
 from collections.abc import Iterator
 
@@ -12,6 +16,7 @@ class Page[T]:
 
     Every collection that a reader returns is a ``Page``.
     Loop over it, or use ``len()``, to get at its ``items``.
+
     ``total_count`` is how many results match your filter in all.
     This includes those left out by ``offset`` and ``limit``.
     It is ``None`` only if you passed ``with_count=False``.

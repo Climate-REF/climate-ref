@@ -1,9 +1,13 @@
 """
-Filters that narrow what the results readers return.
+Filters that choose which results a read returns.
 
-Build a filter and pass it to a reader method.
-Every field is optional, and a field left as ``None`` does not narrow the result.
-So ``MetricValueFilter()`` matches every value at the promoted diagnostic version.
+Build a filter and pass it to a reader method, or to the matching builder in
+[queries][climate_ref.results.queries].
+Filters are frozen [attrs](https://www.attrs.org) classes, so one filter can be reused across reads.
+
+## Which filter to use
+
+Each reader method takes one kind of filter:
 
 * [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]:
   ``reader.values.scalar_values`` and ``series_values``.
@@ -13,27 +17,49 @@ So ``MetricValueFilter()`` matches every value at the promoted diagnostic versio
   ``reader.diagnostics.list`` and ``reader.executions.statistics``.
 * [ResourceFilter][climate_ref.results.filters.ResourceFilter]:
   ``reader.resources.measurements``, ``summary``, ``summaries`` and ``profiles``.
+* [DatasetFilter][climate_ref.models.dataset_query.DatasetFilter]:
+  ``reader.datasets``. It filters the datasets themselves rather than executions.
 
-Some fields are shared by several filters, and each means the same thing, with the same default, on each.
-They come in four groups, one class each.
+## Defaults
 
-* [DiagnosticScope][climate_ref.results.filters.DiagnosticScope]:
-  ``diagnostic_slug``, ``provider_slug``, ``diagnostic_contains``, ``provider_contains``.
-  On every filter.
-* [VersionScope][climate_ref.results.filters.VersionScope]: ``include_superseded``, ``diagnostic_version``.
-  On every filter.
-* [ExecutionScope][climate_ref.results.filters.ExecutionScope]:
-  ``include_retracted``, ``created_after``, ``created_before``.
-  On every filter.
-* [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: ``input_datasets``.
-  On every filter.
+Every field is optional, and a field left as ``None`` does not narrow the result.
+Two defaults still apply to an empty filter, on every filter except ``DatasetFilter``:
 
-Each filter adds its own fields on top, listed on its class.
-``MetricValueFilter`` and ``ResourceFilter`` add ``latest_only``.
-The group and diagnostic filters always judge a group by its newest execution, so they have no such field.
-Dataset-level fields are in [InputDatasetFilter][climate_ref.results.filters.InputDatasetFilter].
-[DatasetFilter][climate_ref.models.dataset_query.DatasetFilter] filters datasets rather than executions,
-so it is not part of this family.
+* Only results from each diagnostic's promoted version are kept.
+  Pass ``include_superseded=True`` for every version.
+* Retracted executions are left out.
+  Pass ``include_retracted=True`` to keep them.
+
+So ``MetricValueFilter()`` matches every value from a promoted, non-retracted execution.
+
+## Shared fields
+
+Most fields mean the same thing, with the same default, on every filter that has them.
+They are grouped into scopes, and each filter is built from the scopes it needs:
+
+* [DiagnosticScope][climate_ref.results.filters.DiagnosticScope]: which diagnostics and providers,
+  by exact slug (``diagnostic_slug``, ``provider_slug``)
+  or by substring (``diagnostic_contains``, ``provider_contains``).
+* [VersionScope][climate_ref.results.filters.VersionScope]: which diagnostic versions
+  (``include_superseded``, ``diagnostic_version``).
+* [ExecutionScope][climate_ref.results.filters.ExecutionScope]: which executions
+  (``include_retracted``, ``created_after``, ``created_before``, ``execution_ids``, ``execution_group_ids``).
+* [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: which input datasets the executions used
+  (``input_datasets``).
+
+## Latest execution only
+
+An execution group can have several executions, one per rerun.
+``MetricValueFilter`` and ``ResourceFilter`` read single executions,
+so they have ``latest_only`` to keep only each group's newest one.
+``ExecutionGroupFilter`` and ``DiagnosticFilter`` always judge a group by its newest execution,
+so they do not need it.
+
+## Filtering by input dataset
+
+[InputDatasetFilter][climate_ref.results.filters.InputDatasetFilter] keeps executions by the datasets they ran
+against, such as a ``source_id`` or a list of dataset ids.
+Pass it as ``input_datasets`` on any filter.
 
 Examples
 --------
@@ -78,7 +104,6 @@ from climate_ref.models.execution import (
     ExecutionFailureReason,
     ExecutionGroup,
     execution_datasets,
-    select_latest_executions,
 )
 from climate_ref.models.metric_value import MetricValue
 from climate_ref.models.provider import Provider
@@ -230,26 +255,11 @@ class InputDatasetFilter:
         # An outer-joined missing execution would pass the no-model-input branch.
         return and_(Execution.id.is_not(None), or_(*branches))
 
-    def execution_group_clause(self) -> ColumnElement[bool]:
-        """
-        Clause over ``ExecutionGroup`` that is true when its latest execution matches.
-
-        A group whose older executions used the datasets but whose latest did not is left out,
-        so group-level readers agree with the values that group's latest execution produced.
-        """
-        latest = select_latest_executions().subquery()
-        matching = (
-            select(latest.c.execution_group_id)
-            .join(Execution, Execution.id == latest.c.execution_id)
-            .where(self.execution_clause())
-        )
-        return ExecutionGroup.id.in_(matching)
-
 
 @attrs.frozen(kw_only=True, slots=False)
 class DiagnosticScope(BaseFilter):
     """
-    A group of fields shared by every filter: which diagnostics or providers to keep.
+    A group of fields to filter for a given set of diagnostics or providers.
 
     Use the ``*_slug`` fields for one exact diagnostic or provider,
     and the ``*_contains`` fields to search by part of a name.
@@ -349,13 +359,13 @@ class ExecutionScope(BaseFilter):
     A group of fields shared by every filter: which executions to keep.
 
     By default every execution that is not retracted counts.
-    The creation window applies before the newest execution is picked,
+    The creation window and the id lists apply before the newest execution is picked,
     so ``latest_only`` with ``created_before`` keeps each group's newest execution from before then.
 
-    Filters over execution groups or diagnostics judge each group by its newest execution in the window.
+    Filters over execution groups or diagnostics judge each group by its newest execution that is kept.
     A group whose newest execution is retracted is dropped, unless ``include_retracted=True``.
     It never falls back to an older execution, because the newer one replaced it.
-    With a window set, a group with no execution in it is dropped.
+    With a window or id list set, a group with no kept execution is dropped.
 
     Examples
     --------
@@ -380,13 +390,23 @@ class ExecutionScope(BaseFilter):
     created_before: datetime.datetime | None = None
     """Keep only executions created before this time, as naive UTC."""
 
-    def created_clauses(self) -> list[ColumnElement[bool]]:
-        """Clauses over ``Execution`` for the creation window."""
+    execution_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
+    """Keep only these executions."""
+
+    execution_group_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
+    """Keep only executions in these groups."""
+
+    def execution_clauses(self) -> list[ColumnElement[bool]]:
+        """Clauses over ``Execution`` that narrow which executions count, before the newest is picked."""
         clauses: list[ColumnElement[bool]] = []
         if self.created_after is not None:
             clauses.append(Execution.created_at >= self.created_after)
         if self.created_before is not None:
             clauses.append(Execution.created_at < self.created_before)
+        if self.execution_ids is not None:
+            clauses.append(Execution.id.in_(self.execution_ids))
+        if self.execution_group_ids is not None:
+            clauses.append(Execution.execution_group_id.in_(self.execution_group_ids))
         return clauses
 
 
@@ -443,12 +463,6 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
 
     A group whose newest execution is retracted gives nothing, unless ``include_retracted=True``.
     """
-
-    execution_ids: Sequence[int] | None = None
-    """Keep only values from these executions."""
-
-    execution_group_ids: Sequence[int] | None = None
-    """Keep only values from executions in these groups."""
 
     dimensions: Mapping[str, str | Sequence[str]] | None = None
     """

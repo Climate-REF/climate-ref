@@ -377,7 +377,7 @@ class ExecutionGroupCollection(Page[ExecutionGroupView]):
 
 class ExecutionsReader:
     """
-    Look up diagnostic runs, their outcomes and the files they produced.
+    Look up executions, their outcomes and the files they produced.
 
     Reach it as ``Reader(db).executions``.
     See the [module overview][climate_ref.results.executions] for what an execution and a group are.

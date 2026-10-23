@@ -629,6 +629,38 @@ class ExecutionOutput(DimensionMixin, CreatedUpdatedMixin, Base):
         )
 
 
+# There are two forms to select for the "latest" execution.
+# These selectors are outside of climate_ref.reader as they are used by the models.
+# The grouped max is fast across many groups, the ordered limit-1 lookup is fast for one group or a page.
+def _select_latest_execution(*where: ColumnElement[bool]) -> Select[tuple[Execution]]:
+    """Select the latest ``Execution`` matching ``where``."""
+    return select(Execution).where(*where).order_by(Execution.created_at.desc(), Execution.id.desc()).limit(1)
+
+
+def select_latest_execution(execution_group_id: int) -> Select[tuple[Execution]]:
+    """
+    Build the ``Select`` for one group's latest ``Execution``, which returns no row if it has none.
+
+    The latest is chosen by ``created_at``, then id, and retracted executions count.
+    """
+    return _select_latest_execution(Execution.execution_group_id == execution_group_id)
+
+
+def latest_execution_id(among_executions: Sequence[ColumnElement[bool]] = ()) -> Any:
+    """
+    Correlated subquery of the outer ``ExecutionGroup``'s latest execution id, or ``NULL`` if it has none.
+
+    ``among_executions`` works as in
+    [select_latest_executions][climate_ref.results.queries.select_latest_executions].
+    """
+    return (
+        _select_latest_execution(Execution.execution_group_id == ExecutionGroup.id, *among_executions)
+        .with_only_columns(Execution.id)
+        .correlate(ExecutionGroup)
+        .scalar_subquery()
+    )
+
+
 def select_latest_executions(
     among_executions: Sequence[ColumnElement[bool]] = (),
 ) -> Select[tuple[int, int]]:

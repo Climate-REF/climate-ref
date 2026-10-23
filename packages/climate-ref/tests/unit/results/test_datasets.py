@@ -178,6 +178,13 @@ class TestFacetFiltering:
                 DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"nonexistent_facet": ("x",)})
             )
 
+    def test_finalised_facet_raises(self, db_with_datasets):
+        reader = Reader(db_with_datasets)
+        with pytest.raises(ValueError, match="Unknown facet 'finalised'"):
+            reader.datasets.list(
+                DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"finalised": ("True",)})
+            )
+
     def test_source_type_is_required(self):
         """``DatasetFilter`` has no default ``source_type``: a typed listing must choose a type."""
         with pytest.raises(TypeError):

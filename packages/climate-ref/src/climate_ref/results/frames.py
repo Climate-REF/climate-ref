@@ -68,7 +68,8 @@ def scalar_values_to_frame(values: "Sequence[ScalarValue]", *, detection_ran: bo
         if v.diagnostic_slug is not None:
             rec.update(diagnostic_slug=v.diagnostic_slug, provider_slug=v.provider_slug)
         records.append(rec)
-    return pd.DataFrame.from_records(records)
+    base_columns = ["id", "execution_id", "execution_group_id", "kind", "value"]
+    return pd.DataFrame.from_records(records, columns=None if records else base_columns)
 
 
 def series_values_to_frame(values: "Sequence[SeriesValue]", *, explode: bool = True) -> pd.DataFrame:
@@ -115,7 +116,7 @@ def series_values_to_frame(values: "Sequence[SeriesValue]", *, explode: bool = T
             execution_id=v.execution_id,
             execution_group_id=v.execution_group_id,
             kind=v.kind,
-            index_name=v.index_name or "index",
+            index_name=v.index_name,
             reference_id=v.reference_id,
         )
         if v.diagnostic_slug is not None:
@@ -130,7 +131,9 @@ def series_values_to_frame(values: "Sequence[SeriesValue]", *, explode: bool = T
             rec = dict(base)
             rec.update(values=list(v.values), index=list(v.index) if v.index is not None else None)
             records.append(rec)
-    return pd.DataFrame.from_records(records)
+    base_columns = ["id", "execution_id", "execution_group_id", "kind", "index_name", "reference_id"]
+    extra = ["index", "value"] if explode else ["values", "index"]
+    return pd.DataFrame.from_records(records, columns=None if records else [*base_columns, *extra])
 
 
 class _DistinctValues(FunctionElement[Any]):

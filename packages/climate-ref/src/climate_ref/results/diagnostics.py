@@ -237,7 +237,8 @@ class DiagnosticsReader:
         Parameters
         ----------
         filters
-            Which diagnostics to return. ``None`` returns all of them.
+            Which diagnostics to return.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
         offset
             Diagnostics to skip, ordered by provider slug then diagnostic slug.
         limit
@@ -295,7 +296,8 @@ class DiagnosticsReader:
         value_type
             ``MetricValueType.SCALAR`` for single numbers, or ``MetricValueType.SERIES`` for time series.
         filters
-            Narrow which diagnostics and executions are considered. ``None`` considers all of them.
+            Narrow which diagnostics and executions are considered.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
             Use ``include_retracted=True`` to count retracted executions,
             or ``created_after`` and ``created_before`` to limit by date.
 

@@ -1,5 +1,6 @@
 import datetime
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -92,6 +93,34 @@ class TestDatasetsList:
             ["datasets", "list", "--dataset-filter", "bad_filter"],
             expected_exit_code=2,
         )
+
+    def test_list_include_files_base_column(self, db_seeded, invoke_cli):
+        """Base columns such as ``slug`` can be selected together with ``--include-files``."""
+        result = invoke_cli(["datasets", "list", "--include-files", "--column", "slug"])
+        assert result.exit_code == 0
+
+    def test_list_include_files_empty_offers_columns(self, db_seeded, invoke_cli):
+        result = invoke_cli(
+            [
+                "datasets",
+                "list",
+                "--include-files",
+                "--dataset-filter",
+                "source_id=DOES-NOT-EXIST",
+                "--column",
+                "nope",
+            ],
+            expected_exit_code=1,
+        )
+        assert "'slug'" in result.stderr
+        assert "'path'" in result.stderr
+
+    def test_list_finalised_is_not_a_facet(self, db_seeded, invoke_cli):
+        invoke_cli(["datasets", "list", "--dataset-filter", "finalised=True"], expected_exit_code=1)
+
+    def test_list_include_files_warns_when_truncated(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "list", "--include-files", "--limit", "1"])
+        assert re.search(r"Displaying 1 of \d+ files", result.stderr)
 
     def test_list_dataset_filter_invalid_facet(self, db_seeded, invoke_cli):
         invoke_cli(

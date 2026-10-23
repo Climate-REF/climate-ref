@@ -127,8 +127,22 @@ class TestPercentile:
     def test_interpolates(self):
         assert _percentile([1.0, 2.0, 3.0, 4.0], 0.5) == 2.5
 
+    @pytest.mark.parametrize("quantile", [0, 1, -0.1, 1.5])
+    def test_quantile_outside_open_interval_raises(self, quantile):
+        with pytest.raises(ValueError, match="quantile"):
+            _percentile([1.0, 2.0, 3.0], quantile)
+
     def test_ignores_input_order(self):
         assert _percentile([3.0, 1.0, 2.0], 0.5) == _percentile([1.0, 2.0, 3.0], 0.5)
+
+
+class TestGroupBy:
+    def test_unknown_group_by_raises(self, db_with_resources):
+        reader = Reader(db_with_resources)
+        with pytest.raises(ValueError, match="group_by"):
+            reader.resources.summaries(group_by="providers")
+        with pytest.raises(ValueError, match="group_by"):
+            reader.resources.profiles(group_by="providers")
 
 
 class TestProfiles:

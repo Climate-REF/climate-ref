@@ -36,7 +36,7 @@ from climate_ref.models.execution import (
     ExecutionFailureReason,
     execution_datasets,
 )
-from climate_ref.query import select_group_counts
+from climate_ref.query import select_group_counts, select_latest_execution
 from climate_ref.results import (
     DiagnosticFilter,
     ExecutionGroupFilter,
@@ -69,6 +69,15 @@ class ListGroupsFilterOptions:
 
     failure_reasons: list[ExecutionFailureReason] | None = None
     """Filter by the latest execution's failure reason"""
+
+    successful: bool | None = None
+    """Filter by whether the latest execution succeeded"""
+
+    dirty: bool | None = None
+    """Filter by whether the group is flagged for recomputation"""
+
+    since: str | None = None
+    """Only groups that ran since this time"""
 
 
 class ValueKind(StrEnum):
@@ -211,7 +220,6 @@ def list_groups(  # noqa: PLR0913
 
     The output is a table by default, or machine-readable JSON with ``--format json``.
     """
-    session = ctx.obj.database.session
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
 
@@ -233,28 +241,29 @@ def list_groups(  # noqa: PLR0913
         provider=provider,
         selectors=selector_filters or None,
         failure_reasons=failure_reason,
+        successful=successful,
+        dirty=dirty,
+        since=since,
     )
     logger.debug(f"Applying filters: {filters}")
-
-    # Get total count before filtering for warning messages
-    total_count = session.query(ExecutionGroup).count()
 
     # Apply filters to query
     collection = reader.executions.groups(group_filter, limit=limit)
 
     # Check if any results found
-    if len(collection) == 0:
-        emit_no_results_warning(filters, total_count)
+    if collection.total_count == 0:
+        emit_no_results_warning(
+            filters, reader.executions.groups(ExecutionGroupFilter(), limit=0).total_count or 0
+        )
 
     results_df = collection.to_pandas()
 
     # Select columns to display.
     if column:
-        if not results_df.empty:  # Only validate against actual data
-            if not all(col in results_df.columns for col in column):
-                logger.error(f"Column not found in data catalog: {column}")
-                raise typer.Exit(code=1)
-            results_df = results_df[column]
+        if not all(col in results_df.columns for col in column):
+            logger.error(f"Column not found in data catalog: {column}")
+            raise typer.Exit(code=1)
+        results_df = results_df[column]
     elif output_format == OutputFormat.table:
         results_df = results_df[_DEFAULT_LIST_GROUPS_COLUMNS]
 
@@ -479,12 +488,7 @@ def walk_directory(directory: pathlib.Path, tree: Tree) -> None:
             tree.add(text_filename)
 
 
-def _execution_panel(execution_group: ExecutionGroup) -> Panel:
-    if len(execution_group.executions) == 0:
-        result = None
-    else:
-        result = execution_group.executions[-1]
-
+def _execution_panel(execution_group: ExecutionGroup, result: Execution | None) -> Panel:
     failure_reason = (result.failure_reason if result else None) or "-"
     panel = Panel(
         f"Key: [bold]{execution_group.key}[/]\n"
@@ -609,6 +613,12 @@ def emit_no_results_warning(
         filter_parts.append(f"selector filters: {selector_strs}")
     if filters.failure_reasons:
         filter_parts.append(f"failure reasons: {[reason.value for reason in filters.failure_reasons]}")
+    if filters.successful is not None:
+        filter_parts.append(f"successful: {filters.successful}")
+    if filters.dirty is not None:
+        filter_parts.append(f"dirty: {filters.dirty}")
+    if filters.since:
+        filter_parts.append(f"since: {filters.since}")
 
     logger.warning(
         f"No execution groups match the specified filters. "
@@ -639,13 +649,13 @@ def inspect(
         logger.error(f"Execution group not found: {group_id}")
         raise typer.Exit(code=1)
 
-    console.print(_execution_panel(execution_group))
+    result = session.execute(select_latest_execution(group_id)).scalar_one_or_none()
+    console.print(_execution_panel(execution_group, result))
 
-    if not execution_group.executions:
+    if result is None:
         logger.warning(f"Execution group {group_id} has not run yet.")
         return
 
-    result: Execution = execution_group.executions[-1]
     output_dir = reader.artifacts.output_directory(result.output_fragment)
 
     console.print(_datasets_panel(result))
@@ -679,7 +689,7 @@ def values(  # noqa: PLR0913
         bool,
         typer.Option(
             "--outliers/--no-outliers",
-            help="Run source-id-aware IQR outlier detection (scalar values only).",
+            help="Run model-aware IQR outlier detection (scalar values only).",
         ),
     ] = False,
     include_unverified: Annotated[
@@ -735,46 +745,40 @@ def values(  # noqa: PLR0913
 
     try:
         dimensions = parse_facet_filters(dimension)
+        # Scope to the concrete execution: promotion/retraction gating would otherwise hide the
+        # values the user explicitly asked to inspect.
+        filters = MetricValueFilter(
+            execution_ids=[execution_id],
+            dimensions=dimensions or None,
+            include_superseded=True,
+            include_retracted=True,
+        )
     except ValueError as e:
         logger.error(str(e))
         raise typer.Exit(code=1)
 
-    # Scope to the concrete execution: promotion/retraction gating would otherwise hide the
-    # values the user explicitly asked to inspect.
-    filters = MetricValueFilter(
-        execution_ids=[execution_id],
-        dimensions=dimensions or None,
-        include_superseded=True,
-        include_retracted=True,
-    )
-
-    try:
-        if kind == ValueKind.scalar:
-            _render_scalar_values(
-                reader.values,
-                filters,
-                console=console,
-                output_format=output_format,
-                outliers=outliers,
-                include_unverified=include_unverified,
-                offset=offset,
-                limit=limit,
-            )
-        else:
-            _render_series_values(
-                reader.values,
-                filters,
-                console=console,
-                output_format=output_format,
-                offset=offset,
-                limit=limit,
-                outliers=outliers,
-                include_unverified=include_unverified,
-            )
-    except KeyError as e:
-        # Raised by the filter when a --dimension key is not a registered CV dimension.
-        logger.error(f"Unknown dimension: {e}")
-        raise typer.Exit(code=1)
+    if kind == ValueKind.scalar:
+        _render_scalar_values(
+            reader.values,
+            filters,
+            console=console,
+            output_format=output_format,
+            outliers=outliers,
+            include_unverified=include_unverified,
+            offset=offset,
+            limit=limit,
+        )
+    else:
+        _render_series_values(
+            reader.values,
+            filters,
+            console=console,
+            output_format=output_format,
+            offset=offset,
+            limit=limit,
+            outliers=outliers,
+            include_unverified=include_unverified,
+        )
 
 
 def _render_scalar_values(  # noqa: PLR0913
@@ -1342,22 +1346,26 @@ def reingest(  # noqa: PLR0913
 
 
 @app.command()
-def flag_dirty(ctx: typer.Context, execution_id: int) -> None:
+def flag_dirty(
+    ctx: typer.Context,
+    group_id: Annotated[int, typer.Argument(help="Execution group ID to flag for recomputation.")],
+) -> None:
     """
     Flag an execution group for recomputation
     """
     session = ctx.obj.database.session
     console = ctx.obj.console
     with session.begin():
-        execution_group = session.get(ExecutionGroup, execution_id)
+        execution_group = session.get(ExecutionGroup, group_id)
 
         if not execution_group:
-            logger.error(f"Execution not found: {execution_id}")
+            logger.error(f"Execution group not found: {group_id}")
             raise typer.Exit(code=1)
 
         execution_group.dirty = True
 
-        console.print(_execution_panel(execution_group))
+        latest = session.execute(select_latest_execution(group_id)).scalar_one_or_none()
+        console.print(_execution_panel(execution_group, latest))
 
 
 @app.command()

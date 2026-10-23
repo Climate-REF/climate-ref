@@ -363,9 +363,8 @@ class TestProviderRollUp:
         assert pmp.memory_limit_seen == 64 * GIB
         assert pmp.over_limit is False
 
-    def test_does_not_mix_sources_across_diagnostics(self, db_with_resources):
-        # esmvaltool's only measured diagnostic is cgroup-sourced, so a rusage-only diagnostic
-        # alongside it must not contribute its far larger peak to the roll-up.
+    def test_keeps_a_diagnostic_measured_by_another_source(self, db_with_resources):
+        # A rusage-only diagnostic beside cgroup-sourced ones still sizes the worker.
         with db_with_resources.session.begin():
             diagnostic = (
                 db_with_resources.session.query(Diagnostic).filter_by(slug="sea-ice-area-basic").first()
@@ -384,9 +383,9 @@ class TestProviderRollUp:
         rolled_up = Reader(db_with_resources).resources.profiles(group_by="provider")
         esmvaltool = {p.provider_slug: p for p in rolled_up}["esmvaltool"]
 
-        assert esmvaltool.memory_source == "cgroup"
-        assert esmvaltool.peak_memory_max == 4 * GIB
-        assert esmvaltool.sample_count == 3
+        assert esmvaltool.memory_source == "rusage"
+        assert esmvaltool.peak_memory_max == 200 * GIB
+        assert esmvaltool.sample_count == 4
 
     def test_provider_with_no_samples(self, db_seeded):
         with db_seeded.session.begin():

@@ -1746,3 +1746,38 @@ class TestExecutionValues:
         result = invoke_cli(["executions", "values", "99999"], expected_exit_code=1)
 
         assert "Execution group not found" in result.stderr
+
+
+class TestSince:
+    @pytest.fixture
+    def db_with_old_runs(self, db_with_groups):
+        # key1 and key3 last ran in 2021, the rest ran now.
+        session = db_with_groups.session
+        with session.begin():
+            for key in ("key1", "key3"):
+                group = session.query(ExecutionGroup).filter_by(key=key).one()
+                for execution in group.executions:
+                    execution.created_at = datetime.datetime(2021, 1, 1)
+        return db_with_groups
+
+    def test_list_groups_keeps_groups_run_since(self, db_with_old_runs, invoke_cli):
+        result = invoke_cli(["executions", "list-groups", "--since", "30d", "--format", "json"])
+        assert {row["key"] for row in json.loads(result.stdout)} == {"key2", "key4", "key5"}
+
+    def test_stats_accepts_since(self, db_with_old_runs, invoke_cli):
+        result = invoke_cli(["executions", "stats", "--since", "2020-06-01", "--provider", "pmp"])
+        assert "enso_tel" in result.stdout
+
+    def test_requeue_skips_failures_before_since(self, db_with_old_runs, invoke_cli):
+        result = invoke_cli(["executions", "requeue", "--since", "30d", "--force"])
+        assert "No failed execution groups match" in result.stdout
+
+    def test_requeue_since_alone_is_a_filter(self, db_with_old_runs, invoke_cli):
+        invoke_cli(["executions", "requeue", "--since", "2020-06-01", "--force"])
+        group = db_with_old_runs.session.query(ExecutionGroup).filter_by(key="key3").one()
+        assert group.dirty is True
+
+    @pytest.mark.parametrize("command", ["list-groups", "stats", "requeue", "resources"])
+    def test_invalid_since_exits(self, db_with_old_runs, invoke_cli, command):
+        result = invoke_cli(["executions", command, "--since", "soon"], expected_exit_code=1)
+        assert "Invalid --since value" in result.stderr

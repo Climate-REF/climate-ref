@@ -90,3 +90,14 @@ def test_value_ids_are_tuples():
     f = MetricValueFilter(isolate_ids=[1, 2], exclude_ids=3)
     assert (f.isolate_ids, f.exclude_ids) == ((1, 2), (3,))
     assert f == MetricValueFilter(isolate_ids=(1, 2), exclude_ids=[3])
+
+
+@pytest.mark.parametrize("cls", READER_FILTERS)
+def test_aware_times_become_naive_utc(cls):
+    nzdt = datetime.timezone(datetime.timedelta(hours=13))
+    f = cls(
+        created_after=datetime.datetime(2026, 1, 1, 12, tzinfo=nzdt),
+        created_before=datetime.datetime(2026, 1, 2),
+    )
+    assert f.created_after == datetime.datetime(2025, 12, 31, 23)
+    assert f.created_before == datetime.datetime(2026, 1, 2)

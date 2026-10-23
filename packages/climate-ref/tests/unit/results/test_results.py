@@ -118,8 +118,10 @@ def dal_db(db_seeded):
         session.add(ref_series)
         session.flush()
         group_id = group.id  # capture inside the txn; reading it post-commit would autobegin
+        diagnostic_id = diagnostic.id
 
     db_seeded.execution_group_id = group_id
+    db_seeded.diagnostic_id = diagnostic_id
     return db_seeded
 
 
@@ -243,6 +245,37 @@ class TestScalarValues:
         )
         assert coll.total_count == 2
         assert {v.dimensions["source_id"] for v in coll} == {"ACCESS-CM2", "CESM3"}
+
+    @pytest.mark.parametrize(("value", "expected"), [([None, "x"], 8), ([None], 8), (["x"], 0)])
+    def test_none_in_a_dimension_list_matches_null(self, dal_db, value, expected):
+        f = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id], dimensions={"region": value})
+        assert Reader(dal_db).values.scalar_values(f).total_count == expected
+
+    def test_outliers_are_tested_per_diagnostic(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            other = session.query(Diagnostic).filter(Diagnostic.id != dal_db.diagnostic_id).first()
+            group = ExecutionGroup(key="other-key", diagnostic_id=other.id, selectors={})
+            session.add(group)
+            session.flush()
+            execution = Execution(
+                execution_group_id=group.id, output_fragment="other", dataset_hash="h", successful=True
+            )
+            session.add(execution)
+            session.flush()
+            for i in range(6):
+                session.add(
+                    ScalarMetricValue.build(
+                        execution_id=execution.id,
+                        value=1000.0 + i,
+                        attributes=None,
+                        dimensions={"statistic": "mean", "metric": "tas", "source_id": f"OTHER-{i}"},
+                    )
+                )
+
+        coll = Reader(dal_db).values.scalar_values(outliers=OutlierPolicy(), include_unverified=True)
+        flagged = {v.dimensions["source_id"] for v in coll if v.is_outlier}
+        assert flagged == {"WILD", "BROKEN"}
 
     @pytest.mark.parametrize("field", ["execution_ids", "execution_group_ids", "isolate_ids"])
     def test_empty_id_sequence_matches_nothing(self, dal_db, field):

@@ -194,6 +194,20 @@ class TestFinalisedFilter:
         slugs = {d.slug for d in coll}
         assert "CMIP.TEST.OTHER-MODEL.historical.Amon.pr.gn.v1" not in slugs
 
+    def test_finalised_does_not_pick_an_older_version_as_latest(self, db_with_datasets):
+        db_with_datasets.session.add(
+            _make_cmip6_dataset(
+                slug="CMIP.TEST.TEST-MODEL.historical.Amon.tas.gn.v11", version="v11", finalised=False
+            )
+        )
+        db_with_datasets.session.flush()
+        coll = Reader(db_with_datasets).datasets.list(
+            DatasetFilter(
+                source_type=SourceDatasetType.CMIP6, finalised=True, facets={"source_id": "TEST-MODEL"}
+            )
+        )
+        assert [d.slug for d in coll] == []
+
     def test_finalised_false(self, db_with_datasets):
         reader = Reader(db_with_datasets)
         coll = reader.datasets.list(

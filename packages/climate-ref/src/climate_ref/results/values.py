@@ -36,7 +36,7 @@ import attrs
 import numpy as np
 import pandas as pd
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, aliased, joinedload
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
@@ -345,6 +345,18 @@ def _to_facets(facet_map: Mapping[str, Sequence[Any]]) -> tuple[Facet, ...]:
     return tuple(Facet(key=k, values=tuple(v)) for k, v in facet_map.items())
 
 
+def _diagnostic_id_of(table: Any) -> Any:
+    """Scalar subquery for the diagnostic id of each value's execution."""
+    execution = aliased(Execution)
+    group = aliased(ExecutionGroup)
+    return (
+        select(group.diagnostic_id)
+        .join(execution, execution.execution_group_id == group.id)
+        .where(execution.id == table.execution_id)
+        .scalar_subquery()
+    )
+
+
 class ValuesReader:
     """
     Gets the metric values that diagnostics produced, to compare models or plot against observations.
@@ -506,24 +518,30 @@ class ValuesReader:
         table = MetricValue.__table__.c
         detect_stmt = (
             select_value_ids(MetricValueType.SCALAR, filters)
-            .with_only_columns(table.id, table.execution_id, table.value, *(table[d] for d in dims))
+            .with_only_columns(
+                table.id, table.execution_id, table.value, *(table[d] for d in dims), _diagnostic_id_of(table)
+            )
             .order_by(table.id)
         )
         # Core execution, because the ORM result layer adds a third to this fetch, so flush as it would.
         if self.session.autoflush:
             self.session.flush()
         scalar_rows = self.session.connection().execute(detect_stmt).tuples().all()
-        _, _, values, *dim_columns = zip(*scalar_rows) if scalar_rows else [()] * (3 + len(dims))
+        _, _, values, *dim_columns, diagnostic_ids = (
+            zip(*scalar_rows) if scalar_rows else [()] * (4 + len(dims))
+        )
         facets = _to_facets(facets_from_columns(dims, dim_columns)) if with_facets else ()
         detection_dims = {*policy.group_by, "source_id"}
         frame = pd.DataFrame(
             {
                 "value": values,
+                "diagnostic_id": diagnostic_ids,
                 **{k: column for k, column in zip(dims, dim_columns) if k in detection_dims},
             }
         )
 
-        is_outlier = flag_outliers(frame, policy)
+        # Diagnostics measure different things under the same metric names, so never pool them.
+        is_outlier = flag_outliers(frame, attrs.evolve(policy, group_by=("diagnostic_id", *policy.group_by)))
         outlier_count = int(is_outlier.sum())
         kept = np.arange(len(scalar_rows)) if include_unverified else np.flatnonzero(~is_outlier)
 
@@ -568,7 +586,7 @@ class ValuesReader:
 
         items = []
         for i in positions:
-            row_id, execution_id, value, *dim_values = rows[i]
+            row_id, execution_id, value, *dim_values, _ = rows[i]
             extra = extras.get(row_id)
             if extra is None:
                 # Deleted by another transaction since detection read it.

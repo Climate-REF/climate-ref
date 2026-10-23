@@ -668,27 +668,15 @@ def _roll_up(provider_slug: str, profiles: Sequence[ResourceProfile]) -> Resourc
     A minimum across diagnostics would pair the largest peak with an unrelated smaller container
     and flag ``OVER`` where no diagnostic was ever over.
 
-    Sources are not mixed here either.
-    A diagnostic measured by a different source than the provider's dominant one is left out,
-    and its samples are counted in ``excluded_execution_count``.
+    Each diagnostic's profile already comes from one memory source.
+    Every measured diagnostic counts, even one measured by a different source,
+    because leaving out the largest would size the worker too small.
+    ``memory_source`` is the peak-driving diagnostic's source.
     """
-    measured = [profile for profile in profiles if profile.sample_count]
+    with_samples = [profile for profile in profiles if profile.sample_count]
     safety_factor = profiles[0].safety_factor
     excluded_execution_count = sum(profile.excluded_execution_count for profile in profiles)
     failed_execution_count = sum(profile.failed_execution_count for profile in profiles)
-
-    source_weights: dict[MemorySource, int] = {}
-    for profile in measured:
-        if profile.memory_source is not None:
-            source_weights[profile.memory_source] = (
-                source_weights.get(profile.memory_source, 0) + profile.sample_count
-            )
-    source = _dominant_source(source_weights)
-
-    with_samples = [profile for profile in measured if profile.memory_source == source]
-    excluded_execution_count += sum(
-        profile.sample_count for profile in measured if profile.memory_source != source
-    )
 
     if not with_samples:
         return _empty_profile(
@@ -711,7 +699,7 @@ def _roll_up(provider_slug: str, profiles: Sequence[ResourceProfile]) -> Resourc
         sample_count=sum(profile.sample_count for profile in with_samples),
         excluded_execution_count=excluded_execution_count,
         failed_execution_count=failed_execution_count,
-        memory_source=source,
+        memory_source=driver.memory_source,
         peak_memory_p50=max(profile.peak_memory_p50 for profile in with_samples),
         peak_memory_p95=peak_p95,
         peak_memory_max=max(profile.peak_memory_max for profile in with_samples),

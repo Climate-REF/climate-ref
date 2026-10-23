@@ -14,7 +14,8 @@ A value is an outlier when it lies more than ``factor`` times the IQR below Q1 o
 
 The test is model-aware:
 
-* Values are tested separately for each metric and statistic (the ``group_by`` fields).
+* Values are tested separately for each diagnostic,
+  and within it for each metric and statistic (the ``group_by`` fields).
 * The limits come from each model's mean over its ensemble members (``source_id``),
   so a model with many members does not outweigh one with a single member.
 * The limits are then applied to every individual value.

@@ -95,6 +95,11 @@ class TestSelectDiagnostics:
         slugs = {row.diagnostic_slug for row in rows}
         assert slugs == {"enso_tel"}
 
+    @pytest.mark.parametrize("search", ["%", "enso%", "ens_"])
+    def test_contains_treats_wildcards_literally(self, db_with_diagnostics, search):
+        stmt = select_diagnostics(DiagnosticFilter(diagnostic_contains=search, provider_contains=search))
+        assert db_with_diagnostics.session.execute(stmt).all() == []
+
     def test_exact_slug_filter(self, db_with_diagnostics):
         stmt = select_diagnostics(DiagnosticFilter(provider_slug="pmp", diagnostic_slug="enso_tel"))
         rows = db_with_diagnostics.session.execute(stmt).all()

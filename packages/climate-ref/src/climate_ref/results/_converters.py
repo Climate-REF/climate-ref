@@ -4,6 +4,7 @@
 Each converter takes one value or a sequence of them and returns a tuple, leaving ``None`` as is.
 """
 
+import datetime
 import enum
 from collections.abc import Sequence
 
@@ -111,3 +112,21 @@ def _as_str_tuple(value: str | Sequence[str] | None) -> tuple[str, ...] | None:
     if isinstance(value, str):
         return (value,)
     return tuple(value)
+
+
+def _as_naive_utc(value: datetime.datetime | None) -> datetime.datetime | None:
+    """
+    Convert an aware time to naive UTC, the form ``created_at`` is stored in.
+
+    A naive time is kept as is.
+
+    Examples
+    --------
+    >>> _as_naive_utc(
+    ...     datetime.datetime(2026, 1, 1, 12, tzinfo=datetime.timezone(datetime.timedelta(hours=13)))
+    ... )
+    datetime.datetime(2025, 12, 31, 23, 0)
+    """
+    if value is None or value.tzinfo is None:
+        return value
+    return value.astimezone(datetime.UTC).replace(tzinfo=None)

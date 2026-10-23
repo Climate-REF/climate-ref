@@ -111,6 +111,7 @@ from climate_ref.models.provider import Provider
 from climate_ref.results._converters import (
     _as_failure_reasons,
     _as_id_tuple,
+    _as_naive_utc,
     _as_source_types,
     _as_str_tuple,
 )
@@ -315,11 +316,15 @@ class DiagnosticScope(BaseFilter):
         if self.diagnostic_slug is not None:
             clauses.append(Diagnostic.slug.in_(self.diagnostic_slug))
         if self.diagnostic_contains:
-            clauses.append(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in self.diagnostic_contains)))
+            clauses.append(
+                or_(*(Diagnostic.slug.icontains(s, autoescape=True) for s in self.diagnostic_contains))
+            )
         if self.provider_slug is not None:
             clauses.append(Provider.slug.in_(self.provider_slug))
         if self.provider_contains:
-            clauses.append(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in self.provider_contains)))
+            clauses.append(
+                or_(*(Provider.slug.icontains(s, autoescape=True) for s in self.provider_contains))
+            )
         return clauses
 
     def diagnostic_ids(self) -> Select[tuple[int]]:
@@ -397,11 +402,11 @@ class ExecutionScope(BaseFilter):
     include_retracted: bool = False
     """Also keep retracted executions."""
 
-    created_after: datetime.datetime | None = None
-    """Keep only executions created at or after this time, as naive UTC."""
+    created_after: datetime.datetime | None = attrs.field(default=None, converter=_as_naive_utc)
+    """Keep only executions created at or after this time. A naive time is read as UTC."""
 
-    created_before: datetime.datetime | None = None
-    """Keep only executions created before this time, as naive UTC."""
+    created_before: datetime.datetime | None = attrs.field(default=None, converter=_as_naive_utc)
+    """Keep only executions created before this time. A naive time is read as UTC."""
 
     execution_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
     """Keep only these executions."""
@@ -546,8 +551,9 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
             if isinstance(value, str) or not isinstance(value, Sequence):
                 clauses.append(col == value)
             else:
-                vals = list(value)
-                clauses.append(col == vals[0] if len(vals) == 1 else col.in_(vals))
+                vals = [v for v in value if v is not None]
+                clause = col == vals[0] if len(vals) == 1 else col.in_(vals)
+                clauses.append(or_(clause, col.is_(None)) if None in value else clause)
         return clauses
 
 

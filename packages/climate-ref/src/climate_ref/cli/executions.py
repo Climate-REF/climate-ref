@@ -20,7 +20,6 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
-from sqlalchemy import or_
 
 from climate_ref.cli._utils import (
     OutputFormat,
@@ -32,12 +31,10 @@ from climate_ref.cli._utils import (
 )
 from climate_ref.config import Config
 from climate_ref.models import Execution, ExecutionGroup
-from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
     ExecutionFailureReason,
     execution_datasets,
 )
-from climate_ref.models.provider import Provider
 from climate_ref.results import (
     DiagnosticFilter,
     ExecutionGroupFilter,
@@ -99,6 +96,22 @@ _PROVIDER_ARG = Annotated[
         help="Filter by provider slug (substring match, case-insensitive). Multiple values can be provided."
     ),
 ]
+_SINCE_ARG = Annotated[
+    str | None,
+    typer.Option(help="Only consider executions newer than this age (90d, 12h, 4w) or ISO date."),
+]
+
+
+def _since_cutoff(since: str | None) -> datetime.datetime | None:
+    """Parse ``--since``, exiting with an error when it is invalid."""
+    if since is None:
+        return None
+    try:
+        return _parse_since(since)
+    except ValueError as e:
+        logger.error(str(e))
+        raise typer.Exit(code=1)
+
 
 # Default columns for the ``list-groups`` table.
 _DEFAULT_LIST_GROUPS_COLUMNS = [
@@ -123,6 +136,7 @@ def list_groups(  # noqa: PLR0913
     limit: int = typer.Option(100, help="Limit the number of rows to display"),
     diagnostic: _DIAGNOSTIC_ARG = None,
     provider: _PROVIDER_ARG = None,
+    since: _SINCE_ARG = None,
     filter: Annotated[  # noqa: A002
         list[str] | None,
         typer.Option(
@@ -166,6 +180,7 @@ def list_groups(  # noqa: PLR0913
     Groups are sorted by id, so the oldest comes first.
     Only groups at each diagnostic's promoted version are listed,
     and a group whose newest execution is retracted is left out.
+    With ``--since``, only groups that ran since then are listed, judged by their newest run in that time.
 
     By default the table shows a subset of columns with the verbose ``selectors``
     and ``updated_at`` fields omitted. Use ``--column`` to choose exactly which columns to display,
@@ -207,6 +222,7 @@ def list_groups(  # noqa: PLR0913
             successful=successful,
             dirty=dirty,
             failure_reasons=failure_reason,
+            created_after=_since_cutoff(since),
         ),
         limit=limit,
     )
@@ -853,22 +869,11 @@ def fail_running(
         cutoff = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(hours=older_than)
         query = query.filter(Execution.created_at < cutoff)
 
-    # Apply diagnostic/provider filters via execution group -> diagnostic join
     if diagnostic or provider:
-        query = query.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id).join(
-            Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id
+        scope = DiagnosticFilter(diagnostic_contains=diagnostic, provider_contains=provider)
+        query = query.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id).filter(
+            ExecutionGroup.diagnostic_id.in_(scope.diagnostic_ids())
         )
-
-    if diagnostic:
-        diagnostic_conditions = [
-            Diagnostic.slug.ilike(f"%{filter_value.lower()}%") for filter_value in diagnostic
-        ]
-        query = query.filter(or_(*diagnostic_conditions))
-
-    if provider:
-        query = query.join(Provider, Diagnostic.provider_id == Provider.id)
-        provider_conditions = [Provider.slug.ilike(f"%{filter_value.lower()}%") for filter_value in provider]
-        query = query.filter(or_(*provider_conditions))
 
     running_executions = query.all()
 
@@ -910,6 +915,7 @@ def stats(
     ctx: typer.Context,
     diagnostic: _DIAGNOSTIC_ARG = None,
     provider: _PROVIDER_ARG = None,
+    since: _SINCE_ARG = None,
 ) -> None:
     """
     Show how many execution groups each diagnostic has, by the status of their newest execution.
@@ -917,12 +923,19 @@ def stats(
     The statuses are running, failed, successful and not started, plus a dirty count that overlaps them.
     Only groups at each diagnostic's promoted version are counted, and retracted executions are skipped.
     Diagnostics with no groups are listed with zero counts, and each provider gets a ``(total)`` row.
+    With ``--since``, only groups that ran since then are counted, by their newest run in that time.
     """
     import pandas as pd
 
     console = ctx.obj.console
     rows = ctx.obj.database.session.execute(
-        select_group_counts(DiagnosticFilter(diagnostic_contains=diagnostic, provider_contains=provider))
+        select_group_counts(
+            DiagnosticFilter(
+                diagnostic_contains=diagnostic,
+                provider_contains=provider,
+                created_after=_since_cutoff(since),
+            )
+        )
     ).all()
 
     if not rows:
@@ -1087,10 +1100,7 @@ def resources(  # noqa: PLR0913
         ResourceGroupBy,
         typer.Option(help="Aggregate per diagnostic (default) or roll up per provider."),
     ] = ResourceGroupBy.diagnostic,
-    since: Annotated[
-        str | None,
-        typer.Option(help="Only consider executions newer than this age (90d, 12h, 4w) or ISO date."),
-    ] = None,
+    since: _SINCE_ARG = None,
     safety: Annotated[
         float,
         typer.Option(help="Multiplier applied to the p95 peak when recommending a memory size."),
@@ -1126,19 +1136,11 @@ def resources(  # noqa: PLR0913
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
 
-    cutoff = None
-    if since is not None:
-        try:
-            cutoff = _parse_since(since)
-        except ValueError as e:
-            logger.error(str(e))
-            raise typer.Exit(code=1)
-
     profiles = reader.resources.profiles(
         ResourceFilter(
             diagnostic_contains=diagnostic,
             provider_contains=provider,
-            created_after=cutoff,
+            created_after=_since_cutoff(since),
             # Sizing draws on every diagnostic version, not only the promoted one.
             include_superseded=True,
         ),
@@ -1334,6 +1336,7 @@ def requeue(  # noqa: PLR0913
     ] = None,
     diagnostic: _DIAGNOSTIC_ARG = None,
     provider: _PROVIDER_ARG = None,
+    since: _SINCE_ARG = None,
     filter: Annotated[  # noqa: A002
         list[str] | None,
         typer.Option(
@@ -1353,6 +1356,7 @@ def requeue(  # noqa: PLR0913
     Only groups whose latest execution failed and that are not already dirty are selected.
     Use ``--failure-reason`` to requeue only one kind of failure,
     e.g. ``--failure-reason system_error`` after fixing a broken environment.
+    Use ``--since`` to requeue only groups whose latest execution ran since then, e.g. ``--since 2d``.
     """
     import pandas as pd
 
@@ -1365,9 +1369,11 @@ def requeue(  # noqa: PLR0913
         logger.error(str(e))
         raise typer.Exit(code=1)
 
-    if not any([failure_reason, diagnostic, provider, selector_filters]):
+    cutoff = _since_cutoff(since)
+    if not any([failure_reason, diagnostic, provider, selector_filters, cutoff]):
         logger.error(
-            "At least one filter is required (--failure-reason, --diagnostic, --provider or --filter). "
+            "At least one filter is required "
+            "(--failure-reason, --diagnostic, --provider, --since or --filter). "
             "This prevents accidentally requeuing every failed execution."
         )
         raise typer.Exit(code=1)
@@ -1382,6 +1388,7 @@ def requeue(  # noqa: PLR0913
                 dirty=False,
                 successful=False,
                 failure_reasons=failure_reason,
+                created_after=cutoff,
                 include_retracted=True,
             )
         )

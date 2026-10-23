@@ -46,7 +46,6 @@ nav:
       - Regression Baselines: background/regression-baselines.md
       - API Surface: api-surface.md
       - Versioning and Compatibility: versioning-and-compatibility.md
-      - Quality Assurance: background/quality-assurance.md
   - CLI: cli.md
   - API: api/
   - Development: development.md

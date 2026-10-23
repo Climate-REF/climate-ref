@@ -2,7 +2,8 @@
 
 <!--- --8<-- [start:description] -->
 
-**Status**: This project is in active development
+Looking for results? Evaluations of CMIP7 data are published on the [REF dashboard](https://dashboard.climate-ref.org).
+This documentation is for people running the REF or developing diagnostics for it.
 
 The Rapid Evaluation Framework(REF) is a set of Python packages that provide the ability to manage the execution of calculations against climate datasets.
 The aim is to be able to evaluate climate data against a set of reference data in near-real time as datasets are published,
@@ -71,7 +72,7 @@ The REF can be configured using a configuration file or environment variables.
 See the [configuration documentation](https://climate-ref.readthedocs.io/en/latest/configuration/) for more information.
 
 Before we can run the REF, we need to fetch some reference datasets used by the diagnostics.
-These datasets can be fetched using the REF CLI tool. See the [required datasets](https://climate-ref.readthedocs.io/en/latest/introduction/requery_datasets/) for more information.
+These datasets can be fetched using the REF CLI tool. See [Download datasets](https://climate-ref.readthedocs.io/en/latest/getting-started/02-download-datasets/) for more information.
 
 The next step is to ingest the local datasets into the REF.
 These datasets must be CMOR-compliant, follow the CMIP6 data structure and expected attributes.

@@ -59,8 +59,8 @@ but deploying them at HPC centres may require network arrangements that are not 
 The existing [pre-computed results notebook](../how-to-guides/using-pre-computed-results.py)
 uses the hosted REF API rather than local result files.
 
-A Python API for querying local REF results would be a useful extension because it would avoid the need to deploy the API/dashboard just to analyse local results.
-That local-results API, and a notebook based on it, are not currently funded.
+To analyse local results without deploying the API or dashboard,
+use the `climate_ref.results` Python API described in [Reading results locally](../how-to-guides/reading-results-locally.md).
 
 ## Suggested first run
 

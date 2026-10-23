@@ -253,7 +253,11 @@ def list_groups(  # noqa: PLR0913
     # Check if any results found
     if collection.total_count == 0:
         emit_no_results_warning(
-            filters, reader.executions.groups(ExecutionGroupFilter(), limit=0).total_count or 0
+            filters,
+            reader.executions.groups(
+                ExecutionGroupFilter(include_superseded=True, include_retracted=True), limit=0
+            ).total_count
+            or 0,
         )
 
     results_df = collection.to_pandas()

@@ -143,6 +143,8 @@ class TestGroupBy:
             reader.resources.summaries(group_by="providers")
         with pytest.raises(ValueError, match="group_by"):
             reader.resources.profiles(group_by="providers")
+        with pytest.raises(ValueError, match="group_by"):
+            reader.resources.profiles(group_by=None)  # type: ignore[arg-type]
 
 
 class TestProfiles:

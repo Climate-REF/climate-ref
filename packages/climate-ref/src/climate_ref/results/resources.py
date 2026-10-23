@@ -34,7 +34,7 @@ with Database.from_config(config, read_only=True) as db:
 import math
 import statistics
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 import attrs
 import pandas as pd
@@ -50,7 +50,6 @@ from climate_ref.query import (
     select_execution_resources,
     select_resource_summary,
 )
-from climate_ref.query.resources import check_group_by
 from climate_ref.results._page import Page, check_paging
 from climate_ref_core.resources import MemorySource
 
@@ -979,7 +978,8 @@ class ResourcesReader:
             pools = Reader(db).resources.profiles(group_by="provider")
         ```
         """
-        check_group_by(group_by)
+        if group_by not in get_args(GroupBy):
+            raise ValueError(f"group_by must be one of {get_args(GroupBy)}, not {group_by!r}")
         filters = filters or ResourceFilter()
         # Sorting here is cheaper than SQLite's unindexed sort, and ``limit_seen`` needs this order.
         unordered = self.session.execute(select_execution_resources(filters).order_by(None)).all()

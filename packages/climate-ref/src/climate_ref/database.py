@@ -29,7 +29,7 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from loguru import logger
 from sqlalchemy.engine import make_url
-from sqlalchemy.exc import ArgumentError, IntegrityError, OperationalError
+from sqlalchemy.exc import ArgumentError, IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from climate_ref.models import MetricValue, Table
@@ -379,7 +379,7 @@ class Database:
         try:
             with self._engine.begin() as connection:
                 connection.exec_driver_sql("PRAGMA optimize")
-        except OperationalError as exc:
+        except SQLAlchemyError as exc:
             logger.warning(f"Could not refresh SQLite statistics: {exc}")
 
     def alembic_config(self, config: "Config") -> AlembicConfig:

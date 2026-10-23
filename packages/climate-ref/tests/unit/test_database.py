@@ -10,7 +10,7 @@ import pytest
 import sqlalchemy
 from loguru import logger
 from sqlalchemy import inspect
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import DatabaseError
 
 from climate_ref.database import (
     REDACTED,
@@ -144,7 +144,7 @@ def test_optimize_gathers_sqlite_statistics(db):
 
 def test_optimize_logs_instead_of_raising(db, mocker):
     mocker.patch.object(
-        db._engine, "begin", side_effect=OperationalError("PRAGMA optimize", {}, Exception("locked"))
+        db._engine, "begin", side_effect=DatabaseError("PRAGMA optimize", {}, Exception("malformed"))
     )
     warning = mocker.patch("climate_ref.database.logger.warning")
 

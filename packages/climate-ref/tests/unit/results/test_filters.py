@@ -2,6 +2,7 @@ import datetime
 
 import pytest
 
+from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.results.filters import (
     BaseFilter,
     DiagnosticFilter,
@@ -11,6 +12,7 @@ from climate_ref.results.filters import (
     ResourceFilter,
     VersionScope,
 )
+from climate_ref_core.source_types import SourceDatasetType
 
 READER_FILTERS = [MetricValueFilter, ResourceFilter, ExecutionGroupFilter, DiagnosticFilter]
 
@@ -34,8 +36,57 @@ def test_execution_scope_window():
 
 
 @pytest.mark.parametrize("cls", READER_FILTERS)
+def test_or_no_model_input_without_source_types_raises(cls):
+    with pytest.raises(ValueError, match="or_no_model_input"):
+        cls(or_no_model_input=True)
+
+
+@pytest.mark.parametrize("cls", READER_FILTERS)
 def test_execution_ids_on_every_reader_filter(cls):
     f = cls(execution_ids=[1, 2], execution_group_ids=[3])
     assert f.execution_ids == (1, 2)
     assert f.execution_group_ids == (3,)
     assert len(f.execution_clauses()) == 2
+
+
+@pytest.mark.parametrize("cls", READER_FILTERS)
+def test_one_value_or_a_list(cls):
+    one = cls(
+        diagnostic_slug="enso_tel",
+        provider_slug="pmp",
+        diagnostic_contains="enso",
+        execution_ids=1,
+        source_types="cmip6",
+    )
+    many = cls(
+        diagnostic_slug=["enso_tel"],
+        provider_slug=("pmp",),
+        diagnostic_contains=["enso"],
+        execution_ids=[1],
+        source_types=[SourceDatasetType.CMIP6],
+    )
+    assert one == many
+    assert one.diagnostic_slug == ("enso_tel",)
+    assert one.source_types == (SourceDatasetType.CMIP6,)
+
+
+def test_source_types_and_failure_reasons_accept_names():
+    assert ExecutionGroupFilter(source_types="CMIP6").source_types == (SourceDatasetType.CMIP6,)
+    f = ExecutionGroupFilter(failure_reasons=["DiagnosticError", "system_error"])
+    assert f.failure_reasons == (ExecutionFailureReason.DiagnosticError, ExecutionFailureReason.SystemError)
+
+
+def test_unknown_source_type_rejected():
+    with pytest.raises(ValueError, match="'cmip9' is not a SourceDatasetType"):
+        DiagnosticFilter(source_types="cmip9")
+
+
+def test_string_ids_rejected():
+    with pytest.raises(TypeError, match="not '12'"):
+        MetricValueFilter(execution_ids="12")
+
+
+def test_value_ids_are_tuples():
+    f = MetricValueFilter(isolate_ids=[1, 2], exclude_ids=3)
+    assert (f.isolate_ids, f.exclude_ids) == ((1, 2), (3,))
+    assert f == MetricValueFilter(isolate_ids=(1, 2), exclude_ids=[3])

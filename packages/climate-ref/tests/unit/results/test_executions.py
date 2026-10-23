@@ -219,14 +219,6 @@ class TestGroupsFilter:
         keys = {g.key for g in coll}
         assert keys == {"key1"}
 
-    def test_bare_string_rejected_diagnostic_contains(self):
-        with pytest.raises(TypeError):
-            ExecutionGroupFilter(diagnostic_contains="enso")
-
-    def test_bare_string_rejected_provider_contains(self):
-        with pytest.raises(TypeError):
-            ExecutionGroupFilter(provider_contains="pmp")
-
 
 class TestGroupsPromotedVersion:
     def test_promoted_version_default_excludes_superseded(self, db_with_groups):

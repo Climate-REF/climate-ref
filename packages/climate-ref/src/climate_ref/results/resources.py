@@ -335,9 +335,9 @@ class ResourceProfile:
     >>> profile = ResourceProfile(
     ...     provider_slug="pmp",
     ...     diagnostic_slug="annual-cycle",
-    ...     n_samples=12,
-    ...     n_excluded=0,
-    ...     n_failed=0,
+    ...     sample_count=12,
+    ...     excluded_execution_count=0,
+    ...     failed_execution_count=0,
     ...     memory_source="cgroup",
     ...     peak_memory_p50=2 * gib,
     ...     peak_memory_p95=3 * gib,
@@ -377,10 +377,10 @@ class ResourceProfile:
     diagnostic_slug: str | None
     """Owning diagnostic's slug, or ``None`` for a provider-level roll-up."""
 
-    n_samples: int
+    sample_count: int
     """Executions with a usable measurement."""
 
-    n_excluded: int
+    excluded_execution_count: int
     """
     Executions that were measured but not usable.
 
@@ -389,12 +389,12 @@ class ResourceProfile:
     or when it carried a memory source other than ``memory_source``.
     """
 
-    n_failed: int
+    failed_execution_count: int
     """
     Failed executions in the same window, measured or not.
 
     An execution killed for exceeding its memory limit records nothing,
-    so it never appears in ``n_samples``.
+    so it never appears in ``sample_count``.
     That biases every recommendation here low on exactly the diagnostics that need more memory,
     and this count is the only warning of it.
     """
@@ -406,7 +406,7 @@ class ResourceProfile:
     A cgroup reading and a rusage reading for the same execution can differ by a factor of two,
     so they are never mixed.
     When a group's executions carry more than one source,
-    the source contributing the most samples wins and the rest land in ``n_excluded``.
+    the source contributing the most samples wins and the rest land in ``excluded_execution_count``.
     """
 
     peak_memory_p50: int
@@ -481,9 +481,9 @@ class ResourceProfile:
         ``thin`` below ten samples, where the p95 is indistinguishable from the maximum,
         and ``good`` at or above ten.
         """
-        if self.n_samples == 0:
+        if self.sample_count == 0:
             return "none"
-        if self.n_samples < _GOOD_SAMPLE_COUNT:
+        if self.sample_count < _GOOD_SAMPLE_COUNT:
             return "thin"
         return "good"
 
@@ -564,17 +564,17 @@ def _empty_profile(
     *,
     provider_slug: str,
     diagnostic_slug: str | None,
-    n_excluded: int,
-    n_failed: int,
+    excluded_execution_count: int,
+    failed_execution_count: int,
     safety_factor: float,
 ) -> ResourceProfile:
     """Profile with no samples, which keeps the exclusion and failure counts."""
     return ResourceProfile(
         provider_slug=provider_slug,
         diagnostic_slug=diagnostic_slug,
-        n_samples=0,
-        n_excluded=n_excluded,
-        n_failed=n_failed,
+        sample_count=0,
+        excluded_execution_count=excluded_execution_count,
+        failed_execution_count=failed_execution_count,
         memory_source=None,
         peak_memory_p50=0,
         peak_memory_p95=0,
@@ -603,7 +603,7 @@ def _build_profile(
     A failed execution that recorded a peak is the most informative row available,
     because a diagnostic outgrowing its container fails at the size it needs reported.
     """
-    n_failed = sum(1 for row in rows if row.successful is False)
+    failed_execution_count = sum(1 for row in rows if row.successful is False)
 
     measured = [row for row in rows if _is_measured(row)]
     candidates = [row for row in measured if _is_complete(row)]
@@ -612,14 +612,14 @@ def _build_profile(
 
     source = _dominant_source(_source_weights(candidates))
     samples = [row for row in candidates if row.memory_source == source] if source else []
-    n_excluded = len(measured) - len(samples)
+    excluded_execution_count = len(measured) - len(samples)
 
     if not samples:
         return _empty_profile(
             provider_slug=provider_slug,
             diagnostic_slug=diagnostic_slug,
-            n_excluded=n_excluded,
-            n_failed=n_failed,
+            excluded_execution_count=excluded_execution_count,
+            failed_execution_count=failed_execution_count,
             safety_factor=safety_factor,
         )
 
@@ -637,9 +637,9 @@ def _build_profile(
     return ResourceProfile(
         provider_slug=provider_slug,
         diagnostic_slug=diagnostic_slug,
-        n_samples=len(samples),
-        n_excluded=n_excluded,
-        n_failed=n_failed,
+        sample_count=len(samples),
+        excluded_execution_count=excluded_execution_count,
+        failed_execution_count=failed_execution_count,
         memory_source=source,
         peak_memory_p50=round(_percentile(peaks, 0.5)),
         peak_memory_p95=peak_p95,
@@ -670,30 +670,32 @@ def _roll_up(provider_slug: str, profiles: Sequence[ResourceProfile]) -> Resourc
 
     Sources are not mixed here either.
     A diagnostic measured by a different source than the provider's dominant one is left out,
-    and its samples are counted in ``n_excluded``.
+    and its samples are counted in ``excluded_execution_count``.
     """
-    measured = [profile for profile in profiles if profile.n_samples]
+    measured = [profile for profile in profiles if profile.sample_count]
     safety_factor = profiles[0].safety_factor
-    n_excluded = sum(profile.n_excluded for profile in profiles)
-    n_failed = sum(profile.n_failed for profile in profiles)
+    excluded_execution_count = sum(profile.excluded_execution_count for profile in profiles)
+    failed_execution_count = sum(profile.failed_execution_count for profile in profiles)
 
     source_weights: dict[MemorySource, int] = {}
     for profile in measured:
         if profile.memory_source is not None:
             source_weights[profile.memory_source] = (
-                source_weights.get(profile.memory_source, 0) + profile.n_samples
+                source_weights.get(profile.memory_source, 0) + profile.sample_count
             )
     source = _dominant_source(source_weights)
 
     with_samples = [profile for profile in measured if profile.memory_source == source]
-    n_excluded += sum(profile.n_samples for profile in measured if profile.memory_source != source)
+    excluded_execution_count += sum(
+        profile.sample_count for profile in measured if profile.memory_source != source
+    )
 
     if not with_samples:
         return _empty_profile(
             provider_slug=provider_slug,
             diagnostic_slug=None,
-            n_excluded=n_excluded,
-            n_failed=n_failed,
+            excluded_execution_count=excluded_execution_count,
+            failed_execution_count=failed_execution_count,
             safety_factor=safety_factor,
         )
 
@@ -706,9 +708,9 @@ def _roll_up(provider_slug: str, profiles: Sequence[ResourceProfile]) -> Resourc
     return ResourceProfile(
         provider_slug=provider_slug,
         diagnostic_slug=None,
-        n_samples=sum(profile.n_samples for profile in with_samples),
-        n_excluded=n_excluded,
-        n_failed=n_failed,
+        sample_count=sum(profile.sample_count for profile in with_samples),
+        excluded_execution_count=excluded_execution_count,
+        failed_execution_count=failed_execution_count,
         memory_source=source,
         peak_memory_p50=max(profile.peak_memory_p50 for profile in with_samples),
         peak_memory_p95=peak_p95,
@@ -925,7 +927,7 @@ class ResourcesReader:
 
         A memory peak read from a container that ran four jobs at once measures all four, not one.
         So ``exclusive_only`` defaults to ``True`` and leaves those executions out.
-        They are counted in ``n_excluded`` rather than dropped silently.
+        They are counted in ``excluded_execution_count`` rather than dropped silently.
         It costs nothing for other memory sources,
         which only look at the execution's own processes and stay accurate however busy the worker was.
 
@@ -934,7 +936,7 @@ class ResourcesReader:
 
         Peaks from different memory sources are never mixed.
         Within each group the source contributing the most samples wins,
-        the rest are counted in ``n_excluded``,
+        the rest are counted in ``excluded_execution_count``,
         and the winner is reported as ``memory_source``.
 
         Parameters

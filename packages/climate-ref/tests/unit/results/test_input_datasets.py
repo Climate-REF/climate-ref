@@ -162,54 +162,46 @@ def _value_sources(db, input_datasets=None, **kwargs):
 class TestInputDatasetFilter:
     def test_unknown_facet_raises(self):
         with pytest.raises(ValueError, match="Unknown facet 'not_a_column'"):
-            InputDatasetFilter(source_types=BOTH_ERAS, facets={"not_a_column": "x"})
+            InputDatasetFilter(facets={"not_a_column": "x"})
 
-    def test_empty_source_types_raises(self):
-        with pytest.raises(ValueError, match="source_types"):
-            InputDatasetFilter(source_types=())
+    def test_empty_filter_raises(self):
+        with pytest.raises(ValueError, match="`facets` or `dataset_ids`"):
+            InputDatasetFilter()
+
+    def test_facets_no_single_type_carries_raise(self):
+        with pytest.raises(ValueError, match="No dataset type has every facet"):
+            InputDatasetFilter(facets={"table_id": "Amon", "region": "glb"})
 
     def test_dataset_ids_alone_is_enough(self):
         assert InputDatasetFilter(dataset_ids=[1, 2]).dataset_ids == (1, 2)
 
-    def test_facets_without_source_types_raises(self):
-        with pytest.raises(ValueError, match="facets"):
-            InputDatasetFilter(dataset_ids=[1], facets={"source_id": "FACET-A"})
-
     def test_bare_string_value_is_one_value(self):
-        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-A"})
-        assert f.source_types == (CMIP6,)
-        assert f.facets == {"source_id": ("FACET-A",)}
+        assert InputDatasetFilter(facets={"source_id": "FACET-A"}).facets == {"source_id": ("FACET-A",)}
 
 
 class TestExecutionGroups:
     def test_match_across_eras(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "FACET-A"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-A"})
         assert _group_ids(db_with_inputs, f) == {ids["cmip6-a"], ids["cmip7-a"]}
 
     def test_source_type_restricts_era(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"})
-        assert _group_ids(db_with_inputs, f) == {ids["cmip7-a"]}
+        f = InputDatasetFilter(facets={"source_id": "FACET-A"})
+        assert _group_ids(db_with_inputs, f, source_types=[CMIP7]) == {ids["cmip7-a"]}
 
     def test_no_match(self, db_with_inputs):
-        f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "NO-SUCH-MODEL"})
+        f = InputDatasetFilter(facets={"source_id": "NO-SUCH-MODEL"})
         assert _group_ids(db_with_inputs, f) == set()
-
-    @pytest.mark.filterwarnings("error::sqlalchemy.exc.SADeprecationWarning")
-    def test_no_facets_matches_any_dataset_of_the_type(self, db_with_inputs):
-        ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=[CMIP7])
-        assert _group_ids(db_with_inputs, f) == {ids["cmip7-a"]}
 
     def test_multi_value_is_or(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": ["FACET-A", "FACET-B"]})
-        assert _group_ids(db_with_inputs, f) == {ids["cmip6-a"], ids["other-b"]}
+        f = InputDatasetFilter(facets={"source_id": ["FACET-A", "FACET-B"]})
+        assert _group_ids(db_with_inputs, f, source_types=[CMIP6]) == {ids["cmip6-a"], ids["other-b"]}
 
     def test_only_the_latest_execution_counts(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-B"})
         groups = Reader(db_with_inputs).executions.groups(ExecutionGroupFilter(input_datasets=f))
         assert {g.id for g in groups} == {ids["other-b"]}
         assert groups.total_count == 1
@@ -225,23 +217,23 @@ class TestExecutionGroups:
                 .first()
             )
             newest.successful = False
-        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-B"})
         assert ids["cmip6-b-old"] not in _group_ids(db_with_inputs, f)
         assert ids["cmip6-b-old"] in _group_ids(db_with_inputs, f, latest_successful=True)
 
     def test_facet_missing_from_one_era_excludes_it(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"mip_era": "CMIP7", "source_id": "FACET-A"})
+        f = InputDatasetFilter(facets={"mip_era": "CMIP7", "source_id": "FACET-A"})
         assert _group_ids(db_with_inputs, f) == {ids["cmip7-a"]}
 
-    def test_facets_no_single_era_carries_match_nothing(self, db_with_inputs):
-        f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"table_id": "Amon", "region": "glb"})
-        assert _group_ids(db_with_inputs, f) == set()
-        assert _value_sources(db_with_inputs, f) == set()
+    def test_source_types_without_the_facet_raise(self, db_with_inputs):
+        f = InputDatasetFilter(facets={"mip_era": "CMIP7"})
+        with pytest.raises(ValueError, match="No dataset type in cmip6"):
+            _group_ids(db_with_inputs, f, source_types=[CMIP6])
 
     def test_combines_with_diagnostic_filter(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-B"})
         diagnostic = ids["diag_2"][1]
         assert _group_ids(db_with_inputs, f, diagnostic_contains=[diagnostic]) == {ids["other-b"]}
 
@@ -265,12 +257,16 @@ class TestDatasetIds:
         f = InputDatasetFilter(dataset_ids=dataset_ids)
         assert _group_ids(db_with_inputs, f) == {ids["cmip6-a"], ids["cmip7-a"]}
 
-    def test_source_types_and_facets_apply_to_the_same_dataset(self, db_with_inputs):
+    def test_facets_and_ids_apply_to_the_same_dataset(self, db_with_inputs):
         cmip7_a = self._dataset_id(db_with_inputs, CMIP7Dataset, "FACET-A")
-        wrong_type = InputDatasetFilter(source_types=[CMIP6], dataset_ids=[cmip7_a])
-        assert _group_ids(db_with_inputs, wrong_type) == set()
-        f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "FACET-A"}, dataset_ids=[cmip7_a])
+        f = InputDatasetFilter(facets={"source_id": "FACET-A"}, dataset_ids=[cmip7_a])
         assert _group_ids(db_with_inputs, f) == {db_with_inputs.ids["cmip7-a"]}
+
+    def test_mixed_group_does_not_match_through_another_type(self, db_with_obs_only):
+        ids = db_with_obs_only.ids
+        cmip7 = InputDatasetFilter(dataset_ids=[self._dataset_id(db_with_obs_only, CMIP7Dataset, "FACET-A")])
+        assert ids["mixed"] in _group_ids(db_with_obs_only, cmip7, source_types=[CMIP7])
+        assert _group_ids(db_with_obs_only, cmip7, source_types=[CMIP6]) == set()
 
     def test_empty_matches_nothing(self, db_with_inputs):
         f = InputDatasetFilter(dataset_ids=[])
@@ -326,29 +322,32 @@ class TestSourceTypes:
             ids["obs-only"]
         }
 
-    def test_none_is_unconstrained(self, db_with_obs_only):
-        assert _group_ids(db_with_obs_only, None, source_types=None, or_no_model_input=True) == _group_ids(
-            db_with_obs_only, None
-        )
-
     def test_combines_with_input_datasets(self, db_with_obs_only):
         ids = db_with_obs_only.ids
-        f = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-A"})
         assert _group_ids(db_with_obs_only, f, source_types=[CMIP7], or_no_model_input=True) == {
             ids["cmip7-a"],
             ids["mixed"],
         }
 
-    def test_groups_without_a_selected_execution_stay_out(self, db_with_obs_only):
+    def test_never_executed_groups_are_kept_by_source_type(self, db_with_obs_only):
         session = db_with_obs_only.session
         with session.begin():
             diag_2 = session.query(Diagnostic).order_by(Diagnostic.id).offset(1).first()
-            session.add(ExecutionGroup(key="never-run", diagnostic_id=diag_2.id, selectors={}))
-        groups = Reader(db_with_obs_only).executions.groups(
-            ExecutionGroupFilter(source_types=[CMIP7], or_no_model_input=True)
-        )
-        assert {g.key for g in groups} == {"cmip7-a", "mixed", "obs-only"}
+            session.add(ExecutionGroup(key="never-run", diagnostic_id=diag_2.id, selectors={"cmip7": []}))
+        reader = Reader(db_with_obs_only)
+        groups = reader.executions.groups(ExecutionGroupFilter(source_types=[CMIP7]))
+        assert {g.key for g in groups} == {"cmip7-a", "mixed", "never-run"}
         assert groups.total_count == len(groups.items)
+        assert {g.key for g in reader.executions.groups(ExecutionGroupFilter(source_types=[CMIP6]))} == {
+            "cmip6-a",
+            "cmip6-b-old",
+            "other-b",
+            "mixed",
+        }
+        _, diag_slug = db_with_obs_only.ids["diag_2"]
+        views = reader.diagnostics.list(DiagnosticFilter(source_types=[CMIP7]))
+        assert {v.diagnostic_slug: v.groups.not_started for v in views}[diag_slug] == 1
 
     def test_values(self, db_with_obs_only):
         assert _value_sources(db_with_obs_only, source_types=[CMIP7]) == {"cmip7-a", "mixed"}
@@ -397,7 +396,7 @@ class TestSourceTypes:
 
 class TestMetricValues:
     def test_scoped_to_the_producing_execution(self, db_with_inputs):
-        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-B"})
         # The newer cmip6-b-old execution had no inputs, so only its first value matches.
         values = Reader(db_with_inputs).values.scalar_values(MetricValueFilter(input_datasets=f))
         assert sorted((v.dimensions["source_id"], v.value) for v in values) == [
@@ -406,8 +405,8 @@ class TestMetricValues:
         ]
 
     def test_match_and_no_match(self, db_with_inputs):
-        both = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "FACET-A"})
-        none = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "NO-SUCH-MODEL"})
+        both = InputDatasetFilter(facets={"source_id": "FACET-A"})
+        none = InputDatasetFilter(facets={"source_id": "NO-SUCH-MODEL"})
         assert _value_sources(db_with_inputs, both) == {"cmip6-a", "cmip7-a"}
         assert _value_sources(db_with_inputs, none) == set()
 
@@ -415,7 +414,7 @@ class TestMetricValues:
 class TestDiagnostics:
     def test_list_scopes_counts_and_drops_unmatched(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=BOTH_ERAS, facets={"source_id": "FACET-A"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-A"})
         items = Reader(db_with_inputs).diagnostics.list(DiagnosticFilter(input_datasets=f)).items
         assert [(d.provider_slug, d.diagnostic_slug) for d in items] == [ids["diag_1"]]
         (view,) = items
@@ -427,22 +426,22 @@ class TestDiagnostics:
 
     def test_combines_with_diagnostic_contains(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-B"})
         filters = DiagnosticFilter(input_datasets=f, diagnostic_contains=[ids["diag_2"][1]])
         items = Reader(db_with_inputs).diagnostics.list(filters).items
         assert [(d.provider_slug, d.diagnostic_slug, d.groups.total) for d in items] == [(*ids["diag_2"], 1)]
 
     def test_stats_scoped(self, db_with_inputs):
         ids = db_with_inputs.ids
-        f = InputDatasetFilter(source_types=[CMIP6], facets={"source_id": "FACET-B"})
+        f = InputDatasetFilter(facets={"source_id": "FACET-B"})
         items = Reader(db_with_inputs).diagnostics.list(DiagnosticFilter(input_datasets=f)).items
         assert {(d.provider_slug, d.diagnostic_slug): d.groups.total for d in items} == {ids["diag_2"]: 1}
 
     def test_with_values_scoped(self, db_with_inputs):
         ids = db_with_inputs.ids
         reader = Reader(db_with_inputs).diagnostics
-        cmip7 = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "FACET-A"})
-        missing = InputDatasetFilter(source_types=[CMIP7], facets={"source_id": "NO-SUCH-MODEL"})
+        cmip7 = InputDatasetFilter(facets={"source_id": "FACET-A"})
+        missing = InputDatasetFilter(facets={"source_id": "NO-SUCH-MODEL"})
         assert reader.with_values(MetricValueType.SCALAR, DiagnosticFilter(input_datasets=cmip7)) == {
             ids["diag_1"]
         }

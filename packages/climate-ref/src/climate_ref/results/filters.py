@@ -81,23 +81,22 @@ with Database.from_config(config, read_only=True) as db:
     df = Reader(db).values.scalar_values(filters).to_pandas()
 ```
 
-Multi-value fields take a list or tuple.
-A bare string is rejected, because it would otherwise be matched one character at a time:
+Fields that pick slugs, ids, source types or failure reasons take one value or a list,
+and a list matches any of its values:
 
->>> MetricValueFilter(diagnostic_contains="enso")
-Traceback (most recent call last):
-...
-TypeError: Expected a sequence of strings, not a bare str. Wrap it in a list/tuple.
->>> MetricValueFilter(diagnostic_contains=["enso"]).diagnostic_contains
-('enso',)
+>>> MetricValueFilter(diagnostic_slug="enso_tel").diagnostic_slug
+('enso_tel',)
+>>> MetricValueFilter(diagnostic_slug=["enso_tel", "enso_perf"], source_types="cmip6").source_types
+(<SourceDatasetType.CMIP6: 'cmip6'>,)
 """
 
 import datetime
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 import attrs
 from sqlalchemy import ColumnElement, Select, and_, exists, false, or_, select, true
 
+from climate_ref.models.dataset import Dataset
 from climate_ref.models.dataset_query import _as_facets, _entity_for
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
@@ -146,6 +145,15 @@ class BaseFilter:
 _MODEL_SOURCE_TYPES = tuple(t for t in SourceDatasetType if t.is_model_output)
 
 
+def _dataset_types() -> tuple[SourceDatasetType, ...]:
+    return tuple(t for t in SourceDatasetType if t in Dataset.__mapper__.polymorphic_map)
+
+
+def _has_facets(source_type: SourceDatasetType, facets: Iterable[str]) -> bool:
+    columns = _entity_for(source_type).__mapper__.columns
+    return all(facet in columns for facet in facets)
+
+
 @attrs.frozen(kw_only=True)
 class InputDatasetFilter:
     """
@@ -154,9 +162,9 @@ class InputDatasetFilter:
     Pass it as ``input_datasets`` on any reader filter.
     An execution matches when one of its input datasets passes every condition:
 
-    * Its type is one of ``source_types``.
     * It has one of the listed values for every facet in ``facets``.
     * Its id is one of ``dataset_ids``, if set.
+    * Its type is one of the reader filter's ``source_types``, if set.
 
     A dataset type without a requested facet never matches,
     so a CMIP7-only facet does not pull in all of CMIP6.
@@ -164,19 +172,14 @@ class InputDatasetFilter:
     Raises
     ------
     ValueError
-        If neither ``source_types`` nor ``dataset_ids`` is set,
-        or a facet is a column on none of the ``source_types``.
+        If neither ``facets`` nor ``dataset_ids`` is set, or no dataset type has every facet.
 
     Examples
     --------
-    Executions that used ACCESS-CM2 data, from either CMIP6 or CMIP7:
+    Executions that used ACCESS-CM2 data, of any dataset type:
 
     >>> from climate_ref.results import InputDatasetFilter, MetricValueFilter
-    >>> from climate_ref_core.source_types import SourceDatasetType
-    >>> access = InputDatasetFilter(
-    ...     source_types=[SourceDatasetType.CMIP6, SourceDatasetType.CMIP7],
-    ...     facets={"source_id": "ACCESS-CM2"},
-    ... )
+    >>> access = InputDatasetFilter(facets={"source_id": "ACCESS-CM2"})
     >>> filters = MetricValueFilter(input_datasets=access)
 
     A single facet value can be a bare string:
@@ -184,29 +187,22 @@ class InputDatasetFilter:
     >>> access.facets
     {'source_id': ('ACCESS-CM2',)}
 
-    Executions that used particular datasets, of any type:
+    Only CMIP6 executions that used ACCESS-CM2 data.
+    A group that also draws on CMIP7 does not match through a CMIP7 ACCESS-CM2 dataset:
+
+    >>> filters = MetricValueFilter(source_types="cmip6", input_datasets=access)
+
+    Executions that used particular datasets:
 
     >>> InputDatasetFilter(dataset_ids=[12, 13]).dataset_ids
     (12, 13)
 
-    ``source_types`` says which dataset tables the facets live on.
-    To keep executions by the source types their group draws on, use ``source_types`` on the filter itself:
+    A facet that is not a column on any dataset type is rejected:
 
-    >>> filters = MetricValueFilter(source_types=[SourceDatasetType.CMIP6], or_no_model_input=True)
-
-    A facet that is not a column on any of the types is rejected:
-
-    >>> InputDatasetFilter(source_types=[SourceDatasetType.CMIP6], facets={"model": ["x"]})
+    >>> InputDatasetFilter(facets={"model": ["x"]})
     Traceback (most recent call last):
     ...
-    ValueError: Unknown facet 'model' for cmip6
-    """
-
-    source_types: tuple[SourceDatasetType, ...] = attrs.field(default=(), converter=_as_source_types)
-    """
-    Dataset types to match against, e.g. ``[SourceDatasetType.CMIP6, SourceDatasetType.CMIP7]``.
-
-    Leave it empty with ``dataset_ids`` to match a dataset of any type.
+    ValueError: Unknown facet 'model'. It is not a column on any dataset type
     """
 
     dataset_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
@@ -220,30 +216,48 @@ class InputDatasetFilter:
     """
 
     def __attrs_post_init__(self) -> None:
-        if not self.source_types and self.dataset_ids is None:
-            raise ValueError("`source_types` must name at least one dataset type, or `dataset_ids` be set")
-        if self.facets and not self.source_types:
-            raise ValueError("`facets` need `source_types` to say which dataset table they are on")
+        if not self.facets and self.dataset_ids is None:
+            raise ValueError("Set `facets` or `dataset_ids`")
+        types = _dataset_types()
         for facet in self.facets or {}:
-            if not any(facet in _entity_for(t).__mapper__.columns for t in self.source_types):
-                names = ", ".join(t.value for t in self.source_types)
-                raise ValueError(f"Unknown facet {facet!r} for {names}")
+            if not any(_has_facets(t, [facet]) for t in types):
+                raise ValueError(f"Unknown facet {facet!r}. It is not a column on any dataset type")
+        if self.facets and not any(_has_facets(t, self.facets) for t in types):
+            raise ValueError(f"No dataset type has every facet in {sorted(self.facets)}")
 
-    def execution_clause(self) -> ColumnElement[bool]:
-        """Clause over ``Execution`` that is true when the execution ran against a matching dataset."""
+    def execution_clause(
+        self, source_types: Sequence[SourceDatasetType] | None = None
+    ) -> ColumnElement[bool]:
+        """
+        Clause over ``Execution`` that is true when the execution ran against a matching dataset.
+
+        ``source_types``, the reader filter's own, keeps only datasets of those types.
+
+        Raises
+        ------
+        ValueError
+            If no type in ``source_types`` has every facet.
+        """
         if self.dataset_ids == ():
             return false()
         facets = self.facets or {}
-        branches: list[ColumnElement[bool]] = []
-        if not self.source_types and self.dataset_ids is not None:
+        if not facets:
             used = select(execution_datasets.c.execution_id).where(
-                execution_datasets.c.dataset_id.in_(self.dataset_ids)
+                execution_datasets.c.dataset_id.in_(self.dataset_ids or ())
             )
-            branches.append(Execution.id.in_(used))
-        for source_type in self.source_types:
+            if source_types is not None:
+                used = used.join(Dataset, Dataset.id == execution_datasets.c.dataset_id).where(
+                    Dataset.dataset_type.in_(source_types)
+                )
+            return Execution.id.in_(used)
+        candidates = _dataset_types() if source_types is None else source_types
+        types = [t for t in candidates if _has_facets(t, facets)]
+        if candidates and not types:
+            names = ", ".join(t.value for t in candidates)
+            raise ValueError(f"No dataset type in {names} has every facet in {sorted(facets)}")
+        branches: list[ColumnElement[bool]] = []
+        for source_type in types:
             entity = _entity_for(source_type)
-            if any(facet not in entity.__mapper__.columns for facet in facets):
-                continue
             conditions = [getattr(entity, facet).in_(values) for facet, values in facets.items()]
             if self.dataset_ids is not None:
                 conditions.append(entity.id.in_(self.dataset_ids))
@@ -259,8 +273,9 @@ class DiagnosticScope(BaseFilter):
     """
     A group of fields to filter for a given set of diagnostics or providers.
 
-    Use the ``*_slug`` fields for one exact diagnostic or provider,
+    Use the ``*_slug`` fields for exact diagnostics or providers,
     and the ``*_contains`` fields to search by part of a name.
+    Each field takes one string or a list, and a list matches any of its values.
     Every field you set must match.
 
     Examples
@@ -272,14 +287,14 @@ class DiagnosticScope(BaseFilter):
     >>> search = DiagnosticFilter(diagnostic_contains=["enso", "annual-cycle"])
     """
 
-    diagnostic_slug: str | None = None
-    """Keep only the diagnostic with exactly this slug, e.g. ``"enso_tel"``."""
+    diagnostic_slug: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """Keep only the diagnostics with exactly these slugs, e.g. ``"enso_tel"``."""
 
-    provider_slug: str | None = None
-    """Keep only the diagnostics of the provider with exactly this slug, e.g. ``"pmp"``."""
+    provider_slug: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """Keep only the diagnostics of the providers with exactly these slugs, e.g. ``"pmp"``."""
 
     diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
-    """Keep diagnostics whose slug contains any of these, ignoring case, e.g. ``["enso"]``."""
+    """Keep diagnostics whose slug contains any of these, ignoring case, e.g. ``"enso"`` or ``["enso"]``."""
 
     provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Keep the diagnostics of providers whose slug contains any of these, ignoring case."""
@@ -298,11 +313,11 @@ class DiagnosticScope(BaseFilter):
         """Clauses for a select joined to ``Diagnostic``, and to ``Provider`` if a provider axis is set."""
         clauses: list[ColumnElement[bool]] = []
         if self.diagnostic_slug is not None:
-            clauses.append(Diagnostic.slug == self.diagnostic_slug)
+            clauses.append(Diagnostic.slug.in_(self.diagnostic_slug))
         if self.diagnostic_contains:
             clauses.append(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in self.diagnostic_contains)))
         if self.provider_slug is not None:
-            clauses.append(Provider.slug == self.provider_slug)
+            clauses.append(Provider.slug.in_(self.provider_slug))
         if self.provider_contains:
             clauses.append(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in self.provider_contains)))
         return clauses
@@ -396,13 +411,22 @@ class ExecutionScope(BaseFilter):
 
     source_types: tuple[SourceDatasetType, ...] | None = attrs.field(default=None, converter=_as_source_types)
     """
-    Keep executions whose group draws on any of these source types.
+    Keep groups that draw on any of these source types, with all their executions.
 
     Pass one type or a list. An empty list matches nothing, unless ``or_no_model_input`` is set.
+    A group that has never been executed is kept if it draws on one of the types.
     """
 
     or_no_model_input: bool = False
-    """Also keep groups that use no model source type, such as observation-only ones."""
+    """
+    Also keep groups that use no model source type, such as observation-only ones.
+
+    This needs ``source_types``.
+    """
+
+    def __attrs_post_init__(self) -> None:
+        if self.or_no_model_input and self.source_types is None:
+            raise ValueError("`or_no_model_input` needs `source_types`")
 
     def execution_clauses(self) -> list[ColumnElement[bool]]:
         """Clauses over ``Execution`` that narrow which executions count, before the newest is picked."""
@@ -415,17 +439,21 @@ class ExecutionScope(BaseFilter):
             clauses.append(Execution.id.in_(self.execution_ids))
         if self.execution_group_ids is not None:
             clauses.append(Execution.execution_group_id.in_(self.execution_group_ids))
-        if self.source_types is not None:
-            branches = [_group_uses(self.source_types) if self.source_types else false()]
-            if self.or_no_model_input:
-                branches.append(~_group_uses(_MODEL_SOURCE_TYPES))
-            clauses.append(or_(*branches))
         return clauses
+
+    def group_clauses(self) -> list[ColumnElement[bool]]:
+        """Clauses over ``ExecutionGroup`` for the source types a group draws on."""
+        if self.source_types is None:
+            return []
+        branches = [_group_uses(self.source_types) if self.source_types else false()]
+        if self.or_no_model_input:
+            branches.append(~_group_uses(_MODEL_SOURCE_TYPES))
+        return [or_(*branches)]
 
 
 def _group_uses(source_types: Sequence[SourceDatasetType]) -> ColumnElement[bool]:
     return exists().where(
-        ExecutionGroupSourceType.execution_group_id == Execution.execution_group_id,
+        ExecutionGroupSourceType.execution_group_id == ExecutionGroup.id,
         ExecutionGroupSourceType.source_type.in_(source_types),
     )
 
@@ -492,10 +520,10 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
     An unknown dimension raises ``KeyError`` when the query runs.
     """
 
-    isolate_ids: Sequence[int] | None = None
+    isolate_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
     """Keep only these value ids. This wins over ``exclude_ids``."""
 
-    exclude_ids: Sequence[int] | None = None
+    exclude_ids: tuple[int, ...] | None = attrs.field(default=None, converter=_as_id_tuple)
     """Drop these value ids. Ignored when ``isolate_ids`` is set."""
 
     reference_only: bool | None = None

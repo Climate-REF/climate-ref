@@ -94,11 +94,8 @@ class DiagnosticView:
     ...     groups=GroupCounts(total=24, successful=18, failed=2, running=2, not_started=2, dirty=1),
     ...     execution_count=31,
     ... )
-
-    The executions beyond one per group are reruns:
-
-    >>> diagnostic.execution_count - diagnostic.groups.total
-    7
+    >>> diagnostic.groups.successful / diagnostic.groups.total
+    0.75
     """
 
     provider_slug: str
@@ -265,7 +262,7 @@ class DiagnosticsReader:
         with Database.from_config(config, read_only=True) as db:
             page = Reader(db).diagnostics.list(DiagnosticFilter(diagnostic_contains=["enso"]))
             df = page.to_pandas()
-            print(df[["provider", "diagnostic", "successful", "total"]])
+            print(df[["provider", "diagnostic", "successful_group_count", "group_count"]])
         ```
         """
         filters = filters or DiagnosticFilter()

@@ -18,7 +18,8 @@ Builders over one kind of record return the ORM objects:
 
 Builders that count or summarise select labelled columns, listed on each builder:
 
-* [select_diagnostics][climate_ref.results.queries.select_diagnostics] and
+* [select_diagnostics][climate_ref.results.queries.select_diagnostics],
+  [select_group_counts][climate_ref.results.queries.select_group_counts] and
   [select_diagnostics_with_values][climate_ref.results.queries.select_diagnostics_with_values].
 * [select_execution_resources][climate_ref.results.queries.select_execution_resources] and
   [select_resource_summary][climate_ref.results.queries.select_resource_summary].
@@ -78,8 +79,8 @@ _ScopedFilter = MetricValueFilter | ResourceFilter | ExecutionGroupFilter | Diag
 
 
 def _where_group_in_scope(stmt: Select[Any], filters: _ScopedFilter) -> Select[Any]:
-    """Keep rows whose ``ExecutionGroup`` is at a kept version of a matching diagnostic."""
-    stmt = stmt.where(*filters.version_clauses())
+    """Keep rows whose ``ExecutionGroup`` is at a kept version, of a matching diagnostic and source type."""
+    stmt = stmt.where(*filters.version_clauses(), *filters.group_clauses())
     if filters.matches_any:
         # Matched against diagnostics first, so SQLite reaches the groups by index rather than scanning them.
         stmt = stmt.where(ExecutionGroup.diagnostic_id.in_(filters.diagnostic_ids()))
@@ -96,7 +97,7 @@ def _scope_executions(stmt: Select[Any], filters: _ScopedFilter, *, latest_only:
     """
     stmt = _where_group_in_scope(stmt, filters)
     if filters.input_datasets:
-        stmt = stmt.where(filters.input_datasets.execution_clause())
+        stmt = stmt.where(filters.input_datasets.execution_clause(filters.source_types))
     among = filters.execution_clauses()
     stmt = stmt.where(*among)
     if not filters.include_retracted:
@@ -247,6 +248,40 @@ _NOT_STARTED_COUNT = func.sum(case((Execution.id.is_(None), 1), else_=0))
 _DIRTY_COUNT = func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0))
 
 
+def select_group_counts(filters: DiagnosticFilter | None = None) -> Select[Any]:
+    """
+    Build the ``Select`` for each diagnostic's group counts, without counting executions.
+
+    Selects ``provider_slug``, ``diagnostic_slug``, ``group_count``, ``successful``, ``running``, ``failed``,
+    ``not_started`` and ``dirty``, counted as in
+    [select_diagnostics][climate_ref.results.queries.select_diagnostics].
+    Diagnostics with no groups are kept at zero, unless ``filters.input_datasets`` is set.
+    Ordered by ``(Provider.slug, Diagnostic.slug, Diagnostic.id)``.
+    """
+    filters = filters or DiagnosticFilter()
+    count_stmt = select(
+        ExecutionGroup.diagnostic_id,
+        func.count(ExecutionGroup.id).label("group_count"),
+        _SUCCESSFUL_COUNT.label("successful"),
+        _RUNNING_COUNT.label("running"),
+        _FAILED_COUNT.label("failed"),
+        _NOT_STARTED_COUNT.label("not_started"),
+        _DIRTY_COUNT.label("dirty"),
+    ).select_from(ExecutionGroup)
+    counts = _join_latest_execution(count_stmt, filters).group_by(ExecutionGroup.diagnostic_id).subquery()
+    stmt = (
+        select(
+            Provider.slug.label("provider_slug"),
+            Diagnostic.slug.label("diagnostic_slug"),
+            *(func.coalesce(c, 0).label(c.name) for c in counts.c if c.name != "diagnostic_id"),
+        )
+        .join(Provider, Diagnostic.provider_id == Provider.id)
+        .join(counts, Diagnostic.id == counts.c.diagnostic_id, isouter=not filters.input_datasets)
+        .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
+    )
+    return stmt.where(*filters.diagnostic_clauses())
+
+
 def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     """
     Build the ``Select`` for diagnostics joined to their provider, with group and execution counts.
@@ -264,18 +299,6 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     """
     filters = filters or DiagnosticFilter()
 
-    group_count_stmt = select(
-        ExecutionGroup.diagnostic_id,
-        func.count(ExecutionGroup.id).label("group_count"),
-        _SUCCESSFUL_COUNT.label("successful"),
-        _RUNNING_COUNT.label("running"),
-        _FAILED_COUNT.label("failed"),
-        _NOT_STARTED_COUNT.label("not_started"),
-        _DIRTY_COUNT.label("dirty"),
-    ).select_from(ExecutionGroup)
-    group_count_stmt = _join_latest_execution(group_count_stmt, filters)
-    group_count_subquery = group_count_stmt.group_by(ExecutionGroup.diagnostic_id).subquery()
-
     execution_count_stmt = (
         select(ExecutionGroup.diagnostic_id, func.count(Execution.id).label("execution_count"))
         .select_from(Execution)
@@ -284,32 +307,15 @@ def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     execution_count_subquery = (
         _scope_executions(execution_count_stmt, filters).group_by(ExecutionGroup.diagnostic_id).subquery()
     )
-
-    stmt = (
-        select(
-            Provider.slug.label("provider_slug"),
-            Diagnostic.slug.label("diagnostic_slug"),
+    return (
+        select_group_counts(filters)
+        .add_columns(
             Diagnostic.name.label("name"),
             Diagnostic.promoted_version.label("promoted_version"),
-            func.coalesce(group_count_subquery.c.group_count, 0).label("group_count"),
-            func.coalesce(group_count_subquery.c.successful, 0).label("successful"),
-            func.coalesce(group_count_subquery.c.running, 0).label("running"),
-            func.coalesce(group_count_subquery.c.failed, 0).label("failed"),
-            func.coalesce(group_count_subquery.c.not_started, 0).label("not_started"),
-            func.coalesce(group_count_subquery.c.dirty, 0).label("dirty"),
             func.coalesce(execution_count_subquery.c.execution_count, 0).label("execution_count"),
         )
-        .join(Provider, Diagnostic.provider_id == Provider.id)
-        .join(
-            group_count_subquery,
-            Diagnostic.id == group_count_subquery.c.diagnostic_id,
-            isouter=not filters.input_datasets,
-        )
         .outerjoin(execution_count_subquery, Diagnostic.id == execution_count_subquery.c.diagnostic_id)
-        .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
-
-    return stmt.where(*filters.diagnostic_clauses())
 
 
 def select_diagnostics_with_values(
@@ -498,7 +504,7 @@ def _join_latest_execution(
     if not filters.include_retracted:
         stmt = stmt.where(or_(Execution.id.is_(None), Execution.retracted.is_(False)))
     if filters.input_datasets:
-        stmt = stmt.where(filters.input_datasets.execution_clause())
+        stmt = stmt.where(filters.input_datasets.execution_clause(filters.source_types))
     return stmt
 
 

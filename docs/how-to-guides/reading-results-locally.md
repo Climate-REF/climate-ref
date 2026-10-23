@@ -316,7 +316,8 @@ with Database.from_config(config, read_only=True) as db:
     df = diagnostics.to_pandas()
 
     for diagnostic in diagnostics:
-        print(diagnostic.provider_slug, diagnostic.slug, diagnostic.successful, diagnostic.total)
+        groups = diagnostic.groups
+        print(diagnostic.provider_slug, diagnostic.diagnostic_slug, groups.successful, groups.total)
 ```
 
 ## Artifacts: resolving output paths

@@ -37,6 +37,8 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("executions", "list-groups"),
     ("executions", "inspect"),
     ("executions", "stats"),
+    ("executions", "values"),
+    ("executions", "resources"),
     ("providers", "list"),
     ("providers", "show"),
     # test-cases commands operate on test artifacts (filesystem, native store, manifests).

@@ -12,7 +12,11 @@ from climate_ref.models.metric_value import MetricValueType, ScalarMetricValue, 
 from climate_ref.provider_registry import _register_provider
 from climate_ref.results import DiagnosticFilter, ExecutionGroupFilter, Reader
 from climate_ref.results.diagnostics import GroupCounts
-from climate_ref.results.queries import select_diagnostics, select_diagnostics_with_values
+from climate_ref.results.queries import (
+    select_diagnostics,
+    select_diagnostics_with_values,
+    select_group_counts,
+)
 
 
 def test_import_smoke() -> None:
@@ -62,6 +66,23 @@ class TestSelectDiagnostics:
         # A diagnostic with zero execution groups still appears, with a count of 0.
         assert by_slug["enso-characteristics"].group_count == 0
 
+    def test_select_group_counts_matches_list(self, db_with_diagnostics):
+        rows = db_with_diagnostics.session.execute(select_group_counts()).all()
+        views = Reader(db_with_diagnostics).diagnostics.list()
+        assert [(r.provider_slug, r.diagnostic_slug) for r in rows] == [
+            (v.provider_slug, v.diagnostic_slug) for v in views
+        ]
+        for row, view in zip(rows, views, strict=True):
+            assert (row.group_count, row.successful, row.failed, row.running, row.not_started, row.dirty) == (
+                view.groups.total,
+                view.groups.successful,
+                view.groups.failed,
+                view.groups.running,
+                view.groups.not_started,
+                view.groups.dirty,
+            )
+        assert any(r.group_count == 0 for r in rows)
+
     def test_provider_contains_filter(self, db_with_diagnostics):
         stmt = select_diagnostics(DiagnosticFilter(provider_contains=["pmp"]))
         rows = db_with_diagnostics.session.execute(stmt).all()
@@ -88,14 +109,6 @@ class TestSelectDiagnostics:
         rows = db_with_diagnostics.session.execute(stmt).all()
         pairs = [(row.provider_slug, row.diagnostic_slug) for row in rows]
         assert pairs == sorted(pairs)
-
-    def test_bare_string_rejected_diagnostic_contains(self):
-        with pytest.raises(TypeError):
-            DiagnosticFilter(diagnostic_contains="enso")
-
-    def test_bare_string_rejected_provider_contains(self):
-        with pytest.raises(TypeError):
-            DiagnosticFilter(provider_contains="pmp")
 
 
 class TestDiagnosticsReaderList:

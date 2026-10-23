@@ -1687,6 +1687,15 @@ class TestExecutionValues:
         assert "WILD" in result.stdout
         assert "ACCESS-CM2" not in result.stdout
 
+    @pytest.mark.parametrize("kind", ["scalar", "series"])
+    def test_no_match_json_is_an_empty_list(self, db_seeded, invoke_cli, kind):
+        group_id, _ = self._setup(db_seeded)
+
+        args = ["executions", "values", str(group_id), "--kind", kind, "-d", "source_id=nope"]
+        result = invoke_cli([*args, "--format", "json"])
+
+        assert json.loads(result.stdout) == []
+
     def test_unknown_dimension(self, db_seeded, invoke_cli):
         group_id, _ = self._setup(db_seeded)
 

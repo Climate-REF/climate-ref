@@ -47,6 +47,7 @@ from climate_ref.results import (
     ResourceFilter,
 )
 from climate_ref.results.executions import OutputView
+from climate_ref.results.queries import select_group_counts
 from climate_ref.results.resources import ResourceProfile
 from climate_ref.results.values import ValuesReader
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
@@ -86,6 +87,19 @@ class ResourceGroupBy(StrEnum):
     provider = "provider"
 
 
+_DIAGNOSTIC_ARG = Annotated[
+    list[str] | None,
+    typer.Option(
+        help="Filter by diagnostic slug (substring match, case-insensitive). Multiple values can be provided."
+    ),
+]
+_PROVIDER_ARG = Annotated[
+    list[str] | None,
+    typer.Option(
+        help="Filter by provider slug (substring match, case-insensitive). Multiple values can be provided."
+    ),
+]
+
 # Default columns for the ``list-groups`` table.
 _DEFAULT_LIST_GROUPS_COLUMNS = [
     "id",
@@ -107,20 +121,8 @@ def list_groups(  # noqa: PLR0913
         typer.Option(help="Only include specified columns in the output"),
     ] = None,
     limit: int = typer.Option(100, help="Limit the number of rows to display"),
-    diagnostic: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by diagnostic slug (substring match, case-insensitive)."
-            "Multiple values can be provided."
-        ),
-    ] = None,
-    provider: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by provider slug (substring match, case-insensitive)."
-            "Multiple values can be provided."
-        ),
-    ] = None,
+    diagnostic: _DIAGNOSTIC_ARG = None,
+    provider: _PROVIDER_ARG = None,
     filter: Annotated[  # noqa: A002
         list[str] | None,
         typer.Option(
@@ -161,7 +163,9 @@ def list_groups(  # noqa: PLR0913
     """
     List the diagnostic execution groups that have been identified
 
-    The data catalog is sorted by the date that the execution group was created (first = newest).
+    Groups are sorted by id, so the oldest comes first.
+    Only groups at each diagnostic's promoted version are listed,
+    and a group whose newest execution is retracted is left out.
 
     By default the table shows a subset of columns with the verbose ``selectors``
     and ``updated_at`` fields omitted. Use ``--column`` to choose exactly which columns to display,
@@ -238,20 +242,8 @@ def list_groups(  # noqa: PLR0913
 @app.command()
 def delete_groups(  # noqa: PLR0912, PLR0913
     ctx: typer.Context,
-    diagnostic: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by diagnostic slug (substring match, case-insensitive)."
-            "Multiple values can be provided."
-        ),
-    ] = None,
-    provider: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by provider slug (substring match, case-insensitive)."
-            "Multiple values can be provided."
-        ),
-    ] = None,
+    diagnostic: _DIAGNOSTIC_ARG = None,
+    provider: _PROVIDER_ARG = None,
     filter: Annotated[  # noqa: A002
         list[str] | None,
         typer.Option(
@@ -753,13 +745,15 @@ def _render_scalar_values(  # noqa: PLR0913
         with_facets=False,
     )
     if not len(collection):
+        if output_format == OutputFormat.json:
+            render_dataframe(collection.to_pandas(), output_format=output_format)
+        elif not collection.had_outliers:
+            console.print("No scalar values found.")
         if collection.had_outliers:
             logger.warning(
                 f"No scalar values found. {collection.outlier_count} value(s) were flagged as "
                 f"outliers and hidden. Use --include-unverified to show them."
             )
-        else:
-            console.print("No scalar values found.")
         return
 
     render_dataframe(collection.to_pandas(), console=console, output_format=output_format)
@@ -800,7 +794,10 @@ def _render_series_values(  # noqa: PLR0913
 
     collection = values.series_values(filters, offset=offset, limit=limit, with_facets=False)
     if not len(collection):
-        console.print("No series values found.")
+        if output_format == OutputFormat.json:
+            render_dataframe(collection.to_pandas(), output_format=output_format)
+        else:
+            console.print("No series values found.")
         return
 
     if output_format == OutputFormat.json:
@@ -831,20 +828,8 @@ def fail_running(
             "If not specified, all running executions are failed."
         ),
     ] = None,
-    diagnostic: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by diagnostic slug (substring match, case-insensitive). "
-            "Multiple values can be provided."
-        ),
-    ] = None,
-    provider: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by provider slug (substring match, case-insensitive). "
-            "Multiple values can be provided."
-        ),
-    ] = None,
+    diagnostic: _DIAGNOSTIC_ARG = None,
+    provider: _PROVIDER_ARG = None,
     force: bool = typer.Option(False, help="Skip confirmation prompt"),
 ) -> None:
     """
@@ -923,44 +908,30 @@ def fail_running(
 @app.command()
 def stats(
     ctx: typer.Context,
-    diagnostic: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by diagnostic slug (substring match, case-insensitive)."
-            "Multiple values can be provided."
-        ),
-    ] = None,
-    provider: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by provider slug (substring match, case-insensitive)."
-            "Multiple values can be provided."
-        ),
-    ] = None,
+    diagnostic: _DIAGNOSTIC_ARG = None,
+    provider: _PROVIDER_ARG = None,
 ) -> None:
     """
-    Show summary statistics for execution groups.
+    Show how many execution groups each diagnostic has, by the status of their newest execution.
 
-    Displays counts of executions grouped by provider, broken down by status
-    (running, failed, successful, not started, dirty).
+    The statuses are running, failed, successful and not started, plus a dirty count that overlaps them.
+    Only groups at each diagnostic's promoted version are counted, and retracted executions are skipped.
+    Diagnostics with no groups are listed with zero counts, and each provider gets a ``(total)`` row.
     """
     import pandas as pd
 
     console = ctx.obj.console
-    reader = Reader(ctx.obj.database)
+    rows = ctx.obj.database.session.execute(
+        select_group_counts(DiagnosticFilter(diagnostic_contains=diagnostic, provider_contains=provider))
+    ).all()
 
-    diagnostics = reader.diagnostics.list(
-        DiagnosticFilter(diagnostic_contains=diagnostic, provider_contains=provider),
-        with_count=False,
-    )
-
-    if not diagnostics.items:
+    if not rows:
         console.print("No execution groups found.")
         return
 
     status_cols = ["running", "failed", "successful", "not_started", "dirty", "total"]
-    results_df = diagnostics.to_pandas().rename(
-        columns={f"{c}_group_count": c for c in status_cols} | {"group_count": "total"}
+    results_df = pd.DataFrame([row._mapping for row in rows]).rename(
+        columns={"provider_slug": "provider", "diagnostic_slug": "diagnostic", "group_count": "total"}
     )[["provider", "diagnostic", *status_cols]]
 
     # Add provider totals
@@ -1028,20 +999,21 @@ def _resource_table_row(profile: ResourceProfile, label: str) -> dict[str, str |
     limit = profile.memory_limit_seen
     headroom = profile.headroom_ratio
     return {
+        # The first 8 columns are the ones an 80-column terminal keeps.
         label: profile.diagnostic_slug if profile.diagnostic_slug is not None else profile.provider_slug,
-        "n": profile.n_samples,
-        "fail": profile.n_failed,
-        "mem p50": format_size(profile.peak_memory_p50),
-        "mem p95": format_size(profile.peak_memory_p95),
-        "mem max": format_size(profile.peak_memory_max),
-        "rec mem": format_size(profile.recommended_memory_bytes),
-        "wall p95": _format_duration(profile.wall_p95),
-        "cpu/wall": f"{profile.parallelism_p95:.1f}",
-        "rec cpu": profile.recommended_cpus,
-        "limit": format_size(limit) if limit is not None else "-",
-        "headroom": f"{headroom:.1f}x" if headroom is not None else "-",
         "flag": "OVER" if profile.over_limit else "",
         "conf": profile.confidence,
+        "n": profile.sample_count,
+        "fail": profile.failed_execution_count,
+        "rec mem": format_size(profile.recommended_memory_bytes),
+        "rec cpu": profile.recommended_cpus,
+        "headroom": f"{headroom:.1f}x" if headroom is not None else "-",
+        "mem max": format_size(profile.peak_memory_max),
+        "mem p95": format_size(profile.peak_memory_p95),
+        "mem p50": format_size(profile.peak_memory_p50),
+        "wall p95": _format_duration(profile.wall_p95),
+        "cpu/wall": f"{profile.parallelism_p95:.1f}",
+        "limit": format_size(limit) if limit is not None else "-",
     }
 
 
@@ -1049,9 +1021,9 @@ def _resource_json_record(profile: ResourceProfile) -> dict[str, object]:
     return {
         "provider": profile.provider_slug,
         "diagnostic": profile.diagnostic_slug,
-        "n_samples": profile.n_samples,
-        "n_excluded": profile.n_excluded,
-        "n_failed": profile.n_failed,
+        "sample_count": profile.sample_count,
+        "excluded_execution_count": profile.excluded_execution_count,
+        "failed_execution_count": profile.failed_execution_count,
         "memory_source": profile.memory_source,
         "peak_memory_p50": profile.peak_memory_p50,
         "peak_memory_p95": profile.peak_memory_p95,
@@ -1082,7 +1054,7 @@ def _warn_about_bias(profiles: Sequence[ResourceProfile]) -> None:
             f"so those executions are being killed by the current container size."
         )
 
-    failed = sum(p.n_failed for p in profiles)
+    failed = sum(p.failed_execution_count for p in profiles)
     if failed:
         logger.warning(
             f"{failed} failed execution(s) in this window. A failure that recorded a measurement "
@@ -1097,7 +1069,7 @@ def _warn_about_bias(profiles: Sequence[ResourceProfile]) -> None:
             f"Their p95 is the maximum by another name."
         )
 
-    excluded = sum(p.n_excluded for p in profiles)
+    excluded = sum(p.excluded_execution_count for p in profiles)
     if excluded:
         logger.warning(
             f"{excluded} measured execution(s) were excluded as incomplete, "
@@ -1109,20 +1081,8 @@ def _warn_about_bias(profiles: Sequence[ResourceProfile]) -> None:
 @app.command()
 def resources(  # noqa: PLR0913
     ctx: typer.Context,
-    provider: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by provider slug (substring match, case-insensitive). "
-            "Multiple values can be provided."
-        ),
-    ] = None,
-    diagnostic: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by diagnostic slug (substring match, case-insensitive). "
-            "Multiple values can be provided."
-        ),
-    ] = None,
+    diagnostic: _DIAGNOSTIC_ARG = None,
+    provider: _PROVIDER_ARG = None,
     by: Annotated[
         ResourceGroupBy,
         typer.Option(help="Aggregate per diagnostic (default) or roll up per provider."),
@@ -1188,7 +1148,10 @@ def resources(  # noqa: PLR0913
     )
 
     if not profiles:
-        console.print("No resource measurements found.")
+        if output_format == OutputFormat.json:
+            render_dataframe(pd.DataFrame(), output_format=output_format)
+        else:
+            console.print("No resource measurements found.")
         return
 
     ordered = sorted(
@@ -1225,20 +1188,8 @@ def reingest(  # noqa: PLR0913
         list[int] | None,
         typer.Argument(help="Execution group IDs to reingest. If omitted, uses filters."),
     ] = None,
-    provider: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by provider slug (substring match, case-insensitive). "
-            "Multiple values can be provided."
-        ),
-    ] = None,
-    diagnostic: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by diagnostic slug (substring match, case-insensitive). "
-            "Multiple values can be provided."
-        ),
-    ] = None,
+    diagnostic: _DIAGNOSTIC_ARG = None,
+    provider: _PROVIDER_ARG = None,
     include_failed: Annotated[
         bool,
         typer.Option(
@@ -1381,20 +1332,8 @@ def requeue(  # noqa: PLR0913
             "Multiple values can be provided."
         ),
     ] = None,
-    diagnostic: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by diagnostic slug (substring match, case-insensitive). "
-            "Multiple values can be provided."
-        ),
-    ] = None,
-    provider: Annotated[
-        list[str] | None,
-        typer.Option(
-            help="Filter by provider slug (substring match, case-insensitive). "
-            "Multiple values can be provided."
-        ),
-    ] = None,
+    diagnostic: _DIAGNOSTIC_ARG = None,
+    provider: _PROVIDER_ARG = None,
     filter: Annotated[  # noqa: A002
         list[str] | None,
         typer.Option(

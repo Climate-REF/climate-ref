@@ -3,7 +3,7 @@ Read the results of diagnostic executions from a local REF database.
 
 The REF stores its local results across several database tables:
 diagnostics, execution groups, executions, metric values and datasets.
-A ``Reader`` joins these tables, picks the latest execution in each group and skips retracted executions,
+A ``Reader`` joins these tables and skips retracted executions,
 so a read needs a filter rather than SQL.
 
 ## Reading results
@@ -17,13 +17,15 @@ Each property of a ``Reader`` reads one kind of result:
 * ``reader.resources``: how much CPU time and memory the executions used.
 * ``reader.artifacts``: where the output files of an execution are on disk.
 
-Every read returns a collection.
+Most reads return a collection.
 Loop over it, or call ``to_pandas()`` on it to get a DataFrame.
+A few, such as ``reader.resources.profiles``, return a plain tuple of views.
 
 ## Filtering
 
 Most reads take a filter, such as ``MetricValueFilter``, to choose which results come back.
-By default a filter keeps only the latest diagnostic version and leaves out retracted executions.
+By default a filter keeps only each diagnostic's promoted version and leaves out retracted executions.
+Readers of single executions also take ``latest_only`` to keep only each group's newest execution.
 The filters are documented in [filters][climate_ref.results.filters].
 
 ## Pagination

@@ -260,7 +260,7 @@ class TestAggregation:
 
         assert len(profiles) == 1
         profile = profiles[0]
-        assert profile.n_samples == 2
-        assert profile.n_excluded == 0
+        assert profile.sample_count == 2
+        assert profile.excluded_execution_count == 0
         assert profile.peak_memory_p95 > 0
         assert profile.recommended_memory_bytes >= profile.peak_memory_p95

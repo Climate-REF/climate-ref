@@ -6,10 +6,11 @@ import json
 import pytest
 from climate_ref_pmp import provider as pmp_provider
 
-from climate_ref.cli.executions import _format_duration, _parse_since
+from climate_ref.cli.executions import _format_duration, _parse_since, _resource_table_row
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.provider_registry import _register_provider
+from climate_ref.results import Reader
 
 GIB = 1024**3
 
@@ -159,7 +160,7 @@ class TestResourcesCommand:
 
         records = {record["diagnostic"]: record for record in json.loads(result.stdout)}
 
-        assert records["enso_tel"]["n_samples"] == 12
+        assert records["enso_tel"]["sample_count"] == 12
         assert records["enso_tel"]["confidence"] == "good"
         assert records["enso_tel"]["memory_source"] == "cgroup"
         assert records["enso_tel"]["peak_memory_p95"] == 4 * GIB
@@ -167,8 +168,8 @@ class TestResourcesCommand:
         assert records["enso_tel"]["over_limit"] is False
 
         nao = records["extratropical-modes-of-variability-nao"]
-        assert nao["n_samples"] == 3
-        assert nao["n_failed"] == 1
+        assert nao["sample_count"] == 3
+        assert nao["failed_execution_count"] == 1
         assert nao["confidence"] == "thin"
         assert nao["headroom_ratio"] == pytest.approx(0.4)
         assert nao["over_limit"] is True
@@ -202,10 +203,10 @@ class TestResourcesCommand:
         db_seeded.session.commit()
 
         default = invoke_cli(["executions", "resources", "--format", "json"])
-        assert json.loads(default.stdout)[0]["n_samples"] == 0
+        assert json.loads(default.stdout)[0]["sample_count"] == 0
 
         shared = invoke_cli(["executions", "resources", "--include-shared", "--format", "json"])
-        assert json.loads(shared.stdout)[0]["n_samples"] == 1
+        assert json.loads(shared.stdout)[0]["sample_count"] == 1
 
     def test_since_filters_everything_out(self, db_with_resources, invoke_cli):
         result = invoke_cli(["executions", "resources", "--since", "2099-01-01"])
@@ -221,3 +222,15 @@ class TestResourcesCommand:
         result = invoke_cli(["executions", "resources"])
 
         assert "No resource measurements found." in result.stdout
+
+    def test_no_measurements_json_is_an_empty_list(self, db_seeded, invoke_cli):
+        result = invoke_cli(["executions", "resources", "--format", "json"])
+
+        assert json.loads(result.stdout) == []
+
+    def test_qualifier_columns_fit_a_narrow_terminal(self, db_with_resources):
+        (profile, *_) = Reader(db_with_resources).resources.profiles()
+        # pretty_print_df keeps console.width // 10 columns, so 8 at 80 columns.
+        first_eight = list(_resource_table_row(profile, "diagnostic"))[:8]
+
+        assert {"flag", "conf", "headroom", "rec mem"} <= set(first_eight)

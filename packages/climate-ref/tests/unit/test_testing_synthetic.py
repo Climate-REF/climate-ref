@@ -2,6 +2,7 @@ import sqlite3
 from pathlib import Path
 
 import pytest
+from sqlalchemy import text
 
 from climate_ref.database import Database
 from climate_ref.results import MetricValueFilter, Reader
@@ -10,6 +11,7 @@ from climate_ref.testing.synthetic import (
     Shape,
     build_synthetic_database,
     cached_synthetic_database,
+    captured_statements,
     large_table_scans,
 )
 
@@ -76,3 +78,19 @@ def test_large_table_scans_accepts_multiline_cte(synthetic_db):
         "\nSELECT * FROM busiest JOIN execution ON execution.id = busiest.execution_id"
     )
     assert large_table_scans(synthetic_db, [(sql, ())]) == frozenset()
+
+
+def test_large_table_scans_finds_a_full_scan(synthetic_db, config):
+    config.db.database_url = f"sqlite:///{synthetic_db}"
+    with Database.from_config(config, read_only=True) as db:
+        with captured_statements(db) as statements, db.session_scope() as session:
+            session.execute(text("SELECT value FROM metric_value WHERE value > 0")).all()
+            session.execute(text("SELECT * FROM execution WHERE id = 1")).all()
+
+    assert len(statements) == 2
+    assert large_table_scans(synthetic_db, statements) == {"metric_value"}
+
+
+def test_large_table_scans_refuses_an_unknown_alias(synthetic_db):
+    with pytest.raises(ValueError, match="cannot map scanned names"):
+        large_table_scans(synthetic_db, [("SELECT value FROM metric_value AS mv WHERE value > 0", ())])

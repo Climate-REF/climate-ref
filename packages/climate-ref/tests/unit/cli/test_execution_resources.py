@@ -163,7 +163,7 @@ class TestResourcesCommand:
         assert records["enso_tel"]["sample_count"] == 12
         assert records["enso_tel"]["confidence"] == "good"
         assert records["enso_tel"]["memory_source"] == "cgroup"
-        assert records["enso_tel"]["peak_memory_p95"] == 4 * GIB
+        assert records["enso_tel"]["peak_memory_bytes_p95"] == 4 * GIB
         assert records["enso_tel"]["recommended_memory_bytes"] == 6 * GIB
         assert records["enso_tel"]["over_limit"] is False
 

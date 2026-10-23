@@ -34,7 +34,7 @@ def list_(  # noqa: PLR0913
         list[str] | None,
         typer.Option(help="Only include specified columns in the output"),
     ] = None,
-    limit: int = typer.Option(100, help="Limit the number of rows to display"),
+    limit: int = typer.Option(100, min=0, help="Limit the number of rows to display"),
     output_format: Annotated[
         OutputFormat,
         typer.Option(

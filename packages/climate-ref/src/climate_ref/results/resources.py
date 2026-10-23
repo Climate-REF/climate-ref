@@ -339,10 +339,10 @@ class ResourceProfile:
     ...     excluded_execution_count=0,
     ...     failed_execution_count=0,
     ...     memory_source="cgroup",
-    ...     peak_memory_p50=2 * gib,
-    ...     peak_memory_p95=3 * gib,
-    ...     peak_memory_max=3 * gib,
-    ...     wall_p95=600.0,
+    ...     peak_memory_bytes_p50=2 * gib,
+    ...     peak_memory_bytes_p95=3 * gib,
+    ...     peak_memory_bytes_max=3 * gib,
+    ...     wall_seconds_p95=600.0,
     ...     cpu_seconds_p95=1900.0,
     ...     parallelism_p95=3.2,
     ...     memory_limit_seen=4 * gib,
@@ -409,16 +409,16 @@ class ResourceProfile:
     the source contributing the most samples wins and the rest land in ``excluded_execution_count``.
     """
 
-    peak_memory_p50: int
+    peak_memory_bytes_p50: int
     """Median peak resident memory, in bytes."""
 
-    peak_memory_p95: int
+    peak_memory_bytes_p95: int
     """95th percentile peak resident memory, in bytes."""
 
-    peak_memory_max: int
+    peak_memory_bytes_max: int
     """Largest peak resident memory observed, in bytes."""
 
-    wall_p95: float
+    wall_seconds_p95: float
     """95th percentile wall clock time, in seconds."""
 
     cpu_seconds_p95: float
@@ -442,7 +442,7 @@ class ResourceProfile:
 
     headroom_ratio: float | None
     """
-    ``memory_limit_seen / peak_memory_p95``, or ``None`` when no limit was recorded.
+    ``memory_limit_seen / peak_memory_bytes_p95``, or ``None`` when no limit was recorded.
 
     Below 1 means the diagnostic is being killed by the current container size.
     """
@@ -455,9 +455,10 @@ class ResourceProfile:
         """
         Memory to request, in bytes.
 
-        This is ``peak_memory_p95`` scaled by ``safety_factor`` and rounded up to a whole GiB, at least 1 GiB.
+        This is ``peak_memory_bytes_p95`` scaled by ``safety_factor``,
+        rounded up to a whole GiB, and at least 1 GiB.
         """
-        scaled = self.peak_memory_p95 * self.safety_factor
+        scaled = self.peak_memory_bytes_p95 * self.safety_factor
         return max(1, math.ceil(scaled / _BYTES_PER_GIB)) * _BYTES_PER_GIB
 
     @property
@@ -576,10 +577,10 @@ def _empty_profile(
         excluded_execution_count=excluded_execution_count,
         failed_execution_count=failed_execution_count,
         memory_source=None,
-        peak_memory_p50=0,
-        peak_memory_p95=0,
-        peak_memory_max=0,
-        wall_p95=0.0,
+        peak_memory_bytes_p50=0,
+        peak_memory_bytes_p95=0,
+        peak_memory_bytes_max=0,
+        wall_seconds_p95=0.0,
         cpu_seconds_p95=0.0,
         parallelism_p95=0.0,
         memory_limit_seen=None,
@@ -641,10 +642,10 @@ def _build_profile(
         excluded_execution_count=excluded_execution_count,
         failed_execution_count=failed_execution_count,
         memory_source=source,
-        peak_memory_p50=round(_percentile(peaks, 0.5)),
-        peak_memory_p95=peak_p95,
-        peak_memory_max=max(peaks),
-        wall_p95=_percentile(walls, 0.95),
+        peak_memory_bytes_p50=round(_percentile(peaks, 0.5)),
+        peak_memory_bytes_p95=peak_p95,
+        peak_memory_bytes_max=max(peaks),
+        wall_seconds_p95=_percentile(walls, 0.95),
         cpu_seconds_p95=_percentile(cpus, 0.95),
         parallelism_p95=_percentile(parallelisms, 0.95),
         memory_limit_seen=limit_seen,
@@ -687,10 +688,10 @@ def _roll_up(provider_slug: str, profiles: Sequence[ResourceProfile]) -> Resourc
             safety_factor=safety_factor,
         )
 
-    driver = max(with_samples, key=lambda profile: profile.peak_memory_p95)
+    driver = max(with_samples, key=lambda profile: profile.peak_memory_bytes_p95)
     limit_seen = driver.memory_limit_seen
 
-    peak_p95 = driver.peak_memory_p95
+    peak_p95 = driver.peak_memory_bytes_p95
     headroom = limit_seen / peak_p95 if limit_seen is not None and peak_p95 > 0 else None
 
     return ResourceProfile(
@@ -700,10 +701,10 @@ def _roll_up(provider_slug: str, profiles: Sequence[ResourceProfile]) -> Resourc
         excluded_execution_count=excluded_execution_count,
         failed_execution_count=failed_execution_count,
         memory_source=driver.memory_source,
-        peak_memory_p50=max(profile.peak_memory_p50 for profile in with_samples),
-        peak_memory_p95=peak_p95,
-        peak_memory_max=max(profile.peak_memory_max for profile in with_samples),
-        wall_p95=max(profile.wall_p95 for profile in with_samples),
+        peak_memory_bytes_p50=max(profile.peak_memory_bytes_p50 for profile in with_samples),
+        peak_memory_bytes_p95=peak_p95,
+        peak_memory_bytes_max=max(profile.peak_memory_bytes_max for profile in with_samples),
+        wall_seconds_p95=max(profile.wall_seconds_p95 for profile in with_samples),
         cpu_seconds_p95=max(profile.cpu_seconds_p95 for profile in with_samples),
         parallelism_p95=_percentile([profile.parallelism_p95 for profile in with_samples], 0.95),
         memory_limit_seen=limit_seen,

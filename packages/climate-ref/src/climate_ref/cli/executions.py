@@ -2,10 +2,11 @@
 View execution groups and their results
 """
 
+import contextlib
 import datetime
 import pathlib
 import shutil
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Annotated
@@ -102,15 +103,22 @@ _SINCE_ARG = Annotated[
 ]
 
 
+@contextlib.contextmanager
+def _exit_on_value_error() -> Iterator[None]:
+    """Turn a ``ValueError`` from bad input into a logged error and exit code 1."""
+    try:
+        yield
+    except ValueError as e:
+        logger.error(str(e))
+        raise typer.Exit(code=1)
+
+
 def _since_cutoff(since: str | None) -> datetime.datetime | None:
     """Parse ``--since``, exiting with an error when it is invalid."""
     if since is None:
         return None
-    try:
+    with _exit_on_value_error():
         return _parse_since(since)
-    except ValueError as e:
-        logger.error(str(e))
-        raise typer.Exit(code=1)
 
 
 # Default columns for the ``list-groups`` table.
@@ -133,7 +141,7 @@ def list_groups(  # noqa: PLR0913
         list[str] | None,
         typer.Option(help="Only include specified columns in the output"),
     ] = None,
-    limit: int = typer.Option(100, help="Limit the number of rows to display"),
+    limit: int = typer.Option(100, min=0, help="Limit the number of rows to display"),
     diagnostic: _DIAGNOSTIC_ARG = None,
     provider: _PROVIDER_ARG = None,
     since: _SINCE_ARG = None,
@@ -194,12 +202,17 @@ def list_groups(  # noqa: PLR0913
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
 
-    # Parse selector filters
-    try:
+    with _exit_on_value_error():
         selector_filters = parse_facet_filters(filter)
-    except ValueError as e:
-        logger.error(str(e))
-        raise typer.Exit(code=1)
+        group_filter = ExecutionGroupFilter(
+            diagnostic_contains=diagnostic,
+            provider_contains=provider,
+            selectors=selector_filters or None,
+            successful=successful,
+            dirty=dirty,
+            failure_reasons=failure_reason,
+            created_after=_since_cutoff(since),
+        )
 
     # Build filter options
     filters = ListGroupsFilterOptions(
@@ -214,18 +227,7 @@ def list_groups(  # noqa: PLR0913
     total_count = session.query(ExecutionGroup).count()
 
     # Apply filters to query
-    collection = reader.executions.groups(
-        ExecutionGroupFilter(
-            diagnostic_contains=diagnostic,
-            provider_contains=provider,
-            selectors=selector_filters or None,
-            successful=successful,
-            dirty=dirty,
-            failure_reasons=failure_reason,
-            created_after=_since_cutoff(since),
-        ),
-        limit=limit,
-    )
+    collection = reader.executions.groups(group_filter, limit=limit)
 
     # Check if any results found
     if len(collection) == 0:
@@ -304,11 +306,16 @@ def delete_groups(  # noqa: PLR0912, PLR0913
     console = ctx.obj.console
 
     # Parse selector filters
-    try:
+    with _exit_on_value_error():
         selector_filters = parse_facet_filters(filter)
-    except ValueError as e:
-        logger.error(str(e))
-        raise typer.Exit(code=1)
+        group_filter = ExecutionGroupFilter(
+            diagnostic_contains=diagnostic,
+            provider_contains=provider,
+            selectors=selector_filters or None,
+            successful=successful,
+            dirty=dirty,
+            include_retracted=True,
+        )
 
     if not any([diagnostic, provider, selector_filters, successful is not None, dirty is not None]):
         logger.warning("THIS WILL DELETE ALL EXECUTION GROUPS IN THE DATABASE")
@@ -323,16 +330,7 @@ def delete_groups(  # noqa: PLR0912, PLR0913
     logger.debug(f"Applying filters: {filters}")
 
     # Apply filters to query
-    all_filtered_results = Reader(ctx.obj.database).executions.group_rows(
-        ExecutionGroupFilter(
-            diagnostic_contains=filters.diagnostic,
-            provider_contains=filters.provider,
-            selectors=filters.selectors,
-            successful=successful,
-            dirty=dirty,
-            include_retracted=True,
-        )
-    )
+    all_filtered_results = Reader(ctx.obj.database).executions.group_rows(group_filter)
 
     # Check if any results found
     if not all_filtered_results:
@@ -461,6 +459,7 @@ def _execution_panel(execution_group: ExecutionGroup) -> Panel:
         f"Provider: [bold]{execution_group.diagnostic.provider.slug}[/]\n"
         f"Dirty: [bold]{execution_group.dirty}[/]\n"
         f"Successful: [bold]{result.successful if result else 'not-started'}[/]\n"
+        f"Retracted: [bold]{result.retracted if result else '-'}[/]\n"
         f"Failure reason: [bold]{failure_reason}[/]\n"
         f"Created At: [bold]{execution_group.created_at}[/]\n"
         f"Updated At: [bold]{execution_group.updated_at}[/]\n"
@@ -586,27 +585,31 @@ def emit_no_results_warning(
 
 
 @app.command()
-def inspect(ctx: typer.Context, execution_id: int) -> None:
+def inspect(
+    ctx: typer.Context,
+    group_id: Annotated[int, typer.Argument(help="Execution group ID to inspect.")],
+) -> None:
     """
     Inspect a specific execution group by its ID
 
     This will display the execution details, datasets, results directory, and logs if available.
+    The details are for the group's newest execution, even when it is retracted.
     """
     config: Config = ctx.obj.config
     session = ctx.obj.database.session
     console = ctx.obj.console
     reader = Reader(ctx.obj.database, results=config.paths.results)
 
-    execution_group = session.get(ExecutionGroup, execution_id)
+    execution_group = session.get(ExecutionGroup, group_id)
 
     if not execution_group:
-        logger.error(f"Execution not found: {execution_id}")
+        logger.error(f"Execution group not found: {group_id}")
         raise typer.Exit(code=1)
 
     console.print(_execution_panel(execution_group))
 
     if not execution_group.executions:
-        logger.error(f"No results found for execution: {execution_id}")
+        logger.warning(f"Execution group {group_id} has not run yet.")
         return
 
     result: Execution = execution_group.executions[-1]
@@ -655,11 +658,11 @@ def values(  # noqa: PLR0913
     ] = False,
     limit: Annotated[
         int,
-        typer.Option(help="Maximum number of values to display."),
+        typer.Option(min=0, help="Maximum number of values to display."),
     ] = 100,
     offset: Annotated[
         int,
-        typer.Option(help="Number of values to skip before displaying."),
+        typer.Option(min=0, help="Number of values to skip before displaying."),
     ] = 0,
     output_format: Annotated[
         OutputFormat,
@@ -1021,10 +1024,10 @@ def _resource_table_row(profile: ResourceProfile, label: str) -> dict[str, str |
         "rec mem": format_size(profile.recommended_memory_bytes),
         "rec cpu": profile.recommended_cpus,
         "headroom": f"{headroom:.1f}x" if headroom is not None else "-",
-        "mem max": format_size(profile.peak_memory_max),
-        "mem p95": format_size(profile.peak_memory_p95),
-        "mem p50": format_size(profile.peak_memory_p50),
-        "wall p95": _format_duration(profile.wall_p95),
+        "mem max": format_size(profile.peak_memory_bytes_max),
+        "mem p95": format_size(profile.peak_memory_bytes_p95),
+        "mem p50": format_size(profile.peak_memory_bytes_p50),
+        "wall p95": _format_duration(profile.wall_seconds_p95),
         "cpu/wall": f"{profile.parallelism_p95:.1f}",
         "limit": format_size(limit) if limit is not None else "-",
     }
@@ -1038,10 +1041,10 @@ def _resource_json_record(profile: ResourceProfile) -> dict[str, object]:
         "excluded_execution_count": profile.excluded_execution_count,
         "failed_execution_count": profile.failed_execution_count,
         "memory_source": profile.memory_source,
-        "peak_memory_p50": profile.peak_memory_p50,
-        "peak_memory_p95": profile.peak_memory_p95,
-        "peak_memory_max": profile.peak_memory_max,
-        "wall_p95": profile.wall_p95,
+        "peak_memory_bytes_p50": profile.peak_memory_bytes_p50,
+        "peak_memory_bytes_p95": profile.peak_memory_bytes_p95,
+        "peak_memory_bytes_max": profile.peak_memory_bytes_max,
+        "wall_seconds_p95": profile.wall_seconds_p95,
         "cpu_seconds_p95": profile.cpu_seconds_p95,
         "parallelism_p95": profile.parallelism_p95,
         "memory_limit_seen": profile.memory_limit_seen,
@@ -1363,14 +1366,20 @@ def requeue(  # noqa: PLR0913
     session = ctx.obj.database.session
     console = ctx.obj.console
 
-    try:
+    with _exit_on_value_error():
         selector_filters = parse_facet_filters(filter)
-    except ValueError as e:
-        logger.error(str(e))
-        raise typer.Exit(code=1)
+        group_filter = ExecutionGroupFilter(
+            diagnostic_contains=diagnostic,
+            provider_contains=provider,
+            selectors=selector_filters or None,
+            dirty=False,
+            successful=False,
+            failure_reasons=failure_reason,
+            created_after=_since_cutoff(since),
+            include_retracted=True,
+        )
 
-    cutoff = _since_cutoff(since)
-    if not any([failure_reason, diagnostic, provider, selector_filters, cutoff]):
+    if not any([failure_reason, diagnostic, provider, selector_filters, since]):
         logger.error(
             "At least one filter is required "
             "(--failure-reason, --diagnostic, --provider, --since or --filter). "
@@ -1380,18 +1389,7 @@ def requeue(  # noqa: PLR0913
 
     results = [
         (eg, execution)
-        for eg, execution in Reader(ctx.obj.database).executions.group_rows(
-            ExecutionGroupFilter(
-                diagnostic_contains=diagnostic,
-                provider_contains=provider,
-                selectors=selector_filters or None,
-                dirty=False,
-                successful=False,
-                failure_reasons=failure_reason,
-                created_after=cutoff,
-                include_retracted=True,
-            )
-        )
+        for eg, execution in Reader(ctx.obj.database).executions.group_rows(group_filter)
         # Drops in-progress and never-run groups, which `successful=False` also matches
         if execution is not None and execution.successful is False
     ]

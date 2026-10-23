@@ -80,6 +80,7 @@ def list_(  # noqa: PLR0913
     ),
     limit: int = typer.Option(
         100,
+        min=0,
         help=(
             "Limit the number of datasets (or files when using --include-files) to display to this number."
         ),

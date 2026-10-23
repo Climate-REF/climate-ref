@@ -277,6 +277,14 @@ class TestScalarValues:
         flagged = {v.dimensions["source_id"] for v in coll if v.is_outlier}
         assert flagged == {"WILD", "BROKEN"}
 
+    def test_kind_model_matches_values_with_no_kind(self, dal_db):
+        f = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id], dimensions={"kind": "model"})
+        assert Reader(dal_db).values.scalar_values(f).total_count == 8
+
+    def test_unknown_outlier_group_by_raises(self, dal_db):
+        with pytest.raises(KeyError, match="bogus"):
+            Reader(dal_db).values.scalar_values(outliers=OutlierPolicy(group_by=("bogus",)))
+
     @pytest.mark.parametrize("field", ["execution_ids", "execution_group_ids", "isolate_ids"])
     def test_empty_id_sequence_matches_nothing(self, dal_db, field):
         ref = Reader(dal_db)

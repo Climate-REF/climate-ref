@@ -39,10 +39,10 @@ class Page[T]:
     total_count: int | None
     """Total rows matching the filter before ``offset``/``limit``, or ``None`` when not counted."""
 
-    offset: int
+    offset: int = attrs.field(validator=attrs.validators.ge(0))
     """Rows skipped before this page."""
 
-    limit: int | None
+    limit: int | None = attrs.field(validator=attrs.validators.optional(attrs.validators.ge(0)))
     """Page size requested, or ``None`` when the whole result was returned."""
 
     def __iter__(self) -> Iterator[T]:

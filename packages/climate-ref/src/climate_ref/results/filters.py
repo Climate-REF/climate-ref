@@ -48,6 +48,9 @@ They are grouped into scopes, and each filter is built from the scopes it needs:
 * [InputDatasetScope][climate_ref.results.filters.InputDatasetScope]: which input datasets the executions used
   (``input_datasets``).
 
+Fields that take a list keep rows matching any of its values, so an empty list keeps nothing.
+``exclude_ids`` is the exception: an empty list drops nothing.
+
 ## Latest execution only
 
 An execution group can have several executions, one each time it is rerun.
@@ -92,6 +95,7 @@ and a list matches any of its values:
 
 import datetime
 from collections.abc import Iterable, Mapping, Sequence
+from typing import Any
 
 import attrs
 from sqlalchemy import ColumnElement, Select, and_, exists, false, or_, select, true
@@ -153,6 +157,31 @@ def _dataset_types() -> tuple[SourceDatasetType, ...]:
 def _has_facets(source_type: SourceDatasetType, facets: Iterable[str]) -> bool:
     columns = _entity_for(source_type).__mapper__.columns
     return all(facet in columns for facet in facets)
+
+
+def _check_known_facet(facet: str, types: Iterable[SourceDatasetType], name: str) -> None:
+    if not any(_has_facets(t, [facet]) for t in types):
+        raise ValueError(f"Unknown {name} {facet!r}. It is not a column on any dataset type")
+
+
+def split_selector_key(key: str) -> tuple[str | None, str]:
+    """Split a ``selectors`` key into its dataset type, if it names one, and its facet."""
+    dataset_type, dot, facet = key.partition(".")
+    return (dataset_type, facet) if dot else (None, key)
+
+
+def _check_selector_keys(_instance: object, _attribute: object, selectors: Mapping[str, Any] | None) -> None:
+    """Reject a ``selectors`` key that names no dataset type or facet, which would match nothing."""
+    types = {t.value: t for t in _dataset_types()}
+    for key in selectors or {}:
+        dataset_type, facet = split_selector_key(key)
+        if dataset_type is not None and dataset_type not in types:
+            raise ValueError(f"Unknown dataset type {dataset_type!r} in selector {key!r}")
+        _check_known_facet(facet, [types[dataset_type]] if dataset_type else types.values(), "selector")
+
+
+def _contains_any(column: Any, searches: Iterable[str]) -> ColumnElement[bool]:
+    return or_(false(), *(column.icontains(s, autoescape=True) for s in searches))
 
 
 @attrs.frozen(kw_only=True)
@@ -221,8 +250,7 @@ class InputDatasetFilter:
             raise ValueError("Set `facets` or `dataset_ids`")
         types = _dataset_types()
         for facet in self.facets or {}:
-            if not any(_has_facets(t, [facet]) for t in types):
-                raise ValueError(f"Unknown facet {facet!r}. It is not a column on any dataset type")
+            _check_known_facet(facet, types, "facet")
         if self.facets and not any(_has_facets(t, self.facets) for t in types):
             raise ValueError(f"No dataset type has every facet in {sorted(self.facets)}")
 
@@ -303,28 +331,26 @@ class DiagnosticScope(BaseFilter):
     @property
     def matches_any(self) -> bool:
         """Whether any diagnostic or provider axis is set."""
-        return self.diagnostic_slug is not None or bool(self.diagnostic_contains) or self.matches_provider
+        return (
+            self.diagnostic_slug is not None or self.diagnostic_contains is not None or self.matches_provider
+        )
 
     @property
     def matches_provider(self) -> bool:
         """Whether any provider axis is set."""
-        return self.provider_slug is not None or bool(self.provider_contains)
+        return self.provider_slug is not None or self.provider_contains is not None
 
     def diagnostic_clauses(self) -> list[ColumnElement[bool]]:
         """Clauses for a select joined to ``Diagnostic``, and to ``Provider`` if a provider axis is set."""
         clauses: list[ColumnElement[bool]] = []
         if self.diagnostic_slug is not None:
             clauses.append(Diagnostic.slug.in_(self.diagnostic_slug))
-        if self.diagnostic_contains:
-            clauses.append(
-                or_(*(Diagnostic.slug.icontains(s, autoescape=True) for s in self.diagnostic_contains))
-            )
+        if self.diagnostic_contains is not None:
+            clauses.append(_contains_any(Diagnostic.slug, self.diagnostic_contains))
         if self.provider_slug is not None:
             clauses.append(Provider.slug.in_(self.provider_slug))
-        if self.provider_contains:
-            clauses.append(
-                or_(*(Provider.slug.icontains(s, autoescape=True) for s in self.provider_contains))
-            )
+        if self.provider_contains is not None:
+            clauses.append(_contains_any(Provider.slug, self.provider_contains))
         return clauses
 
     def diagnostic_ids(self) -> Select[tuple[int]]:
@@ -433,8 +459,12 @@ class ExecutionScope(BaseFilter):
         if self.or_no_model_input and self.source_types is None:
             raise ValueError("`or_no_model_input` needs `source_types`")
 
-    def execution_clauses(self) -> list[ColumnElement[bool]]:
-        """Clauses over ``Execution`` that narrow which executions count, before the newest is picked."""
+    @property
+    def narrows_executions(self) -> bool:
+        """Whether a time or execution id narrows which executions count, so a group needs one of them."""
+        return bool(self._narrowing_clauses())
+
+    def _narrowing_clauses(self) -> list[ColumnElement[bool]]:
         clauses: list[ColumnElement[bool]] = []
         if self.created_after is not None:
             clauses.append(Execution.created_at >= self.created_after)
@@ -442,6 +472,11 @@ class ExecutionScope(BaseFilter):
             clauses.append(Execution.created_at < self.created_before)
         if self.execution_ids is not None:
             clauses.append(Execution.id.in_(self.execution_ids))
+        return clauses
+
+    def execution_clauses(self) -> list[ColumnElement[bool]]:
+        """Clauses over ``Execution`` that narrow which executions count, before the newest is picked."""
+        clauses = self._narrowing_clauses()
         if self.execution_group_ids is not None:
             clauses.append(Execution.execution_group_id.in_(self.execution_group_ids))
         return clauses
@@ -548,12 +583,14 @@ class MetricValueFilter(DiagnosticScope, VersionScope, ExecutionScope, InputData
             if key not in entity._cv_dimensions:
                 raise KeyError(f"Unknown dimension column {key!r}")
             col = getattr(entity, key)
-            if isinstance(value, str) or not isinstance(value, Sequence):
-                clauses.append(col == value)
-            else:
-                vals = [v for v in value if v is not None]
-                clause = col == vals[0] if len(vals) == 1 else col.in_(vals)
-                clauses.append(or_(clause, col.is_(None)) if None in value else clause)
+            wanted: list[Any] = (
+                [value] if isinstance(value, str) or not isinstance(value, Sequence) else list(value)
+            )
+            if key == "kind" and "model" in wanted:
+                # A value with no ``kind`` reads as "model".
+                wanted.append(None)
+            clause = col.in_([v for v in wanted if v is not None])
+            clauses.append(or_(clause, col.is_(None)) if None in wanted else clause)
         return clauses
 
 
@@ -636,10 +673,14 @@ class ExecutionGroupFilter(DiagnosticScope, VersionScope, ExecutionScope, InputD
 
     ``True`` picks the newest successful execution, even when a later one failed.
     ``False`` picks the newest unsuccessful or running execution.
+    Retracted executions are skipped unless ``include_retracted`` is set,
+    and a group with no such execution is left out.
     It can be combined with ``successful``.
     """
 
-    selectors: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
+    selectors: Mapping[str, tuple[str, ...]] | None = attrs.field(
+        default=None, converter=_as_facets, validator=_check_selector_keys
+    )
     """
     Keep groups by the facets they were selected with, e.g. ``{"source_id": ["ACCESS-CM2"]}``.
 

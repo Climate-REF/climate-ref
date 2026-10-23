@@ -515,6 +515,9 @@ class ValuesReader:
         Only the columns detection needs are loaded for every row, and only the returned page becomes DTOs.
         """
         dims = ScalarMetricValue._cv_dimensions
+        for g in policy.group_by:
+            if g not in dims:
+                raise KeyError(f"Unknown outlier group_by dimension {g!r}")
         table = MetricValue.__table__.c
         detect_stmt = (
             select_value_ids(MetricValueType.SCALAR, filters)

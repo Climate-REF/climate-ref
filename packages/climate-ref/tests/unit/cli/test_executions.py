@@ -924,7 +924,7 @@ class TestExecutionInspect:
 
     def test_inspect_missing(self, invoke_cli):
         result = invoke_cli(["executions", "inspect", "999"], expected_exit_code=1)
-        assert "Execution not found: 999" in result.stderr
+        assert "Execution group not found: 999" in result.stderr
 
     def test_inspect_outputs_panel(self, sample_data_dir, db_seeded, invoke_cli, config):
         # Real on-disk results root so the directory-tree / log panels keep their existing behaviour.
@@ -1781,3 +1781,10 @@ class TestSince:
     def test_invalid_since_exits(self, db_with_old_runs, invoke_cli, command):
         result = invoke_cli(["executions", command, "--since", "soon"], expected_exit_code=1)
         assert "Invalid --since value" in result.stderr
+
+
+@pytest.mark.parametrize("command", ["list-groups", "delete-groups", "requeue"])
+def test_unknown_filter_key_exits(db_with_groups, invoke_cli, command):
+    force = [] if command == "list-groups" else ["--force"]
+    result = invoke_cli(["executions", command, "--filter", "nope=x", *force], expected_exit_code=1)
+    assert "Unknown selector 'nope'" in result.stderr

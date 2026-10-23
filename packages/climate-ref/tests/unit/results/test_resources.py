@@ -137,10 +137,10 @@ class TestProfiles:
 
         assert profile.provider_slug == "pmp"
         assert profile.sample_count == 10
-        assert profile.peak_memory_p50 == round(5.5 * GIB)
-        assert profile.peak_memory_p95 == round(9.55 * GIB)
-        assert profile.peak_memory_max == 10 * GIB
-        assert profile.wall_p95 == 100.0
+        assert profile.peak_memory_bytes_p50 == round(5.5 * GIB)
+        assert profile.peak_memory_bytes_p95 == round(9.55 * GIB)
+        assert profile.peak_memory_bytes_max == 10 * GIB
+        assert profile.wall_seconds_p95 == 100.0
         assert profile.cpu_seconds_p95 == 110.0
         assert profile.parallelism_p95 == pytest.approx(1.1)
 
@@ -150,13 +150,13 @@ class TestProfiles:
         # The 40 GiB shared reading and the sample missing a CPU time, and nothing else.
         assert profile.excluded_execution_count == 2
         assert profile.failed_execution_count == 1
-        assert profile.peak_memory_max == 10 * GIB
+        assert profile.peak_memory_bytes_max == 10 * GIB
 
     def test_include_shared(self, db_with_resources):
         profile = _by_slug(Reader(db_with_resources).resources.profiles(exclusive_only=False))["enso_tel"]
 
         assert profile.sample_count == 11
-        assert profile.peak_memory_max == 40 * GIB
+        assert profile.peak_memory_bytes_max == 40 * GIB
         assert profile.excluded_execution_count == 1
 
     def test_a_process_tree_reading_survives_a_busy_worker(self, db_seeded):
@@ -193,7 +193,7 @@ class TestProfiles:
         assert profile.memory_source == "proc_tree"
         assert profile.sample_count == 3
         assert profile.excluded_execution_count == 0
-        assert profile.peak_memory_max == 2 * GIB
+        assert profile.peak_memory_bytes_max == 2 * GIB
 
     def test_mixed_memory_sources_take_the_dominant_one(self, db_with_resources):
         profile = _by_slug(Reader(db_with_resources).resources.profiles())["enso-characteristics"]
@@ -202,7 +202,7 @@ class TestProfiles:
         assert profile.sample_count == 3
         # The lone rusage reading is excluded rather than averaged into the cgroup ones.
         assert profile.excluded_execution_count == 1
-        assert profile.peak_memory_max == 4 * GIB
+        assert profile.peak_memory_bytes_max == 4 * GIB
 
     def test_unmeasured_executions_are_absent(self, db_with_resources):
         profiles = _by_slug(Reader(db_with_resources).resources.profiles())
@@ -282,7 +282,7 @@ class TestProfiles:
         assert profile.sample_count == 1
         assert profile.failed_execution_count == 1
         assert profile.excluded_execution_count == 0
-        assert profile.peak_memory_max == 40 * GIB
+        assert profile.peak_memory_bytes_max == 40 * GIB
 
     def test_filters(self, db_with_resources):
         reader = Reader(db_with_resources).resources
@@ -319,8 +319,8 @@ class TestProviderRollUp:
         pmp = profiles["pmp"]
         assert pmp.diagnostic_slug is None
         # nao peaks at 20 GiB, enso_tel at 10 GiB, and a worker has to fit the larger one.
-        assert pmp.peak_memory_p95 == 20 * GIB
-        assert pmp.peak_memory_max == 20 * GIB
+        assert pmp.peak_memory_bytes_p95 == 20 * GIB
+        assert pmp.peak_memory_bytes_max == 20 * GIB
         # Cores take the p95 of the per-diagnostic parallelism (1.1 and 3.8), not the max.
         assert pmp.parallelism_p95 == pytest.approx(3.665)
         assert pmp.recommended_cpus == 4
@@ -359,7 +359,7 @@ class TestProviderRollUp:
         rolled_up = Reader(db_seeded).resources.profiles(group_by="provider")
         pmp = {p.provider_slug: p for p in rolled_up}["pmp"]
 
-        assert pmp.peak_memory_p95 == 20 * GIB
+        assert pmp.peak_memory_bytes_p95 == 20 * GIB
         assert pmp.memory_limit_seen == 64 * GIB
         assert pmp.over_limit is False
 
@@ -384,7 +384,7 @@ class TestProviderRollUp:
         esmvaltool = {p.provider_slug: p for p in rolled_up}["esmvaltool"]
 
         assert esmvaltool.memory_source == "rusage"
-        assert esmvaltool.peak_memory_max == 200 * GIB
+        assert esmvaltool.peak_memory_bytes_max == 200 * GIB
         assert esmvaltool.sample_count == 4
 
     def test_provider_with_no_samples(self, db_seeded):

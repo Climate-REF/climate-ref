@@ -289,7 +289,7 @@ GROUP_FILTERS = {
     "not_dirty": (ExecutionGroupFilter(dirty=False), 6),
     "successful": (ExecutionGroupFilter(successful=True), 4),
     "not_successful": (ExecutionGroupFilter(successful=False), 3),
-    "latest_successful": (ExecutionGroupFilter(latest_successful=True), 7),
+    "latest_successful": (ExecutionGroupFilter(latest_successful=True), 4),
     "latest_successful_and_successful": (ExecutionGroupFilter(latest_successful=True, successful=True), 4),
     "failure_reasons": (ExecutionGroupFilter(failure_reasons=[ExecutionFailureReason.DiagnosticError]), 1),
     "other_failure_reasons": (ExecutionGroupFilter(failure_reasons=[ExecutionFailureReason.SystemError]), 0),
@@ -776,3 +776,40 @@ class TestSharedExecutionScope:
         everything = self._counts(reader)
         ran = self._counts(reader, created_before=future)
         assert ran == tuple(n - 1 for n in everything)  # key6 has never run
+
+
+class TestGroupRules:
+    def test_group_ids_keep_a_group_that_never_ran(self, db_with_groups):
+        group_id = db_with_groups.group_ids["key6"]
+        coll = Reader(db_with_groups).executions.groups(ExecutionGroupFilter(execution_group_ids=group_id))
+        assert [g.id for g in coll] == [group_id]
+        assert coll.items[0].latest is None
+
+    def test_latest_successful_skips_a_retracted_success(self, db_with_groups):
+        session = db_with_groups.session
+        group_id = db_with_groups.group_ids["key1"]
+        session.query(Execution).filter_by(execution_group_id=group_id).one().retracted = True
+        session.add(
+            Execution(
+                execution_group_id=group_id,
+                successful=True,
+                output_fragment="key1-older",
+                dataset_hash="h",
+                created_at=datetime.datetime(2020, 1, 1),
+            )
+        )
+        session.commit()
+        coll = Reader(db_with_groups).executions.groups(
+            ExecutionGroupFilter(latest_successful=True, execution_group_ids=group_id)
+        )
+        assert coll.items[0].latest.output_fragment == "key1-older"
+
+    @pytest.mark.parametrize("field", ["diagnostic_contains", "provider_contains", "failure_reasons"])
+    def test_an_empty_list_matches_nothing(self, db_with_groups, field):
+        coll = Reader(db_with_groups).executions.groups(ExecutionGroupFilter(**{field: []}))
+        assert len(coll) == 0
+
+    @pytest.mark.parametrize("paging", [{"offset": -1}, {"limit": -1}])
+    def test_negative_paging_raises(self, db_with_groups, paging):
+        with pytest.raises(ValueError, match="must be >= 0"):
+            Reader(db_with_groups).executions.groups(**paging)

@@ -117,7 +117,12 @@ class OutlierPolicy:
     """
 
     group_by: tuple[str, ...] = ("statistic", "metric")
-    """Dimensions to test separately, such as ``"metric"`` or ``"region"``. Missing dimensions are ignored."""
+    """
+    Dimensions to test separately, such as ``"metric"`` or ``"region"``.
+
+    A dimension that is not a CV dimension raises ``KeyError`` when the values are read.
+    One that is empty in every value read is ignored.
+    """
 
     @property
     def enabled(self) -> bool:

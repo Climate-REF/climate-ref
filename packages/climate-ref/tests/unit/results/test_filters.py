@@ -101,3 +101,12 @@ def test_aware_times_become_naive_utc(cls):
     )
     assert f.created_after == datetime.datetime(2025, 12, 31, 23)
     assert f.created_before == datetime.datetime(2026, 1, 2)
+
+
+@pytest.mark.parametrize(
+    ("key", "match"),
+    [("nope", "Unknown selector 'nope'"), ("cmip9.source_id", "Unknown dataset type 'cmip9'")],
+)
+def test_unknown_selector_key_raises(key, match):
+    with pytest.raises(ValueError, match=match):
+        ExecutionGroupFilter(selectors={key: "x"})

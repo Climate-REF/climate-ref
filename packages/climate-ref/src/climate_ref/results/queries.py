@@ -70,6 +70,7 @@ from climate_ref.results.filters import (
     ExecutionGroupFilter,
     MetricValueFilter,
     ResourceFilter,
+    split_selector_key,
 )
 
 GroupBy = Literal["diagnostic", "provider"]
@@ -111,7 +112,7 @@ def _scope_executions(stmt: Select[Any], filters: _ScopedFilter, *, latest_only:
 def _apply_common(
     stmt: Select[Any],
     entity: type[MetricValue],
-    f: MetricValueFilter,
+    filters: MetricValueFilter,
     *,
     subquery_type: MetricValueType | None = None,
 ) -> Select[Any]:
@@ -130,26 +131,26 @@ def _apply_common(
         else stmt.join(Execution, entity.execution_id == Execution.id)
     )
     scope = scope.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-    scope = _scope_executions(scope, f, latest_only=f.latest_only)
+    scope = _scope_executions(scope, filters, latest_only=filters.latest_only)
     if subquery_type is not None:
         stmt = stmt.where(tuple_(entity.execution_id, entity.type).in_(scope))
     else:
         stmt = scope
 
-    for clause in f.dimension_clauses(entity):
+    for clause in filters.dimension_clauses(entity):
         stmt = stmt.where(clause)
 
-    if f.isolate_ids is not None:
-        stmt = stmt.where(entity.id.in_(list(f.isolate_ids)))
-    elif f.exclude_ids:
-        stmt = stmt.where(~entity.id.in_(list(f.exclude_ids)))
+    if filters.isolate_ids is not None:
+        stmt = stmt.where(entity.id.in_(list(filters.isolate_ids)))
+    elif filters.exclude_ids:
+        stmt = stmt.where(~entity.id.in_(list(filters.exclude_ids)))
 
     return stmt
 
 
-def select_scalar_values(f: MetricValueFilter | None = None) -> Select[tuple[ScalarMetricValue]]:
+def select_scalar_values(filters: MetricValueFilter | None = None) -> Select[tuple[ScalarMetricValue]]:
     """
-    Build a ``Select`` over ``ScalarMetricValue`` for the filter, or for every value if ``f`` is ``None``.
+    Build a ``Select`` over ``ScalarMetricValue`` for the filter, or for every value if there is none.
 
     Rows are ordered by id, so ``offset`` and ``limit`` give stable pages.
 
@@ -160,22 +161,22 @@ def select_scalar_values(f: MetricValueFilter | None = None) -> Select[tuple[Sca
     rows = db.session.execute(stmt.limit(10)).scalars().all()
     ```
     """
-    f = f or MetricValueFilter()
-    stmt = _apply_common(select(ScalarMetricValue), ScalarMetricValue, f)
+    filters = filters or MetricValueFilter()
+    stmt = _apply_common(select(ScalarMetricValue), ScalarMetricValue, filters)
     return stmt.order_by(ScalarMetricValue.id)
 
 
-def select_series_values(f: MetricValueFilter | None = None) -> Select[tuple[SeriesMetricValue]]:
+def select_series_values(filters: MetricValueFilter | None = None) -> Select[tuple[SeriesMetricValue]]:
     """
-    Build a ``Select`` over ``SeriesMetricValue`` for the filter, or for every series if ``f`` is ``None``.
+    Build a ``Select`` over ``SeriesMetricValue`` for the filter, or for every series if there is none.
 
     ``reference_only`` on the filter keeps only the reference series, or only the model ones.
     The shared index is loaded with each row, so ``index`` and ``index_name`` are safe to read.
     Rows are ordered by id, so ``offset`` and ``limit`` give stable pages.
     """
-    f = f or MetricValueFilter()
-    stmt = _apply_common(select(SeriesMetricValue), SeriesMetricValue, f)
-    stmt = stmt.where(*_reference_clauses(SeriesMetricValue.reference_id, f.reference_only))
+    filters = filters or MetricValueFilter()
+    stmt = _apply_common(select(SeriesMetricValue), SeriesMetricValue, filters)
+    stmt = stmt.where(*_reference_clauses(SeriesMetricValue.reference_id, filters.reference_only))
     return stmt.order_by(SeriesMetricValue.id)
 
 
@@ -202,7 +203,9 @@ def _compile_unindexed(element: _Unindexed, compiler: SQLCompiler, **kw: Any) ->
     return prefix + compiler.process(element.clauses, **kw)
 
 
-def select_value_ids(value_type: MetricValueType, f: MetricValueFilter | None = None) -> Select[tuple[int]]:
+def select_value_ids(
+    value_type: MetricValueType, filters: MetricValueFilter | None = None
+) -> Select[tuple[int]]:
     """
     Build an unordered ``Select`` of the ids of the ``value_type`` values that match the filter.
 
@@ -213,17 +216,18 @@ def select_value_ids(value_type: MetricValueType, f: MetricValueFilter | None = 
     that uses ``ix_metric_value_execution_id_type``, so SQLite reads only that scope's values.
     With ``isolate_ids`` it uses joins instead, because looking those ids up directly is cheaper.
     """
-    f = f or MetricValueFilter()
-    scoped = not f.isolate_ids and bool(f.matches_any or f.execution_group_ids)
+    filters = filters or MetricValueFilter()
+    scoped = not filters.isolate_ids and bool(filters.matches_any or filters.execution_group_ids)
     if scoped:
-        stmt = _apply_common(select(MetricValue.id), MetricValue, f, subquery_type=value_type)
+        stmt = _apply_common(select(MetricValue.id), MetricValue, filters, subquery_type=value_type)
     else:
-        stmt = _apply_common(select(MetricValue.id), MetricValue, f).where(MetricValue.type == value_type)
+        stmt = _apply_common(select(MetricValue.id), MetricValue, filters)
+        stmt = stmt.where(MetricValue.type == value_type)
     if value_type is MetricValueType.SERIES:
         reference_id: Any = MetricValue.__table__.c.reference_id
         if scoped:
             reference_id = _Unindexed(reference_id)
-        stmt = stmt.where(*_reference_clauses(reference_id, f.reference_only))
+        stmt = stmt.where(*_reference_clauses(reference_id, filters.reference_only))
     return stmt
 
 
@@ -495,11 +499,13 @@ def _join_latest_execution(
     This is the one definition of which groups count, used by every reader over groups or diagnostics.
     """
     window = filters.execution_clauses()
+    if among_executions and not filters.include_retracted:
+        among_executions = [*among_executions, Execution.retracted.is_(False)]
     stmt = stmt.outerjoin(Execution, Execution.id == latest_execution_id([*window, *among_executions]))
     stmt = _where_group_in_scope(stmt, filters)
     if filters.execution_group_ids is not None:
         stmt = stmt.where(ExecutionGroup.id.in_(filters.execution_group_ids))
-    if window:
+    if filters.narrows_executions or among_executions:
         stmt = stmt.where(Execution.id.is_not(None))
     if not filters.include_retracted:
         stmt = stmt.where(or_(Execution.id.is_(None), Execution.retracted.is_(False)))
@@ -522,7 +528,7 @@ def _select_groups(stmt: Select[Any], filters: ExecutionGroupFilter) -> Select[A
         stmt = stmt.where(or_(ExecutionGroup.dirty.is_(False), ExecutionGroup.dirty.is_(None)))
     if filters.successful is not None:
         stmt = stmt.where(_successful_clause(filters.successful))
-    if filters.failure_reasons:
+    if filters.failure_reasons is not None:
         stmt = stmt.where(Execution.failure_reason.in_([reason.value for reason in filters.failure_reasons]))
     return stmt
 
@@ -580,11 +586,11 @@ def filter_by_selectors(
     """
 
     def matches(group_selectors: Mapping[str, Any], key: str, values: Sequence[str]) -> bool:
-        if "." in key:
-            dataset_type, facet = key.split(".", 1)
+        dataset_type, facet = split_selector_key(key)
+        if dataset_type is not None:
             pairs = group_selectors.get(dataset_type, [])
             return any([facet, value] in pairs for value in values)
-        return any([key, value] in pairs for pairs in group_selectors.values() for value in values)
+        return any([facet, value] in pairs for pairs in group_selectors.values() for value in values)
 
     return [
         (group, execution)

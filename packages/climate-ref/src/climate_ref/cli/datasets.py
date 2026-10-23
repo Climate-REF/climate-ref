@@ -437,6 +437,9 @@ def ingest(  # noqa
             check_health=check_health,
         ).ok
 
+    if not dry_run:
+        db.optimize()
+
     if failed_dirs:
         logger.error(
             f"Ingestion failed for {len(failed_dirs)} of {len(file_or_directory)} input(s): "

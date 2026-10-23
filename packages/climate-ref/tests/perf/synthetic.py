@@ -7,8 +7,8 @@ so a synthetic database can match production without copying any of its data.
 
 The schema comes from the real migrations, so every index matches a deployed database.
 Rows are written with raw `sqlite3` because the ORM is far too slow at this size.
-`ANALYZE` is deliberately not run, because deployed databases have no table statistics
-and the query planner behaves differently with them.
+Statistics are gathered with `Database.optimize`, as after an ingest or a solve,
+because the query planner behaves differently without them.
 """
 
 import datetime
@@ -146,6 +146,12 @@ def build_synthetic_database(path: Path, shape: Shape, *, scale: float = 1.0, se
         for _, sql in indexes:
             con.execute(sql)
     con.close()
+
+    config = Config()
+    config.db.database_url = f"sqlite:///{path}"
+    database = Database.from_config(config, run_migrations=False)
+    database.optimize()
+    database.close()
 
 
 class _Writer:

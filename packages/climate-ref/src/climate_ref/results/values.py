@@ -1,5 +1,5 @@
 """
-Read metric values, and the ``Reader`` entry point to every kind of result.
+Read metric values through ``Reader(db).values``.
 
 A metric value is a number, or a series of numbers, that a diagnostic produced for a model or a reference.
 Each value has labels such as ``source_id``, ``experiment_id``, ``metric`` and ``statistic``.

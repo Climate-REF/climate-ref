@@ -396,6 +396,15 @@ class TestDeleteGroups:
         remaining_count = db_with_groups.session.query(ExecutionGroup).count()
         assert remaining_count < initial_count
 
+    def test_delete_groups_reaches_superseded_versions(self, db_with_groups, invoke_cli):
+        session = db_with_groups.session
+        with session.begin():
+            session.query(Diagnostic).filter_by(slug="enso_tel").one().promoted_version = 2
+
+        invoke_cli(["executions", "delete-groups", "--diagnostic", "enso_tel", "--force"])
+
+        assert session.query(ExecutionGroup).filter_by(key="key1").count() == 0
+
     def test_delete_groups_no_deletion_on_decline(self, db_with_groups, invoke_cli):
         initial_count = db_with_groups.session.query(ExecutionGroup).count()
 

@@ -401,12 +401,14 @@ class ResourceProfile:
 
     memory_source: MemorySource | None
     """
-    Provenance of every peak memory figure aggregated here, or ``None`` when there are no samples.
+    Where the peak memory figures came from, or ``None`` when there are no samples.
 
     A cgroup reading and a rusage reading for the same execution can differ by a factor of two,
-    so they are never mixed.
-    When a group's executions carry more than one source,
+    so a per-diagnostic profile never mixes them.
+    When a diagnostic's executions carry more than one source,
     the source contributing the most samples wins and the rest land in ``excluded_execution_count``.
+    A provider roll-up can combine diagnostics measured by different sources,
+    and then this names the source of the diagnostic that drives ``peak_memory_bytes_p95``.
     """
 
     peak_memory_bytes_p50: int
@@ -923,10 +925,12 @@ class ResourcesReader:
         Failed executions that recorded a measurement are aggregated alongside successful ones.
         An execution that died at 40 GiB is the strongest evidence there is about what the diagnostic needs.
 
-        Peaks from different memory sources are never mixed.
-        Within each group the source contributing the most samples wins,
+        A per-diagnostic profile never mixes memory sources.
+        Within each diagnostic the source contributing the most samples wins,
         the rest are counted in ``excluded_execution_count``,
         and the winner is reported as ``memory_source``.
+        A provider roll-up keeps every diagnostic, whatever its source,
+        so the largest one still sizes the worker.
 
         Parameters
         ----------

@@ -3,7 +3,7 @@ import datetime
 import pytest
 
 from climate_ref.models.execution import ExecutionFailureReason
-from climate_ref.results.filters import (
+from climate_ref.query.filters import (
     BaseFilter,
     DiagnosticFilter,
     ExecutionGroupFilter,

@@ -10,7 +10,7 @@ Its [values][climate_ref.results.reader.Reader.values] reader,
 [ValuesReader][climate_ref.results.values.ValuesReader], gets scalar and series values.
 A read returns a collection that you can loop over or turn into a DataFrame with ``to_pandas()``.
 
-Pass a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter] to choose which values you get,
+Pass a [MetricValueFilter][climate_ref.query.filters.MetricValueFilter] to choose which values you get,
 and an [OutlierPolicy][climate_ref.results.outliers.OutlierPolicy] to flag unusual scalar values.
 
 Examples
@@ -43,8 +43,15 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, MetricValueType, ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.provider import Provider
+from climate_ref.query import (
+    MetricValueFilter,
+    count,
+    paginate,
+    select_scalar_values,
+    select_series_values,
+    select_value_ids,
+)
 from climate_ref.results._page import Page
-from climate_ref.results.filters import MetricValueFilter
 from climate_ref.results.frames import (
     collect_facets,
     facets_from_columns,
@@ -52,13 +59,6 @@ from climate_ref.results.frames import (
     series_values_to_frame,
 )
 from climate_ref.results.outliers import OutlierPolicy, flag_outliers
-from climate_ref.results.queries import (
-    count,
-    paginate,
-    select_scalar_values,
-    select_series_values,
-    select_value_ids,
-)
 
 _ID_CHUNK = 900
 """Ids per ``IN`` lookup, below the 999 bound parameters SQLite allowed before 3.32."""
@@ -405,7 +405,7 @@ class ValuesReader:
         """
         Get single-number metric values, to compare models in a table.
 
-        Call it with a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]
+        Call it with a [MetricValueFilter][climate_ref.query.filters.MetricValueFilter]
         to choose the diagnostic, models, experiments or metric.
         For large results, set ``limit`` to read them in pages.
 
@@ -626,7 +626,7 @@ class ValuesReader:
         """
         Get series of values, such as time series, to plot.
 
-        Call it with a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]
+        Call it with a [MetricValueFilter][climate_ref.query.filters.MetricValueFilter]
         to choose the diagnostic and models.
         Set ``reference_only`` on the filter to get the observational series or the model series.
         For large results, set ``limit`` to read them in pages.

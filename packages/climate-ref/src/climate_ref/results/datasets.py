@@ -16,8 +16,9 @@ It returns:
 
 ``DatasetFilter`` chooses which datasets to keep.
 Import it from ``climate_ref.results``.
-It describes datasets rather than executions, so it does not share fields with the filters in
-[climate_ref.results.filters][climate_ref.results.filters].
+It filters datasets rather than executions,
+and shares only the diagnostic and provider fields with the other filters in
+[climate_ref.query.filters][climate_ref.query.filters].
 
 Examples
 --------
@@ -46,12 +47,9 @@ from sqlalchemy.orm import Session, selectin_polymorphic, selectinload
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models.dataset import Dataset
-from climate_ref.models.dataset_query import DatasetFilter
+from climate_ref.query import DatasetFilter, count, paginate, select_datasets
 from climate_ref.results._page import Page
-from climate_ref.results.queries import count, paginate, select_datasets
 from climate_ref_core.source_types import SourceDatasetType
-
-__all__ = ["DatasetFilter"]
 
 
 @attrs.frozen(kw_only=True)
@@ -235,7 +233,7 @@ class DatasetsReader:
 
     Examples
     --------
-    Describe which datasets you want with a [DatasetFilter][climate_ref.models.dataset_query.DatasetFilter].
+    Describe which datasets you want with a [DatasetFilter][climate_ref.query.filters.DatasetFilter].
     Only ``source_type`` is required, and this does not need a database.
     A single facet value can be a string, and several values are alternatives:
 
@@ -271,7 +269,7 @@ class DatasetsReader:
     The datasets that execution 42 used:
 
     ```python
-    used = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_id=42))
+    used = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_ids=42))
     ```
     """
 

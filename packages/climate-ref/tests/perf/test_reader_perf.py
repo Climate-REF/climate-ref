@@ -140,7 +140,7 @@ SCENARIOS = [
     Scenario(
         id="datasets.execution",
         call=lambda r, t: r.datasets.list(
-            DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_id=t.execution_id),
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_ids=t.execution_id),
             include_files=True,
         ),
     ),

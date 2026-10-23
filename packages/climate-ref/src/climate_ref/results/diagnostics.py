@@ -287,6 +287,7 @@ class DiagnosticsReader:
         before calling ``reader.values.series_values``.
         By default only results from each diagnostic's current (promoted) version count,
         and retracted executions do not.
+        Any kept execution counts, not only each group's newest, as for ``reader.values``.
 
         Parameters
         ----------

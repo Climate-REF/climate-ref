@@ -102,7 +102,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     RequireTimerange(
                         group_by=("instance_id",),
                         start=PartialDateTime(1979, 1),
-                        end=PartialDateTime(2014, 12),
+                        end=PartialDateTime(2021, 12),
                     ),
                     RequireFacets(
                         "variable_id",
@@ -204,7 +204,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                         datasets = recipe_variables[short_name]["additional_datasets"]
                         for ds in datasets:
                             ds.pop("mip", None)
-                            ds["timerange"] = "1979/2014"
+                            ds["timerange"] = "1979/2021"
                         variable["additional_datasets"] = datasets
         else:
             datasets = recipe_variables["tas"]["additional_datasets"]

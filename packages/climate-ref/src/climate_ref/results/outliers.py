@@ -49,7 +49,10 @@ import attrs
 import numpy as np
 import pandas as pd
 from sqlalchemy import ColumnElement, Select, and_, case, false, func, null, or_, select, true
+from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql.compiler import SQLCompiler
+from sqlalchemy.sql.functions import FunctionElement
 
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, ScalarMetricValue
@@ -277,6 +280,18 @@ def _is_finite(value: Any) -> ColumnElement[bool]:
     return and_(value > float("-inf"), value < float("inf"))
 
 
+class _CellKey(FunctionElement[Any]):
+    """The labels of a cell as one sort key, which SQLite ranks faster than many columns."""
+
+    inherit_cache = True
+
+
+@compiles(_CellKey)
+def _compile_cell_key(element: _CellKey, compiler: SQLCompiler, **kw: Any) -> str:
+    labels = compiler.process(element.clauses, **kw)
+    return f"json_array({labels})" if compiler.dialect.name == "sqlite" else labels
+
+
 def select_outlier_flags(value_ids: Select[tuple[int]], policy: OutlierPolicy) -> Select[tuple[int, bool]]:
     """
     Build a ``Select`` of ``(id, is_outlier)`` for every scalar value that ``value_ids`` matches.
@@ -310,31 +325,30 @@ def select_outlier_flags(value_ids: Select[tuple[int]], policy: OutlierPolicy) -
     table = MetricValue.__table__.c
     execution = aliased(Execution)
     group = aliased(ExecutionGroup)
-    diagnostic_id = (
-        select(group.diagnostic_id)
-        .join(execution, execution.execution_group_id == group.id)
-        .where(execution.id == table.execution_id)
-        .scalar_subquery()
-    )
     labels = [d for d in dims if d in {"kind", "source_id", *cell_dims}]
     scoped = (
-        value_ids.with_only_columns(
-            table.id, table.value, *(table[d] for d in labels), diagnostic_id.label("diagnostic_id")
-        )
+        value_ids.with_only_columns(table.id, table.execution_id, table.value, *(table[d] for d in labels))
         .order_by(None)
         .cte("outlier_scope")
     )
     c = scoped.c
     model = c.source_id if "source_id" in c else None
-    cells = select(
-        c.id,
-        c.value,
-        *(c[d] for d in labels),
-        func.dense_rank().over(order_by=[c.diagnostic_id, *(c[d] for d in cell_dims)]).label("cell"),
-        case((_is_reference(c), null()), (_is_finite(c.value), c.value)).label("sample"),
-        # A value without a source_id is a model of its own.
-        (case((model.is_(None), c.id)) if model is not None else c.id).label("solo"),
-    ).cte("outlier_cells")
+    cells = (
+        select(
+            c.id,
+            c.value,
+            *(c[d] for d in ("kind", "source_id") if d in c),
+            func.dense_rank()
+            .over(order_by=_CellKey(group.diagnostic_id, *(c[d] for d in cell_dims)))
+            .label("cell"),
+            case((_is_reference(c), null()), (_is_finite(c.value), c.value)).label("sample"),
+            # A value without a source_id is a model of its own.
+            (case((model.is_(None), c.id)) if model is not None else c.id).label("solo"),
+        )
+        .join(execution, execution.id == c.execution_id)
+        .join(group, group.id == execution.execution_group_id)
+        .cte("outlier_cells")
+    )
 
     model_keys = [cells.c.cell, cells.c.solo, *([cells.c.source_id] if model is not None else [])]
     means = (

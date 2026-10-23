@@ -274,6 +274,12 @@ def test_sql_and_pandas_match_the_reference(db_seeded, diagnostic_ids, policy):
     assert [v.id for v in first] + [v.id for v in second] == kept[:100]
     assert all(v.is_outlier is False and v.verification_status == "verified" for v in first)
 
+    past_end = values.scalar_values(outliers=policy, offset=len(rows), limit=50)
+    unverified = values.scalar_values(outliers=policy, include_unverified=True, limit=50)
+    assert len(past_end) == 0
+    assert (past_end.total_count, past_end.outlier_count) == (len(kept), first.outlier_count)
+    assert (unverified.total_count, unverified.outlier_count) == (len(rows), first.outlier_count)
+
 
 def test_empty_read_counts_nothing(db_seeded):
     collection = Reader(db_seeded).values.scalar_values(

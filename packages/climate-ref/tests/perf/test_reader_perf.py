@@ -60,6 +60,27 @@ SCENARIOS = [
         budget_seconds=5.0,
     ),
     Scenario(
+        id="values.scalar.diagnostic-page-iqr-unverified",
+        call=lambda r, t: r.values.scalar_values(
+            _diagnostic(t), outliers=OutlierPolicy(method="iqr"), include_unverified=True, limit=100
+        ),
+        budget_seconds=5.0,
+    ),
+    Scenario(
+        id="values.scalar.diagnostic-deep-page-iqr",
+        call=lambda r, t: r.values.scalar_values(
+            _diagnostic(t), outliers=OutlierPolicy(method="iqr"), offset=10_000, limit=100
+        ),
+        budget_seconds=5.0,
+    ),
+    Scenario(
+        id="values.scalar.provider-page-iqr",
+        call=lambda r, t: r.values.scalar_values(
+            MetricValueFilter(provider_slug=t.provider_slug), outliers=OutlierPolicy(method="iqr"), limit=100
+        ),
+        budget_seconds=10.0,
+    ),
+    Scenario(
         id="values.scalar.diagnostic-dimension-filter",
         call=lambda r, t: r.values.scalar_values(
             _diagnostic(t, dimensions={"source_id": t.source_id}), limit=100

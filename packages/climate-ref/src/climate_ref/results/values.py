@@ -497,28 +497,41 @@ class ValuesReader:
         Flag every matching value in the database so the bounds do not depend on the page, then page.
 
         Only the values on the page are loaded.
+        The counts ride along on each row of the page, so detection runs once unless the page is empty.
         """
         value_ids = select_value_ids(MetricValueType.SCALAR, filters)
         flags = select_outlier_flags(value_ids, policy).subquery("outlier_flags")
         facets = self._facets(value_ids) if with_facets else ()
-        matched, flagged = self.session.execute(
-            select(func.count(), func.coalesce(func.sum(case((flags.c.is_outlier, 1), else_=0)), 0))
-        ).one()
-        total_count = (matched if include_unverified else matched - flagged) if with_count else None
-
-        page_stmt = select(ScalarMetricValue, flags.c.is_outlier).join(
-            flags, flags.c.id == ScalarMetricValue.id
-        )
+        flagged_sum = func.sum(case((flags.c.is_outlier, 1), else_=0))
+        counted = select(
+            flags.c.id,
+            flags.c.is_outlier,
+            func.count().over().label("matched"),
+            flagged_sum.over().label("flagged"),
+        ).subquery("outlier_counted")
+        page_ids = select(counted).order_by(counted.c.id)
         if not include_unverified:
-            page_stmt = page_stmt.where(~flags.c.is_outlier)
-        page_stmt = page_stmt.options(self._scalar_loader(include_context)).order_by(ScalarMetricValue.id)
+            page_ids = page_ids.where(~counted.c.is_outlier)
+        page = paginate(page_ids, offset, limit).subquery("outlier_page")
+        page_stmt = (
+            select(ScalarMetricValue, page.c.is_outlier, page.c.matched, page.c.flagged)
+            .join(page, page.c.id == ScalarMetricValue.id)
+            .options(self._scalar_loader(include_context))
+            .order_by(page.c.id)
+        )
+        rows = self.session.execute(page_stmt).all()
+        if rows:
+            matched, flagged = rows[0].matched, rows[0].flagged
+        else:
+            matched, flagged = self.session.execute(select(func.count(), func.coalesce(flagged_sum, 0))).one()
+        total_count = (matched if include_unverified else matched - flagged) if with_count else None
         items = tuple(
             attrs.evolve(
                 self._to_scalar_dto(row, include_context),
                 is_outlier=bool(is_outlier),
                 verification_status="unverified" if is_outlier else "verified",
             )
-            for row, is_outlier in self.session.execute(paginate(page_stmt, offset, limit))
+            for row, is_outlier, _, _ in rows
         )
         return ScalarValueCollection(
             items=items,

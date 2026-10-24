@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import text
 
 from climate_ref.database import Database
-from climate_ref.results import MetricValueFilter, Reader
+from climate_ref.results import DiagnosticFilter, MetricValueFilter, Reader
 from climate_ref.testing.synthetic import (
     DEFAULT_SHAPE,
     Shape,
@@ -54,6 +54,33 @@ def test_reader_reads_the_database(synthetic_db, config):
 
     assert len(values) == 10
     assert sum(d.groups.total for d in diagnostics) > 0
+
+
+def test_groups_record_their_source_types(synthetic_db, config):
+    con = sqlite3.connect(synthetic_db)
+    (missing,) = con.execute(
+        "SELECT count(*) FROM execution_group WHERE id NOT IN "
+        "(SELECT execution_group_id FROM execution_group_source_type)"
+    ).fetchone()
+    (mismatched,) = con.execute(
+        "SELECT count(*) FROM execution e JOIN execution_dataset ed ON ed.execution_id = e.id "
+        "JOIN dataset d ON d.id = ed.dataset_id LEFT JOIN execution_group_source_type t "
+        "ON t.execution_group_id = e.execution_group_id AND t.source_type = d.dataset_type "
+        "WHERE t.source_type IS NULL"
+    ).fetchone()
+    (mixed,) = con.execute(
+        "SELECT count(*) FROM (SELECT execution_group_id FROM execution_group_source_type "
+        "WHERE source_type IN ('CMIP6', 'CMIP7') GROUP BY execution_group_id HAVING count(*) > 1)"
+    ).fetchone()
+    con.close()
+    assert missing == 0
+    assert mismatched == 0
+    assert mixed == 0
+
+    config.db.database_url = f"sqlite:///{synthetic_db}"
+    with Database.from_config(config, read_only=True) as db:
+        cmip6 = Reader(db).diagnostics.list(DiagnosticFilter(source_types="cmip6"))
+    assert sum(d.groups.total for d in cmip6) > 0
 
 
 def test_refuses_to_overwrite(synthetic_db, shape):

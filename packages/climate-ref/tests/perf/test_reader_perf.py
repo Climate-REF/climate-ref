@@ -16,7 +16,9 @@ import pytest
 from climate_ref.models.metric_value import MetricValueType
 from climate_ref.results import (
     DatasetFilter,
+    DiagnosticFilter,
     ExecutionGroupFilter,
+    InputDatasetFilter,
     MetricValueFilter,
     OutlierPolicy,
     Reader,
@@ -26,6 +28,8 @@ from climate_ref_core.source_types import SourceDatasetType
 
 _EVERY_EXECUTION = frozenset({"execution", "execution_group"})
 _EVERY_GROUP = frozenset({"execution_group"})
+# obs4MIPs also has a `source_id` but only a few dozen datasets, so a scan of it is cheap.
+_OBS4MIPS = frozenset({"obs4mips_dataset"})
 
 
 @attrs.frozen(kw_only=True)
@@ -88,6 +92,17 @@ SCENARIOS = [
         ),
     ),
     Scenario(
+        id="values.scalar.diagnostic-page-cmip6",
+        call=lambda r, t: r.values.scalar_values(_diagnostic(t, source_types="cmip6"), limit=100),
+    ),
+    Scenario(
+        id="values.scalar.diagnostic-page-input-model",
+        call=lambda r, t: r.values.scalar_values(
+            _diagnostic(t, input_datasets=InputDatasetFilter(facets={"source_id": t.source_id})), limit=100
+        ),
+        allowed_scans=_OBS4MIPS,
+    ),
+    Scenario(
         id="values.scalar.execution-page",
         call=lambda r, t: r.values.scalar_values(
             MetricValueFilter(execution_ids=[t.execution_id], include_retracted=True), limit=100
@@ -141,6 +156,19 @@ SCENARIOS = [
         # No filter, so every group is checked for a promoted, non-retracted execution.
         allowed_scans=_EVERY_GROUP,
     ),
+    Scenario(
+        id="executions.groups.page-cmip6",
+        call=lambda r, t: r.executions.groups(ExecutionGroupFilter(source_types="cmip6"), limit=50),
+        allowed_scans=_EVERY_GROUP,
+    ),
+    Scenario(
+        id="executions.groups.input-model",
+        call=lambda r, t: r.executions.groups(
+            ExecutionGroupFilter(input_datasets=InputDatasetFilter(facets={"source_id": t.source_id})),
+            limit=50,
+        ),
+        allowed_scans=_EVERY_GROUP | _OBS4MIPS,
+    ),
     Scenario(id="executions.group", call=lambda r, t: r.executions.group(t.execution_group_id)),
     Scenario(
         id="executions.latest-execution",
@@ -152,6 +180,23 @@ SCENARIOS = [
         id="diagnostics.list",
         call=lambda r, t: r.diagnostics.list(),
         allowed_scans=_EVERY_EXECUTION,
+    ),
+    Scenario(
+        id="diagnostics.list.cmip6",
+        call=lambda r, t: r.diagnostics.list(DiagnosticFilter(source_types="cmip6")),
+        allowed_scans=_EVERY_EXECUTION,
+    ),
+    Scenario(
+        id="diagnostics.list.cmip6-or-no-model",
+        call=lambda r, t: r.diagnostics.list(DiagnosticFilter(source_types="cmip6", or_no_model_input=True)),
+        allowed_scans=_EVERY_EXECUTION,
+    ),
+    Scenario(
+        id="diagnostics.list.input-model",
+        call=lambda r, t: r.diagnostics.list(
+            DiagnosticFilter(input_datasets=InputDatasetFilter(facets={"source_id": t.source_id}))
+        ),
+        allowed_scans=_EVERY_EXECUTION | _OBS4MIPS,
     ),
     Scenario(
         id="diagnostics.with-scalar-values",

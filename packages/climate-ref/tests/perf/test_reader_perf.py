@@ -39,6 +39,16 @@ class Scenario:
     budget_seconds: float = 0.5
     allowed_scans: frozenset[str] = frozenset()
     """Large tables this call has to read in full, e.g. a summary over every execution."""
+    found: Callable[[Any], bool] | None = None
+    """Whether the call found anything, for a filter that would look fast if it matched nothing."""
+
+
+def _any(result: Any) -> bool:
+    return len(result) > 0
+
+
+def _any_groups(result: Any) -> bool:
+    return sum(d.groups.total for d in result) > 0
 
 
 def _diagnostic(t, **kwargs):
@@ -94,6 +104,7 @@ SCENARIOS = [
     Scenario(
         id="values.scalar.diagnostic-page-cmip6",
         call=lambda r, t: r.values.scalar_values(_diagnostic(t, source_types="cmip6"), limit=100),
+        found=_any,
     ),
     Scenario(
         id="values.scalar.diagnostic-page-input-model",
@@ -101,6 +112,7 @@ SCENARIOS = [
             _diagnostic(t, input_datasets=InputDatasetFilter(facets={"source_id": t.source_id})), limit=100
         ),
         allowed_scans=_OBS4MIPS,
+        found=_any,
     ),
     Scenario(
         id="values.scalar.execution-page",
@@ -160,6 +172,7 @@ SCENARIOS = [
         id="executions.groups.page-cmip6",
         call=lambda r, t: r.executions.groups(ExecutionGroupFilter(source_types="cmip6"), limit=50),
         allowed_scans=_EVERY_GROUP,
+        found=_any,
     ),
     Scenario(
         id="executions.groups.input-model",
@@ -168,6 +181,7 @@ SCENARIOS = [
             limit=50,
         ),
         allowed_scans=_EVERY_GROUP | _OBS4MIPS,
+        found=_any,
     ),
     Scenario(id="executions.group", call=lambda r, t: r.executions.group(t.execution_group_id)),
     Scenario(
@@ -185,11 +199,13 @@ SCENARIOS = [
         id="diagnostics.list.cmip6",
         call=lambda r, t: r.diagnostics.list(DiagnosticFilter(source_types="cmip6")),
         allowed_scans=_EVERY_EXECUTION,
+        found=_any_groups,
     ),
     Scenario(
         id="diagnostics.list.cmip6-or-no-model",
         call=lambda r, t: r.diagnostics.list(DiagnosticFilter(source_types="cmip6", or_no_model_input=True)),
         allowed_scans=_EVERY_EXECUTION,
+        found=_any_groups,
     ),
     Scenario(
         id="diagnostics.list.input-model",
@@ -197,6 +213,7 @@ SCENARIOS = [
             DiagnosticFilter(input_datasets=InputDatasetFilter(facets={"source_id": t.source_id}))
         ),
         allowed_scans=_EVERY_EXECUTION | _OBS4MIPS,
+        found=_any_groups,
     ),
     Scenario(
         id="diagnostics.with-scalar-values",
@@ -244,4 +261,5 @@ def test_reader_scenario(scenario: Scenario, measure, targets) -> None:
 
     unexpected = measurement.large_table_scans - scenario.allowed_scans
     assert not unexpected, f"reads every row of {sorted(unexpected)}"
+    assert scenario.found is None or scenario.found(measurement.result), "found nothing to read"
     assert measurement.median_seconds <= scenario.budget_seconds

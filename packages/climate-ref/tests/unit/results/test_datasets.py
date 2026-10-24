@@ -178,6 +178,13 @@ class TestFacetFiltering:
                 DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"nonexistent_facet": ("x",)})
             )
 
+    def test_finalised_facet_raises(self, db_with_datasets):
+        reader = Reader(db_with_datasets)
+        with pytest.raises(ValueError, match="Unknown facet 'finalised'"):
+            reader.datasets.list(
+                DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"finalised": ("True",)})
+            )
+
     def test_source_type_is_required(self):
         """``DatasetFilter`` has no default ``source_type``: a typed listing must choose a type."""
         with pytest.raises(TypeError):
@@ -193,6 +200,20 @@ class TestFinalisedFilter:
         assert all(d.finalised for d in coll)
         slugs = {d.slug for d in coll}
         assert "CMIP.TEST.OTHER-MODEL.historical.Amon.pr.gn.v1" not in slugs
+
+    def test_finalised_does_not_pick_an_older_version_as_latest(self, db_with_datasets):
+        db_with_datasets.session.add(
+            _make_cmip6_dataset(
+                slug="CMIP.TEST.TEST-MODEL.historical.Amon.tas.gn.v11", version="v11", finalised=False
+            )
+        )
+        db_with_datasets.session.flush()
+        coll = Reader(db_with_datasets).datasets.list(
+            DatasetFilter(
+                source_type=SourceDatasetType.CMIP6, finalised=True, facets={"source_id": "TEST-MODEL"}
+            )
+        )
+        assert [d.slug for d in coll] == []
 
     def test_finalised_false(self, db_with_datasets):
         reader = Reader(db_with_datasets)
@@ -244,7 +265,7 @@ class TestExecutionIdJoin:
         coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
-                execution_id=db_with_datasets.execution_id,
+                execution_ids=db_with_datasets.execution_id,
                 latest_only=False,
             )
         )
@@ -254,7 +275,7 @@ class TestExecutionIdJoin:
     def test_execution_id_no_match(self, db_with_datasets):
         reader = Reader(db_with_datasets)
         coll = reader.datasets.list(
-            DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_id=999999, latest_only=False)
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_ids=999999, latest_only=False)
         )
         assert len(coll) == 0
 
@@ -290,7 +311,7 @@ class TestDiagnosticSlugJoin:
         coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
-                execution_id=db_with_datasets.execution_id,
+                execution_ids=db_with_datasets.execution_id,
                 diagnostic_slug=db_with_datasets.diagnostic_slug,
                 latest_only=False,
             )
@@ -475,3 +496,17 @@ class TestGet:
         assert v2 is not None and v10 is not None
         assert v2.id == db_with_datasets.dataset_ids["v2"]
         assert v10.id == db_with_datasets.dataset_ids["v10"]
+
+
+class TestWithCount:
+    def test_without_count(self, db_with_datasets, count_queries):
+        reader = Reader(db_with_datasets)
+        filters = DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False)
+        with count_queries(db_with_datasets) as counted:
+            full = reader.datasets.list(filters, limit=2)
+        with count_queries(db_with_datasets) as uncounted:
+            page = reader.datasets.list(filters, limit=2, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1

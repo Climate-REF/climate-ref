@@ -11,7 +11,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
 from climate_ref_core.metric_values import SeriesMetricValue
 from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -456,7 +456,7 @@ class AnnualCycle(CommandLineDiagnostic):
                         registry_name="pmp-climatology",
                         facets={"variable_id": "ts", "source_id": "ERA-5"},
                     ),
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="annual-cycle-cmip7-ts",
                         facets={
                             "source_id": "ACCESS-ESM1-5",

@@ -34,7 +34,7 @@ def list_(  # noqa: PLR0913
         list[str] | None,
         typer.Option(help="Only include specified columns in the output"),
     ] = None,
-    limit: int = typer.Option(100, help="Limit the number of rows to display"),
+    limit: int = typer.Option(100, min=0, help="Limit the number of rows to display"),
     output_format: Annotated[
         OutputFormat,
         typer.Option(
@@ -52,10 +52,15 @@ def list_(  # noqa: PLR0913
     - diagnostic: the diagnostic slug.
     - name: the human-readable diagnostic name.
     - promoted_version: the currently promoted diagnostic version.
-    - execution_group_count: execution groups created for it across all versions.
-    - successful: promoted-version execution groups whose latest execution succeeded.
-    - inflight: promoted-version execution groups whose latest execution is still running.
-    - total: execution groups at the promoted version.
+    - group_count: execution groups at the promoted version, excluding groups whose newest execution is
+      retracted.
+    - successful_group_count: groups whose latest execution succeeded.
+    - failed_group_count: groups whose latest execution failed.
+    - running_group_count: groups whose latest execution is still running.
+    - not_started_group_count: groups with no execution yet.
+    - dirty_group_count: groups marked to be rerun.
+    - execution_count: number of executions at the promoted version, counting every rerun
+      and excluding retracted executions.
     """
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
@@ -75,7 +80,7 @@ def list_(  # noqa: PLR0913
 
     render_dataframe(results_df, console=console, output_format=output_format)
 
-    filtered_count = collection.total_count
+    filtered_count = collection.total_count or 0
     if filtered_count > limit:
         logger.warning(
             f"Displaying {limit} of {filtered_count} filtered results. "

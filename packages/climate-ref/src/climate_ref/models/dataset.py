@@ -85,7 +85,7 @@ class Dataset(Base):
     so removing the row would either violate the foreign key or destroy execution provenance).
     A retracted dataset's row and files are left intact, but excluded from future solves.
 
-    ``select_datasets`` (``climate_ref.models.dataset_query``) excludes retracted rows by default
+    ``select_datasets`` (``climate_ref.query.datasets``) excludes retracted rows by default
     and only includes them when a caller passes ``DatasetFilter(include_retracted=True)``,
     so provenance/history reads
     (e.g. reconstructing what an existing execution used, or ``ref datasets list``) can still see them.
@@ -137,7 +137,7 @@ class DatasetFile(Base):
     End time of a given file (ISO string, supports cftime calendars)
     """
 
-    path: Mapped[str] = mapped_column()
+    path: Mapped[str] = mapped_column(index=True)
     """
     Prefix that describes where the dataset is stored relative to the data directory
     """

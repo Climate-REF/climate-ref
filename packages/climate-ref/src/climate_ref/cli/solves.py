@@ -110,7 +110,7 @@ def _datasets_panel(datasets: DatasetCollection, title: str) -> Panel:
         return Panel(Text("None."), title=f"{title} (0)")
 
     table = df_to_table(datasets.to_pandas()[["id", "slug", "dataset_type"]])
-    if datasets.total_count > len(datasets):
+    if datasets.total_count is not None and datasets.total_count > len(datasets):
         table.caption = f"Showing {len(datasets)} of {datasets.total_count}"
     return Panel(table, title=f"{title} ({datasets.total_count})")
 

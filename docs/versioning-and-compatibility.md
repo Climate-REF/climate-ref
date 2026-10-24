@@ -114,7 +114,7 @@ The value is append-only: always increment, never reuse a previous number.
 - ``Diagnostic.promoted_version`` is recomputed to ``max(ExecutionGroup.diagnostic_version)``,
   so default queries (CLI, API) immediately return only the new version's results.
 - Older versions remain reachable for audit via
-  ``get_execution_group_and_latest_filtered(..., include_superseded=True)``.
+  ``include_superseded=True`` on any results filter, e.g. ``ExecutionGroupFilter(include_superseded=True)``.
 
 ### Provider version stamping
 

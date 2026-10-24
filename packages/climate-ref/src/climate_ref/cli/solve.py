@@ -174,5 +174,7 @@ def solve(  # noqa: PLR0913
         rerun_failed=rerun_failed,
         check_health=check_health,
     )
+    if not dry_run:
+        db.optimize()
     if not outcome.ok:
         raise typer.Exit(code=1)

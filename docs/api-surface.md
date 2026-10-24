@@ -50,7 +50,7 @@ The primary module providers interact with.
 ### Key extension points
 
 - Override `DiagnosticProvider.configure(config)` for provider-level setup
-- Override `setup_environment(config)`, `fetch_data(config)`, `ingest_data(config, db)`
+- Override `setup_environment(config)`, `fetch_data(config)`, `data_to_ingest(config)`
 - Override `validate_setup(config) -> bool`
 - Call `provider.register(diagnostic)` to add diagnostics
 
@@ -79,7 +79,8 @@ The primary module providers interact with.
 | `RequireTimerange`            | Class (attrs) | Require a minimum time range                |
 | `RequireContiguousTimerange`  | Class (attrs) | Require contiguous time coverage            |
 | `RequireOverlappingTimerange` | Class (attrs) | Require overlapping time ranges             |
-| `SelectParentExperiment`      | Class (attrs) | Add parent experiment data                  |
+| `AddParentDataset`            | Class (attrs) | Add each dataset's parent experiment data   |
+| `SelectFirstMember`           | Class (attrs) | Keep one ensemble member per group          |
 | `PartialDateTime`             | Class         | Partial datetime for time range constraints |
 | `apply_constraint`            | Function      | Apply a constraint to grouped data          |
 
@@ -146,6 +147,7 @@ and defaults to `None`, so a provider that never sets it stays valid.
 | `ConstraintNotSatisfied`     | Class | Dataset constraint not met        |
 | `ResultValidationError`      | Class | Result validation failure         |
 | `ExecutionError`             | Class | Execution failure                 |
+| `CondaCommandError`          | Class | Conda environment command failure |
 | `DiagnosticError`            | Class | Diagnostic runtime error          |
 | `TestCaseError`              | Class | Base test case error              |
 | `TestCaseNotFoundError`      | Class | Test case not found               |
@@ -156,24 +158,27 @@ and defaults to `None`, so a provider that never sets it stays valid.
 
 ## `climate_ref_core.pycmec` (Stable)
 
-| Symbol                 | Kind             | Description                |
-| ---------------------- | ---------------- | -------------------------- |
-| `CMECMetric`           | Class (Pydantic) | CMEC metric bundle model   |
-| `CMECOutput`           | Class (Pydantic) | CMEC output bundle model   |
-| `ControlledVocabulary` | Class (Pydantic) | CMEC controlled vocabulary |
+Import these from their submodules, eg. `from climate_ref_core.pycmec.metric import CMECMetric`.
+
+| Symbol                     | Kind             | Description                |
+| -------------------------- | ---------------- | -------------------------- |
+| `metric.CMECMetric`        | Class (Pydantic) | CMEC metric bundle model   |
+| `output.CMECOutput`        | Class (Pydantic) | CMEC output bundle model   |
+| `controlled_vocabulary.CV` | Class (attrs)    | CMEC controlled vocabulary |
 
 ---
 
 ## `climate_ref_core.esgf` (Provisional)
 
-| Symbol                | Kind          | Description                              |
-| --------------------- | ------------- | ---------------------------------------- |
-| `ESGFRequest`         | Class (attrs) | ESGF data request specification          |
-| `CMIP6Request`        | Class (attrs) | CMIP6-specific ESGF request              |
-| `CMIP7Request`        | Class (attrs) | CMIP7-specific ESGF request              |
-| `Obs4MIPsRequest`     | Class (attrs) | obs4MIPs-specific ESGF request           |
-| `ESGFDataFetcher`     | Class         | Fetch data from ESGF                     |
-| `ESGFRequestRegistry` | Class         | Registry of ESGF requests per diagnostic |
+| Symbol                  | Kind          | Description                                |
+| ----------------------- | ------------- | ------------------------------------------ |
+| `ESGFRequest`           | Class (attrs) | ESGF data request specification            |
+| `CMIP6Request`          | Class (attrs) | CMIP6-specific ESGF request                |
+| `CMIP7Request`          | Class (attrs) | CMIP7-specific ESGF request                |
+| `ConvertedCMIP7Request` | Class         | CMIP7 data converted from CMIP6, for tests |
+| `Obs4MIPsRequest`       | Class (attrs) | obs4MIPs-specific ESGF request             |
+| `ESGFFetcher`           | Class         | Fetch data from ESGF                       |
+| `RegistryRequest`       | Class         | Request for files from a dataset registry  |
 
 ---
 

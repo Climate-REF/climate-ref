@@ -4,7 +4,7 @@ Adds a ``solve`` table recording each solve,
 and nullable links from ``execution`` and ``execution_group`` to the solve that created or reaped them.
 
 Revision ID: cd446510084f
-Revises: e7f8a9b0c1d2
+Revises: 42598155c23b
 Create Date: 2026-10-16 12:01:11.626006
 
 """
@@ -16,7 +16,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "cd446510084f"
-down_revision: str | None = "e7f8a9b0c1d2"
+down_revision: str | None = "42598155c23b"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

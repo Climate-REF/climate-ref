@@ -40,6 +40,16 @@ class TestSolve:
         assert kwargs["filters"].diagnostic is None
         assert kwargs["filters"].provider is None
 
+    @pytest.mark.parametrize(("args", "expected"), [([], 1), (["--dry-run"], 0)])
+    def test_solve_refreshes_statistics(
+        self, sample_data_dir, db, invoke_cli, mock_solve, mocker, args, expected
+    ):
+        optimize = mocker.patch("climate_ref.database.Database.optimize")
+
+        invoke_cli(["solve", *args])
+
+        assert optimize.call_count == expected
+
     def test_solve_with_timeout(self, sample_data_dir, db, invoke_cli, mock_solve):
         invoke_cli(["solve", "--timeout", "10"])
 

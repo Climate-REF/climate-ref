@@ -24,7 +24,8 @@ The contents of this result directory depends on the diagnostic that was run, bu
 
 ## Querying metrics with Python
 
-We are working on a Python package to make it easier to query and visualize results programmatically.
+`climate_ref.results` reads executions, metric values and output files from a local REF database.
+See [Reading results locally](../how-to-guides/reading-results-locally.md).
 
 ## Web dashboard
 

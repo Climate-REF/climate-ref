@@ -13,7 +13,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
     PMP_RECONSTRUCTION_INPUTS,
@@ -149,7 +149,7 @@ class ENSO(CommandLineDiagnostic):
                                 "variable_id": self.model_variables,
                             },
                         ),
-                        CMIP7Request(
+                        ConvertedCMIP7Request(
                             slug=f"enso-{self.slug}-cmip7",
                             facets={
                                 "source_id": "ACCESS-ESM1-5",
@@ -164,7 +164,7 @@ class ENSO(CommandLineDiagnostic):
                             },
                             time_span=("2000-01", "2014-12"),
                         ),
-                        CMIP7Request(
+                        ConvertedCMIP7Request(
                             slug=f"enso-{self.slug}-areacella-cmip7",
                             facets={
                                 "source_id": "ACCESS-ESM1-5",
@@ -176,7 +176,7 @@ class ENSO(CommandLineDiagnostic):
                                 "region": "glb",
                             },
                         ),
-                        CMIP7Request(
+                        ConvertedCMIP7Request(
                             slug=f"enso-{self.slug}-sftlf-cmip7",
                             facets={
                                 "source_id": "ACCESS-ESM1-5",

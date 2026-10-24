@@ -308,9 +308,15 @@ def get_child_and_parent_dataset(
     # This ensures that the datasets are aligned correctly in time.
     parent_attrs = parent_df.iloc[0]
     child_attrs = child_df.iloc[0]
+    # branch_time_in_parent is expressed in the child's parent_time_units, which
+    # can use a different reference date than the parent's own time axis
+    # (e.g. AWI-CM-1-1-MR). Fall back to the parent's units if it is missing.
+    parent_time_units = child_attrs.get("parent_time_units")
+    if not isinstance(parent_time_units, str) or not parent_time_units.strip():
+        parent_time_units = parent_attrs["time_units"]
     branch_time_in_parent = cftime.num2date(
         child_attrs["branch_time_in_parent"],
-        units=parent_attrs["time_units"],
+        units=parent_time_units,
         calendar=parent_attrs["calendar"],
     )
     branch_time_in_child = cftime.num2date(
@@ -342,11 +348,11 @@ def get_child_and_parent_dataset(
     return [child_dataset, parent_dataset]
 
 
-_ESMVALTOOL_COMMIT = "b827ce01b109f75af6117be120f89a6214c7db1f"
-_ESMVALTOOL_VERSION = f"2.14.0.dev65+g{_ESMVALTOOL_COMMIT[:9]}"
+_ESMVALTOOL_COMMIT = "edddf5fbd793e8c83c56bfa73968fb8d5285eec5"
+_ESMVALTOOL_VERSION = "2.15.0"  # f"2.14.0.dev65+g{_ESMVALTOOL_COMMIT[:9]}"
 _ESMVALTOOL_URL = f"git+https://github.com/ESMValGroup/ESMValTool.git@{_ESMVALTOOL_COMMIT}"
 
-_ESMVALCORE_COMMIT = "d7569120c19a394b2c519e81c7117d0652942349"
+_ESMVALCORE_COMMIT = "3e9a372d34ea8243e7308f309b782a8a4362d525"
 _ESMVALCORE_URL = f"git+https://github.com/ESMValGroup/ESMValCore.git@{_ESMVALCORE_COMMIT}"
 
 _RECIPES_URL = (

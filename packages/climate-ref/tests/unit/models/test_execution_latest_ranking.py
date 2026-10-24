@@ -1,6 +1,6 @@
 """Latest-execution-per-group ranking semantics.
 
-Covers the reusable ranking primitive behind ``get_execution_group_and_latest``:
+Covers the ranking behind ``select_execution_groups``:
 
 1. Deterministic tie-break -- two executions sharing ``created_at`` yield exactly
    one group row (not a duplicate, as the old ``max(created_at)`` equijoin did).
@@ -15,11 +15,15 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
-    get_execution_group_and_latest,
-    get_execution_group_and_latest_filtered,
 )
+from climate_ref.query import select_execution_groups
+from climate_ref.results import ExecutionGroupFilter
 
 _T0 = datetime.datetime(2024, 1, 1, 0, 0, 0)
+
+
+def _group_rows(db: Database, **filters) -> list[tuple[ExecutionGroup, Execution | None]]:
+    return list(db.session.execute(select_execution_groups(ExecutionGroupFilter(**filters))).tuples().all())
 
 
 def _add_execution(
@@ -59,7 +63,7 @@ def test_tie_break_is_deterministic_single_winner(db_seeded: Database) -> None:
         _add_execution(db_seeded, eg.id, successful=True, offset=0, tag="a")
         _add_execution(db_seeded, eg.id, successful=False, offset=0, tag="b")
 
-    rows = [(g, e) for g, e in get_execution_group_and_latest(db_seeded.session).all() if g.id == eg.id]
+    rows = [(g, e) for g, e in _group_rows(db_seeded, include_superseded=True) if g.id == eg.id]
     assert len(rows) == 1, "tie on created_at must still yield exactly one group row"
     # Highest id wins the tie -> execution 'b'.
     assert rows[0][1].output_fragment == "out-b"
@@ -76,18 +80,10 @@ def test_post_rank_vs_pre_rank_successful_diverge(db_seeded: Database) -> None:
         _add_execution(db_seeded, eg.id, successful=True, offset=0, tag="ok")
         _add_execution(db_seeded, eg.id, successful=False, offset=10, tag="fail")
 
-    post = [
-        (g, e)
-        for g, e in get_execution_group_and_latest_filtered(db_seeded.session, successful=True)
-        if g.id == eg.id
-    ]
+    post = [(g, e) for g, e in _group_rows(db_seeded, successful=True) if g.id == eg.id]
     assert post == [], "post-rank successful=True must drop a group whose latest run failed"
 
-    pre = [
-        (g, e)
-        for g, e in get_execution_group_and_latest_filtered(db_seeded.session, latest_successful=True)
-        if g.id == eg.id
-    ]
+    pre = [(g, e) for g, e in _group_rows(db_seeded, latest_successful=True) if g.id == eg.id]
     assert len(pre) == 1, "pre-rank latest_successful=True must surface the earlier successful run"
     assert pre[0][1].output_fragment == "out-ok"
 
@@ -99,7 +95,7 @@ def test_pre_rank_default_matches_latest_regardless_of_success(db_seeded: Databa
         _add_execution(db_seeded, eg.id, successful=True, offset=0, tag="ok")
         _add_execution(db_seeded, eg.id, successful=False, offset=10, tag="fail")
 
-    rows = [(g, e) for g, e in get_execution_group_and_latest_filtered(db_seeded.session) if g.id == eg.id]
+    rows = [(g, e) for g, e in _group_rows(db_seeded) if g.id == eg.id]
     assert len(rows) == 1
     assert rows[0][1].output_fragment == "out-fail"
 

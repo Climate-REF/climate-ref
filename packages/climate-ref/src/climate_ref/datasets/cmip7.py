@@ -13,7 +13,7 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref.config import Config
-from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
+from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction, SkipFunction
 from climate_ref.datasets.catalog_builder import build_catalog, iter_built_catalogs
 from climate_ref.datasets.cmip7_parsers import parse_cmip7_complete, parse_cmip7_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
@@ -189,6 +189,9 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         :meth:`iter_local_datasets` (streaming) so per-chunk processing is
         identical to a single-pass build.
         """
+        if datasets.empty:
+            return datasets
+
         # Convert the start_time and end_time columns to cftime objects
         cal = datasets["calendar"] if "calendar" in datasets.columns else "standard"
         if "start_time" in datasets.columns:
@@ -257,7 +260,7 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         )
         return catalog
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip: SkipFunction | None = None) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory.
 
@@ -268,6 +271,8 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         ----------
         file_or_directory
             File or directory containing the datasets
+        skip
+            Selects files to leave out of the catalog, such as files already in the database
 
         Returns
         -------
@@ -281,12 +286,16 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             parsing_func=parsing_function,
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
+            skip=skip,
         )
 
         return self._enrich_parsed_catalog(datasets)
 
     def iter_local_datasets(
-        self, file_or_directory: Path, chunk_size: int = 10_000
+        self,
+        file_or_directory: Path,
+        chunk_size: int = 10_000,
+        skip: SkipFunction | None = None,
     ) -> Iterator[pd.DataFrame]:
         """
         Stream the data catalog in chunks to bound peak memory.
@@ -303,6 +312,8 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         chunk_size
             Soft target for the number of files per chunk. Increasing this
             trades higher peak memory for fewer per-chunk overheads.
+        skip
+            Selects files to leave out of the catalog, such as files already in the database.
 
         Yields
         ------
@@ -318,6 +329,7 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             include_patterns=["*.nc"],
             n_jobs=self.n_jobs,
             chunk_size=chunk_size,
+            skip=skip,
         ):
             enriched = self._enrich_parsed_catalog(raw_chunk)
             if enriched.empty:

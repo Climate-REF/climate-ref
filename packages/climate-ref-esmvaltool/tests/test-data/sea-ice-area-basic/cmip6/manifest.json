@@ -16,54 +16,54 @@
       "size": 22118
     },
     "executions/recipe/plots/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
-      "sha256": "c54cb72dcfb2812540d0a481814e29a1e3d86ec1294e25a3162911243a3a54f9",
-      "size": 169601
+      "sha256": "9ae0e2eb500183da7ca7a6add5d270d764433390827428592c0ddc0b4d5a86bc",
+      "size": 169584
     },
     "executions/recipe/plots/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
-      "sha256": "4b533866060f6dbaabca87888e62a2e5fbc42b173c827ded6bba72e13107a478",
-      "size": 163321
+      "sha256": "b425475ea07e51dedb125f4bfff2d4a3e4fce15e4016fb9ece7631a6d28035c7",
+      "size": 163304
     },
     "executions/recipe/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
-      "sha256": "849be7c52caf2e13b22f1a9ad2847d3392a20d88298cb446b0b368d234d92a86",
-      "size": 140536
+      "sha256": "e14a54d263e77584d5e8f01a89d04aeb22430bc75ae47aff8276fe311d55ab40",
+      "size": 140519
     },
     "executions/recipe/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
-      "sha256": "3a637ec7d453838cafd0aaa50560c12d05e84e312ee52f6d41534cc3bb8be769",
-      "size": 143226
+      "sha256": "27add60635798e859b89a19208597d360283c74798436332e40aaf5267f1bb42",
+      "size": 143209
     },
     "executions/recipe/run/siarea_min/allplots/diagnostic_provenance.yml": {
-      "sha256": "c99714f05078cd57c348b1d6490d8cc1b065a0620b7e0dac30525d3f34518f24",
+      "sha256": "8c046a6001c96b1033a9d6f594dcb6d3a1f31d19eb6c391bceb709e17e995b22",
       "size": 1698
     },
     "executions/recipe/run/siarea_seas/allplots/diagnostic_provenance.yml": {
-      "sha256": "6d386b42f0020c8e600e096b219e91cfc6dc32c957cb5e9d66e9a663c38e48cf",
+      "sha256": "aeb9737bb321895e83e3fb7cc0f67697a96c8386e3c9ae51e3356210e70eba0b",
       "size": 1678
     },
     "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "sha256": "2a5ecaa1561134ef0eb5b18b8f2b861015530526658b19f00da061feb4eca74b",
-      "size": 10284
+      "sha256": "bb6a5e7d726c0539e74bd788e8c3368f84cf7ee09b4dd3231f1575f8964067da",
+      "size": 9522
     },
     "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "sha256": "60b286c8a960cae9070d11f88d99a30c17815d9c931f631efd9602ae1c32a8b9",
-      "size": 10284
+      "sha256": "c2e7f6895c20e2a7747704467bde56aedca08820ea1fc793f133d65dff128ebe",
+      "size": 9714
     },
     "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "sha256": "3cc218994c53cefaffef1d27d74a7132e427a9db0c411c10e83ff86582b830ac",
-      "size": 10171
+      "sha256": "90929d0b5759de610abf288a5360c62ea7f322dc1c8b99949e12cbbfbdbd5d12",
+      "size": 8752
     },
     "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "sha256": "4f71d562eac95a86f5c70fd30edac1aadca55f54c4800d487ffbce6a3f10ecff",
-      "size": 10171
+      "sha256": "516325455afa888f9975632ebcbeeb8ff4135e7e88611a4c5b1649a4f86130eb",
+      "size": 8752
     },
     "output.json": {
       "sha256": "451bcae9a54d7d358a750ef4910d33b1d6b68666596e863ecb897dc15ffd45d8",
       "size": 5266
     },
     "series.json": {
-      "sha256": "e31f5e64815f26a58117efb39532d68487170ff2960b83ec07c3d81a9ea4eb11",
-      "size": 17279
+      "sha256": "b4e958645e2b5802a9ed2e6ebb6b872ef802846657b312bd78d63d780a725f59",
+      "size": 17575
     }
   },
   "schema": 2,
-  "test_case_version": 4
+  "test_case_version": 6
 }

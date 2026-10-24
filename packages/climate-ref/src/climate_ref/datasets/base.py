@@ -1,3 +1,4 @@
+from collections.abc import Callable, Container
 from pathlib import Path
 from typing import Any, Protocol, cast
 
@@ -10,7 +11,8 @@ from sqlalchemy.orm import selectinload
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.utils import _is_na, _to_db_str, coerce_catalog_times, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
-from climate_ref.models.dataset_query import DatasetFilter, select_datasets
+from climate_ref.query.datasets import select_datasets
+from climate_ref.query.filters import DatasetFilter
 from climate_ref_core.datasets import select_latest_version
 from climate_ref_core.exceptions import RefException
 
@@ -81,6 +83,12 @@ class DatasetParsingFunction(Protocol):
             Data catalog containing the metadata for the dataset
         """
         ...
+
+
+SkipFunction = Callable[[list[str]], Container[str]]
+"""
+Takes a batch of discovered file paths and returns the ones to leave unparsed.
+"""
 
 
 class DatasetAdapter(Protocol):
@@ -154,12 +162,13 @@ class DatasetAdapter(Protocol):
             ]
         ]
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, file_or_directory: Path, skip: SkipFunction | None = None) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
 
         This data catalog should contain all the metadata needed by the database.
         The index of the data catalog should be the dataset slug.
+        Files selected by ``skip`` are left out, so the catalog may be empty.
         """
         ...
 
@@ -451,7 +460,7 @@ class DatasetAdapter(Protocol):
         """
         Build the ``Select`` for this adapter's latest-version datasets via the shared query builder.
 
-        Routing through ``climate_ref.models.dataset_query.select_datasets`` keeps ONE definition of
+        Routing through ``climate_ref.query.datasets.select_datasets`` keeps ONE definition of
         "the datasets query" behind both ``load_catalog`` and ``climate_ref.results``'s
         ``reader.datasets``, so the two cannot drift apart.
 

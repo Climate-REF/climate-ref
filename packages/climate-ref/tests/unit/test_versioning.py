@@ -22,8 +22,9 @@ from sqlalchemy import inspect
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic, recompute_promoted_version
-from climate_ref.models.execution import Execution, ExecutionGroup, get_execution_group_and_latest_filtered
+from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
+from climate_ref.results import ExecutionGroupFilter, Reader
 from climate_ref.solver import ExecutionSolver, solve_required_executions
 
 
@@ -115,7 +116,7 @@ class TestMigrationUpDown:
 
 
 class TestHelperVersionFiltering:
-    """get_execution_group_and_latest_filtered respects include_superseded."""
+    """ExecutionsReader.group_rows respects include_superseded."""
 
     @pytest.fixture
     def db_two_versions(self, db_seeded: Database) -> Database:
@@ -139,14 +140,14 @@ class TestHelperVersionFiltering:
         return db_seeded
 
     def test_default_returns_only_promoted_version(self, db_two_versions: Database) -> None:
-        results = get_execution_group_and_latest_filtered(db_two_versions.session)
+        results = Reader(db_two_versions).executions.group_rows()
         returned_versions = {eg.diagnostic_version for eg, _ in results}
         # Only v2 (the promoted version) should be visible
         assert 2 in returned_versions
         assert 1 not in returned_versions
 
     def test_include_superseded_returns_both_versions(self, db_two_versions: Database) -> None:
-        results = get_execution_group_and_latest_filtered(db_two_versions.session, include_superseded=True)
+        results = Reader(db_two_versions).executions.group_rows(ExecutionGroupFilter(include_superseded=True))
         returned_versions = {eg.diagnostic_version for eg, _ in results}
         assert 1 in returned_versions
         assert 2 in returned_versions

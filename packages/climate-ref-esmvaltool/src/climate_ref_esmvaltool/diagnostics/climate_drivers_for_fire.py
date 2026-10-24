@@ -8,7 +8,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
@@ -182,7 +182,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 requests=(
                     # The recipe runs CMIP7 over 2002-2021, but real CanESM5 `historical` data
                     # ends in 2014, so extend_historical_to repeats 2014 out to 2021-12.
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],

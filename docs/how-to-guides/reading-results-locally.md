@@ -11,14 +11,16 @@ a typed read layer over the REF database.
 It returns frozen, ORM-free value objects wrapped in collections that offer `to_pandas()`,
 so a DataFrame built inside a `with Database(...)` block keeps working after the session closes.
 
-!!! note
+/// note
 
-    This guide is not executed when the documentation is built,
-    because the documentation build ingests datasets but does not run any diagnostics,
-    so there are no execution results to read.
-    Every snippet below has been checked against the current source of
-    [`climate_ref.results`](../api/climate_ref/results/),
-    but you will need your own populated database to run them.
+This guide is not executed when the documentation is built,
+because the documentation build ingests datasets but does not run any diagnostics,
+so there are no execution results to read.
+Every snippet below has been checked against the current source of
+[`climate_ref.results`](../api/climate_ref/results/),
+but you will need your own populated database to run them.
+
+///
 
 ## Opening a database and constructing a `Reader`
 
@@ -48,6 +50,7 @@ It holds the database and exposes one sub-reader per domain as a property:
 - `reader.executions` — execution groups and executions,
 - `reader.datasets` — ingested datasets,
 - `reader.diagnostics` — diagnostics and their status counts,
+- `reader.resources` — time, CPU and memory use of executions,
 - `reader.artifacts` — filesystem paths for execution outputs.
 
 `reader.artifacts` needs to know where output files live,
@@ -65,6 +68,47 @@ with Database.from_config(config, read_only=True) as db:
 
 Constructing `Reader(db)` without a `results` root and then touching `reader.artifacts`
 raises a `ValueError` telling you to supply one.
+
+## Filters
+
+Each reader method takes an optional filter object:
+`MetricValueFilter` for values, `ExecutionGroupFilter` for execution groups,
+`DiagnosticFilter` for diagnostics and statistics, `ResourceFilter` for resource usage,
+and `DatasetFilter` for datasets.
+Every field is optional, and leaving it out means "don't narrow on this".
+The same field works the same way on every filter that has it.
+
+| To keep                                                | Set                                                         |
+| ------------------------------------------------------ | ----------------------------------------------------------- |
+| one diagnostic or provider                             | `diagnostic_slug="enso_tel"`, `provider_slug="pmp"`         |
+| diagnostics or providers whose name contains some text | `diagnostic_contains=["enso"]`, `provider_contains=["pmp"]` |
+| results from older diagnostic versions as well         | `include_superseded=True`                                   |
+| only each execution group's newest execution           | `latest_only=True`                                          |
+| executions created in a date range                     | `created_after=...`, `created_before=...`                   |
+| retracted executions as well                           | `include_retracted=True`                                    |
+| groups that draw on a source type                      | `source_types=[...]`                                        |
+| executions that used particular input datasets         | `input_datasets=InputDatasetFilter(...)`                    |
+
+By default you get the current diagnostic version only, with retracted executions left out.
+When you narrow execution groups or diagnostics by `input_datasets`,
+a group matches only if its newest execution used those datasets.
+
+For example, the latest PMP values from executions created this year:
+
+```python
+import datetime
+
+from climate_ref.results import MetricValueFilter
+
+filters = MetricValueFilter(
+    provider_slug="pmp",
+    latest_only=True,
+    created_after=datetime.datetime(2026, 1, 1),
+)
+```
+
+`DatasetFilter` describes datasets rather than executions.
+It shares the diagnostic and provider fields, and its other fields are covered under [Datasets](#datasets).
 
 ## Scalar and series values
 
@@ -92,7 +136,9 @@ with Database.from_config(config, read_only=True) as db:
 ```
 
 Pass a `MetricValueFilter` to narrow the query.
-Every field is optional; `None`/empty means "do not constrain on this axis".
+Every field is optional.
+By default only promoted versions are read and retracted executions are left out.
+An empty list matches nothing.
 Dimension filters go through the `dimensions` map,
 keyed by any registered CV dimension;
 a string is an equality match and a sequence is an `IN` match:
@@ -111,13 +157,13 @@ with Database.from_config(config, read_only=True) as db:
     df = Reader(db).values.scalar_values(filters=filters).to_pandas()
 ```
 
-An unknown dimension key raises `KeyError` rather than silently returning the wrong data.
+An unknown dimension key raises `ValueError`.
 `diagnostic_slug`/`provider_slug` are exact matches;
 `diagnostic_contains`/`provider_contains` are case-insensitive substring matches for search.
 
 #### Outlier detection
 
-Scalar reads can flag outliers using a source-id-aware IQR test,
+Scalar reads can flag outliers using a model-aware IQR test,
 configured with an `OutlierPolicy`.
 Detection is off by default:
 
@@ -133,6 +179,10 @@ with Database.from_config(config, read_only=True) as db:
     df = collection.to_pandas()    # gains `is_outlier` / `verification_status` columns
 ```
 
+Each diagnostic, region, experiment and other label is tested on its own,
+comparing one mean per model.
+Reference values are never flagged.
+NaN and infinite model values always are.
 With `include_unverified=False` (the default) flagged values are removed before pagination
 and excluded from `total_count`.
 When detection runs, `to_pandas()` adds `is_outlier` and `verification_status` columns.
@@ -171,7 +221,7 @@ with Database.from_config(config, read_only=True) as db:
 `reader.executions` reads execution groups and the individual executions within them.
 
 `groups()` returns an `ExecutionGroupCollection`;
-each `ExecutionGroupView` carries its `latest` execution (or `None` if it has never run):
+each `ExecutionGroupView` carries its `latest` execution (or `None` if it has no execution yet):
 
 ```python
 from climate_ref.results import ExecutionGroupFilter
@@ -204,17 +254,20 @@ with Database.from_config(config, read_only=True) as db:
     latest = reader.executions.latest_execution(execution_group_id=1)
 ```
 
-`group()`, `groups()`, `latest_execution()`, and `statistics()`
-all agree on which execution is "latest" for a group
-(ranked by `created_at DESC, id DESC`).
+The newest execution is ranked by `created_at DESC, id DESC`.
+`group()` and `latest_execution()` ignore retraction, while `groups()` applies its filter first,
+so they can pick different executions.
 
-`statistics()` returns per-`(provider, diagnostic)` status counts as `ExecutionStats` objects:
+`reader.diagnostics.list()` returns per-diagnostic status counts in `DiagnosticView.groups`:
 
 ```python
+from climate_ref.results import DiagnosticFilter
+
 with Database.from_config(config, read_only=True) as db:
-    stats = Reader(db).executions.statistics(provider_contains=["esmvaltool"])
-    for row in stats:
-        print(row.provider, row.diagnostic, row.successful, row.failed, row.running)
+    diagnostics = Reader(db).diagnostics.list(DiagnosticFilter(provider_contains=["esmvaltool"]))
+    for d in diagnostics.items:
+        counts = d.groups
+        print(d.provider_slug, d.diagnostic_slug, counts.successful, counts.failed, counts.running)
 ```
 
 ## Datasets
@@ -245,7 +298,17 @@ By default `DatasetFilter.latest_only` is `True`,
 so a listing returns exactly one row per dataset — the latest version — rather than every version,
 deduplicated with that source type's version key.
 
-`get(slug)` fetches a single dataset by slug, returning the latest version on a tie
+`DatasetFilter.include_retracted` and `DatasetFilter.latest_only` are about datasets,
+not executions, unlike the fields with the same names on the other filters.
+
+`execution_ids` keeps the datasets those executions used.
+The diagnostic fields (`diagnostic_slug`, `provider_slug`, `diagnostic_contains`, `provider_contains`)
+keep the datasets used by an execution of a matching diagnostic.
+Like the other filters, these skip retracted and superseded executions.
+`execution_ids` does not.
+`slug_contains` takes one string or a list and keeps datasets whose slug contains any of them.
+
+`get(slug)` fetches a single dataset by slug, retracted or not
 (or `None` when no dataset has that slug):
 
 ```python
@@ -271,7 +334,8 @@ with Database.from_config(config, read_only=True) as db:
     df = diagnostics.to_pandas()
 
     for diagnostic in diagnostics:
-        print(diagnostic.provider_slug, diagnostic.slug, diagnostic.successful, diagnostic.total)
+        groups = diagnostic.groups
+        print(diagnostic.provider_slug, diagnostic.diagnostic_slug, groups.successful, groups.total)
 ```
 
 ## Artifacts: resolving output paths
@@ -308,7 +372,7 @@ It exports only what you *name to make a call*:
 
 - the `Reader` entry point,
 - the filter objects you construct and pass in
-  (`MetricValueFilter`, `ExecutionGroupFilter`, `DatasetFilter`, `DiagnosticFilter`),
+  (`MetricValueFilter`, `ExecutionGroupFilter`, `DatasetFilter`, `DiagnosticFilter`, `ResourceFilter`),
 - the `OutlierPolicy` value object.
 
 Everything the package *returns* — the DTOs (`ScalarValue`, `ExecutionGroupView`, `DatasetView`, …),

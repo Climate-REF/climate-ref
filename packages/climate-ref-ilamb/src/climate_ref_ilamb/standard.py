@@ -1,5 +1,6 @@
 import hashlib
 import os
+import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -35,7 +36,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import MetricValueKind, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
@@ -778,7 +779,7 @@ def _build_test_data_spec(  # noqa: PLR0913
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
@@ -1091,10 +1092,11 @@ class ILAMBStandard(Diagnostic):
             # ilamb3 will expect the reference dataset dataframe to have a `key`
             # column that uniquely describes each dataset. Create one using the
             # `instance_id` and an integer and then modify the ilamb3 configure
-            # so that it finds the proper data.
+            # so that it finds the proper data. The `#` separator keeps e.g. `obs.v1`
+            # from matching the keys of `obs.v10`.
             ref_datasets = definition.datasets[SourceDatasetType.obs4MIPs].datasets
             ref_datasets = ref_datasets.reset_index()
-            ref_datasets["key"] = ref_datasets["instance_id"] + ref_datasets.index.astype(str)
+            ref_datasets["key"] = ref_datasets["instance_id"] + "#" + ref_datasets.index.astype(str)
             source_keys = {
                 entry["variable_id"]: key
                 for key, entry in ilamb_kwargs["sources"].items()
@@ -1103,7 +1105,7 @@ class ILAMBStandard(Diagnostic):
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 source_key = source_keys.get(variable_id, variable_id)
-                ilamb_kwargs["sources"][source_key] = f"{instance_id}*"
+                ilamb_kwargs["sources"][source_key] = rf"^{re.escape(str(instance_id))}#\d+$"
             # Relationship analyses (and any remaining legacy string-path sources)
             # still refer to keys in the ILAMB/obs4REF registries.
             # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so

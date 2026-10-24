@@ -1,24 +1,30 @@
 """Entrypoint for the CLI"""
 
+import functools
 import importlib
+import importlib.util
 import sys
+from collections.abc import Iterator
+from contextlib import contextmanager
 from enum import StrEnum
 from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
-from attrs import define, field
+from attrs import define, field, frozen
 from loguru import logger
 from rich.console import Console
-from typer.core import TyperGroup
+from typer.core import TyperCommand, TyperGroup
 
 from climate_ref import __version__
 from climate_ref.config import Config
 from climate_ref.constants import CONFIG_FILENAME
-from climate_ref.database import Database
 from climate_ref_core import __version__ as __core_version__
 from climate_ref_core.env import env
 from climate_ref_core.logging import initialise_logging
+
+if TYPE_CHECKING:
+    from climate_ref.database import Database
 
 # Registry of read-only command paths (group, command)
 # These commands skip database backup before migrations since they don't modify data
@@ -37,6 +43,8 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("executions", "list-groups"),
     ("executions", "inspect"),
     ("executions", "stats"),
+    ("executions", "values"),
+    ("executions", "resources"),
     ("providers", "list"),
     ("providers", "show"),
     ("solves", "list"),
@@ -130,11 +138,11 @@ class CLIContext:
     configuration_directory: Path | None = None
     config_load_error: str | None = None
     skip_backup: bool = False
-    _database: Database | None = field(default=None, alias="_database")
-    _database_unmigrated: Database | None = field(default=None, alias="_database_unmigrated")
+    _database: "Database | None" = field(default=None, alias="_database")
+    _database_unmigrated: "Database | None" = field(default=None, alias="_database_unmigrated")
 
     @property
-    def database(self) -> Database:
+    def database(self) -> "Database":
         """
         Get the database instance, creating it lazily if needed.
 
@@ -142,17 +150,21 @@ class CLIContext:
         Backup creation is skipped for read-only commands to reduce overhead.
         """
         if self._database is None:
+            from climate_ref.database import Database
+
             self._database = Database.from_config(self.config, skip_backup=self.skip_backup)
         return self._database
 
     @property
-    def database_unmigrated(self) -> Database:
+    def database_unmigrated(self) -> "Database":
         """
         Get a database instance without running migrations.
 
         Used by ``db`` subcommands that inspect or manage migration state directly.
         """
         if self._database_unmigrated is None:
+            from climate_ref.database import Database
+
             self._database_unmigrated = Database.from_config(self.config, run_migrations=False)
         return self._database_unmigrated
 
@@ -221,8 +233,105 @@ def _load_config(
     return config, None
 
 
-class _LoggingGroup(TyperGroup):
-    """Root command group that records an uncaught exception in the log file before it propagates."""
+@frozen
+class _Subcommand:
+    """A top-level command, imported only when it is invoked."""
+
+    module: str
+    attr: str
+    help: str
+    """Short help shown in the root ``--help`` listing, so listing needs no import."""
+    requires: str | None = None
+    """Optional package that must be installed for the command to be available."""
+
+    def load(self, name: str) -> Any:
+        """Import the command and convert it to a Click command named ``name``."""
+        target = getattr(importlib.import_module(self.module), self.attr)
+        command: Any
+        if isinstance(target, typer.Typer):
+            command = typer.main.get_group(target)
+        else:
+            wrapper = typer.Typer(add_completion=False)
+            wrapper.command()(target)
+            command = typer.main.get_command(wrapper)
+        command.name = name
+        return command
+
+
+_SUBCOMMANDS: dict[str, _Subcommand] = {
+    "solve": _Subcommand("climate_ref.cli.solve", "solve", "Solve for executions that require recalculation"),
+    "doctor": _Subcommand(
+        "climate_ref.cli.doctor", "doctor", "Check this deployment for data and configuration problems."
+    ),
+    "config": _Subcommand("climate_ref.cli.config", "app", "View and update the REF configuration"),
+    "datasets": _Subcommand("climate_ref.cli.datasets", "app", "View and ingest input datasets"),
+    "db": _Subcommand("climate_ref.cli.db", "app", "Database management commands"),
+    "diagnostics": _Subcommand("climate_ref.cli.diagnostics", "app", "View diagnostic metadata"),
+    "executions": _Subcommand("climate_ref.cli.executions", "app", "View execution groups and their results"),
+    "providers": _Subcommand("climate_ref.cli.providers", "app", "Manage the REF providers."),
+    "solves": _Subcommand("climate_ref.cli.solves", "app", "View past solves and what they did"),
+    "test-cases": _Subcommand(
+        "climate_ref.cli.test_cases", "app", "Test data management commands for diagnostic development."
+    ),
+    "celery": _Subcommand(
+        "climate_ref_celery.cli", "app", "Managing remote celery workers", requires="climate_ref_celery"
+    ),
+}
+
+
+@functools.cache
+def available_subcommands() -> dict[str, _Subcommand]:
+    """
+    Get the top-level commands that can run in this environment.
+
+    A command with ``requires`` set is only available if that package is installed.
+    """
+    return {
+        name: sub
+        for name, sub in _SUBCOMMANDS.items()
+        if sub.requires is None or importlib.util.find_spec(sub.requires) is not None
+    }
+
+
+class _RootGroup(TyperGroup):
+    """
+    Root command group that imports each subcommand on first use.
+
+    Importing every subcommand up front pulls in the database, ESGF and HPC stacks,
+    which made even ``ref --help`` take over a second.
+    """
+
+    _listing_help = False
+
+    def list_commands(self, ctx: Any) -> list[str]:
+        return list(available_subcommands())
+
+    def get_command(self, ctx: Any, cmd_name: str) -> Any:
+        if cmd_name not in self.commands:
+            subcommand = available_subcommands().get(cmd_name)
+            if subcommand is None:
+                return None
+            if self._listing_help:
+                return TyperCommand(name=cmd_name, help=subcommand.help)
+            self.commands[cmd_name] = subcommand.load(cmd_name)
+        return super().get_command(ctx, cmd_name)
+
+    @contextmanager
+    def _listing(self) -> Iterator[None]:
+        """Serve placeholders from `get_command` while only names and short help are needed."""
+        self._listing_help = True
+        try:
+            yield
+        finally:
+            self._listing_help = False
+
+    def format_help(self, ctx: Any, formatter: Any) -> None:
+        with self._listing():
+            super().format_help(ctx, formatter)
+
+    def shell_complete(self, ctx: Any, incomplete: str) -> Any:
+        with self._listing():
+            return super().shell_complete(ctx, incomplete)
 
     def invoke(self, ctx: Any) -> Any:
         try:
@@ -239,50 +348,14 @@ def build_app() -> typer.Typer:
     """
     Build the CLI app
 
-    This registers all the commands and subcommands of the CLI app.
-    Some commands may not be available if certain dependencies are not installed,
-    for example the Celery CLI is only available if the `climate-ref-celery` package is installed.
+    The subcommands are registered lazily by the root group, see `available_subcommands`.
 
     Returns
     -------
     :
         The CLI app
     """
-    # Import here to avoid circular imports since submodules import read_only from this module
-    from climate_ref.cli import (
-        config,
-        datasets,
-        db,
-        diagnostics,
-        doctor,
-        executions,
-        providers,
-        solve,
-        solves,
-        test_cases,
-    )
-
-    app = typer.Typer(name="ref", no_args_is_help=True, cls=_LoggingGroup)
-
-    app.command(name="solve")(solve.solve)
-    app.command(name="doctor")(doctor.doctor)
-    app.add_typer(config.app, name="config")
-    app.add_typer(datasets.app, name="datasets")
-    app.add_typer(db.app, name="db")
-    app.add_typer(diagnostics.app, name="diagnostics")
-    app.add_typer(executions.app, name="executions")
-    app.add_typer(providers.app, name="providers")
-    app.add_typer(solves.app, name="solves")
-    app.add_typer(test_cases.app, name="test-cases")
-
-    try:
-        celery_app = importlib.import_module("climate_ref_celery.cli").app
-    except ImportError:
-        pass
-    else:
-        app.add_typer(celery_app, name="celery")
-
-    return app
+    return typer.Typer(name="ref", no_args_is_help=True, cls=_RootGroup)
 
 
 app = build_app()
@@ -344,7 +417,7 @@ def main(  # noqa: PLR0913
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
 
-    if not any(group.name == "celery" for group in app.registered_groups):
+    if "celery" not in available_subcommands():
         logger.debug("Celery CLI not available")
 
     # Create context with lazy database initialization

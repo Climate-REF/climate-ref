@@ -1,21 +1,40 @@
 """Unit tests for the metric-value data access layer (spike)."""
 
+import datetime
 import math
+import types
 
+import attrs
+import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.metric_value import ScalarMetricValue, SeriesIndex, SeriesMetricValue
+from climate_ref.models.metric_value import (
+    MetricValueType,
+    ScalarMetricValue,
+    SeriesIndex,
+    SeriesMetricValue,
+)
+from climate_ref.query import (
+    count,
+    paginate,
+    select_latest_execution,
+    select_latest_executions,
+    select_scalar_values,
+    select_series_values,
+    select_value_ids,
+)
 from climate_ref.results import (
+    ExecutionGroupFilter,
     MetricValueFilter,
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results._query import latest_execution_for_group
-from climate_ref.results.frames import scalar_values_to_frame, series_values_to_frame
-from climate_ref.results.outliers import detect_scalar_outliers
+from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
+from climate_ref.results.outliers import flag_outliers
+from climate_ref.results.values import SeriesValue
 
 
 @pytest.fixture
@@ -101,8 +120,10 @@ def dal_db(db_seeded):
         session.add(ref_series)
         session.flush()
         group_id = group.id  # capture inside the txn; reading it post-commit would autobegin
+        diagnostic_id = diagnostic.id
 
     db_seeded.execution_group_id = group_id
+    db_seeded.diagnostic_id = diagnostic_id
     return db_seeded
 
 
@@ -132,6 +153,25 @@ class TestScalarValues:
         assert "WILD" not in source_ids
         assert "BROKEN" not in source_ids
         assert "Reference" in source_ids
+
+    def test_outlier_detection_sees_pending_changes(self, dal_db):
+        session = dal_db.session
+        rows = session.query(ScalarMetricValue).all()
+        wild = next(r for r in rows if r.dimensions.get("source_id") == "WILD")
+        broken = next(r for r in rows if r.dimensions.get("source_id") == "BROKEN")
+        wild.value = 10.1
+        session.delete(broken)
+
+        coll = Reader(dal_db).values.scalar_values(
+            MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]),
+            outliers=OutlierPolicy(),
+            include_unverified=True,
+        )
+        by_source = {v.dimensions["source_id"]: v for v in coll}
+        assert "BROKEN" not in by_source
+        assert by_source["WILD"].value == 10.1
+        assert by_source["WILD"].is_outlier is False
+        session.rollback()
 
     def test_include_unverified_keeps_flagged_with_annotation(self, dal_db):
         ref = Reader(dal_db)
@@ -183,6 +223,10 @@ class TestScalarValues:
         assert len(coll) == 3
         assert coll.total_count == 8
 
+    def test_total_count_ignores_an_already_paged_select(self, dal_db):
+        stmt = paginate(select_scalar_values(MetricValueFilter()), 1, 2)
+        assert count(dal_db.session, stmt) == Reader(dal_db).values.scalar_values().total_count
+
     def test_pagination_deterministic_across_tied_timestamps(self, dal_db):
         # Every scalar row here shares one execution (one created_at), so ordering must fall back to
         # the value id. Two adjacent pages must partition the result with no overlap and no gap.
@@ -208,10 +252,100 @@ class TestScalarValues:
         assert coll.total_count == 2
         assert {v.dimensions["source_id"] for v in coll} == {"ACCESS-CM2", "CESM3"}
 
+    @pytest.mark.parametrize(("value", "expected"), [([None, "x"], 8), ([None], 8), (["x"], 0)])
+    def test_none_in_a_dimension_list_matches_null(self, dal_db, value, expected):
+        f = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id], dimensions={"region": value})
+        assert Reader(dal_db).values.scalar_values(f).total_count == expected
+
+    def test_outliers_are_tested_per_diagnostic(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            other = session.query(Diagnostic).filter(Diagnostic.id != dal_db.diagnostic_id).first()
+            group = ExecutionGroup(key="other-key", diagnostic_id=other.id, selectors={})
+            session.add(group)
+            session.flush()
+            execution = Execution(
+                execution_group_id=group.id, output_fragment="other", dataset_hash="h", successful=True
+            )
+            session.add(execution)
+            session.flush()
+            for i in range(6):
+                session.add(
+                    ScalarMetricValue.build(
+                        execution_id=execution.id,
+                        value=1000.0 + i,
+                        attributes=None,
+                        dimensions={"statistic": "mean", "metric": "tas", "source_id": f"OTHER-{i}"},
+                    )
+                )
+
+        coll = Reader(dal_db).values.scalar_values(outliers=OutlierPolicy(), include_unverified=True)
+        flagged = {v.dimensions["source_id"] for v in coll if v.is_outlier}
+        assert flagged == {"WILD", "BROKEN"}
+
+    def test_outliers_use_each_diagnostics_own_dimensions(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            other = session.query(Diagnostic).filter(Diagnostic.id != dal_db.diagnostic_id).first()
+            group = ExecutionGroup(key="no-metric-key", diagnostic_id=other.id, selectors={})
+            session.add(group)
+            session.flush()
+            execution = Execution(
+                execution_group_id=group.id, output_fragment="no-metric", dataset_hash="h", successful=True
+            )
+            session.add(execution)
+            session.flush()
+            for i, value in enumerate([1.0, 2.0, 3.0, 4.0, 5.0, 1000.0]):
+                session.add(
+                    ScalarMetricValue.build(
+                        execution_id=execution.id,
+                        value=value,
+                        attributes=None,
+                        dimensions={"source_id": f"NOMETRIC-{i}"},
+                    )
+                )
+
+        coll = Reader(dal_db).values.scalar_values(outliers=OutlierPolicy(), include_unverified=True)
+        flagged = {v.dimensions["source_id"] for v in coll if v.is_outlier}
+        assert flagged == {"WILD", "BROKEN", "NOMETRIC-5"}
+
+    def test_kind_model_matches_values_with_no_kind(self, dal_db):
+        f = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id], dimensions={"kind": "model"})
+        assert Reader(dal_db).values.scalar_values(f).total_count == 8
+
+    def test_unknown_outlier_group_by_raises(self, dal_db):
+        with pytest.raises(ValueError, match="bogus"):
+            Reader(dal_db).values.scalar_values(outliers=OutlierPolicy(group_by=("bogus",)))
+
+    @pytest.mark.parametrize("field", ["execution_ids", "execution_group_ids", "isolate_ids"])
+    def test_empty_id_sequence_matches_nothing(self, dal_db, field):
+        ref = Reader(dal_db)
+        assert ref.values.scalar_values(MetricValueFilter(**{field: []})).total_count == 0
+        assert ref.values.series_values(MetricValueFilter(**{field: []})).total_count == 0
+
+    def test_empty_exclude_ids_is_a_no_op(self, dal_db):
+        ref = Reader(dal_db)
+        assert ref.values.scalar_values(MetricValueFilter(exclude_ids=[])).total_count == (
+            ref.values.scalar_values(MetricValueFilter()).total_count
+        )
+
     def test_unknown_dimension_raises(self, dal_db):
         ref = Reader(dal_db)
-        with pytest.raises(KeyError, match="not_a_dim"):
+        with pytest.raises(ValueError, match="not_a_dim"):
             ref.values.scalar_values(MetricValueFilter(dimensions={"not_a_dim": "x"}))
+
+    def test_reference_only_on_scalars_raises(self, dal_db):
+        ref = Reader(dal_db)
+        with pytest.raises(ValueError, match="series values only"):
+            ref.values.scalar_values(MetricValueFilter(reference_only=True))
+        with pytest.raises(ValueError, match="series values only"):
+            select_value_ids(MetricValueType.SCALAR, MetricValueFilter(reference_only=False))
+
+    def test_empty_frame_keeps_base_columns(self, dal_db):
+        coll = Reader(dal_db).values.scalar_values(MetricValueFilter(execution_ids=[-1]))
+        df = coll.to_pandas()
+        assert df.empty
+        assert "value" in df.columns
 
     def test_include_context_adds_slugs(self, dal_db):
         ref = Reader(dal_db)
@@ -266,6 +400,62 @@ class TestSeriesValues:
         assert len(df) == 6
         for col in ("value", "index", "index_name", "source_id", "reference_id"):
             assert col in df.columns
+
+    def test_empty_frames_keep_base_columns(self, dal_db):
+        coll = Reader(dal_db).values.series_values(MetricValueFilter(execution_ids=[-1]))
+        assert {"value", "index", "index_name"} <= set(coll.to_pandas(explode=True).columns)
+        assert {"values", "index"} <= set(coll.to_pandas(explode=False).columns)
+
+    def test_missing_index_name_stays_none(self):
+        series = SeriesValue(
+            id=1,
+            execution_id=1,
+            execution_group_id=1,
+            values=[1.0],
+            index=[0],
+            index_name=None,
+            reference_id=None,
+            kind="model",
+            dimensions={},
+            attributes={},
+        )
+        assert series_values_to_frame([series])["index_name"].isna().all()
+
+
+class TestWithCount:
+    def test_scalar_without_count(self, dal_db, count_queries):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        with count_queries(dal_db) as counted:
+            full = values.scalar_values(filters, limit=3, with_facets=False)
+        with count_queries(dal_db) as uncounted:
+            page = values.scalar_values(filters, limit=3, with_facets=False, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1
+
+    def test_scalar_outliers_without_count(self, dal_db):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        policy = OutlierPolicy(method="iqr")
+        full = values.scalar_values(filters, outliers=policy)
+        page = values.scalar_values(filters, outliers=policy, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+
+    def test_series_without_count(self, dal_db, count_queries):
+        values = Reader(dal_db).values
+        filters = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        with count_queries(dal_db) as counted:
+            full = values.series_values(filters, limit=1, with_facets=False)
+        with count_queries(dal_db) as uncounted:
+            page = values.series_values(filters, limit=1, with_facets=False, with_count=False)
+
+        assert page.total_count is None
+        assert page.items == full.items
+        assert len(uncounted) == len(counted) - 1
 
 
 class TestFrameParity:
@@ -349,13 +539,294 @@ class TestLatestExecutionForGroup:
             session.add(newer)
             session.flush()
             newer_id = newer.id
-        latest = latest_execution_for_group(session, group_id)
+        latest = session.execute(select_latest_execution(group_id)).scalar_one_or_none()
         assert latest is not None
         assert latest.id == newer_id
 
 
+def _add_execution(session, group_id, fragment, created_at):
+    execution = Execution(
+        execution_group_id=group_id,
+        output_fragment=fragment,
+        dataset_hash=f"hash-{fragment}",
+        successful=True,
+        created_at=created_at,
+    )
+    session.add(execution)
+    session.flush()
+    return execution.id
+
+
+class TestSelectLatestExecutions:
+    def test_newest_created_at_wins_over_higher_id(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            newest = _add_execution(session, group_id, "newest", datetime.datetime(2030, 1, 1))
+            _add_execution(session, group_id, "older", datetime.datetime(2029, 1, 1))
+        rows = session.execute(select_latest_executions()).all()
+        assert dict(rows)[group_id] == newest
+
+    def test_tied_created_at_picks_highest_id(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        tied_at = datetime.datetime(2030, 1, 1)
+        with session.begin():
+            ids = [_add_execution(session, group_id, f"tie-{i}", tied_at) for i in range(2)]
+        rows = session.execute(select_latest_executions()).all()
+        assert [r.execution_id for r in rows if r.execution_group_id == group_id] == [max(ids)]
+
+    def test_one_row_per_group(self, dal_db):
+        session = dal_db.session
+        rows = session.execute(select_latest_executions()).all()
+        group_ids = [r.execution_group_id for r in rows]
+        assert len(group_ids) == len(set(group_ids))
+        assert dal_db.execution_group_id in group_ids
+
+    def test_among_executions_picks_newest_matching(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            older_success = _add_execution(session, group_id, "older-ok", datetime.datetime(2030, 1, 1))
+            newer = _add_execution(session, group_id, "newer-failed", datetime.datetime(2031, 1, 1))
+            session.get(Execution, newer).successful = False
+        all_rows = dict(session.execute(select_latest_executions()).all())
+        successful_rows = dict(
+            session.execute(select_latest_executions([Execution.successful.is_(True)])).all()
+        )
+        assert all_rows[group_id] == newer
+        assert successful_rows[group_id] == older_success
+
+    def test_each_group_and_version_gets_its_own_latest(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            diagnostic_id = session.get(ExecutionGroup, dal_db.execution_group_id).diagnostic_id
+            groups = {}
+            for key, version in [("multi", 1), ("multi", 2), ("other", 1)]:
+                group = ExecutionGroup(
+                    key=key, diagnostic_id=diagnostic_id, diagnostic_version=version, selectors={}
+                )
+                session.add(group)
+                session.flush()
+                groups[key, version] = group.id
+            # Interleaved so the newest execution overall belongs to one group only.
+            expected = {}
+            for (key, version), group_id in groups.items():
+                for year in (2030, 2032, 2031):
+                    execution_id = _add_execution(
+                        session,
+                        group_id,
+                        f"{key}-v{version}-{year}",
+                        datetime.datetime(year, 1, 1, version),
+                    )
+                    if year == 2032:
+                        expected[group_id] = execution_id
+        rows = dict(session.execute(select_latest_executions()).all())
+        assert {group_id: rows[group_id] for group_id in groups.values()} == expected
+
+    def test_latest_only_follows_the_promoted_version(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            diagnostic = session.get(ExecutionGroup, dal_db.execution_group_id).diagnostic
+            latest = {}
+            for version in (1, 2):
+                group = ExecutionGroup(
+                    key="versioned", diagnostic_id=diagnostic.id, diagnostic_version=version, selectors={}
+                )
+                session.add(group)
+                session.flush()
+                for year in (2030, 2031):
+                    execution_id = _add_execution(
+                        session, group.id, f"versioned-v{version}-{year}", datetime.datetime(year, 1, 1)
+                    )
+                    session.add(
+                        ScalarMetricValue.build(
+                            execution_id=execution_id,
+                            value=float(version),
+                            attributes=None,
+                            dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                        )
+                    )
+                latest[version] = execution_id
+            diagnostic.promoted_version = 2
+
+        values = Reader(dal_db).values
+        promoted = values.scalar_values(MetricValueFilter(latest_only=True))
+        assert {v.execution_id for v in promoted.items} == {latest[2]}
+        every_version = values.scalar_values(MetricValueFilter(latest_only=True, include_superseded=True))
+        assert {latest[1], latest[2]} <= {v.execution_id for v in every_version.items}
+
+    def test_among_executions_drops_groups_without_a_match(self, dal_db):
+        session = dal_db.session
+        rows = session.execute(select_latest_executions([Execution.output_fragment == "no-such"])).all()
+        assert rows == []
+
+
+class TestLatestOnly:
+    def test_drops_values_from_superseded_execution(self, dal_db):
+        session = dal_db.session
+        group_id = dal_db.execution_group_id
+        with session.begin():
+            newer = _add_execution(session, group_id, "newer", datetime.datetime(2030, 1, 1))
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=newer,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        reader = Reader(dal_db)
+        latest = reader.values.scalar_values(MetricValueFilter(latest_only=True))
+        assert {v.execution_id for v in latest.items} == {newer}
+        assert len(latest) == 1
+        everything = reader.values.scalar_values(MetricValueFilter())
+        assert len(everything) == 9
+
+    def test_keeps_all_values_of_sole_execution(self, dal_db):
+        reader = Reader(dal_db)
+        assert len(reader.values.scalar_values(MetricValueFilter(latest_only=True))) == len(
+            reader.values.scalar_values(MetricValueFilter())
+        )
+        assert len(reader.values.series_values(MetricValueFilter(latest_only=True))) == 2
+
+
+class TestCreatedWindow:
+    @pytest.fixture
+    def newer_execution(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            newer = _add_execution(session, dal_db.execution_group_id, "newer", datetime.datetime(2030, 1, 1))
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=newer,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        return newer
+
+    def test_created_after(self, dal_db, newer_execution):
+        f = MetricValueFilter(created_after=datetime.datetime(2029, 1, 1))
+        assert {v.execution_id for v in Reader(dal_db).values.scalar_values(f).items} == {newer_execution}
+
+    def test_created_before(self, dal_db, newer_execution):
+        f = MetricValueFilter(created_before=datetime.datetime(2029, 1, 1))
+        values = Reader(dal_db).values.scalar_values(f)
+        assert newer_execution not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_latest_only_picks_latest_inside_the_window(self, dal_db, newer_execution):
+        f = MetricValueFilter(latest_only=True, created_before=datetime.datetime(2029, 1, 1))
+        values = Reader(dal_db).values.scalar_values(f)
+        assert newer_execution not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_latest_only_picks_latest_among_execution_ids(self, dal_db, newer_execution):
+        reader = Reader(dal_db)
+        older = reader.values.scalar_values(MetricValueFilter(created_before=datetime.datetime(2029, 1, 1)))
+        (older_id,) = {v.execution_id for v in older.items}
+        values = reader.values.scalar_values(MetricValueFilter(latest_only=True, execution_ids=[older_id]))
+        assert {v.execution_id for v in values.items} == {older_id}
+        assert len(values) == 8
+
+    def test_groups_judged_by_newest_of_execution_ids(self, dal_db, newer_execution):
+        reader = Reader(dal_db)
+        older = reader.values.scalar_values(MetricValueFilter(created_before=datetime.datetime(2029, 1, 1)))
+        (older_id,) = {v.execution_id for v in older.items}
+        groups = reader.executions.groups(ExecutionGroupFilter(execution_ids=[older_id]))
+        assert [(g.id, g.latest.id) for g in groups] == [(dal_db.execution_group_id, older_id)]
+
+
+class TestRetracted:
+    @pytest.fixture
+    def retracted_latest(self, dal_db):
+        session = dal_db.session
+        with session.begin():
+            execution_id = _add_execution(
+                session, dal_db.execution_group_id, "retracted", datetime.datetime(2030, 1, 1)
+            )
+            session.get(Execution, execution_id).retracted = True
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution_id,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        return execution_id
+
+    def test_excluded_by_default(self, dal_db, retracted_latest):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter())
+        assert retracted_latest not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_include_retracted(self, dal_db, retracted_latest):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter(include_retracted=True))
+        assert len(values) == 9
+
+    def test_retracted_latest_execution_still_wins_its_group(self, dal_db, retracted_latest):
+        reader = Reader(dal_db).values
+        assert len(reader.scalar_values(MetricValueFilter(latest_only=True))) == 0
+        latest = reader.scalar_values(MetricValueFilter(latest_only=True, include_retracted=True))
+        assert {v.execution_id for v in latest.items} == {retracted_latest}
+
+
+class TestPromotedOnly:
+    @pytest.fixture
+    def superseded_execution(self, dal_db):
+        """A group at version 2 holds one value, while the diagnostic stays promoted at version 1."""
+        session = dal_db.session
+        with session.begin():
+            original = session.get(ExecutionGroup, dal_db.execution_group_id)
+            group = ExecutionGroup(
+                key=original.key, diagnostic_id=original.diagnostic_id, selectors={}, diagnostic_version=2
+            )
+            session.add(group)
+            session.flush()
+            execution_id = _add_execution(session, group.id, "superseded", datetime.datetime(2030, 1, 1))
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution_id,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ACCESS-CM2"},
+                )
+            )
+        return execution_id
+
+    def test_default_drops_unpromoted_versions(self, dal_db, superseded_execution):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter())
+        assert superseded_execution not in {v.execution_id for v in values.items}
+        assert len(values) == 8
+
+    def test_include_superseded_keeps_every_version(self, dal_db, superseded_execution):
+        values = Reader(dal_db).values.scalar_values(MetricValueFilter(include_superseded=True))
+        assert len(values) == 9
+
+    def test_latest_only_is_per_group_across_versions(self, dal_db, superseded_execution):
+        reader = Reader(dal_db).values
+        promoted = reader.scalar_values(MetricValueFilter(latest_only=True))
+        assert superseded_execution not in {v.execution_id for v in promoted.items}
+        assert len(promoted) == 8
+        every_version = reader.scalar_values(MetricValueFilter(latest_only=True, include_superseded=True))
+        assert len(every_version) == 9
+
+
+class TestIncludeSupersededDefault:
+    def test_default_excludes_superseded(self):
+        assert not MetricValueFilter().include_superseded
+        assert MetricValueFilter() == MetricValueFilter(include_superseded=False)
+
+    def test_evolve_keeps_resolved_value(self):
+        f = attrs.evolve(MetricValueFilter(include_superseded=True), latest_only=True)
+        assert f.include_superseded is True
+
+
 class _FakeScalar:
-    """Minimal stand-in exposing the attributes ``detect_scalar_outliers`` reads."""
+    """Minimal stand-in for a scalar metric value row."""
 
     def __init__(self, id_, value, dimensions):
         self.id = id_
@@ -365,11 +836,12 @@ class _FakeScalar:
 
 def _flags(scalars, **policy_kwargs):
     """Run detection and return a ``{id: is_outlier}`` mapping."""
-    annotated, _ = detect_scalar_outliers(scalars, OutlierPolicy(**policy_kwargs))
-    return {a.value.id: a.is_outlier for a in annotated}
+    frame = pd.DataFrame([{"value": sv.value, **sv.dimensions} for sv in scalars])
+    verdicts = flag_outliers(frame, OutlierPolicy(**policy_kwargs))
+    return {sv.id: bool(v) for sv, v in zip(scalars, verdicts)}
 
 
-class TestDetectScalarOutliers:
+class TestFlagOutliers:
     def test_outlier_policy_rejects_min_n_below_two(self):
         with pytest.raises(ValueError):
             OutlierPolicy(min_n=1)
@@ -470,3 +942,191 @@ class TestReaderSession:
             values = Reader(dal_db, session=session).values.scalar_values()
 
         assert len(values.items) == len(expected.items) > 0
+
+
+def _add_values(session, execution_id, source_id):
+    """One scalar plus a model and a reference series for ``source_id``."""
+    session.add(
+        ScalarMetricValue.build(
+            execution_id=execution_id,
+            value=1.0,
+            attributes=None,
+            dimensions={"statistic": "mean", "metric": "pr", "source_id": source_id},
+        )
+    )
+    axis = SeriesIndex.get_or_create(session, "time", [0, 1, 2])
+    for reference_id in (None, f"ref-{source_id}"):
+        series = SeriesMetricValue.build(
+            execution_id=execution_id,
+            values=[1.0, 2.0, 3.0],
+            index_axis=axis,
+            dimensions={"source_id": source_id, "metric": "pr"},
+            attributes=None,
+        )
+        series.reference_id = reference_id
+        session.add(series)
+
+
+@pytest.fixture
+def scoped_db(dal_db):
+    """
+    ``dal_db`` plus values in a second diagnostic, a superseded group, and older and retracted executions.
+    """
+    session = dal_db.session
+    with session.begin():
+        home = session.get(ExecutionGroup, dal_db.execution_group_id)
+        diagnostic = home.diagnostic
+        other_diagnostic = session.query(Diagnostic).filter(Diagnostic.id != diagnostic.id).first()
+        assert other_diagnostic is not None
+        other = ExecutionGroup(key="scoped-other", diagnostic_id=other_diagnostic.id, selectors={})
+        superseded = ExecutionGroup(
+            key="scoped-superseded",
+            diagnostic_id=diagnostic.id,
+            diagnostic_version=diagnostic.promoted_version + 1,
+            selectors={},
+        )
+        session.add_all([other, superseded])
+        session.flush()
+
+        older = _add_execution(session, home.id, "scoped-older", datetime.datetime(2000, 1, 1))
+        retracted = _add_execution(session, other.id, "scoped-retracted", datetime.datetime(2000, 1, 1))
+        session.get(Execution, retracted).retracted = True
+        current = _add_execution(session, other.id, "scoped-current", datetime.datetime(2001, 1, 1))
+        unpromoted = _add_execution(
+            session, superseded.id, "scoped-superseded", datetime.datetime(2001, 1, 1)
+        )
+        for execution_id, source_id in [
+            (older, "OLDER"),
+            (retracted, "RETRACTED"),
+            (current, "OTHER"),
+            (unpromoted, "SUPERSEDED"),
+        ]:
+            _add_values(session, execution_id, source_id)
+
+        dal_db.scope = types.SimpleNamespace(
+            home_group=home.id,
+            other_group=other.id,
+            older_execution=older,
+            diagnostic_slug=diagnostic.slug,
+            provider_slug=diagnostic.provider.slug,
+            other_diagnostic_slug=other_diagnostic.slug,
+        )
+    return dal_db
+
+
+SCOPED_FILTERS = {
+    "unscoped": lambda s: MetricValueFilter(),
+    "diagnostic_slug": lambda s: MetricValueFilter(diagnostic_slug=s.diagnostic_slug),
+    "other_diagnostic_slug": lambda s: MetricValueFilter(diagnostic_slug=s.other_diagnostic_slug),
+    "provider_slug": lambda s: MetricValueFilter(provider_slug=s.provider_slug),
+    "unknown_provider_slug": lambda s: MetricValueFilter(provider_slug="no-such-provider"),
+    "diagnostic_contains": lambda s: MetricValueFilter(diagnostic_contains=[s.diagnostic_slug.upper()]),
+    "provider_contains": lambda s: MetricValueFilter(provider_contains=[s.provider_slug.upper()]),
+    "one_group": lambda s: MetricValueFilter(execution_group_ids=[s.home_group]),
+    "two_groups": lambda s: MetricValueFilter(execution_group_ids=[s.home_group, s.other_group]),
+    "group_latest_only": lambda s: MetricValueFilter(execution_group_ids=[s.home_group], latest_only=True),
+    "diagnostic_latest_only": lambda s: MetricValueFilter(
+        diagnostic_slug=s.diagnostic_slug, latest_only=True
+    ),
+    "group_include_retracted": lambda s: MetricValueFilter(
+        execution_group_ids=[s.other_group], include_retracted=True
+    ),
+    "diagnostic_include_superseded": lambda s: MetricValueFilter(
+        diagnostic_slug=s.diagnostic_slug, include_superseded=True
+    ),
+    "group_and_execution": lambda s: MetricValueFilter(
+        execution_group_ids=[s.home_group], execution_ids=[s.older_execution]
+    ),
+    "group_and_dimensions": lambda s: MetricValueFilter(
+        execution_group_ids=[s.home_group, s.other_group], dimensions={"metric": "pr"}
+    ),
+    "group_reference_only": lambda s: MetricValueFilter(
+        execution_group_ids=[s.home_group, s.other_group], reference_only=True
+    ),
+    "group_model_only": lambda s: MetricValueFilter(
+        execution_group_ids=[s.home_group, s.other_group], reference_only=False
+    ),
+    "diagnostic_and_isolate_ids": lambda s: MetricValueFilter(
+        diagnostic_slug=s.diagnostic_slug, isolate_ids=[1, 2, 3]
+    ),
+    "group_and_exclude_ids": lambda s: MetricValueFilter(execution_group_ids=[s.home_group], exclude_ids=[1]),
+}
+
+
+@pytest.mark.parametrize("make_filter", SCOPED_FILTERS.values(), ids=list(SCOPED_FILTERS))
+class TestValueIdsMatchRows:
+    """
+    Counts, facets and outlier detection read ``select_value_ids``, while pages read the value selects.
+    The two must match the same rows for every filter.
+    """
+
+    def test_scalar_ids(self, scoped_db, make_filter):
+        f = make_filter(scoped_db.scope)
+        if f.reference_only is not None:
+            pytest.skip("reference_only is series only")
+        session = scoped_db.session
+        rows = [v.id for v in session.execute(select_scalar_values(f)).scalars()]
+        ids = session.execute(select_value_ids(MetricValueType.SCALAR, f)).scalars().all()
+        assert sorted(ids) == rows
+
+    def test_series_ids(self, scoped_db, make_filter):
+        f = make_filter(scoped_db.scope)
+        session = scoped_db.session
+        rows = [v.id for v in session.execute(select_series_values(f)).scalars().unique()]
+        ids = session.execute(select_value_ids(MetricValueType.SERIES, f)).scalars().all()
+        assert sorted(ids) == rows
+
+    def test_scalar_count_and_facets(self, scoped_db, make_filter):
+        f = make_filter(scoped_db.scope)
+        if f.reference_only is not None:
+            pytest.skip("reference_only is series only")
+        values = Reader(scoped_db).values
+        expected_facets = collect_facets(scoped_db.session, select_scalar_values(f), ScalarMetricValue)
+
+        page = values.scalar_values(f)
+        assert page.total_count == len(page)
+        assert page.facets_dict() == expected_facets
+
+        detected = values.scalar_values(f, outliers=OutlierPolicy(), include_unverified=True)
+        assert [v.id for v in detected] == [v.id for v in page]
+        assert detected.total_count == len(page)
+        assert detected.facets_dict() == expected_facets
+
+    def test_series_count_and_facets(self, scoped_db, make_filter):
+        f = make_filter(scoped_db.scope)
+        page = Reader(scoped_db).values.series_values(f)
+        assert page.total_count == len(page)
+        assert page.facets_dict() == collect_facets(
+            scoped_db.session, select_series_values(f), SeriesMetricValue
+        )
+
+
+class TestScopedFiltersSelectRows:
+    """Guards the parity tests above against filters that all match the same rows."""
+
+    def test_scopes_differ(self, scoped_db):
+        session = scoped_db.session
+
+        def ids(name):
+            f = SCOPED_FILTERS[name](scoped_db.scope)
+            return set(session.execute(select_value_ids(MetricValueType.SCALAR, f)).scalars())
+
+        assert ids("unknown_provider_slug") == set()
+        assert ids("other_diagnostic_slug")
+        assert ids("other_diagnostic_slug").isdisjoint(ids("diagnostic_slug"))
+        assert ids("one_group") < ids("two_groups") <= ids("unscoped")
+        assert ids("group_include_retracted") > ids("two_groups") - ids("one_group")
+        assert ids("diagnostic_include_superseded") > ids("diagnostic_slug")
+        assert ids("group_and_execution") and ids("group_and_execution") < ids("one_group")
+
+    def test_latest_only_within_groups_matches_global_latest(self, scoped_db):
+        session = scoped_db.session
+        groups = [scoped_db.scope.home_group, scoped_db.scope.other_group]
+
+        def ids(f):
+            return set(session.execute(select_value_ids(MetricValueType.SCALAR, f)).scalars())
+
+        in_groups = ids(MetricValueFilter(execution_group_ids=groups))
+        latest_in_groups = ids(MetricValueFilter(execution_group_ids=groups, latest_only=True))
+        assert latest_in_groups == ids(MetricValueFilter(latest_only=True)) & in_groups
+        assert latest_in_groups < in_groups

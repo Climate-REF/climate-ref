@@ -1,37 +1,77 @@
 """
 Outlier detection for scalar metric values.
 
-This is a port of the logic previously living in the ref-app backend,
-and has been hoisted here to ensure all consumers use the same logic.
+Hide values from a model that are far off the others, so one broken execution does not dominate a comparison.
 
-Outlier detection is read logic, not presentation policy.
-All consumers should see the same set of outliers.
-The outlier detection is performed at run-time (instead of a pre-computed flag)
-as the outlier configuration may depend on the use-case.
-We may also adopt other outlier detection algorithms in future.
+Configure detection with an [OutlierPolicy][climate_ref.results.outliers.OutlierPolicy]
+and pass it as ``outliers`` to [scalar_values][climate_ref.results.values.ValuesReader.scalar_values].
+Every reader then sees the same outliers.
+Detection runs when you read, so you can change the settings without rerunning anything.
 
+The method is the inter-quartile range (IQR) test.
+The IQR is the spread of the middle half of the values, from the 25th to the 75th percentile (Q1 to Q3).
+A value is an outlier when it lies more than ``factor`` times the IQR below Q1 or above Q3.
 
-The algorithm is source-id-aware Inter-Quartile Range (IQR).
-Within each ``group_by`` group,
-IQR bounds are computed on the per-``source_id`` mean value
-(so each model is weighted equally regardless of ensemble size),
-then applied to individual values.
-The values that are outside ``factor`` * IQR are flagged as outliers.
-``"Reference"`` values are never flagged.
-Non-finite values (NaN/inf) are always flagged.
+The test is model-aware:
 
+* Values are tested in cells.
+  A cell is every value of one diagnostic that shares all labels except those naming the model:
+  ``source_id``, ``member_id``, ``variant_label`` and ``grid_label``.
+  So each region, season, experiment or reference dataset is tested on its own.
+* The limits come from each model's mean over its finite values in the cell (one mean per ``source_id``),
+  so a model with many members does not outweigh one with a single member.
+* The limits are then applied to every individual value in the cell.
+* Reference (observation) values are never flagged and never set the limits.
+  A value is a reference when its ``kind`` is ``"reference"`` or its ``source_id`` is ``"Reference"``.
+* Every other value that is missing, NaN or infinite is always flagged.
+
+Detection runs in the database, so a read only loads the values it returns.
+
+Examples
+--------
+Which values are far off the other models? Flag them with the default policy and read them back:
+
+```python
+from climate_ref.results import OutlierPolicy, Reader
+
+with Database.from_config(config, read_only=True) as db:
+    collection = Reader(db).values.scalar_values(outliers=OutlierPolicy())
+    print(collection.had_outliers, collection.outlier_count)
+    df = collection.to_pandas()
+    flagged = df[df["is_outlier"]]
+```
 """
 
-import math
 import statistics
-from collections.abc import Sequence
+from typing import Any, cast
 
 import attrs
+import numpy as np
 import pandas as pd
+from sqlalchemy import ColumnElement, Select, and_, case, false, func, null, or_, select, true
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.orm import aliased
+from sqlalchemy.sql.compiler import SQLCompiler
+from sqlalchemy.sql.functions import FunctionElement
 
-from climate_ref.models.metric_value import ScalarMetricValue
+from climate_ref.models.execution import Execution, ExecutionGroup
+from climate_ref.models.metric_value import MetricValue, ScalarMetricValue
+from climate_ref.query._converters import _as_str_tuple
 
 _SUPPORTED_METHODS = ("off", "iqr")
+
+_MODEL_DIMS = ("source_id", "member_id", "variant_label", "grid_label")
+_NON_CELL_DIMS = ("kind", *_MODEL_DIMS)
+"""Labels that name the model or ensemble member of a value rather than what it measures."""
+
+_LEGACY_REFERENCE_SOURCE_ID = "Reference"
+"""``source_id`` that marked reference values before ``kind`` was stored."""
+
+
+def _check_group_by(instance: Any, attribute: Any, value: tuple[str, ...] | None) -> None:
+    for dimension in value or ():
+        if dimension in _NON_CELL_DIMS:
+            raise ValueError(f"group_by cannot include {dimension!r}, which names a model or its role")
 
 
 @attrs.frozen(kw_only=True)
@@ -39,166 +79,320 @@ class OutlierPolicy:
     """
     Configuration for scalar outlier detection.
 
-    The defaults reproduce the behaviour users currently see through the ref-app API
-    (``factor=10.0``, source-id-aware IQR grouped by ``("statistic", "metric")``).
+    Settings for hiding values that are far off the others.
+
+    Pass the policy as ``outliers`` to
+    [ValuesReader.scalar_values][climate_ref.results.values.ValuesReader.scalar_values].
+    The defaults run the model-aware IQR test described in
+    [climate_ref.results.outliers][], with ``factor=10.0``, separately in each cell.
+    That is loose enough to catch only gross errors, such as a unit mistake or a broken execution.
+    Lower ``factor`` to flag more values.
+
+    Raises
+    ------
+    ValueError
+        If ``method`` is not ``"off"`` or ``"iqr"``, ``factor`` is negative, ``min_n`` is below 2,
+        or ``group_by`` names ``kind`` or a model label such as ``source_id``.
+
+    Examples
+    --------
+    The defaults:
+
+    >>> from climate_ref.results import OutlierPolicy
+    >>> policy = OutlierPolicy()
+    >>> policy.method, policy.factor, policy.min_n, policy.group_by
+    ('iqr', 10.0, 4, None)
+    >>> policy.enabled
+    True
+
+    A stricter policy:
+
+    >>> strict = OutlierPolicy(factor=3.0)
+    >>> strict.factor
+    3.0
+
+    One that pools every region and season of a metric and statistic into one cell:
+
+    >>> OutlierPolicy(group_by=["statistic", "metric"]).group_by
+    ('statistic', 'metric')
+
+    Detection can be switched off explicitly:
+
+    >>> OutlierPolicy(method="off").enabled
+    False
+
+    Read PMP values with the stricter policy, keeping the flagged values so they can be inspected:
+
+    ```python
+    with Database.from_config(config, read_only=True) as db:
+        collection = Reader(db).values.scalar_values(
+            MetricValueFilter(provider_slug="pmp"),
+            outliers=strict,
+            include_unverified=True,
+        )
+    ```
+    With ``include_unverified=False`` (the default), flagged values are left out of the result.
     """
 
     method: str = attrs.field(default="iqr", validator=attrs.validators.in_(_SUPPORTED_METHODS))
-    """Detection method. ``"off"`` disables detection; ``"iqr"`` enables it."""
+    """Detection method. ``"off"`` disables detection and ``"iqr"`` enables it."""
 
-    factor: float = 10.0
-    """Multiplier on the IQR to set the outlier bounds (``Q1 - factor*IQR``, ``Q3 + factor*IQR``)."""
+    factor: float = attrs.field(default=10.0, validator=attrs.validators.ge(0))
+    """Multiplier on the IQR that sets the outlier bounds, ``Q1 - factor*IQR`` and ``Q3 + factor*IQR``."""
 
     min_n: int = attrs.field(default=4, validator=attrs.validators.ge(2))
     """
-    Minimum sample size required to run detection.
+    Minimum number of models in a cell required to run detection.
 
-    On the source-id-aware path this counts distinct non-reference ``source_id`` with a finite mean.
-    On the fallback path it counts finite values.
-    Non-finite values (NaN/inf) are excluded from the count
-    and are flagged unconditionally regardless of whether detection runs.
+    This counts the models (by ``source_id``, excluding references) that have a finite mean.
+    A value without a ``source_id`` counts as a model of its own.
+    A cell below the minimum is never flagged for being far off,
+    but its non-finite values are still flagged.
     """
 
-    group_by: tuple[str, ...] = ("statistic", "metric")
-    """CV dimensions to group by before computing bounds. Missing dimensions are ignored."""
+    group_by: tuple[str, ...] | None = attrs.field(
+        default=None, converter=_as_str_tuple, validator=_check_group_by
+    )
+    """
+    Labels that define a cell, such as ``("statistic", "metric")``, or ``None`` for every label.
+
+    ``None`` (the default) tests each combination of labels apart from the model ones on its own.
+    Naming labels pools the values of every other label into one cell, for example every region.
+    Only do that when the pooled values share a scale, because the limits are applied across them all.
+    Each diagnostic is always tested on its own.
+    A label that is not a CV dimension raises ``ValueError`` when the values are read.
+    """
 
     @property
     def enabled(self) -> bool:
-        """Whether detection should run."""
+        """Whether detection runs, which is ``True`` for ``method="iqr"``."""
         return self.method == "iqr"
 
 
-@attrs.frozen(kw_only=True)
-class AnnotatedScalar:
-    """A scalar ORM row paired with its outlier verdict."""
-
-    value: ScalarMetricValue
-    """The underlying scalar metric value row."""
-
-    is_outlier: bool
-    """Whether this value was flagged as an outlier."""
-
-    verification_status: str
-    """``"verified"`` or ``"unverified"``, mirroring ``is_outlier``."""
-
-
-def _is_finite(x: object) -> bool:
-    return isinstance(x, int | float) and not math.isinf(x) and not math.isnan(x)
-
-
-def _flag_outliers_iqr(values: Sequence[float], factor: float, min_n: int) -> list[bool]:
+def _iqr_bounds(samples: list[float], factor: float, min_n: int) -> tuple[float, float] | None:
     """
-    Flag outliers with a plain IQR test (fallback when no source_id is available).
+    ``Q1 - factor*IQR`` and ``Q3 + factor*IQR`` of finite ``samples``.
 
-    Detection runs only over finite values: a single NaN/inf would otherwise poison the quantiles
-    and disable the test for the whole group.
-    Non-finite values are never flagged here (the caller flags them separately).
-    When the finite spread is zero the bounds collapse, so nothing is flagged.
-    Gated on the count of finite values against ``min_n``.
+    Returns ``None`` when fewer than ``min_n`` samples are given or when the spread is zero,
+    so collapsed bounds never flag anything.
     """
-    finite = [v for v in values if _is_finite(v)]
-    if len(finite) < min_n:
-        return [False] * len(values)
-    q1, _, q3 = statistics.quantiles(finite, n=4, method="inclusive")
-    iqr = q3 - q1
-    if iqr == 0:
-        return [False] * len(values)
-    lower, upper = q1 - factor * iqr, q3 + factor * iqr
-    return [_is_finite(v) and (v < lower or v > upper) for v in values]
-
-
-def _iqr_bounds_by_source_id(df: pd.DataFrame, factor: float, min_n: int) -> tuple[float, float] | None:
-    """
-    IQR bounds computed on per-source_id means (equal model weighting).
-
-    A source whose mean is non-finite (e.g. all values NaN) is dropped before the ``min_n`` count
-    and the quantile computation, so it cannot poison the bounds for the others. Returns ``None``
-    when fewer than ``min_n`` sources have a finite mean or when the spread is zero.
-    """
-    if "source_id" not in df.columns:
+    if len(samples) < min_n:
         return None
-    non_reference = df[df["source_id"] != "Reference"]
-    source_id_means = non_reference.groupby("source_id")["value"].mean()
-    finite_means = source_id_means[source_id_means.map(_is_finite)]
-    if len(finite_means) < min_n:
-        return None
-    q1, _, q3 = statistics.quantiles(finite_means.tolist(), n=4, method="inclusive")
+    q1, _, q3 = statistics.quantiles(samples, n=4, method="inclusive")
     iqr = q3 - q1
     if iqr == 0:
         return None
     return q1 - factor * iqr, q3 + factor * iqr
 
 
-def detect_scalar_outliers(
-    scalar_values: Sequence[ScalarMetricValue],
-    policy: OutlierPolicy,
-) -> tuple[list[AnnotatedScalar], int]:
+def flag_outliers(frame: pd.DataFrame, policy: OutlierPolicy) -> np.ndarray:
     """
-    Annotate scalar values with outlier verdicts.
+    Outlier verdict for each row of ``frame``, in row order.
+
+    This applies the same test as ``scalar_values(outliers=...)`` to a DataFrame you already hold.
+
+    ``frame`` holds a ``value`` column and one column per label (``source_id``, ``metric`` and so on).
+    An optional ``kind`` column marks reference values with ``"reference"``.
+    Every other column defines the cells, so leave out columns such as ``id``.
+    Add a column such as ``diagnostic_id`` when the frame mixes diagnostics.
+    With ``policy.group_by`` set, only those columns and ``diagnostic_id`` define the cells.
+    A null label is a value of its own, so rows with no ``region`` form a cell apart from the others.
 
     Parameters
     ----------
-    scalar_values
-        The full (unpaginated) set of scalar rows for the query scope. Detection must run over
-        the whole set so IQR bounds are globally consistent.
+    frame
+        Values to test, with a ``value`` column and label columns such as ``source_id``.
     policy
-        Detection configuration.
+        Detection settings. The result is all ``False`` for an empty frame.
 
     Returns
     -------
     :
-        A tuple of (annotated values in input order, total number of outliers).
+        A boolean array, ``True`` where the row is an outlier.
+
+    Examples
+    --------
+    Five models agree and a sixth is far away.
+    The reference (observation) value is large too, but is never flagged:
+
+    >>> import pandas as pd
+    >>> from climate_ref.results.outliers import OutlierPolicy, flag_outliers
+    >>> frame = pd.DataFrame(
+    ...     {
+    ...         "source_id": ["a", "b", "c", "d", "e", "f", "obs"],
+    ...         "kind": ["model"] * 6 + ["reference"],
+    ...         "value": [1.0, 2.0, 3.0, 4.0, 5.0, 1000.0, 5000.0],
+    ...     }
+    ... )
+    >>> flag_outliers(frame, OutlierPolicy()).tolist()
+    [False, False, False, False, False, True, False]
     """
-    if not scalar_values:
-        return [], 0
+    if frame.empty:
+        return np.zeros(0, dtype=bool)
 
-    if not policy.enabled:
-        return (
-            [
-                AnnotatedScalar(value=sv, is_outlier=False, verification_status="verified")
-                for sv in scalar_values
-            ],
-            0,
-        )
+    values = frame["value"].astype(float).to_numpy()
+    finite = np.isfinite(values)
+    reference = np.zeros(len(frame), dtype=bool)
+    if "kind" in frame:
+        reference |= (frame["kind"] == "reference").to_numpy()
+    if "source_id" in frame:
+        reference |= (frame["source_id"] == _LEGACY_REFERENCE_SOURCE_ID).to_numpy()
 
-    df = pd.DataFrame(
-        [{"scalar_value": sv, "value": sv.value, **sv.dimensions, "id": sv.id} for sv in scalar_values]
+    if policy.group_by is None:
+        cell_dims = [c for c in frame.columns if c != "value" and c not in _NON_CELL_DIMS]
+    else:
+        cell_dims = [c for c in frame.columns if c in policy.group_by or c == "diagnostic_id"]
+    cells = (
+        frame.groupby(cell_dims, dropna=False, sort=False).ngroup().to_numpy()
+        if cell_dims
+        else np.zeros(len(frame), dtype=np.int64)
     )
-    group_by = [g for g in policy.group_by if g in df.columns]
 
-    verdict_by_id: dict[int, bool] = {}
-    groups = df.groupby(list(group_by)) if group_by else [(None, df)]
-    for _, group in groups:
-        values = group["value"]
-        finite = values.map(_is_finite)
-        if "source_id" in group.columns:
-            # Distinct finite source_ids gate detection (see _iqr_bounds_by_source_id).
-            bounds = _iqr_bounds_by_source_id(group, factor=policy.factor, min_n=policy.min_n)
-            if bounds is not None:
-                lower, upper = bounds
-                out_of_bounds = (values < lower) | (values > upper)
-                flags = finite & out_of_bounds & (group["source_id"] != "Reference")
-            else:
-                flags = pd.Series(False, index=group.index)
-        else:
-            # Finite value count gates detection (see _flag_outliers_iqr).
-            flag_list = _flag_outliers_iqr(values.to_list(), factor=policy.factor, min_n=policy.min_n)
-            flags = pd.Series(flag_list, index=group.index)
+    # A value without a source_id is a model of its own.
+    models = pd.factorize(frame["source_id"])[0] if "source_id" in frame else np.full(len(frame), -1)
+    solo = models == -1
+    models[solo] = models.max() + 1 + np.arange(solo.sum())
+    samples = pd.Series(np.where(finite & ~reference, values, np.nan))
+    means = samples.groupby([cells, models], sort=False).mean().dropna()
 
-        verdicts = flags | ~finite  # non-finite values are always flagged
-        for row_id, verdict in zip(group["id"], verdicts):
-            verdict_by_id[row_id] = bool(verdict)
+    lower_by_cell = np.full(cells.max() + 1, np.nan)
+    upper_by_cell = np.full(cells.max() + 1, np.nan)
+    for cell, cell_means in means.groupby(level=0):
+        bounds = _iqr_bounds(cell_means.tolist(), policy.factor, policy.min_n)
+        if bounds is not None:
+            lower_by_cell[cast(int, cell)], upper_by_cell[cast(int, cell)] = bounds
+    with np.errstate(invalid="ignore"):
+        out_of_bounds = (values < lower_by_cell[cells]) | (values > upper_by_cell[cells])
+    return ~reference & (~finite | out_of_bounds)
 
-    annotated: list[AnnotatedScalar] = []
-    total = 0
-    for sv in scalar_values:
-        is_outlier = verdict_by_id.get(sv.id, False)
-        annotated.append(
-            AnnotatedScalar(
-                value=sv,
-                is_outlier=is_outlier,
-                verification_status="unverified" if is_outlier else "verified",
-            )
+
+def _is_reference(columns: Any) -> ColumnElement[bool]:
+    clauses = []
+    if "kind" in columns:
+        clauses.append(columns.kind == "reference")
+    if "source_id" in columns:
+        clauses.append(columns.source_id == _LEGACY_REFERENCE_SOURCE_ID)
+    return or_(false(), *clauses)
+
+
+def _is_finite(value: Any) -> ColumnElement[bool]:
+    # Postgres sorts NaN above infinity, and SQLite stores NaN as null, so this is false for both.
+    return and_(value > float("-inf"), value < float("inf"))
+
+
+class _CellKey(FunctionElement[Any]):
+    """The labels of a cell as one sort key, which SQLite ranks faster than many columns."""
+
+    inherit_cache = True
+
+
+@compiles(_CellKey)
+def _compile_cell_key(element: _CellKey, compiler: SQLCompiler, **kw: Any) -> str:
+    labels = compiler.process(element.clauses, **kw)
+    return f"json_array({labels})" if compiler.dialect.name == "sqlite" else labels
+
+
+def select_outlier_flags(value_ids: Select[tuple[int]], policy: OutlierPolicy) -> Select[tuple[int, bool]]:
+    """
+    Build a ``Select`` of ``(id, is_outlier)`` for every scalar value that ``value_ids`` matches.
+
+    The test is the one [flag_outliers][climate_ref.results.outliers.flag_outliers] applies,
+    run in the database with the cells split by diagnostic.
+    The quartiles interpolate linearly between the sorted model means,
+    as ``statistics.quantiles(method="inclusive")`` and the pandas default do.
+
+    Parameters
+    ----------
+    value_ids
+        Ids of the scalar values to test, such as from
+        [select_value_ids][climate_ref.query.values.select_value_ids].
+    policy
+        Detection settings.
+
+    Raises
+    ------
+    ValueError
+        If ``policy.group_by`` names a label that is not a CV dimension.
+    """
+    dims = ScalarMetricValue._cv_dimensions
+    for g in policy.group_by or ():
+        if g not in dims:
+            raise ValueError(f"Unknown outlier group_by dimension {g!r}")
+    if policy.group_by is None:
+        cell_dims = [d for d in dims if d not in _NON_CELL_DIMS]
+    else:
+        cell_dims = list(policy.group_by)
+    table = MetricValue.__table__.c
+    execution = aliased(Execution)
+    group = aliased(ExecutionGroup)
+    labels = [d for d in dims if d in {"kind", "source_id", *cell_dims}]
+    scoped = (
+        value_ids.with_only_columns(table.id, table.execution_id, table.value, *(table[d] for d in labels))
+        .order_by(None)
+        .cte("outlier_scope")
+    )
+    c = scoped.c
+    model = c.source_id if "source_id" in c else None
+    cells = (
+        select(
+            c.id,
+            c.value,
+            *(c[d] for d in ("kind", "source_id") if d in c),
+            func.dense_rank()
+            .over(order_by=_CellKey(group.diagnostic_id, *(c[d] for d in cell_dims)))
+            .label("cell"),
+            case((_is_reference(c), null()), (_is_finite(c.value), c.value)).label("sample"),
+            # A value without a source_id is a model of its own.
+            (case((model.is_(None), c.id)) if model is not None else c.id).label("solo"),
         )
-        total += int(is_outlier)
-    return annotated, total
+        .join(execution, execution.id == c.execution_id)
+        .join(group, group.id == execution.execution_group_id)
+        .cte("outlier_cells")
+    )
+
+    model_keys = [cells.c.cell, cells.c.solo, *([cells.c.source_id] if model is not None else [])]
+    means = (
+        select(cells.c.cell, func.avg(cells.c.sample).label("mean"))
+        .group_by(*model_keys)
+        .having(func.avg(cells.c.sample).is_not(None))
+        .subquery("outlier_means")
+    )
+    ranked = select(
+        means.c.cell,
+        means.c.mean,
+        (func.row_number().over(partition_by=means.c.cell, order_by=means.c.mean) - 1).label("position"),
+        func.count().over(partition_by=means.c.cell).label("n"),
+    ).subquery("outlier_ranked")
+
+    def quartile(i: int) -> Any:
+        # statistics.quantiles(n=4, method="inclusive"): (x[j] * (4 - delta) + x[j + 1] * delta) / 4
+        spread = i * (ranked.c.n - 1)
+        j, delta = spread // 4, spread % 4
+        weight = case((ranked.c.position == j, 4 - delta), (ranked.c.position == j + 1, delta), else_=0)
+        return func.sum(ranked.c.mean * weight) / 4.0
+
+    quartiles = (
+        select(ranked.c.cell, quartile(1).label("q1"), quartile(3).label("q3"))
+        .group_by(ranked.c.cell)
+        .having(func.max(ranked.c.n) >= policy.min_n)
+        .subquery("outlier_quartiles")
+    )
+    iqr = quartiles.c.q3 - quartiles.c.q1
+    bounds = (
+        select(
+            quartiles.c.cell,
+            (quartiles.c.q1 - policy.factor * iqr).label("lower"),
+            (quartiles.c.q3 + policy.factor * iqr).label("upper"),
+        )
+        .where(iqr > 0)
+        .subquery("outlier_bounds")
+    )
+
+    finite = _is_finite(cells.c.value)
+    is_outlier = case(
+        (_is_reference(cells.c), false()),
+        (and_(finite, or_(cells.c.value < bounds.c.lower, cells.c.value > bounds.c.upper)), true()),
+        (finite, false()),
+        else_=true(),
+    )
+    return select(cells.c.id, is_outlier.label("is_outlier")).outerjoin(bounds, bounds.c.cell == cells.c.cell)

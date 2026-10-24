@@ -1,8 +1,28 @@
 """Tests for climate_ref_core.esgf.obs4mips module."""
 
+from unittest.mock import MagicMock, patch
+
+import intake_esgf
+import pandas as pd
 import pytest
 
-from climate_ref_core.esgf import ESGFRequest, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, ESGFRequest, Obs4MIPsRequest
+
+
+def _catalog_recording_ceda(seen):
+    def make_catalog():
+        seen.append(intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"])
+        cat = MagicMock()
+        cat.df = pd.DataFrame({"key": ["ds1"]})
+        cat.to_path_dict.return_value = {"ds1": ["/ds1.nc"]}
+        return cat
+
+    return make_catalog
+
+
+@pytest.fixture
+def ceda_disabled(monkeypatch):
+    monkeypatch.setitem(intake_esgf.conf["solr_indices"], "esgf.ceda.ac.uk", False)
 
 
 class TestObs4MIPsRequest:
@@ -15,11 +35,8 @@ class TestObs4MIPsRequest:
             facets={"source_id": "GPCP-SG", "variable_id": "pr"},
         )
         assert request.slug == "test-obs"
-        assert request.facets == {
-            "project": "obs4MIPs",
-            "source_id": "GPCP-SG",
-            "variable_id": "pr",
-        }
+        assert request.facets == {"source_id": "GPCP-SG", "variable_id": "pr"}
+        assert request.project == "obs4MIPs"
         assert request.remove_ensembles is False
         assert request.time_span is None
         assert request.source_type == "obs4MIPs"
@@ -62,20 +79,23 @@ class TestObs4MIPsRequest:
         for item in Obs4MIPsRequest.obs4mips_filename_paths:
             assert item in Obs4MIPsRequest.avail_facets
 
-    def test_init_invalid_path_item(self):
-        """Test that invalid path items raise ValueError."""
+    @pytest.mark.usefixtures("ceda_disabled")
+    def test_fetch_searches_ceda_only_while_fetching(self):
+        request = Obs4MIPsRequest(slug="test-obs", facets={"source_id": "C3S-GTO-ECV-9-0"})
+        seen = []
 
-        class BadObs4MIPsRequest(Obs4MIPsRequest):
-            obs4mips_path_items = ("invalid_facet",)
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", side_effect=_catalog_recording_ceda(seen)):
+            request.fetch_datasets()
 
-        with pytest.raises(ValueError, match=r"Path item.*not in available facets"):
-            BadObs4MIPsRequest(slug="test", facets={})
+        assert seen == [True]
+        assert intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"] is False
 
-    def test_init_invalid_filename_path(self):
-        """Test that invalid filename path items raise ValueError."""
+    @pytest.mark.usefixtures("ceda_disabled")
+    def test_cmip6_fetch_does_not_search_ceda(self):
+        request = CMIP6Request(slug="test", facets={"source_id": "ACCESS-ESM1-5"})
+        seen = []
 
-        class BadObs4MIPsRequest(Obs4MIPsRequest):
-            obs4mips_filename_paths = ("invalid_facet",)
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", side_effect=_catalog_recording_ceda(seen)):
+            request.fetch_datasets()
 
-        with pytest.raises(ValueError, match=r"Filename path.*not in available facets"):
-            BadObs4MIPsRequest(slug="test", facets={})
+        assert seen == [False]

@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-import intake_esgf
 import pandas as pd
 import pytest
 from intake_esgf.exceptions import NoSearchResults
@@ -142,7 +141,7 @@ class TestIntakeESGFMixin:
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
             result = request.fetch_datasets()
 
-        mock_cat.search.assert_called_once_with(source_id="ACCESS-ESM1-5", variable_id="tas")
+        mock_cat.search.assert_called_once_with(project="CMIP6", source_id="ACCESS-ESM1-5", variable_id="tas")
         assert "key" in result.columns
         assert "files" in result.columns
 
@@ -228,31 +227,6 @@ class TestIntakeESGFMixin:
 
         mock_cat.remove_ensembles.assert_called_once()
 
-    def test_fetch_datasets_enables_ceda_solr_index(self):
-        """
-        The CEDA Solr index must be enabled as a fallback while the ozone reference
-        C3S-GTO-ECV-9-0 is missing from the default ESGF2-US-1.5-Catalog index.
-        """
-        request = CMIP6Request(
-            slug="test",
-            facets={"source_id": "ACCESS-ESM1-5"},
-        )
-
-        mock_cat = MagicMock()
-        mock_cat.df = pd.DataFrame(
-            {
-                "key": ["ds1"],
-                "source_id": ["ACCESS-ESM1-5"],
-            }
-        )
-        mock_cat.to_path_dict.return_value = {"ds1": ["/path/to/file.nc"]}
-
-        intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"] = False
-        with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
-            request.fetch_datasets()
-
-        assert intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"] is True
-
     def test_fetch_datasets_empty_result(self):
         """Test fetch_datasets raises error when no datasets found."""
         request = CMIP6Request(
@@ -265,7 +239,7 @@ class TestIntakeESGFMixin:
         mock_cat.to_path_dict.return_value = {}
 
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
-            with pytest.raises(ValueError, match="No datasets found"):
+            with pytest.raises(DatasetResolutionError, match="No datasets found"):
                 request.fetch_datasets()
 
     def test_fetch_datasets_empty_dataframe(self):
@@ -280,7 +254,7 @@ class TestIntakeESGFMixin:
         mock_cat.to_path_dict.return_value = {}
 
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
-            with pytest.raises(ValueError, match="No datasets found"):
+            with pytest.raises(DatasetResolutionError, match="No datasets found"):
                 request.fetch_datasets()
 
     def test_fetch_datasets_no_search_results(self):
@@ -324,6 +298,7 @@ class TestIntakeESGFMixin:
             pinned.fetch_datasets()
 
         mock_cat.search.assert_called_once_with(
+            project="CMIP6",
             instance_id=["CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v1"],
             # A pin holds even once a newer version has been published
             latest=[True, False],

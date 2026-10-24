@@ -12,7 +12,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, ExecutionDefinition
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -235,7 +235,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
@@ -265,7 +265,6 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",
@@ -525,7 +524,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
@@ -554,7 +553,6 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",
@@ -781,7 +779,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    CMIP7Request(
+                    ConvertedCMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
@@ -811,7 +809,6 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                     Obs4MIPsRequest(
                         slug="obs4mips",
                         facets={
-                            "project": "obs4MIPs",
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",

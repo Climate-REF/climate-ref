@@ -10,6 +10,7 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
+    ExecutionGroupSourceType,
     ExecutionOutput,
 )
 from climate_ref.models.metric_value import (
@@ -27,6 +28,7 @@ __all__ = [
     "Diagnostic",
     "Execution",
     "ExecutionGroup",
+    "ExecutionGroupSourceType",
     "ExecutionOutput",
     "MetricValue",
     "Provider",

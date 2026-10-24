@@ -10,6 +10,7 @@ import pytest
 import sqlalchemy
 from loguru import logger
 from sqlalchemy import inspect
+from sqlalchemy.exc import DatabaseError
 
 from climate_ref.database import (
     REDACTED,
@@ -128,6 +129,60 @@ def test_invalid_urls(config, database_url, tmp_path):
 def test_database(db):
     assert db._engine
     assert db.session.is_active
+
+
+def test_optimize_gathers_sqlite_statistics(db):
+    db.session.add(Provider(slug="p", name="P", version="1"))
+    db.session.commit()
+
+    db.optimize()
+
+    with db._engine.connect() as connection:
+        tables = connection.exec_driver_sql("SELECT DISTINCT tbl FROM sqlite_stat1").scalars().all()
+    assert "provider" in tables
+
+
+@pytest.mark.parametrize("version", [(3, 46, 0), (3, 45, 0)])
+def test_optimize_refreshes_stale_statistics(tmp_path, config, mocker, version):
+    # Each CLI command opens a fresh connection, so a grown table must be re-analysed without query history.
+    mocker.patch("climate_ref.database.sqlite3.sqlite_version_info", version)
+    path = tmp_path / "stale.db"
+    with sqlite3.connect(path) as con:
+        con.execute("CREATE TABLE t (a INTEGER)")
+        con.execute("CREATE INDEX ix_t_a ON t (a)")
+        con.executemany("INSERT INTO t VALUES (?)", ((i,) for i in range(100)))
+        con.execute("ANALYZE")
+        con.executemany("INSERT INTO t VALUES (?)", ((i,) for i in range(100_000)))
+    con.close()
+
+    database = Database(f"sqlite:///{path}")
+    database.optimize()
+    database.close()
+
+    with sqlite3.connect(path) as con:
+        (stat,) = con.execute("SELECT stat FROM sqlite_stat1 WHERE idx = 'ix_t_a'").fetchone()
+    con.close()
+    assert int(stat.split()[0]) == 100_100
+
+
+def test_optimize_skips_other_backends(db, mocker):
+    mocker.patch.object(db._engine.dialect, "name", "postgresql")
+    begin = mocker.spy(db._engine, "begin")
+
+    db.optimize()
+
+    begin.assert_not_called()
+
+
+def test_optimize_logs_instead_of_raising(db, mocker):
+    mocker.patch.object(
+        db._engine, "begin", side_effect=DatabaseError("PRAGMA optimize", {}, Exception("malformed"))
+    )
+    warning = mocker.patch("climate_ref.database.logger.warning")
+
+    db.optimize()
+
+    warning.assert_called_once()
 
 
 def test_database_migrate_with_old_revision(db, mocker, config):

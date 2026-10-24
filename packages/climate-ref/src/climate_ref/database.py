@@ -29,7 +29,7 @@ from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from loguru import logger
 from sqlalchemy.engine import make_url
-from sqlalchemy.exc import ArgumentError, IntegrityError
+from sqlalchemy.exc import ArgumentError, IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
 
 from climate_ref.models import MetricValue, Table
@@ -363,6 +363,30 @@ class Database:
             self.session.close()
         finally:
             self._engine.dispose()
+
+    def optimize(self) -> None:
+        """
+        Refresh the query planner's table statistics
+
+        SQLite gathers statistics only when asked,
+        so call this after a bulk write such as an ingest or a solve.
+        It is cheap when the statistics are still current.
+        Other backends keep their own statistics, so this does nothing there.
+        A failure is logged rather than raised, because stale statistics only slow queries down.
+        """
+        if self._engine.dialect.name != "sqlite":
+            return
+        # 0x10002 checks every table, not only those this connection has queried, and needs SQLite 3.46.
+        if sqlite3.sqlite_version_info >= (3, 46):
+            statements = ["PRAGMA optimize=0x10002"]
+        else:
+            statements = ["PRAGMA analysis_limit=1000", "ANALYZE"]
+        try:
+            with self._engine.begin() as connection:
+                for statement in statements:
+                    connection.exec_driver_sql(statement)
+        except SQLAlchemyError as exc:
+            logger.warning(f"Could not refresh SQLite statistics: {exc}")
 
     def alembic_config(self, config: "Config") -> AlembicConfig:
         """

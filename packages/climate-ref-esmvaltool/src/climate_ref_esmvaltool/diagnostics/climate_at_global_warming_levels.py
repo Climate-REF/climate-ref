@@ -180,7 +180,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             #     name="cmip7",
             #     description="Test with CMIP7 data.",
             #     requests=(
-            #         CMIP7Request(
+            #         ConvertedCMIP7Request(
             #             slug="cmip7",
             #             facets={
             #                 "experiment_id": ["ssp245", "historical"],

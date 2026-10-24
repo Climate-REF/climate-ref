@@ -37,7 +37,7 @@ from climate_ref_core.testing import (
 
 
 def _determine_test_directory() -> Path | None:
-    path = env.path("REF_TEST_DATA_DIR", default=Path(__file__).parents[4] / "tests" / "test-data")
+    path = env.path("REF_TEST_DATA_DIR", default=Path(__file__).parents[5] / "tests" / "test-data")
 
     if not path.exists():  # pragma: no cover
         return None
@@ -140,7 +140,6 @@ def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> Non
         The symlink approach is faster, but will fail when running with a non-local executor
         because the symlinks can't be followed.
     """
-
     if TEST_DATA_DIR is None:  # pragma: no cover
         logger.warning("Test data directory not found, skipping sample data fetch")
         return

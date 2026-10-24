@@ -1,0 +1,58 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "g126": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "grid_label",
+      "source_id",
+      "variant_label",
+      "region",
+      "metric"
+    ],
+    "metric": {
+      "09pattern": {},
+      "10lifecycle": {},
+      "11amplitude": {},
+      "12seasonality": {},
+      "13asymmetry": {},
+      "14duration": {},
+      "15diversity": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "UKESM1-3-LL": {}
+    },
+    "variant_label": {
+      "r1i1p1f2": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "historical": {
+      "g126": {
+        "UKESM1-3-LL": {
+          "r1i1p1f2": {
+            "global": {
+              "09pattern": 0.1290631,
+              "10lifecycle": 0.08389997,
+              "11amplitude": 3.639887,
+              "12seasonality": 31.18576,
+              "13asymmetry": 102.4101,
+              "14duration": 7.692308,
+              "15diversity": 22.30216
+            }
+          }
+        }
+      }
+    }
+  }
+}

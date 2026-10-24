@@ -2,7 +2,7 @@
 Typed, detached read surface for solves.
 
 [SolvesReader][climate_ref.results.solves.SolvesReader] is reached via
-[Reader.solves][climate_ref.results.values.Reader.solves].
+[Reader.solves][climate_ref.results.reader.Reader.solves].
 Execution outcomes are joined live through ``Execution.solve_id`` rather than stored on the solve.
 
 A solve's window runs from the start of the previous solve, of any status, up to its own start.
@@ -17,16 +17,16 @@ from typing import Any
 import attrs
 import pandas as pd
 from sqlalchemy import ColumnElement, Select, func, select
-from sqlalchemy.orm import InstrumentedAttribute, Session, selectin_polymorphic
+from sqlalchemy.orm import InstrumentedAttribute, Session, joinedload, selectin_polymorphic
 
 from climate_ref.database import Database
 from climate_ref.models.dataset import Dataset
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import Execution, ExecutionGroup, get_execution_group_and_latest
+from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.models.solve import Solve, SolveStage, SolveStatus
-from climate_ref.results._query import count_values, dataset_subtypes
-from climate_ref.results.datasets import DatasetCollection, DatasetView
+from climate_ref.query import count, latest_execution_id
+from climate_ref.results.datasets import DatasetCollection, DatasetView, dataset_subtypes
 from climate_ref.results.executions import ExecutionGroupView, ExecutionView
 
 
@@ -200,7 +200,7 @@ class SolvesReader:
     def list(self, *, limit: int | None = None) -> SolveCollection:
         """List solves, most recent first."""
         stmt = select(Solve)
-        total_count = count_values(self.session, stmt)
+        total_count = count(self.session, stmt)
         stmt = stmt.order_by(Solve.started_at.desc(), Solve.id.desc())
         if limit is not None:
             stmt = stmt.limit(limit)
@@ -221,11 +221,11 @@ class SolvesReader:
         ).all()
         counts = {True: 0, False: 0, None: 0}
         failure_reasons: dict[str, int] = {}
-        for successful, failure_reason, count in rows:
-            counts[successful] += count
+        for successful, failure_reason, n in rows:
+            counts[successful] += n
             if successful is False:
                 key = failure_reason or "unknown"
-                failure_reasons[key] = failure_reasons.get(key, 0) + count
+                failure_reasons[key] = failure_reasons.get(key, 0) + n
         return SolveOutcomes(
             succeeded=counts[True],
             failed=counts[False],
@@ -266,12 +266,14 @@ class SolvesReader:
 
     def groups(self, solve_id: int) -> tuple[ExecutionGroupView, ...]:
         """List the execution groups the solve created, with their latest execution."""
-        rows = (
-            get_execution_group_and_latest(self.session)
-            .filter(ExecutionGroup.created_by_solve_id == solve_id)
+        stmt = (
+            select(ExecutionGroup, Execution)
+            .options(joinedload(ExecutionGroup.diagnostic).joinedload(Diagnostic.provider))
+            .outerjoin(Execution, Execution.id == latest_execution_id())
+            .where(ExecutionGroup.created_by_solve_id == solve_id)
             .order_by(ExecutionGroup.id)
         )
-        return tuple(ExecutionGroupView.from_model(eg, latest) for eg, latest in rows)
+        return tuple(ExecutionGroupView.from_model(eg, latest) for eg, latest in self.session.execute(stmt))
 
     def window(self, solve_id: int) -> SolveWindow | None:
         """Find the window of a solve, or ``None`` when no solve has that id."""
@@ -309,7 +311,7 @@ class SolvesReader:
         if window.start is not None:
             stmt = stmt.where(column >= window.start)
 
-        total_count = count_values(self.session, stmt)
+        total_count = count(self.session, stmt)
         stmt = stmt.order_by(Dataset.slug, Dataset.id).options(
             selectin_polymorphic(Dataset, dataset_subtypes())
         )

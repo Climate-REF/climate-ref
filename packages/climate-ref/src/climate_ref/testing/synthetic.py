@@ -478,7 +478,7 @@ class _Writer:
         ]
         pools = {era: self.datasets_by_type.get(era, []) + reference for era in set(self.group_eras.values())}
         # A group draws on its era and on the types of the datasets its executions used.
-        source_types = {(gid, era) for gid, era in self.group_eras.items()}
+        source_types = set(self.group_eras.items())
 
         def links() -> Iterator[tuple[int, int]]:
             for eid in range(1, self.n_executions + 1):

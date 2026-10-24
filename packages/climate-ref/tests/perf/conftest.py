@@ -115,6 +115,9 @@ class Measurement:
     large_table_scans: frozenset[str]
     """Large tables read in full by any statement."""
 
+    result: object
+    """What the last run returned."""
+
     @property
     def median_seconds(self) -> float:
         return statistics.median(self.seconds)
@@ -130,10 +133,13 @@ def measure(perf_database: Database, perf_database_path: Path) -> Callable[..., 
     repeat = int(os.environ.get("REF_PERF_REPEAT", "3"))
 
     def _measure(scenario: str, call: Callable[[Reader], object]) -> Measurement:
+        result: object = None
+
         def _time() -> float:
+            nonlocal result
             with perf_database.session_scope() as session:
                 start = time.perf_counter()
-                call(Reader(perf_database, session=session))
+                result = call(Reader(perf_database, session=session))
                 return time.perf_counter() - start
 
         with captured_statements(perf_database) as statements:
@@ -144,6 +150,7 @@ def measure(perf_database: Database, perf_database_path: Path) -> Callable[..., 
             seconds=tuple(seconds),
             queries=len(statements),
             large_table_scans=large_table_scans(perf_database_path, statements),
+            result=result,
         )
         _results.append(
             {

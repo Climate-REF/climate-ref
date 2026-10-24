@@ -934,7 +934,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
             dataset_collection = next(iter(execution_dataset.values()))
             for source_id in dataset_collection.source_id.unique():
                 select = source_id == np.array([s.strip() for s in ds.dataset.values.astype(str).tolist()])
-                ds.isel(dim0=select)
+                ds = ds.isel(dim0=select)
                 variable_id = next(iter(ds.data_vars.keys()))
                 metric_args[MetricCV.DIMENSIONS.value]["variable_id"][variable_id] = {}
                 metric_args[MetricCV.RESULTS.value][variable_id] = {}

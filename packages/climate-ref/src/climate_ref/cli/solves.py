@@ -1,0 +1,144 @@
+"""
+View past solves and what they did
+"""
+
+import json
+from typing import Annotated
+
+import typer
+from loguru import logger
+from rich.console import Group
+from rich.markup import escape
+from rich.panel import Panel
+from rich.text import Text
+
+from climate_ref.cli._utils import OutputFormat, df_to_table, render_dataframe
+from climate_ref.results import Reader
+from climate_ref.results.datasets import DatasetCollection
+from climate_ref.results.executions import ExecutionView
+from climate_ref.results.solves import SolveExecutionView, SolveOutcomes, SolveView, SolveWindow
+
+app = typer.Typer(help=__doc__)
+
+
+@app.command(name="list")
+def list_(
+    ctx: typer.Context,
+    limit: int = typer.Option(20, help="Limit the number of rows to display"),
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option(
+            "--format",
+            help="Output format: 'table' (default) or machine-readable 'json'.",
+        ),
+    ] = OutputFormat.table,
+) -> None:
+    """
+    List solves, most recent first.
+
+    Dry runs are not recorded, so they are not listed.
+    """
+    collection = Reader(ctx.obj.database).solves.list(limit=limit)
+
+    render_dataframe(collection.to_pandas(), console=ctx.obj.console, output_format=output_format)
+
+    if collection.total_count > limit:
+        logger.warning(
+            f"Displaying {limit} of {collection.total_count} solves. "
+            f"Use the `--limit` option to display more."
+        )
+
+
+def _solve_panel(solve: SolveView, window: SolveWindow | None) -> Panel:
+    window_start = window.start if window and window.start else "none (first solve)"
+    return Panel(
+        f"Status: [bold]{solve.status.value}[/]\n"
+        f"Stage: [bold]{solve.stage.value}[/]\n"
+        f"Started At: [bold]{solve.started_at}[/]\n"
+        f"Finished At: [bold]{solve.finished_at or '-'}[/]\n"
+        f"Error: [bold]{escape(solve.error or '-')}[/]\n"
+        f"Skipped providers: [bold]{', '.join(solve.skipped_providers) or '-'}[/]\n"
+        f"Host: [bold]{escape(solve.hostname)}[/]\n"
+        f"REF version: [bold]{solve.ref_version}[/]\n"
+        f"Window start: [bold]{window_start}[/]\n"
+        f"Options: {escape(json.dumps(dict(solve.options), sort_keys=True, default=str))}",
+        title=f"Solve Details: [bold]{solve.id}[/]",
+    )
+
+
+def _status(execution: ExecutionView) -> str:
+    if execution.successful is None:
+        return "pending"
+    if execution.successful:
+        return "succeeded"
+    return f"failed ({execution.failure_reason or 'unknown'})"
+
+
+def _executions_panel(outcomes: SolveOutcomes, executions: tuple[SolveExecutionView, ...]) -> Panel:
+    import pandas as pd
+
+    reasons = ", ".join(f"{reason}: {count}" for reason, count in sorted(outcomes.failure_reasons.items()))
+    summary = Text.from_markup(
+        f"Succeeded: [bold]{outcomes.succeeded}[/]  "
+        f"Failed: [bold]{outcomes.failed}[/]" + (f" ({escape(reasons)})" if reasons else "") + "  "
+        f"Pending: [bold]{outcomes.pending}[/]"
+    )
+    if not executions:
+        return Panel(summary, title="Executions (0)")
+
+    table = df_to_table(
+        pd.DataFrame(
+            [
+                {
+                    "id": e.execution.id,
+                    "group_id": e.execution.execution_group_id,
+                    "diagnostic": f"{e.provider_slug}/{e.diagnostic_slug}",
+                    "key": e.group_key,
+                    "status": _status(e.execution),
+                }
+                for e in executions
+            ]
+        )
+    )
+    if outcomes.total > len(executions):
+        table.caption = f"Showing {len(executions)} of {outcomes.total}"
+    return Panel(Group(summary, table), title=f"Executions ({outcomes.total})")
+
+
+def _datasets_panel(datasets: DatasetCollection, title: str) -> Panel:
+    if not datasets.items:
+        return Panel(Text("None."), title=f"{title} (0)")
+
+    table = df_to_table(datasets.to_pandas()[["id", "slug", "dataset_type"]])
+    if datasets.total_count is not None and datasets.total_count > len(datasets):
+        table.caption = f"Showing {len(datasets)} of {datasets.total_count}"
+    return Panel(table, title=f"{title} ({datasets.total_count})")
+
+
+@app.command()
+def inspect(
+    ctx: typer.Context,
+    solve_id: int,
+    limit: int = typer.Option(20, help="Maximum number of executions or datasets to list in each section"),
+) -> None:
+    """
+    Inspect a solve by its ID
+
+    This shows how the solve ended, the outcomes of the executions it created,
+    and the datasets created or retracted since the previous solve started.
+    """
+    console = ctx.obj.console
+    solves = Reader(ctx.obj.database).solves
+
+    solve = solves.get(solve_id)
+    if solve is None:
+        logger.error(f"Solve not found: {solve_id}")
+        raise typer.Exit(code=1)
+
+    window = solves.window(solve_id)
+    console.print(_solve_panel(solve, window))
+    console.print(_executions_panel(solves.outcomes(solve_id), solves.executions(solve_id, limit=limit)))
+    console.print(_datasets_panel(solves.new_datasets(solve_id, limit=limit, window=window), "New datasets"))
+    console.print(
+        _datasets_panel(solves.retracted_datasets(solve_id, limit=limit, window=window), "Retracted datasets")
+    )

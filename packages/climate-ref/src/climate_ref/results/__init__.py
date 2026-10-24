@@ -15,6 +15,7 @@ Each property of a ``Reader`` reads one kind of result:
 * ``reader.diagnostics``: the diagnostics, with how many of their execution groups succeeded or failed.
 * ``reader.datasets``: the datasets that have been ingested.
 * ``reader.resources``: how much CPU time and memory the executions used.
+* ``reader.solves``: past solves, the executions each one created and the datasets it saw first.
 * ``reader.artifacts``: where the output files of an execution are on disk.
 
 Most reads return a collection.

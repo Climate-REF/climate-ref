@@ -7,6 +7,7 @@ This module provides a solver to determine which diagnostics need to be calculat
 import datetime
 import itertools
 import pathlib
+import socket
 import typing
 from collections import Counter
 from collections.abc import Mapping, Sequence
@@ -15,8 +16,9 @@ import attrs
 import pandas as pd
 from attrs import define, frozen
 from loguru import logger
-from sqlalchemy import func
+from sqlalchemy import func, update
 
+from climate_ref import __version__
 from climate_ref.config import Config, refresh_ignore_datasets_file
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
@@ -32,8 +34,9 @@ from climate_ref.datasets import (
 from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
 from climate_ref.executor.result_handling import mark_execution_failed
 from climate_ref.models import Diagnostic as DiagnosticModel
-from climate_ref.models import ExecutionGroup
+from climate_ref.models import ExecutionGroup, Solve, SolveStage, SolveStatus
 from climate_ref.models import Provider as ProviderModel
+from climate_ref.models.base import utcnow
 from climate_ref.models.diagnostic import recompute_promoted_version
 from climate_ref.models.execution import Execution, ExecutionFailureReason
 from climate_ref.provider_registry import ProviderRegistry
@@ -740,9 +743,7 @@ def _stale_execution_cutoff(
     stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
 ) -> datetime.datetime:
     """Naive UTC timestamp before which an in-progress execution is considered abandoned."""
-    return datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - datetime.timedelta(
-        seconds=stale_after_seconds
-    )
+    return utcnow() - datetime.timedelta(seconds=stale_after_seconds)
 
 
 def fail_stale_in_progress_executions(
@@ -751,6 +752,7 @@ def fail_stale_in_progress_executions(
     stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
     scratch_root: pathlib.Path | None = None,
     results_root: pathlib.Path | None = None,
+    solve_id: int | None = None,
 ) -> int:
     """
     Mark abandoned in-progress executions as failed so the next solve can retry them.
@@ -778,6 +780,8 @@ def fail_stale_in_progress_executions(
     results_root
         Results directory the API serves logs from.
         When given with ``scratch_root``, the partial log of an abandoned execution is copied there.
+    solve_id
+        The solve doing the reaping, recorded on each execution it marks failed.
 
     Returns
     -------
@@ -801,6 +805,7 @@ def fail_stale_in_progress_executions(
                 f"{execution.execution_group_id}) as failed; created at {execution.created_at}"
             )
             execution.mark_failed(reason)
+            execution.reaped_by_solve_id = solve_id
             if scratch_root is not None and started:
                 adopt_logs.append(execution.output_fragment)
             # This reaper only runs from a real solve (never from reingest), so no
@@ -900,6 +905,80 @@ def _log_submitted_outcomes(db: Database, execution_ids: list[int]) -> int:
     return failed
 
 
+def fail_stale_solves(
+    db: Database,
+    *,
+    stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
+    exclude_solve_id: int | None = None,
+) -> int:
+    """
+    Mark solves still running long after they started as failed.
+
+    A solve is left running when its process is killed before it can record how it ended.
+
+    Parameters
+    ----------
+    db
+        The database to inspect
+    stale_after_seconds
+        Minimum age in seconds before a running solve is considered abandoned
+    exclude_solve_id
+        A solve to leave alone, normally the one doing the reaping
+
+    Returns
+    -------
+    :
+        The number of solves that were marked failed.
+    """
+    cutoff = _stale_execution_cutoff(stale_after_seconds)
+    # A single conditional UPDATE, so a solve that finishes concurrently keeps its outcome.
+    with db.session.begin():
+        stale_ids = (
+            db.session.execute(
+                update(Solve)
+                .where(
+                    Solve.status == SolveStatus.Running,
+                    Solve.started_at < cutoff,
+                    Solve.id != exclude_solve_id,
+                )
+                .values(status=SolveStatus.Failed, error="abandoned", finished_at=utcnow())
+                .returning(Solve.id)
+            )
+            .scalars()
+            .all()
+        )
+    for solve_id in stale_ids:
+        logger.warning(f"Marked abandoned solve {solve_id} as failed")
+    return len(stale_ids)
+
+
+def _start_solve(db: Database, options: dict[str, typing.Any]) -> int:
+    """Record a new running solve in its own transaction and return its id."""
+    with db.session.begin():
+        solve = Solve(
+            status=SolveStatus.Running,
+            stage=SolveStage.Preflight,
+            started_at=utcnow(),
+            options=options,
+            skipped_providers=[],
+            ref_version=__version__,
+            hostname=socket.gethostname(),
+        )
+        db.session.add(solve)
+        db.session.flush()
+        solve_id = solve.id
+    logger.info(f"Started solve {solve_id}")
+    return solve_id
+
+
+def _update_solve(db: Database, solve_id: int | None, **values: typing.Any) -> None:
+    """Update a solve in its own transaction, or do nothing for a dry run, which has no solve."""
+    if solve_id is None:
+        return
+    with db.session.begin():
+        db.session.execute(update(Solve).where(Solve.id == solve_id).values(**values))
+
+
 def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     db: Database,
     dry_run: bool = False,
@@ -929,6 +1008,10 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     When ``check_health`` is True and the executor runs diagnostics on this host,
     each provider in scope is health checked first and an unhealthy provider is left out of the solve.
 
+    Unless ``dry_run`` is set, the solve is recorded as a `Solve`,
+    which the executions and execution groups it creates link back to.
+    It is marked failed if this raises.
+
     Returns
     -------
     :
@@ -941,251 +1024,310 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     """
     if config is None:
         config = Config.default()
-    if solver is None:
-        solver = ExecutionSolver.build_from_db(config, db)
 
     logger.info("Solving for diagnostics that require recalculation...")
 
-    # A dry run is a read-only preview: it must not create execution groups,
-    # reap stale executions, or build/submit to an executor.
-    stale_cutoff = None
-    if dry_run:
-        stale_cutoff = _stale_execution_cutoff()
-    else:
-        # Reap any executions that were left in-progress by a previous run that crashed,
-        # hit walltime, or otherwise lost its result-handling callback.
-        fail_stale_in_progress_executions(
-            db, scratch_root=config.paths.scratch, results_root=config.paths.results
+    # A dry run writes nothing, so it records no solve either.
+    solve_id = None
+    if not dry_run:
+        solve_id = _start_solve(
+            db,
+            {
+                "filters": attrs.asdict(filters) if filters else None,
+                "limit": limit,
+                "rerun_failed": rerun_failed,
+                "one_per_provider": one_per_provider,
+                "one_per_diagnostic": one_per_diagnostic,
+                "wait": wait,
+                "timeout": timeout,
+                "execute": execute,
+                "check_health": check_health,
+            },
         )
+    stage = SolveStage.Preflight
 
-    executor = None if dry_run else config.executor.build(config, db)
+    try:
+        if solver is None:
+            solver = ExecutionSolver.build_from_db(config, db)
 
-    if executor is not None and not wait and getattr(executor, "collects_results_on_join", False):
-        logger.warning(
-            f"--no-wait was requested with the {getattr(executor, 'name', 'configured')!r} executor, "
-            f"which only persists results while waiting (during join). "
-            f"Queued executions will run, "
-            f"but their outputs will be left in the scratch directory and never copied to the results "
-            f"directory or ingested into the database. Re-run without --no-wait, or recover existing "
-            f"scratch outputs with `ref executions reingest --include-failed`."
-        )
+        # A dry run is a read-only preview: it must not create execution groups,
+        # reap stale executions, or build/submit to an executor.
+        stale_cutoff = None
+        if dry_run:
+            stale_cutoff = _stale_execution_cutoff()
+        else:
+            fail_stale_solves(db, exclude_solve_id=solve_id)
+            # Reap any executions that were left in-progress by a previous run that crashed,
+            # hit walltime, or otherwise lost its result-handling callback.
+            fail_stale_in_progress_executions(
+                db, scratch_root=config.paths.scratch, results_root=config.paths.results, solve_id=solve_id
+            )
 
-    unhealthy: list[str] = []
-    # Optional executor attribute, so executors from other packages need not define it.
-    if check_health and execute and getattr(executor, "runs_on_solve_host", False):
-        health = check_provider_health(solver.provider_registry.providers, config, filters)
-        unhealthy = [slug for slug, problems in health.items() if problems]
-    if unhealthy:
-        logger.error(f"Skipping the diagnostics of unhealthy providers: {', '.join(unhealthy)}")
-        filters = filters or SolveFilterOptions()
-        filters = attrs.evolve(filters, exclude_provider=[*(filters.exclude_provider or []), *unhealthy])
+        executor = None if dry_run else config.executor.build(config, db)
 
-    diagnostic_count: dict[str, int] = {}
-    provider_count: dict[str, int] = {}
-    total_count = 0
-    skipped: Counter[str] = Counter()
-    submitted_ids: list[int] = []
+        if executor is not None and not wait and getattr(executor, "collects_results_on_join", False):
+            logger.warning(
+                f"--no-wait was requested with the {getattr(executor, 'name', 'configured')!r} executor, "
+                f"which only persists results while waiting (during join). "
+                f"Queued executions will run, "
+                f"but their outputs will be left in the scratch directory and never copied to the results "
+                f"directory or ingested into the database. Re-run without --no-wait, or recover existing "
+                f"scratch outputs with `ref executions reingest --include-failed`."
+            )
 
-    # Prefetch all (provider_slug, diagnostic_slug) -> diagnostic_id mappings
-    # so the per-iteration loop body avoids an N+1 SELECT against the
-    # diagnostic table.
-    with db.session.begin():
-        diagnostic_id_by_slug: dict[tuple[str, str], int] = {
-            (provider_slug, diagnostic_slug): diagnostic_id
-            for diagnostic_id, diagnostic_slug, provider_slug in db.session.query(
-                DiagnosticModel.id, DiagnosticModel.slug, ProviderModel.slug
-            ).join(DiagnosticModel.provider)
-        }
+        unhealthy: list[str] = []
+        # Optional executor attribute, so executors from other packages need not define it.
+        if check_health and execute and getattr(executor, "runs_on_solve_host", False):
+            health = check_provider_health(solver.provider_registry.providers, config, filters)
+            unhealthy = [slug for slug, problems in health.items() if problems]
+        if unhealthy:
+            logger.error(f"Skipping the diagnostics of unhealthy providers: {', '.join(unhealthy)}")
+            filters = filters or SolveFilterOptions()
+            filters = attrs.evolve(filters, exclude_provider=[*(filters.exclude_provider or []), *unhealthy])
 
-    for potential_execution in solver.solve(filters):
-        definition = potential_execution.build_execution_definition(output_root=config.paths.scratch)
-        provider_slug = potential_execution.provider.slug
-        diagnostic_full_slug = potential_execution.diagnostic.full_slug()
+        stage = SolveStage.Solving
+        _update_solve(db, solve_id, stage=stage, skipped_providers=unhealthy)
 
-        logger.debug(f"Identified candidate execution {definition.key} for {diagnostic_full_slug}")
+        diagnostic_count: dict[str, int] = {}
+        provider_count: dict[str, int] = {}
+        total_count = 0
+        skipped: Counter[str] = Counter()
+        submitted_ids: list[int] = []
 
-        provider_count.setdefault(provider_slug, 0)
-        diagnostic_count.setdefault(diagnostic_full_slug, 0)
-
-        # Submission to the executor must happen after the DB transaction commits.
-        # Holding a transaction across a Redis send_task / process pool submit can
-        # block writes from worker callbacks (e.g. handle_result) and create
-        # "database is locked" loops on SQLite, leaving Execution rows stuck with
-        # successful=None.
-        pending: tuple[ExecutionDefinition, Execution] | None = None
-        limit_reached = False
-
-        diagnostic_id = diagnostic_id_by_slug[(provider_slug, potential_execution.diagnostic.slug)]
-        diagnostic_version = potential_execution.diagnostic.version
-
-        # Use a transaction to make sure that the models
-        # are created correctly before potentially executing out of process
+        # Prefetch all (provider_slug, diagnostic_slug) -> diagnostic_id mappings
+        # so the per-iteration loop body avoids an N+1 SELECT against the
+        # diagnostic table.
         with db.session.begin():
-            if dry_run:
-                # Read-only preview: look the group up without creating it.
-                # A group that does not exist yet is one this solve *would* create and run.
-                execution_group = (
-                    db.session.query(ExecutionGroup)
-                    .filter_by(
+            diagnostic_id_by_slug: dict[tuple[str, str], int] = {
+                (provider_slug, diagnostic_slug): diagnostic_id
+                for diagnostic_id, diagnostic_slug, provider_slug in db.session.query(
+                    DiagnosticModel.id, DiagnosticModel.slug, ProviderModel.slug
+                ).join(DiagnosticModel.provider)
+            }
+
+        for potential_execution in solver.solve(filters):
+            definition = potential_execution.build_execution_definition(output_root=config.paths.scratch)
+            provider_slug = potential_execution.provider.slug
+            diagnostic_full_slug = potential_execution.diagnostic.full_slug()
+
+            logger.debug(f"Identified candidate execution {definition.key} for {diagnostic_full_slug}")
+
+            provider_count.setdefault(provider_slug, 0)
+            diagnostic_count.setdefault(diagnostic_full_slug, 0)
+
+            # Submission to the executor must happen after the DB transaction commits.
+            # Holding a transaction across a Redis send_task / process pool submit can
+            # block writes from worker callbacks (e.g. handle_result) and create
+            # "database is locked" loops on SQLite, leaving Execution rows stuck with
+            # successful=None.
+            pending: tuple[ExecutionDefinition, Execution] | None = None
+            limit_reached = False
+
+            diagnostic_id = diagnostic_id_by_slug[(provider_slug, potential_execution.diagnostic.slug)]
+            diagnostic_version = potential_execution.diagnostic.version
+
+            # Use a transaction to make sure that the models
+            # are created correctly before potentially executing out of process
+            with db.session.begin():
+                if dry_run:
+                    # Read-only preview: look the group up without creating it.
+                    # A group that does not exist yet is one this solve *would* create and run.
+                    execution_group = (
+                        db.session.query(ExecutionGroup)
+                        .filter_by(
+                            key=definition.key,
+                            diagnostic_id=diagnostic_id,
+                            diagnostic_version=diagnostic_version,
+                        )
+                        .one_or_none()
+                    )
+                else:
+                    # diagnostic_version is part of the lookup key so bumping
+                    # ``Diagnostic.version`` produces a fresh v2 group instead of reusing the v1 row.
+                    execution_group, created = db.get_or_create(
+                        ExecutionGroup,
                         key=definition.key,
                         diagnostic_id=diagnostic_id,
                         diagnostic_version=diagnostic_version,
+                        defaults={
+                            "selectors": potential_execution.selectors,
+                            "dirty": True,
+                            "created_by_solve_id": solve_id,
+                        },
                     )
-                    .one_or_none()
-                )
-            else:
-                # diagnostic_version is part of the lookup key so bumping
-                # ``Diagnostic.version`` produces a fresh v2 group instead of reusing the v1 row.
-                execution_group, created = db.get_or_create(
-                    ExecutionGroup,
-                    key=definition.key,
-                    diagnostic_id=diagnostic_id,
-                    diagnostic_version=diagnostic_version,
-                    defaults={
-                        "selectors": potential_execution.selectors,
-                        "dirty": True,
-                    },
+
+                    if created:
+                        logger.info(f"Created new execution group: {potential_execution.execution_slug()!r}")
+                        db.session.flush()
+                        recompute_promoted_version(diagnostic_id, db.session)
+
+                # TODO: Move this logic to the solver
+                # Check if we should run given the one_per_provider or one_per_diagnostic flags
+                one_of_check_failed = (one_per_provider and provider_count.get(provider_slug, 0) > 0) or (
+                    one_per_diagnostic and diagnostic_count.get(diagnostic_full_slug, 0) > 0
                 )
 
-                if created:
-                    logger.info(f"Created new execution group: {potential_execution.execution_slug()!r}")
-                    db.session.flush()
-                    recompute_promoted_version(diagnostic_id, db.session)
+                logger.debug(
+                    f"one_per_provider={one_per_provider}, one_per_diagnostic={one_per_diagnostic}, "
+                    f"one_of_check_failed={one_of_check_failed}, diagnostic_count={diagnostic_count}, "
+                    f"provider_count={provider_count}"
+                )
 
-            # TODO: Move this logic to the solver
-            # Check if we should run given the one_per_provider or one_per_diagnostic flags
-            one_of_check_failed = (one_per_provider and provider_count.get(provider_slug, 0) > 0) or (
-                one_per_diagnostic and diagnostic_count.get(diagnostic_full_slug, 0) > 0
+                # A not-yet-created group (dry-run only) would always run;
+                # an existing group defers to its should_run logic.
+                skip_reason = (
+                    execution_group.skip_reason(
+                        definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
+                    )
+                    if execution_group is not None
+                    else None
+                )
+                if skip_reason is not None:
+                    skipped[skip_reason.value] += 1
+                    continue
+
+                if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
+                    skipped["one-of check"] += 1
+                    logger.info(
+                        f"Skipping execution due to one-of check: {potential_execution.execution_slug()!r}"
+                    )
+                    continue
+
+                if dry_run:
+                    provider_count[provider_slug] += 1
+                    diagnostic_count[diagnostic_full_slug] += 1
+                    total_count += 1
+                    if limit is not None and total_count >= limit:
+                        limit_reached = True
+                else:
+                    # Only the dry-run branch leaves the group unresolved
+                    assert execution_group is not None
+                    logger.info(
+                        f"Running new execution for execution group: {potential_execution.execution_slug()!r}"
+                    )
+
+                    execution = Execution(
+                        execution_group=execution_group,
+                        dataset_hash=definition.datasets.hash,
+                        output_fragment=PLACEHOLDER_FRAGMENT,
+                        provider_version=potential_execution.provider.version,
+                        solve_id=solve_id,
+                    )
+                    db.session.add(execution)
+
+                    fragment = assign_execution_fragment(
+                        db.session,
+                        execution,
+                        provider_slug=provider_slug,
+                        diagnostic_slug=potential_execution.diagnostic.slug,
+                        selectors=potential_execution.selectors,
+                        group_id=execution_group.id,
+                    )
+
+                    # Rebuild the definition so the executor sees the resolved output path.
+                    definition = attrs.evolve(
+                        definition,
+                        output_directory=config.paths.scratch.resolve() / pathlib.Path(fragment),
+                    )
+
+                    # Add links to the datasets used in the execution
+                    execution.register_datasets(db, definition.datasets)
+
+                    if execute:
+                        # Detach the row before the surrounding ``with begin()`` commits.
+                        # Otherwise expire-on-commit marks ``execution.id`` stale,
+                        # and the next attribute access inside ``executor.run`` autobegins a transaction,
+                        # which collides with the ``with begin()`` at the top of the next loop iteration.
+                        # The detached instance keeps its loaded attributes
+                        # and is still mergeable for ``SynchronousExecutor``.
+                        db.session.expunge(execution)
+                        pending = (definition, execution)
+
+                    provider_count[provider_slug] += 1
+                    diagnostic_count[diagnostic_full_slug] += 1
+                    total_count += 1
+                    if limit is not None and total_count >= limit:
+                        limit_reached = True
+
+            # Transaction has committed; safe to submit to the executor.
+            # ``pending`` is only set on the non-dry-run path, where the executor exists.
+            if pending is not None and executor is not None:
+                pending_definition, pending_execution = pending
+                submitted_ids.append(pending_execution.id)
+                stage = SolveStage.Queuing
+                _update_solve(db, solve_id, stage=stage)
+                try:
+                    executor.run(
+                        definition=pending_definition,
+                        execution=pending_execution,
+                    )
+                except Exception as exc:
+                    logger.exception(f"Failed to submit {pending_definition.execution_slug()!r}")
+                    mark_execution_failed(
+                        db,
+                        config,
+                        pending_definition,
+                        pending_execution.id,
+                        retryable=True,
+                        detail=f"submit to the executor failed: {exc!r}",
+                    )
+                stage = SolveStage.Solving
+                _update_solve(db, solve_id, stage=stage)
+
+            if limit_reached:
+                logger.info(f"Reached execution limit of {limit}")
+                break
+
+        if submitted_ids:
+            stage = SolveStage.Queuing
+            _update_solve(db, solve_id, stage=stage)
+        logger.info("Solve complete")
+        logger.info(f"Found {sum(diagnostic_count.values())} new executions")
+        for diag, count in diagnostic_count.items():
+            logger.info(f"  {diag}: {count} new executions")
+        for prov, count in provider_count.items():
+            logger.info(f"  {prov}: {count} new executions")
+
+        if skipped:
+            logger.info(
+                f"Skipped {skipped.total()} executions: "
+                + ", ".join(f"{count} {reason}" for reason, count in skipped.items())
             )
 
-            logger.debug(
-                f"one_per_provider={one_per_provider}, one_per_diagnostic={one_per_diagnostic}, "
-                f"one_of_check_failed={one_of_check_failed}, diagnostic_count={diagnostic_count}, "
-                f"provider_count={provider_count}"
+        # Executors may expose extra end-of-solve reporting, such as per-queue submission counts
+        log_submission_summary = getattr(executor, "log_submission_summary", None)
+        if log_submission_summary is not None:
+            log_submission_summary()
+
+        if not (wait and executor is not None):
+            outcome = SolveOutcome(unhealthy_providers=unhealthy)
+        else:
+            stage = SolveStage.Waiting
+            _update_solve(db, solve_id, stage=stage)
+            executor.join(timeout=timeout)
+            outcome = SolveOutcome(
+                unhealthy_providers=unhealthy, failed_executions=_log_submitted_outcomes(db, submitted_ids)
             )
-
-            # A not-yet-created group (dry-run only) would always run;
-            # an existing group defers to its should_run logic.
-            skip_reason = (
-                execution_group.skip_reason(
-                    definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
-                )
-                if execution_group is not None
-                else None
-            )
-            if skip_reason is not None:
-                skipped[skip_reason.value] += 1
-                continue
-
-            if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
-                skipped["one-of check"] += 1
-                logger.info(
-                    f"Skipping execution due to one-of check: {potential_execution.execution_slug()!r}"
-                )
-                continue
-
-            if dry_run:
-                provider_count[provider_slug] += 1
-                diagnostic_count[diagnostic_full_slug] += 1
-                total_count += 1
-                if limit is not None and total_count >= limit:
-                    limit_reached = True
-            else:
-                # Only the dry-run branch leaves the group unresolved
-                assert execution_group is not None
-                logger.info(
-                    f"Running new execution for execution group: {potential_execution.execution_slug()!r}"
-                )
-
-                execution = Execution(
-                    execution_group=execution_group,
-                    dataset_hash=definition.datasets.hash,
-                    output_fragment=PLACEHOLDER_FRAGMENT,
-                    provider_version=potential_execution.provider.version,
-                )
-                db.session.add(execution)
-
-                fragment = assign_execution_fragment(
-                    db.session,
-                    execution,
-                    provider_slug=provider_slug,
-                    diagnostic_slug=potential_execution.diagnostic.slug,
-                    selectors=potential_execution.selectors,
-                    group_id=execution_group.id,
-                )
-
-                # Rebuild the definition so the executor sees the resolved output path.
-                definition = attrs.evolve(
-                    definition,
-                    output_directory=config.paths.scratch.resolve() / pathlib.Path(fragment),
-                )
-
-                # Add links to the datasets used in the execution
-                execution.register_datasets(db, definition.datasets)
-
-                if execute:
-                    # Detach the row before the surrounding ``with begin()`` commits.
-                    # Otherwise expire-on-commit marks ``execution.id`` stale,
-                    # and the next attribute access inside ``executor.run`` autobegins a fresh transaction,
-                    # which collides with the ``with begin()`` at the top of the next loop iteration.
-                    # The detached instance keeps its loaded attributes
-                    # and is still mergeable for ``SynchronousExecutor``.
-                    db.session.expunge(execution)
-                    pending = (definition, execution)
-
-                provider_count[provider_slug] += 1
-                diagnostic_count[diagnostic_full_slug] += 1
-                total_count += 1
-                if limit is not None and total_count >= limit:
-                    limit_reached = True
-
-        # Transaction has committed; safe to submit to the executor.
-        # ``pending`` is only set on the non-dry-run path, where the executor exists.
-        if pending is not None and executor is not None:
-            pending_definition, pending_execution = pending
-            submitted_ids.append(pending_execution.id)
-            try:
-                executor.run(
-                    definition=pending_definition,
-                    execution=pending_execution,
-                )
-            except Exception as exc:
-                logger.exception(f"Failed to submit {pending_definition.execution_slug()!r}")
-                mark_execution_failed(
-                    db,
-                    config,
-                    pending_definition,
-                    pending_execution.id,
-                    retryable=True,
-                    detail=f"submit to the executor failed: {exc!r}",
-                )
-
-        if limit_reached:
-            logger.info(f"Reached execution limit of {limit}")
-            break
-
-    logger.info("Solve complete")
-    logger.info(f"Found {sum(diagnostic_count.values())} new executions")
-    for diag, count in diagnostic_count.items():
-        logger.info(f"  {diag}: {count} new executions")
-    for prov, count in provider_count.items():
-        logger.info(f"  {prov}: {count} new executions")
-
-    if skipped:
-        logger.info(
-            f"Skipped {skipped.total()} executions: "
-            + ", ".join(f"{count} {reason}" for reason, count in skipped.items())
+    except BaseException as exc:
+        # The session may still hold the transaction that failed.
+        db.session.rollback()
+        _update_solve(
+            db,
+            solve_id,
+            status=SolveStatus.Failed,
+            stage=stage,
+            error=str(exc) or type(exc).__name__,
+            finished_at=utcnow(),
         )
+        raise
 
-    # Executors may expose extra end-of-solve reporting, such as per-queue submission counts
-    log_submission_summary = getattr(executor, "log_submission_summary", None)
-    if log_submission_summary is not None:
-        log_submission_summary()
-
-    if not (wait and executor is not None):
-        return SolveOutcome(unhealthy_providers=unhealthy)
-
-    executor.join(timeout=timeout)
-    return SolveOutcome(
-        unhealthy_providers=unhealthy, failed_executions=_log_submitted_outcomes(db, submitted_ids)
+    _update_solve(
+        db,
+        solve_id,
+        status=SolveStatus.Degraded if unhealthy else SolveStatus.Succeeded,
+        stage=stage,
+        # Clears an "abandoned" verdict from a concurrent solve, because this one did finish.
+        error=None,
+        finished_at=utcnow(),
     )
+    return outcome

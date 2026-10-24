@@ -1,3 +1,4 @@
+import datetime
 from copy import deepcopy
 from typing import Any
 from unittest import mock
@@ -14,7 +15,8 @@ from climate_ref.config import ExecutorConfig
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
-from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models import Diagnostic as DiagnosticModel
+from climate_ref.models import Execution, ExecutionGroup, Solve, SolveStage, SolveStatus
 from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
@@ -2307,3 +2309,189 @@ def test_solve_warns_when_outcomes_are_still_being_recorded(
     assert outcome.failed_executions == 0
     assert "1 still in progress" in caplog.text
     assert "not reflected in the exit code" in caplog.text
+
+
+class TestSolveRecording:
+    @pytest.fixture
+    def solver(self, provider):
+        solver = mock.MagicMock(spec=ExecutionSolver)
+        solver.provider_registry = ProviderRegistry(providers=[provider])
+        return solver
+
+    @staticmethod
+    def _only_solve(db) -> Solve:
+        solves = db.session.query(Solve).all()
+        assert len(solves) == 1
+        return solves[0]
+
+    def test_records_succeeded_solve(self, mock_metric_execution, mock_executor, db_seeded, solver):
+        solver.solve.return_value = [mock_metric_execution]
+
+        solve_required_executions(db_seeded, solver=solver, limit=5)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Succeeded
+        assert solve.stage == SolveStage.Waiting
+        assert solve.finished_at is not None
+        assert solve.error is None
+        assert solve.skipped_providers == []
+        assert solve.options["limit"] == 5
+        assert solve.options["wait"] is True
+        assert solve.ref_version
+        assert solve.hostname
+        execution = db_seeded.session.query(Execution).one()
+        assert execution.solve_id == solve.id
+        assert execution.execution_group.created_by_solve_id == solve.id
+
+    def test_no_wait_finishes_after_submission(self, mock_metric_execution, mock_executor, db_seeded, solver):
+        solver.solve.return_value = [mock_metric_execution]
+
+        solve_required_executions(db_seeded, solver=solver, wait=False)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Succeeded
+        assert solve.stage == SolveStage.Queuing
+        mock_executor.return_value.join.assert_not_called()
+
+    def test_degraded_when_provider_skipped(self, mocker, mock_executor, db_seeded, solver, provider):
+        mock_executor.return_value.runs_on_solve_host = True
+        mocker.patch.object(provider, "check_health", return_value=["broken"])
+        solver.solve.return_value = []
+
+        solve_required_executions(db_seeded, solver=solver)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Degraded
+        assert solve.skipped_providers == [provider.slug]
+
+    def test_submit_failure_keeps_solve_going(self, mock_metric_execution, mock_executor, db_seeded, solver):
+        solver.solve.return_value = [mock_metric_execution]
+        mock_executor.return_value.run.side_effect = RuntimeError("broker down")
+
+        solve_required_executions(db_seeded, solver=solver, wait=False)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Succeeded
+        assert solve.stage == SolveStage.Queuing
+        execution = db_seeded.session.query(Execution).one()
+        assert execution.successful is False
+        assert execution.solve_id == solve.id
+
+    def test_interrupt_while_submitting_fails_at_queuing(
+        self, mock_metric_execution, mock_executor, db_seeded, solver
+    ):
+        solver.solve.return_value = [mock_metric_execution]
+        mock_executor.return_value.run.side_effect = KeyboardInterrupt
+
+        with pytest.raises(KeyboardInterrupt):
+            solve_required_executions(db_seeded, solver=solver)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Failed
+        assert solve.stage == SolveStage.Queuing
+
+    def test_queuing_is_persisted_while_submitting(
+        self, mock_metric_execution, mock_executor, db_seeded, solver
+    ):
+        solver.solve.return_value = [mock_metric_execution]
+        stages = []
+
+        def record_stage(**kwargs):
+            with db_seeded.session.begin():
+                stages.append(db_seeded.session.query(Solve.stage).scalar())
+
+        mock_executor.return_value.run.side_effect = record_stage
+
+        solve_required_executions(db_seeded, solver=solver, wait=False)
+
+        assert stages == [SolveStage.Queuing]
+
+    def test_finishing_overrides_abandoned_verdict(
+        self, mock_metric_execution, mock_executor, db_seeded, solver
+    ):
+        solver.solve.return_value = [mock_metric_execution]
+
+        def reaped_by_another_solve(timeout):
+            with db_seeded.session.begin():
+                solve = db_seeded.session.query(Solve).one()
+                solve.status = SolveStatus.Failed
+                solve.error = "abandoned"
+
+        mock_executor.return_value.join.side_effect = reaped_by_another_solve
+
+        solve_required_executions(db_seeded, solver=solver)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Succeeded
+        assert solve.error is None
+
+    def test_failed_at_waiting(self, mock_metric_execution, mock_executor, db_seeded, solver):
+        solver.solve.return_value = [mock_metric_execution]
+        mock_executor.return_value.join.side_effect = TimeoutError("took too long")
+
+        with pytest.raises(TimeoutError):
+            solve_required_executions(db_seeded, solver=solver)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Failed
+        assert solve.stage == SolveStage.Waiting
+        assert solve.error == "took too long"
+
+    def test_interrupt_while_solving(self, mock_executor, db_seeded, solver):
+        solver.solve.side_effect = KeyboardInterrupt
+
+        with pytest.raises(KeyboardInterrupt):
+            solve_required_executions(db_seeded, solver=solver)
+
+        solve = self._only_solve(db_seeded)
+        assert solve.status == SolveStatus.Failed
+        assert solve.stage == SolveStage.Solving
+        assert solve.error == "KeyboardInterrupt"
+
+    def test_dry_run_records_nothing(self, mock_metric_execution, mock_executor, db_seeded, solver):
+        solver.solve.return_value = [mock_metric_execution]
+
+        solve_required_executions(db_seeded, solver=solver, dry_run=True)
+
+        assert db_seeded.session.query(Solve).count() == 0
+
+    def test_preflight_reaps_stale_solves_and_executions(
+        self, mock_metric_execution, mock_executor, db_seeded, solver, provider
+    ):
+        old = datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - datetime.timedelta(hours=12)
+        with db_seeded.session.begin():
+            stale_solve = Solve(
+                status=SolveStatus.Running,
+                stage=SolveStage.Waiting,
+                started_at=old,
+                ref_version="0.0.0",
+                hostname="elsewhere",
+            )
+            recent_solve = Solve(
+                status=SolveStatus.Running,
+                stage=SolveStage.Waiting,
+                started_at=old + datetime.timedelta(hours=11),
+                ref_version="0.0.0",
+                hostname="elsewhere",
+            )
+            diagnostic = db_seeded.session.query(DiagnosticModel).filter_by(slug="mock").one()
+            group = ExecutionGroup(key="stale", diagnostic_id=diagnostic.id, selectors={})
+            stale_execution = Execution(
+                execution_group=group, dataset_hash="abc", output_fragment="stale", created_at=old
+            )
+            db_seeded.session.add_all([stale_solve, recent_solve, group, stale_execution])
+        solver.solve.return_value = []
+
+        solve_required_executions(db_seeded, solver=solver)
+
+        new_solve = db_seeded.session.query(Solve).order_by(Solve.id.desc()).first()
+        assert new_solve.status == SolveStatus.Succeeded
+        db_seeded.session.refresh(stale_solve)
+        db_seeded.session.refresh(recent_solve)
+        db_seeded.session.refresh(stale_execution)
+        assert stale_solve.status == SolveStatus.Failed
+        assert "abandoned" in stale_solve.error
+        assert stale_solve.finished_at is not None
+        assert recent_solve.status == SolveStatus.Running
+        assert stale_execution.successful is False
+        assert stale_execution.reaped_by_solve_id == new_solve.id

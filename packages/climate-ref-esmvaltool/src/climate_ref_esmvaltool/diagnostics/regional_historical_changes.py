@@ -656,7 +656,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
     name = "Regional historical trend of climate variables"
     slug = "regional-historical-trend"
     base_recipe = "ref/recipe_ref_trend_regions.yml"
-    version = 2
+    version = 3
 
     variables = (
         "hus",
@@ -934,12 +934,15 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
             dataset_collection = next(iter(execution_dataset.values()))
             for source_id in dataset_collection.source_id.unique():
                 select = source_id == np.array([s.strip() for s in ds.dataset.values.astype(str).tolist()])
-                ds.isel(dim0=select)
-                variable_id = next(iter(ds.data_vars.keys()))
+                # Some files hold only the extra reference datasets added in `update_recipe`.
+                if not select.any():
+                    continue
+                selected = ds.isel(dim0=select)
+                variable_id = next(iter(selected.data_vars.keys()))
                 metric_args[MetricCV.DIMENSIONS.value]["variable_id"][variable_id] = {}
                 metric_args[MetricCV.RESULTS.value][variable_id] = {}
                 for region_value, trend_value in zip(
-                    ds.shape_id.astype(str).values, fillvalues_to_nan(ds[variable_id].values)
+                    selected.shape_id.astype(str).values, fillvalues_to_nan(selected[variable_id].values)
                 ):
                     region = region_value.strip()
                     trend = float(trend_value)

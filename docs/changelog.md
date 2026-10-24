@@ -21,6 +21,13 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.20.1 (2026-10-24)
+
+### Bug Fixes
+
+- Fixed the synthetic test database in `climate_ref.testing.synthetic` recording no source types for its execution groups, so filtering it by `source_types` matched nothing. Each group now draws on one model era. ([#1023](https://github.com/Climate-REF/climate-ref/pull/1023))
+
+
 ## climate-ref 0.20.0 (2026-10-23)
 
 ### Highlights

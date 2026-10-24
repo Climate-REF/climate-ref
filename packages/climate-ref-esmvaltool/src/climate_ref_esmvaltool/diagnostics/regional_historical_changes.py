@@ -9,10 +9,11 @@ from climate_ref_core.constraints import (
     AddSupplementaryDataset,
     PartialDateTime,
     RequireTimerange,
+    SelectSingleGrid,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, ExecutionDefinition
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, ConvertedCMIP7Request, Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -708,13 +709,14 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+                group_by=("source_id", "experiment_id", "variant_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
                         start=PartialDateTime(1980, 1),
                         end=PartialDateTime(2009, 12),
                     ),
+                    SelectSingleGrid(group_by=("source_id", "experiment_id", "variant_label", "variable_id")),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),
@@ -779,26 +781,38 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
-                            "source_id": "CanESM5",
-                            "variable_id": ["areacella", *variables],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "hus_tavg-p19-hxy-u",
-                                "pr_tavg-u-hxy-u",
-                                "psl_tavg-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
-                                "ua_tavg-p19-hxy-air",
+                            "source_id": "UKESM1-3-LL",
+                            "variable_id": list(variables),
+                            "branding_suffix": [
+                                "tavg-h2m-hxy-u",
+                                "tavg-p19-hxy-air",
+                                "tavg-p19-hxy-u",
+                                "tavg-u-hxy-u",
                             ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1980", "2009"),
+                    ),
+                    # intake-esgf cannot filter fx files by time, so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": "historical",
+                            "source_id": "UKESM1-3-LL",
+                            "variable_id": ["areacella"],
+                            "branding_suffix": ["ti-u-hxy-u"],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),

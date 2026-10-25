@@ -259,6 +259,7 @@ jobs:
   # The only check the ruleset requires, so jobs can change without touching repo settings.
   ci-pass:
     if: always()
+    permissions: {}
     needs:
       - pre-commit
       - tests-core

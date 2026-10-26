@@ -13,9 +13,9 @@
 version: 1
 metadata:
   content_hash:
-    linux-64: ad9fb1ca7327f5fd63518bc0ce5d45e8a09c60979527cf5890a5f68f7ad1c1ef
-    osx-64: 72dc93648aee2f3aea8177a2f2bad552f711445fe9fa78221312c18dba4f77c8
-    osx-arm64: fa43917dee2de436e49aba9995831bc88ce32ac11bd2085c091b421cb4f666b2
+    linux-64: 7c11f9bf17d696e4e5d6fe294a94622508323e0f3e6d16ccf31249040d47cea5
+    osx-64: 2cfb7a54997d3bedc153c3b0fab51d1205b3f6f217d0cadfc91f72687db84917
+    osx-arm64: 4a64a36f2cacbadbb27b80ea6b704d0695aa62d3c577e3d0f37dc49872fba6ca
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -2042,67 +2042,67 @@ package:
   category: main
   optional: false
 - name: cartopy
-  version: 0.25.0
+  version: 0.26.0
   manager: conda
   platform: linux-64
   dependencies:
     __glibc: '>=2.17,<3.0.a0'
-    libgcc: '>=14'
-    libstdcxx: '>=14'
-    matplotlib-base: '>=3.6'
-    numpy: '>=1.25,<3'
+    libgcc: '>=15'
+    libstdcxx: '>=15'
+    matplotlib-base: '>=3.8'
+    numpy: '>=1.25,<3,>=1.26'
     packaging: '>=21'
-    pyproj: '>=3.3.1'
-    pyshp: '>=2.3'
+    pyproj: '>=3.6'
+    pyshp: '>=2.3.1'
     python: ''
     python_abi: 3.14.*
     shapely: '>=2.0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/cartopy-0.25.0-np2py314h6477eea_3.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/cartopy-0.26.0-np2py314hbf8ec49_1.conda
   hash:
-    md5: 1c2bf9dbf9be09fad080f505ffd6314c
-    sha256: 5d07b1c8d034b2010637f204739fb7b421d890eb4818334bc77452a8d88c22fc
+    md5: 3b100bda6d915515389155b12b93fabb
+    sha256: 3db172bdc43279eeea98c90e817ec189379e174c873a97119797c2be8e8836ba
   category: main
   optional: false
 - name: cartopy
-  version: 0.25.0
+  version: 0.26.0
   manager: conda
   platform: osx-64
   dependencies:
     __osx: '>=11.0'
-    libcxx: '>=19'
-    matplotlib-base: '>=3.6'
-    numpy: '>=1.25,<3'
+    libcxx: '>=21'
+    matplotlib-base: '>=3.8'
+    numpy: '>=1.25,<3,>=1.26'
     packaging: '>=21'
-    pyproj: '>=3.3.1'
-    pyshp: '>=2.3'
+    pyproj: '>=3.6'
+    pyshp: '>=2.3.1'
     python: ''
     python_abi: 3.14.*
     shapely: '>=2.0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/cartopy-0.25.0-np2py314h72ea864_3.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/cartopy-0.26.0-np2py314hcc7bd4b_1.conda
   hash:
-    md5: e9c1e6706fa7a8d9a8a2cd207e4dbb63
-    sha256: 9e6e45bf5a0bfce2e252589879dc737134748cd1acb4e03d0d033a14ec8dc26f
+    md5: 61d4477e6ff730f7ba8dbe80092cc763
+    sha256: bcedb526e5921c66767a2a1ae049c18c12f36733dd91456f3ca3d01e506ecc63
   category: main
   optional: false
 - name: cartopy
-  version: 0.25.0
+  version: 0.26.0
   manager: conda
   platform: osx-arm64
   dependencies:
     __osx: '>=11.0'
-    libcxx: '>=19'
-    matplotlib-base: '>=3.6'
-    numpy: '>=1.25,<3'
+    libcxx: '>=21'
+    matplotlib-base: '>=3.8'
+    numpy: '>=1.25,<3,>=1.26'
     packaging: '>=21'
-    pyproj: '>=3.3.1'
-    pyshp: '>=2.3'
+    pyproj: '>=3.6'
+    pyshp: '>=2.3.1'
     python: ''
     python_abi: 3.14.*
     shapely: '>=2.0'
-  url: https://conda.anaconda.org/conda-forge/osx-arm64/cartopy-0.25.0-np2py314hb9e636f_3.conda
+  url: https://conda.anaconda.org/conda-forge/osx-arm64/cartopy-0.26.0-np2py314hfc433ed_1.conda
   hash:
-    md5: 53bed798c7a4eb765411ac3093c954ee
-    sha256: 06f51647a27de1c6b952e1f06e13513e793b90babf4cfbed1370077e601d1d80
+    md5: 2161da2a2ee4e320069db5d756708303
+    sha256: f6ebeb5b45af5f413a9a78e2049562ace5099e84221bc86687fe20254cd99fe8
   category: main
   optional: false
 - name: cattrs
@@ -9977,6 +9977,19 @@ package:
     sha256: c8c3153df39abedf3413483f672151ad70f1adb0c06c192bdf7ec432c3616b07
   category: main
   optional: false
+- name: libpython
+  version: 3.14.7
+  manager: conda
+  platform: osx-64
+  dependencies:
+    __osx: '>=11.0'
+    libcxx: '>=20'
+  url: https://conda.anaconda.org/conda-forge/osx-64/libpython-3.14.7-he408f89_6_cp314t.conda
+  hash:
+    md5: c90fb27507a3773f454207c39c3aede3
+    sha256: d5372a748ef017ed5a6b159632ff6309c21f7c0711d6b9dd1260350be8174c97
+  category: main
+  optional: false
 - name: libre2-11
   version: 2025.11.05
   manager: conda
@@ -15550,20 +15563,20 @@ package:
     libffi: '>=3.7.0,<3.8.0a0'
     liblzma: '>=5.8.3,<6.0a0'
     libmpdec: '>=4.0.0,<5.0a0'
+    libpython: 3.14.7
     libsqlite: '>=3.53.4,<4.0a0'
     libzlib: '>=1.3.2,<2.0a0'
     ncurses: '>=6.6,<7.0a0'
-    openssl: '>=3.5.7,<4.0a0'
-    pip: ''
+    openssl: '>=3.5.8,<4.0a0'
     python_abi: 3.14.*
     readline: '>=8.3,<9.0a0'
     tk: '>=8.6.13,<8.7.0a0'
     tzdata: ''
     zstd: '>=1.5.7,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/python-3.14.7-hb933c43_100_cp314.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/python-3.14.7-he6988ae_6_cp314t.conda
   hash:
-    md5: 4953dc4478227b685cf6001941b65282
-    sha256: 4305cf3d9f5e78ae16a364fb7f0fdb092868526ba80b7cdf5794b2fc077df660
+    md5: 56f1b2babc961c5bb0b1f6504a6bd0a7
+    sha256: c45eff1185a6dd0c75070351059740b815828670cf8968f64e23986c3709ad0b
   category: main
   optional: false
 - name: python
@@ -15942,10 +15955,10 @@ package:
   manager: conda
   platform: osx-64
   dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.14-8_cp314.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/python_abi-3.14-9_cp314t.conda
   hash:
-    md5: 0539938c55b6b1a59b560e843ad864a4
-    sha256: ad6d2e9ac39751cc0529dd1566a26751a0bf2542adb0c232533d32e176e21db5
+    md5: 9c01376462ad43e95011809ef09a7929
+    sha256: 903b8515dbec9cdfa6baa03fb84dbbd454a16c6d0e4c33218f452f96f278aa44
   category: main
   optional: false
 - name: python_abi

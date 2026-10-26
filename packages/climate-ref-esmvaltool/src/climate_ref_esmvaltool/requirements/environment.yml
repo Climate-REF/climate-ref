@@ -3,7 +3,8 @@ channels:
   - nodefaults
 
 dependencies:
-  - cartopy
+  # 0.25 raises "getX called on empty Point" in pcolormesh (SciTools/cartopy#2640).
+  - cartopy >=0.26
   - cf-units
   - dask
   - esmvaltool-base

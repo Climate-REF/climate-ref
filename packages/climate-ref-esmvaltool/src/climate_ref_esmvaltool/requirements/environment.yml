@@ -14,6 +14,8 @@ dependencies:
   - matplotlib-base <3.11
   - numpy
   - pandas
+  # The compiled dependencies are built for the regular ABI, not the free-threaded cp314t one.
+  - python_abi * *_cp314
   - requests
   - scikit-learn
   - scipy

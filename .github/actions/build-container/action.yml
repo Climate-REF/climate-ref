@@ -19,7 +19,7 @@ runs:
           type=ref,event=tag
           # set latest tag for default branch
           type=raw,value=main,enable={{is_default_branch}}
-    - uses: docker/build-push-action@v7.3.0
+    - uses: docker/build-push-action@v7.4.0
       id: push
       with:
         cache-from: type=gha

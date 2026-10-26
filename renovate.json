@@ -130,7 +130,8 @@
       "automerge": true
     },
     {
-      "matchManagers": ["dockerfile", "docker-compose"],
+      "description": "The same image can be pinned in the Dockerfiles, compose file and Helm values, so bump them together",
+      "matchManagers": ["dockerfile", "docker-compose", "helm-values"],
       "groupName": "container images"
     },
     {

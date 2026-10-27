@@ -21,6 +21,23 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.20.2 (2026-10-27)
+
+### Improvements
+
+- Sped up reading pages of series values, and of scalar values without outlier detection, when few values match.
+  They now read only the values of the matching executions rather than every value of that type. ([#1036](https://github.com/Climate-REF/climate-ref/pull/1036))
+
+### Bug Fixes
+
+- Fixed the `regional-historical-trend` diagnostic reporting reference dataset trends in place of the model's trends when both were in the same output file. ([#1019](https://github.com/Climate-REF/climate-ref/pull/1019))
+- Required cartopy 0.26 in the ESMValTool environment, so the climate drivers for fire diagnostic no longer fails while plotting its maps. ([#1035](https://github.com/Climate-REF/climate-ref/pull/1035))
+
+### Trivial/Internal Changes
+
+- [#1024](https://github.com/Climate-REF/climate-ref/pull/1024), [#1032](https://github.com/Climate-REF/climate-ref/pull/1032)
+
+
 ## climate-ref 0.20.1 (2026-10-24)
 
 ### Bug Fixes

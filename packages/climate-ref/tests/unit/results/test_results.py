@@ -35,6 +35,7 @@ from climate_ref.results import (
 from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
 from climate_ref.results.outliers import flag_outliers
 from climate_ref.results.values import SeriesValue
+from climate_ref.testing.synthetic import captured_statements
 
 
 @pytest.fixture
@@ -405,6 +406,21 @@ class TestSeriesValues:
         coll = Reader(dal_db).values.series_values(MetricValueFilter(execution_ids=[-1]))
         assert {"value", "index", "index_name"} <= set(coll.to_pandas(explode=True).columns)
         assert {"values", "index"} <= set(coll.to_pandas(explode=False).columns)
+
+    def test_sqlite_page_reads_only_the_scope(self, scoped_db):
+        f = MetricValueFilter(diagnostic_slug=scoped_db.scope.diagnostic_slug, dimensions={"metric": "pr"})
+        with captured_statements(scoped_db) as statements:
+            page = Reader(scoped_db).values.series_values(f, limit=10, with_facets=False, with_count=False)
+        assert len(page) > 0
+
+        connection = scoped_db.session.connection()
+        plan = " ".join(
+            row[3]
+            for statement, parameters in statements
+            for row in connection.exec_driver_sql(f"EXPLAIN QUERY PLAN {statement}", parameters)
+        )
+        # A lookup on (type, rowid) is fine, a search on type alone reads every series.
+        assert "ix_metric_value_type (type=?)" not in plan
 
     def test_missing_index_name_stays_none(self):
         series = SeriesValue(

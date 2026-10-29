@@ -76,6 +76,9 @@ class Targets:
     execution_group_id: int
     dataset_slug: str
     source_id: str
+    sparse_series_provider_slug: str
+    sparse_series_diagnostic_slug: str
+    """The diagnostic with the fewest series, the worst case for a read that filters series one by one."""
 
 
 @pytest.fixture(scope="session")
@@ -95,6 +98,12 @@ def targets(perf_database_path: Path) -> Targets:
         "SELECT source_id FROM metric_value WHERE execution_id = ? AND source_id IS NOT NULL LIMIT 1",
         (execution_id,),
     ).fetchone()
+    sparse_diagnostic_slug, sparse_provider_slug = con.execute(
+        "SELECT d.slug, p.slug FROM metric_value mv JOIN execution e ON e.id = mv.execution_id "
+        "JOIN execution_group g ON g.id = e.execution_group_id JOIN diagnostic d ON d.id = g.diagnostic_id "
+        "JOIN provider p ON p.id = d.provider_id WHERE mv.type = 'SERIES' "
+        "GROUP BY d.id ORDER BY count(*), d.id LIMIT 1"
+    ).fetchone()
     con.close()
     return Targets(
         provider_slug=provider_slug,
@@ -103,6 +112,8 @@ def targets(perf_database_path: Path) -> Targets:
         execution_group_id=group_id,
         dataset_slug=dataset_slug,
         source_id=source_id,
+        sparse_series_provider_slug=sparse_provider_slug,
+        sparse_series_diagnostic_slug=sparse_diagnostic_slug,
     )
 
 
@@ -114,6 +125,9 @@ class Measurement:
     queries: int
     large_table_scans: frozenset[str]
     """Large tables read in full by any statement."""
+
+    result: object
+    """What the last run returned."""
 
     @property
     def median_seconds(self) -> float:
@@ -130,10 +144,13 @@ def measure(perf_database: Database, perf_database_path: Path) -> Callable[..., 
     repeat = int(os.environ.get("REF_PERF_REPEAT", "3"))
 
     def _measure(scenario: str, call: Callable[[Reader], object]) -> Measurement:
+        result: object = None
+
         def _time() -> float:
+            nonlocal result
             with perf_database.session_scope() as session:
                 start = time.perf_counter()
-                call(Reader(perf_database, session=session))
+                result = call(Reader(perf_database, session=session))
                 return time.perf_counter() - start
 
         with captured_statements(perf_database) as statements:
@@ -144,6 +161,7 @@ def measure(perf_database: Database, perf_database_path: Path) -> Callable[..., 
             seconds=tuple(seconds),
             queries=len(statements),
             large_table_scans=large_table_scans(perf_database_path, statements),
+            result=result,
         )
         _results.append(
             {

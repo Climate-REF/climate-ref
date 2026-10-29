@@ -153,6 +153,34 @@ class TestExecutionList:
         assert "key1" in result.stdout
         assert "key2" not in result.stdout
 
+    def test_list_limit_zero_does_not_claim_no_matches(self, sample_data_dir, db_seeded, invoke_cli):
+        self._setup_db(db_seeded)
+
+        result = invoke_cli(["executions", "list-groups", "--limit", "0"])
+
+        assert "No execution groups match" not in result.stderr
+
+    def test_list_unknown_column_on_empty_result(self, sample_data_dir, db_seeded, invoke_cli):
+        result = invoke_cli(["executions", "list-groups", "--column", "bogus"], expected_exit_code=1)
+
+        assert "Column not found" in result.stderr
+
+    def test_list_empty_table_uses_default_columns(self, sample_data_dir, db_seeded, invoke_cli):
+        result = invoke_cli(["executions", "list-groups"])
+
+        assert "selectors" not in result.stdout
+        assert "dirty" in result.stdout
+
+    def test_list_no_match_names_all_filters(self, sample_data_dir, db_seeded, invoke_cli):
+        self._setup_db(db_seeded)
+
+        result = invoke_cli(["executions", "list-groups", "--successful", "--dirty", "--since", "30d"])
+
+        assert "successful: True" in result.stderr
+        assert "dirty: True" in result.stderr
+        assert "since: 30d" in result.stderr
+        assert "Total execution groups in database: 2" in result.stderr
+
     def test_list_columns(self, sample_data_dir, db_seeded, invoke_cli):
         self._setup_db(db_seeded)
 
@@ -396,14 +424,36 @@ class TestDeleteGroups:
         remaining_count = db_with_groups.session.query(ExecutionGroup).count()
         assert remaining_count < initial_count
 
-    def test_delete_groups_reaches_superseded_versions(self, db_with_groups, invoke_cli):
+    @pytest.mark.parametrize(("extra_args", "remaining"), [([], 1), (["--include-superseded"], 0)])
+    def test_delete_groups_superseded_versions(self, db_with_groups, invoke_cli, extra_args, remaining):
         session = db_with_groups.session
         with session.begin():
             session.query(Diagnostic).filter_by(slug="enso_tel").one().promoted_version = 2
 
-        invoke_cli(["executions", "delete-groups", "--diagnostic", "enso_tel", "--force"])
+        invoke_cli(["executions", "delete-groups", "--diagnostic", "enso_tel", *extra_args, "--force"])
 
-        assert session.query(ExecutionGroup).filter_by(key="key1").count() == 0
+        assert session.query(ExecutionGroup).filter_by(key="key1").count() == remaining
+
+    def test_delete_groups_dry_run(self, db_with_groups, invoke_cli):
+        initial_count = db_with_groups.session.query(ExecutionGroup).count()
+
+        with patch("climate_ref.cli.executions.typer.confirm") as mock_confirm:
+            result = invoke_cli(["executions", "delete-groups", "--diagnostic", "enso", "--dry-run"])
+
+        assert result.exit_code == 0
+        assert "Dry run: would delete" in result.stdout
+        mock_confirm.assert_not_called()
+        assert db_with_groups.session.query(ExecutionGroup).count() == initial_count
+
+    @pytest.mark.parametrize("option", ["--diagnostic", "--provider"])
+    @pytest.mark.parametrize("value", ["", "  "])
+    def test_delete_groups_rejects_blank_filter(self, db_with_groups, invoke_cli, option, value):
+        initial_count = db_with_groups.session.query(ExecutionGroup).count()
+
+        result = invoke_cli(["executions", "delete-groups", option, value, "--force"], expected_exit_code=2)
+
+        assert "must not be empty" in result.stderr
+        assert db_with_groups.session.query(ExecutionGroup).count() == initial_count
 
     def test_delete_groups_no_deletion_on_decline(self, db_with_groups, invoke_cli):
         initial_count = db_with_groups.session.query(ExecutionGroup).count()
@@ -922,6 +972,30 @@ class TestExecutionInspect:
 
         assert "Successful: False" in result.stdout
 
+    def test_inspect_uses_newest_by_creation_time(self, sample_data_dir, db_seeded, invoke_cli):
+        execution_group = ExecutionGroup(key="key1", diagnostic_id=1)
+        with db_seeded.session.begin():
+            db_seeded.session.add(execution_group)
+            db_seeded.session.flush()
+            # The higher id is the older execution.
+            for fragment, successful, created_at in [
+                ("newer", False, datetime.datetime(2022, 1, 1)),
+                ("older", True, datetime.datetime(2021, 1, 1)),
+            ]:
+                db_seeded.session.add(
+                    Execution(
+                        execution_group_id=execution_group.id,
+                        successful=successful,
+                        output_fragment=fragment,
+                        dataset_hash=fragment,
+                        created_at=created_at,
+                    )
+                )
+
+        result = invoke_cli(["executions", "inspect", str(execution_group.id)])
+
+        assert "Successful: False" in result.stdout
+
     def test_inspect_no_results(self, sample_data_dir, db_seeded, invoke_cli):
         metric_execution_group = ExecutionGroup(key="key1", diagnostic_id=1)
         with db_seeded.session.begin():
@@ -1103,7 +1177,9 @@ class TestExecutionInspect:
         assert "Dirty: True" in result.stdout
 
     def test_flag_dirty_missing(self, db_seeded, invoke_cli):
-        invoke_cli(["executions", "flag-dirty", "123"], expected_exit_code=1)
+        result = invoke_cli(["executions", "flag-dirty", "123"], expected_exit_code=1)
+
+        assert "Execution group not found: 123" in result.stderr
 
 
 class TestFailureReason:

@@ -2,10 +2,11 @@ import re
 from pathlib import Path
 
 import pytest
+import typer
 from rich.console import Console
 
 from climate_ref import __version__
-from climate_ref.cli import CLIContext, build_app
+from climate_ref.cli import _SUBCOMMANDS, CLIContext, app, available_subcommands
 from climate_ref_core import __version__ as __core_version__
 
 
@@ -95,67 +96,75 @@ def test_config_directory_append(config, invoke_cli):
     )
 
 
-def test_import_emits_no_debug_logs_without_celery():
-    """
-    Importing the CLI must not leak debug logs to stderr, even when an optional
-    dependency (the Celery CLI) is unavailable.
+@pytest.fixture()
+def expected_commands() -> list[str]:
+    return [
+        "solve",
+        "doctor",
+        "config",
+        "datasets",
+        "db",
+        "diagnostics",
+        "executions",
+        "providers",
+        "test-cases",
+        "celery",
+    ]
 
-    ``build_app()`` runs at import time before the ``main`` callback configures
-    the logging level so it must not emit any logs itself.
-    """
+
+def _root_command_names() -> list[str]:
+    group = typer.main.get_command(app)
+    return group.list_commands(typer.Context(group))
+
+
+def test_root_commands(expected_commands):
+    assert _root_command_names() == expected_commands
+
+
+def test_root_commands_without_celery(mocker, expected_commands):
+    mocker.patch("climate_ref.cli.importlib.util.find_spec", return_value=None)
+    available_subcommands.cache_clear()
+    try:
+        assert _root_command_names() == [name for name in expected_commands if name != "celery"]
+    finally:
+        available_subcommands.cache_clear()
+
+
+@pytest.mark.parametrize("name", list(_SUBCOMMANDS))
+def test_subcommand_help_matches_command(name):
+    """The listing help is duplicated so ``ref --help`` needs no import, so it must not drift."""
+    if _SUBCOMMANDS[name].requires:
+        pytest.importorskip(_SUBCOMMANDS[name].requires)
+    command = _SUBCOMMANDS[name].load(name)
+
+    assert command.name == name
+    assert command.get_short_help_str(limit=1000) == _SUBCOMMANDS[name].help
+
+
+def test_import_skips_subcommands():
+    """Importing the CLI must not import the subcommands or their heavy dependencies, or emit logs."""
     import subprocess
     import sys
 
     script = (
-        "import importlib\n"
-        "_real = importlib.import_module\n"
-        "def _fake(name, *args, **kwargs):\n"
-        "    if name.startswith('climate_ref_celery'):\n"
-        "        raise ImportError(name)\n"
-        "    return _real(name, *args, **kwargs)\n"
-        "importlib.import_module = _fake\n"
-        "import climate_ref.cli  # noqa: F401\n"
+        "import sys\n"
+        "import climate_ref.cli\n"
+        "heavy = ['climate_ref.cli.test_cases', 'climate_ref.cli.doctor', 'climate_ref.database', 'pandas']\n"
+        "print([name for name in heavy if name in sys.modules])\n"
     )
     # Fixed args, trusted interpreter -- safe subprocess use.
     result = subprocess.run(  # noqa: S603
-        [sys.executable, "-c", script], capture_output=True, text=True, check=False
+        [sys.executable, "-c", script], capture_output=True, text=True, check=True
     )
 
-    assert result.returncode == 0, result.stderr
-    assert "Celery CLI not available" not in result.stderr
+    assert result.stdout.strip() == "[]"
     assert "DEBUG" not in result.stderr
-
-
-@pytest.fixture()
-def expected_groups() -> set[str]:
-    return {"config", "datasets", "db", "diagnostics", "executions", "providers", "celery", "test-cases"}
-
-
-def test_build_app(expected_groups):
-    app = build_app()
-
-    registered_commands = [command.name for command in app.registered_commands]
-    registered_groups = [group.name for group in app.registered_groups]
-
-    assert registered_commands == ["solve", "doctor"]
-    assert set(registered_groups) == expected_groups
-
-
-def test_build_app_without_celery(mocker, expected_groups):
-    mocker.patch("climate_ref.cli.importlib.import_module", side_effect=ModuleNotFoundError)
-    app = build_app()
-
-    registered_commands = [command.name for command in app.registered_commands]
-    registered_groups = [group.name for group in app.registered_groups]
-
-    assert ["solve", "doctor"] == registered_commands
-    assert set(registered_groups) == expected_groups - {"celery"}
 
 
 def test_cli_context_lazy_database(config, mocker):
     """Test that CLIContext creates database lazily on first access."""
     # Mock Database.from_config to verify it's called lazily
-    mock_from_config = mocker.patch("climate_ref.cli.Database.from_config")
+    mock_from_config = mocker.patch("climate_ref.database.Database.from_config")
     mock_db = mocker.MagicMock()
     mock_from_config.return_value = mock_db
 
@@ -176,7 +185,7 @@ def test_cli_context_lazy_database(config, mocker):
 
 def test_cli_context_skip_backup(config, mocker):
     """Test that CLIContext passes skip_backup to Database.from_config."""
-    mock_from_config = mocker.patch("climate_ref.cli.Database.from_config")
+    mock_from_config = mocker.patch("climate_ref.database.Database.from_config")
     mock_db = mocker.MagicMock()
     mock_from_config.return_value = mock_db
 
@@ -226,7 +235,7 @@ def test_cli_context_close_without_database(config):
 
 def test_config_list_skips_database(invoke_cli, mocker):
     """Test that 'config list' doesn't access the database."""
-    mock_from_config = mocker.patch("climate_ref.cli.Database.from_config")
+    mock_from_config = mocker.patch("climate_ref.database.Database.from_config")
 
     result = invoke_cli(["config", "list"])
     assert result.exit_code == 0

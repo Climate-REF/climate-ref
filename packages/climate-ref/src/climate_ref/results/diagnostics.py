@@ -28,14 +28,14 @@ from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
 from climate_ref.models.metric_value import MetricValueType
-from climate_ref.results._page import Page
-from climate_ref.results.filters import DiagnosticFilter
-from climate_ref.results.queries import (
+from climate_ref.query import (
+    DiagnosticFilter,
     count,
     paginate,
     select_diagnostics,
     select_diagnostics_with_values,
 )
+from climate_ref.results._page import Page, check_paging
 
 
 @attrs.frozen(kw_only=True)
@@ -237,7 +237,8 @@ class DiagnosticsReader:
         Parameters
         ----------
         filters
-            Which diagnostics to return. ``None`` returns all of them.
+            Which diagnostics to return.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
         offset
             Diagnostics to skip, ordered by provider slug then diagnostic slug.
         limit
@@ -265,6 +266,7 @@ class DiagnosticsReader:
             print(df[["provider", "diagnostic", "successful_group_count", "group_count"]])
         ```
         """
+        check_paging(offset, limit)
         filters = filters or DiagnosticFilter()
 
         base_stmt = select_diagnostics(filters)
@@ -287,13 +289,15 @@ class DiagnosticsReader:
         before calling ``reader.values.series_values``.
         By default only results from each diagnostic's current (promoted) version count,
         and retracted executions do not.
+        Any kept execution counts, not only each group's newest, as for ``reader.values``.
 
         Parameters
         ----------
         value_type
             ``MetricValueType.SCALAR`` for single numbers, or ``MetricValueType.SERIES`` for time series.
         filters
-            Narrow which diagnostics and executions are considered. ``None`` considers all of them.
+            Narrow which diagnostics and executions are considered.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
             Use ``include_retracted=True`` to count retracted executions,
             or ``created_after`` and ``created_before`` to limit by date.
 
@@ -320,7 +324,7 @@ class DiagnosticsReader:
         # pairs == frozenset({("pmp", "enso_tel"), ...})
         ```
 
-        See [select_diagnostics_with_values][climate_ref.results.queries.select_diagnostics_with_values]
+        See [select_diagnostics_with_values][climate_ref.query.diagnostics.select_diagnostics_with_values]
         for the query.
         """
         rows = self.session.execute(select_diagnostics_with_values(value_type, filters)).all()

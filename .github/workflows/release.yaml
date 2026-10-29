@@ -29,15 +29,16 @@ jobs:
         run: make build
       - name: Generate Release Notes
         run: |
-          echo "" >> ".github/release_template.md"
-          echo "## Changelog" >> ".github/release_template.md"
-          echo "" >> ".github/release_template.md"
-          uv run python scripts/changelog-to-release-template.py >> ".github/release_template.md"
-          echo "" >> ".github/release_template.md"
-          echo "## Changes" >> ".github/release_template.md"
-          echo "" >> ".github/release_template.md"
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty='format:* %h %s' --no-merges >> ".github/release_template.md"
-          echo .github/release_template.md
+          {
+            echo "## Changelog"
+            echo ""
+            uv run python scripts/changelog-to-release-template.py
+            echo ""
+            echo "## Changes"
+            echo ""
+            git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty='format:* %h %s' --no-merges
+          } > ".github/release_template.md"
+          cat .github/release_template.md
       - name: Create Release Draft
         uses: softprops/action-gh-release@v3
         with:

@@ -21,6 +21,204 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.20.3 (2026-10-29)
+
+### Bug Fixes
+
+- Requires intake-esgf 2026.11.28, so downloaded files follow the umask instead of landing as 0600
+  and STAC searches by `file_start` or `file_end` no longer fail on fx variables. ([#1041](https://github.com/Climate-REF/climate-ref/pull/1041))
+
+### Improved Documentation
+
+- Fixed the "Using pre-computed results" notebook, which broke after the API replaced `latest_execution` with a list of `executions`. ([#1038](https://github.com/Climate-REF/climate-ref/pull/1038))
+
+
+## climate-ref 0.20.2 (2026-10-27)
+
+### Improvements
+
+- Sped up reading pages of series values, and of scalar values without outlier detection, when few values match.
+  They now read only the values of the matching executions rather than every value of that type. ([#1036](https://github.com/Climate-REF/climate-ref/pull/1036))
+
+### Bug Fixes
+
+- Fixed the `regional-historical-trend` diagnostic reporting reference dataset trends in place of the model's trends when both were in the same output file. ([#1019](https://github.com/Climate-REF/climate-ref/pull/1019))
+- Required cartopy 0.26 in the ESMValTool environment, so the climate drivers for fire diagnostic no longer fails while plotting its maps. ([#1035](https://github.com/Climate-REF/climate-ref/pull/1035))
+
+### Trivial/Internal Changes
+
+- [#1024](https://github.com/Climate-REF/climate-ref/pull/1024), [#1032](https://github.com/Climate-REF/climate-ref/pull/1032)
+
+
+## climate-ref 0.20.1 (2026-10-24)
+
+### Bug Fixes
+
+- Fixed the synthetic test database in `climate_ref.testing.synthetic` recording no source types for its execution groups, so filtering it by `source_types` matched nothing. Each group now draws on one model era. ([#1023](https://github.com/Climate-REF/climate-ref/pull/1023))
+
+
+## climate-ref 0.20.0 (2026-10-23)
+
+### Highlights
+
+- This release reworks how results are read.
+  Every filter and query builder now lives in a new `climate_ref.query` package,
+  and a field shared by several filters has the same meaning and default on each.
+  Results can be filtered by the data that went into them, such as a model, a MIP era or specific datasets.
+  Common reads are much faster on large databases, and the `ref` CLI starts faster.
+  It also adds downloads of published CMIP7 data from ESGF.
+  The ozone, sea ice and ENSO diagnostics now follow ESMValTool v2.15, which changes their results.
+  The provider and results APIs have breaking changes, listed below. ([#999](https://github.com/Climate-REF/climate-ref/pull/999))
+
+### Breaking Changes
+
+- Providers now declare the fetched data they need ingested by returning `DataIngestRequest`s from `DiagnosticProvider.data_to_ingest(config)`, and `ref providers setup` ingests it.
+  This replaces `DiagnosticProvider.ingest_data(config, db)` and removes the `db` argument of `DiagnosticProvider.setup()`.
+  Third-party providers that overrode `ingest_data` need to implement `data_to_ingest` instead. ([#972](https://github.com/Climate-REF/climate-ref/pull/972))
+- An empty `execution_ids`, `execution_group_ids` or `isolate_ids` on `MetricValueFilter` now matches no values. Previously an empty list was ignored and matched every value. ([#985](https://github.com/Climate-REF/climate-ref/pull/985))
+- `total_count` on the results collections is now typed `int | None`. It is `None` only when `with_count=False` is passed. ([#986](https://github.com/Climate-REF/climate-ref/pull/986))
+- Renamed the `CMIP7Request` that converts CMIP6 data to CMIP7 to `ConvertedCMIP7Request` and moved it to `climate_ref_core.esgf.cmip7_converted`, along with `LatestFile`.
+  The new `CMIP7Request` has no `facet_mapping` or `cmip7_only_facets`, because it searches with CMIP7 facet names directly.
+  `CMIP7Request` now downloads published CMIP7 data from ESGF.
+  Removed `enable_ceda_solr_index` from `climate_ref_core.esgf`.
+  `Obs4MIPsRequest` now searches the CEDA Solr index only for the duration of its own fetch. ([#995](https://github.com/Climate-REF/climate-ref/pull/995))
+- Reworked the `climate_ref.results` filters so a field means the same thing, with the same default, on every reader.
+
+  - Every filter now keeps only the promoted diagnostic version and drops groups whose newest execution is retracted. Pass `include_superseded=True` or `include_retracted=True` to keep them. The `DatasetFilter` slug fields follow the same rule, with `include_retracted_executions` in place of `include_retracted`.
+  - Bad input now raises `ValueError` instead of matching nothing or being ignored. This covers unknown `selectors`, `dimensions`, `OutlierPolicy.group_by` and resources `group_by` keys, unknown `source_types`, a negative `offset` or `limit`, `reference_only` on a scalar read and a base column in `DatasetFilter.facets`. A string id such as `"12"` raises `TypeError`.
+  - An empty list now matches nothing in every list field, except `exclude_ids=[]`, which drops nothing.
+  - List fields such as `diagnostic_slug`, `provider_slug`, `isolate_ids` and `exclude_ids` are now tuples. They still take a single value.
+  - `latest_successful=True` now drops groups with no successful execution. `execution_group_ids` no longer drops groups that have never run. `dimensions={"kind": "model"}` now also matches values with no `kind`.
+  - Removed `ExecutionsReader.statistics`, `DiagnosticsReader.stats`, `ExecutionStats` and `select_execution_statistics`. Use `reader.diagnostics.list`.
+  - Removed `latest_execution_for_group` and the `get_execution_group_and_latest*` helpers. Use `select_latest_execution` or `ExecutionsReader.group_rows`.
+  - Removed `AnnotatedScalar` and `detect_scalar_outliers`. Pass `outliers=OutlierPolicy(...)` to `reader.values.scalar_values`.
+  - Removed `MetricValueFilter(promoted_only=...)` and `ExecutionGroupFilter(facets=...)`. Use `include_superseded` and `selectors`.
+  - Renamed fields to match across views:
+    - `DiagnosticView.slug` is `diagnostic_slug` and `total` is `execution_count`. Group counts moved to `DiagnosticView.groups`.
+    - `ResourceProfile` uses the `ResourceSummary` names, such as `sample_count` and `peak_memory_bytes_p95`, in Python, in `ref executions resources` and in its JSON.
+    - `ResourceFilter.since` is `created_after`, and `ResourcesReader.profiles` takes a `ResourceFilter`.
+    - The value builders take `filters` instead of `f`.
+  - `ref executions inspect` names its argument `GROUP_ID` and warns rather than errors for a group that has not run.
+
+  ([#999](https://github.com/Climate-REF/climate-ref/pull/999))
+- Moved every filter and query builder into a new `climate_ref.query` package.
+  `climate_ref.models` now holds only the tables, and `climate_ref.results` holds the readers built on `climate_ref.query`.
+
+  - Removed `climate_ref.models.dataset_query`. Import `DatasetFilter` and `select_datasets` from `climate_ref.query`.
+  - `DatasetFilter` and `select_datasets` are no longer re-exported from `climate_ref.results.datasets`.
+  - `DatasetFilter.execution_id` is now `execution_ids`, which takes one id or a list.
+  - `DatasetFilter.diagnostic_slug` now takes one slug or a list, and `DatasetFilter` gains `provider_slug`, `diagnostic_contains` and `provider_contains`, like the other filters.
+  - `DatasetFilter.source_type` now also takes a string such as `"cmip6"`.
+
+  ([#1011](https://github.com/Climate-REF/climate-ref/pull/1011))
+- Scalar outlier detection now tests each region, experiment and other label on its own,
+  rather than pooling everything except `statistic` and `metric`.
+  This stops a metric reported on different scales from being flagged and dropped as a whole.
+  Pass `OutlierPolicy(group_by=...)` to pool labels as before.
+  Values with `kind="reference"` are never flagged, and detection now runs in the database. ([#1018](https://github.com/Climate-REF/climate-ref/pull/1018))
+
+### Features
+
+- Added `select_latest_executions` and a `latest_only` option on `MetricValueFilter`, so values can be limited to the latest execution in each group. ([#973](https://github.com/Climate-REF/climate-ref/pull/973))
+- Added `InputDatasetFilter` to the results reader.
+  Execution groups, metric values and diagnostics can now be filtered by the datasets their executions ran against,
+  such as a `source_id`, a MIP era or a list of `dataset_ids`.
+  Group-level reads check each group's latest execution. ([#974](https://github.com/Climate-REF/climate-ref/pull/974))
+- Added `slug_contains` to `DatasetFilter`, a case-insensitive substring match on the dataset slug. ([#975](https://github.com/Climate-REF/climate-ref/pull/975))
+- Added `ResourcesReader.summary` and `ResourcesReader.summaries`, which aggregate resource usage in SQL. ([#976](https://github.com/Climate-REF/climate-ref/pull/976))
+- Added `latest_only` to `ResourceFilter`, matching `MetricValueFilter`.
+  Retracted executions are now excluded by default from resource summaries, measurements and profiles, as they already are from values.
+  `ResourcesReader.measurement` still finds a retracted execution by id. ([#977](https://github.com/Climate-REF/climate-ref/pull/977))
+- Added `SourceDatasetType.is_model_output`, which is true for source types that hold model simulation output rather than observations. ([#985](https://github.com/Climate-REF/climate-ref/pull/985))
+- Added a `with_count` option to the paged results readers, so callers can skip the count query, and a shared `Page` base for their collections. ([#986](https://github.com/Climate-REF/climate-ref/pull/986))
+- Added `CMIP7Request` for downloading CMIP7 data published on ESGF.
+  It searches the ESGF STAC indices and accepts the same facet names as data requirements. ([#995](https://github.com/Climate-REF/climate-ref/pull/995))
+- Every reader filter now lives in `climate_ref.query.filters`, and a field shared by several filters has the same meaning and default on each:
+
+  - `diagnostic_slug` and `provider_slug` for exact matches, beside `diagnostic_contains` and `provider_contains`.
+  - `include_superseded` and `diagnostic_version`, to read one diagnostic version, promoted or not.
+  - `include_retracted`, `created_after`, `created_before`, `execution_ids` and `execution_group_ids`.
+  - `source_types` and `or_no_model_input`, to scope results by the kind of input data, such as a MIP era.
+
+  `ref executions stats` now also lists diagnostics with no execution groups, and no longer counts every execution.
+
+  Filter fields that pick slugs, ids, source types or failure reasons take one value or a list, so `diagnostic_slug="enso_tel"`, `source_types="cmip6"` and `execution_ids=42` all work.
+
+  `ref executions list-groups`, `stats` and `requeue` take `--since`, like `resources`, to only count executions newer than an age (`30d`) or a date (`2026-10-01`).
+
+  ([#999](https://github.com/Climate-REF/climate-ref/pull/999))
+- Added a `SelectSingleGrid` constraint that keeps one grid per variable when a model publishes it on several.
+  The grid is chosen by a pluggable `GridPreference`, which defaults to `PreferNativeGrid`: the native `gn` grid, then the finest `nominal_resolution`. ([#1001](https://github.com/Climate-REF/climate-ref/pull/1001))
+- Added `ExecutionGroupSourceType`, a table recording which source dataset types each execution group draws on. This lets groups be filtered by their inputs in plain SQL. Existing groups are backfilled from their selectors. ([#1003](https://github.com/Climate-REF/climate-ref/pull/1003))
+- Added `climate_ref.testing.synthetic`, which builds a production-shaped synthetic database for performance testing reads.
+  It also provides `large_table_scans`, which reports the large tables a set of queries reads in full. ([#1009](https://github.com/Climate-REF/climate-ref/pull/1009))
+- Added `--include-superseded` and `--dry-run` to `ref executions delete-groups`.
+  It still deletes only groups for each diagnostic's promoted version unless `--include-superseded` is given, and its preview now shows each group's version and whether its latest execution is retracted. ([#1015](https://github.com/Climate-REF/climate-ref/pull/1015))
+
+### Improvements
+
+- Reduced the size of the ESMValTool conda environment. ([#885](https://github.com/Climate-REF/climate-ref/pull/885))
+- Added `DiagnosticsReader.with_values` and an index on metric value type per execution, so checking which diagnostics have scalar or series values no longer reads every series value. ([#971](https://github.com/Climate-REF/climate-ref/pull/971))
+- Added `ExecutionsReader.group_rows`, which returns live execution group rows for callers that mutate them.
+  `delete-groups`, `requeue` and reingest now use it, so they share one filter mapping with `ExecutionsReader.groups`. ([#979](https://github.com/Climate-REF/climate-ref/pull/979))
+- Models and results now pick the latest execution with the same SQL, `climate_ref.query.select_latest_executions`.
+  Picking each group's latest successful execution no longer rescans every execution per group on SQLite, so `latest_successful=True` dropped from 35 s to under 0.1 s on a 22k-group database. ([#980](https://github.com/Climate-REF/climate-ref/pull/980))
+- Sped up the slowest `Reader` reads on large databases, including the diagnostics list, diagnostic-scoped value pages and outlier detection.
+  Results are unchanged. ([#989](https://github.com/Climate-REF/climate-ref/pull/989))
+- The regression mint workflow now accepts several diagnostics in one dispatch, and `ref test-cases mint` bumps `test_case_version` automatically when the committed bundle changes. ([#1002](https://github.com/Climate-REF/climate-ref/pull/1002))
+- Refreshes SQLite query planner statistics with `PRAGMA optimize` after `ref solve` and `ref datasets ingest`. Without statistics SQLite can pick a poor index and read far more rows than needed. ([#1007](https://github.com/Climate-REF/climate-ref/pull/1007))
+- The `ref` CLI now starts faster because each subcommand is only imported when it is used, so `ref --help` no longer loads additional libraries. ([#1013](https://github.com/Climate-REF/climate-ref/pull/1013))
+- Sped up finding each execution group's newest execution, which the per-diagnostic group counts in the results reader do for every group. A new index on `execution (execution_group_id, created_at, id)` replaces a sort of each group's executions. ([#1017](https://github.com/Climate-REF/climate-ref/pull/1017))
+
+### Bug Fixes
+
+- Updated the ozone diagnostics to use the unified ozone recipe from ESMValTool v2.15.
+  The northern hemisphere polar cap now spans 60N to 85N, matching the upstream boundary fix.
+  The zonal mean ozone profiles are now averaged over 1990 to 2000 rather than 2005 to 2014.
+  CMIP7 executions now evaluate the historical experiment through 2021. ([#894](https://github.com/Climate-REF/climate-ref/pull/894))
+- Updated the sea ice sensitivity diagnostic for the recipe changes in ESMValTool v2.15. ([#899](https://github.com/Climate-REF/climate-ref/pull/899))
+- Updated the ENSO diagnostics for the renamed recipes in ESMValTool v2.15.
+  They now compare against TROPFLUX v2 and GPCP v3.3, as the upstream recipes do. ([#984](https://github.com/Climate-REF/climate-ref/pull/984))
+- Fixed `Reader.artifacts` resolving paths that escape the results root through a symlink.
+  Such paths now raise `ValueError`, so a symlink in the results tree can no longer expose files outside it.
+  A symlink loop also raises `ValueError` rather than an unexpected error. ([#993](https://github.com/Climate-REF/climate-ref/pull/993))
+- Minor correctness fixes:
+
+  - `None` in a `dimensions` list now also matches rows where that dimension is empty.
+  - An aware `created_after` or `created_before` is converted to UTC before comparing.
+  - Outlier detection tests each diagnostic separately, so one diagnostic's values no longer change another's verdicts.
+  - The provider roll-up in `reader.resources.profiles` keeps a diagnostic measured by a different memory source, so the largest diagnostic still sizes the worker.
+  - `DatasetFilter(finalised=True)` no longer returns an older finalised version when the newest version is not finalised.
+
+  ([#999](https://github.com/Climate-REF/climate-ref/pull/999))
+- Fixed the ESMValTool ENSO basic climatology and sea ice sensitivity diagnostics so they solve against published CMIP7 data, which puts each realm on its own grid.
+  They no longer group CMIP6 data by `grid_label` either, so models with their atmosphere and ocean published with different grid labels (such as IPSL, CNRM, EC-Earth and GFDL-ESM4) are now included.
+  The ENSO, sea ice and ozone CMIP7 test cases now use published `UKESM1-3-LL` data.
+  Fixed `ref test-cases fetch` pinning every request of a test case to all of its recorded datasets, which broke test cases that split one source type across requests.
+  Fixed reading ESMValTool series when a multi-dataset file names its variable after a reference dataset, such as `sic` from OSI-450 instead of `siconc`. ([#1001](https://github.com/Climate-REF/climate-ref/pull/1001))
+- Fixed PMP runs that could hang forever on a Dask deadlock in xarray (pydata/xarray#11645).
+  The PMP provider now sets `DASK_SCHEDULER=synchronous` unless the environment already sets one. ([#1012](https://github.com/Climate-REF/climate-ref/pull/1012))
+- Fixed a blank `--diagnostic` or `--provider` matching every execution group, which let `delete-groups`, `requeue` and `reingest` act on every group. A blank value is now rejected. ([#1015](https://github.com/Climate-REF/climate-ref/pull/1015))
+- Fixed small bugs in the results readers and CLI.
+
+  - `total_count` on an already paged `Select` now counts every row.
+  - An empty value read keeps its columns in `to_pandas()`.
+  - `reader.datasets.list` returns one row per dataset even when versions do not parse.
+  - `ref executions flag-dirty` takes an execution group id, as it always did, and now says so.
+  - `ref executions list-groups` validates `--column` on an empty result and handles `--limit 0`.
+  - `ref datasets list --include-files --column slug` now works.
+
+  ([#1018](https://github.com/Climate-REF/climate-ref/pull/1018))
+
+### Improved Documentation
+
+- Corrected stale class names, CLI flags and the default CMIP6 parser in the documentation, fixed note boxes that did not render, and added the example provider to the API reference. ([#1005](https://github.com/Climate-REF/climate-ref/pull/1005))
+
+### Trivial/Internal Changes
+
+- [#983](https://github.com/Climate-REF/climate-ref/pull/983), [#992](https://github.com/Climate-REF/climate-ref/pull/992), [#1006](https://github.com/Climate-REF/climate-ref/pull/1006), [#1016](https://github.com/Climate-REF/climate-ref/pull/1016)
+
+
 ## climate-ref 0.19.2 (2026-10-20)
 
 ### Features

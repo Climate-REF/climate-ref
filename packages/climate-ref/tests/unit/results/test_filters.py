@@ -3,7 +3,7 @@ import datetime
 import pytest
 
 from climate_ref.models.execution import ExecutionFailureReason
-from climate_ref.results.filters import (
+from climate_ref.query.filters import (
     BaseFilter,
     DiagnosticFilter,
     ExecutionGroupFilter,
@@ -110,3 +110,16 @@ def test_aware_times_become_naive_utc(cls):
 def test_unknown_selector_key_raises(key, match):
     with pytest.raises(ValueError, match=match):
         ExecutionGroupFilter(selectors={key: "x"})
+
+
+def test_dimensions_are_copied_into_tuples():
+    wanted = {"statistic": "mean", "source_id": ["a", "b"]}
+    f = MetricValueFilter(dimensions=wanted)
+    wanted["source_id"].append("c")
+    wanted["new"] = "x"
+    assert f.dimensions == {"statistic": ("mean",), "source_id": ("a", "b")}
+
+
+def test_dimensions_reject_a_set():
+    with pytest.raises(TypeError, match="source_id"):
+        MetricValueFilter(dimensions={"source_id": {"a", "b"}})

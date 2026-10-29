@@ -16,8 +16,9 @@ It returns:
 
 ``DatasetFilter`` chooses which datasets to keep.
 Import it from ``climate_ref.results``.
-It describes datasets rather than executions, so it does not share fields with the filters in
-[climate_ref.results.filters][climate_ref.results.filters].
+It filters datasets rather than executions,
+and shares only the diagnostic and provider fields with the other filters in
+[climate_ref.query.filters][climate_ref.query.filters].
 
 Examples
 --------
@@ -34,24 +35,22 @@ with Database.from_config(config, read_only=True) as db:
 ```
 """
 
+import datetime
 import functools
 from collections.abc import Mapping
 from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy import Select, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, selectin_polymorphic, selectinload
 
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models.dataset import Dataset
-from climate_ref.models.dataset_query import DatasetFilter
-from climate_ref.results._page import Page
-from climate_ref.results.queries import count, paginate, select_datasets
+from climate_ref.query import DatasetFilter, count, paginate, select_datasets
+from climate_ref.results._page import Page, check_paging
 from climate_ref_core.source_types import SourceDatasetType
-
-__all__ = ["DatasetFilter"]
 
 
 @attrs.frozen(kw_only=True)
@@ -130,13 +129,13 @@ class DatasetView:
     ``False`` means it used only the file and folder names.
     """
 
-    retracted_at: Any
+    retracted_at: datetime.datetime | None
     """When the dataset was retracted, or ``None`` if it has not been."""
 
-    created_at: Any
+    created_at: datetime.datetime
     """When the dataset was first ingested, as a ``datetime``."""
 
-    updated_at: Any
+    updated_at: datetime.datetime
     """When the dataset's record was last changed, as a ``datetime``."""
 
     facets: Mapping[str, object]
@@ -235,7 +234,7 @@ class DatasetsReader:
 
     Examples
     --------
-    Describe which datasets you want with a [DatasetFilter][climate_ref.models.dataset_query.DatasetFilter].
+    Describe which datasets you want with a [DatasetFilter][climate_ref.query.filters.DatasetFilter].
     Only ``source_type`` is required, and this does not need a database.
     A single facet value can be a string, and several values are alternatives:
 
@@ -268,10 +267,17 @@ class DatasetsReader:
     everything = DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False, include_retracted=True)
     ```
 
-    The datasets that execution 42 used:
+    The datasets that execution 42 used, even if they have since been retracted or superseded:
 
     ```python
-    used = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_id=42))
+    used = reader.datasets.list(
+        DatasetFilter(
+            source_type=SourceDatasetType.CMIP6,
+            execution_ids=42,
+            include_retracted=True,
+            latest_only=False,
+        )
+    )
     ```
     """
 
@@ -308,16 +314,6 @@ class DatasetsReader:
             facets=facets,
             files=files,
         )
-
-    def _base_statement(self, filter: DatasetFilter) -> Select[Any]:  # noqa: A002
-        """
-        Build the unpaginated ``SELECT`` over the dataset class for the filter's source type.
-
-        Keeping only the latest version is done in SQL, partitioned by the adapter's ``dataset_id_metadata``.
-        It does nothing when ``filter.latest_only`` is ``False``.
-        """
-        adapter = get_dataset_adapter(filter.source_type.value)
-        return select_datasets(filter, latest_group_by=adapter.dataset_id_metadata)
 
     def list(
         self,
@@ -362,6 +358,7 @@ class DatasetsReader:
         ------
         ValueError
             If a name in ``filters.facets`` is not a facet of the source type.
+            Fields such as ``finalised`` are not facets, so use the matching ``DatasetFilter`` field.
 
         Examples
         --------
@@ -379,7 +376,8 @@ class DatasetsReader:
             df[["experiment_id", "member_id", "version"]]
         ```
         """
-        base_stmt = self._base_statement(filters)
+        check_paging(offset, limit)
+        base_stmt = select_datasets(filters)
         total_count = count(self.session, base_stmt) if with_count else None
 
         stmt = base_stmt.order_by(None).order_by(Dataset.slug, Dataset.id)
@@ -396,7 +394,8 @@ class DatasetsReader:
         Is this dataset in the database?
 
         Returns the dataset with this slug, or ``None`` when there is none.
-        If several versions share the slug, the newest is returned.
+        A slug is unique, so at most one dataset matches.
+        Retracted datasets are returned too, check ``retracted_at`` on the result.
         The files are not loaded, so ``DatasetView.files`` is empty.
         Use ``list(..., include_files=True)`` when you need them.
 
@@ -422,7 +421,6 @@ class DatasetsReader:
         stmt = (
             select(Dataset)
             .where(Dataset.slug == slug)
-            .order_by(Dataset.version_key.desc(), Dataset.id.desc())
             .options(selectin_polymorphic(Dataset, _dataset_subtypes()))
         )
         dataset = self.session.execute(stmt).scalars().first()

@@ -26,7 +26,7 @@ A few, such as ``reader.resources.profiles``, return a plain tuple of views.
 Most reads take a filter, such as ``MetricValueFilter``, to choose which results come back.
 By default a filter keeps only each diagnostic's promoted version and leaves out retracted executions.
 Readers of single executions also take ``latest_only`` to keep only each group's newest execution.
-The filters are documented in [filters][climate_ref.results.filters].
+The filters are documented in [filters][climate_ref.query.filters].
 
 ## Pagination
 
@@ -48,7 +48,7 @@ This is on purpose:
 * They cannot change the database. They are frozen and not attached to a session.
 * Their fields can stay the same when the database tables change, so code that uses them does not break.
 
-To work with the ORM objects, use the query builders in [queries][climate_ref.results.queries].
+To work with the ORM objects, use the query builders in [climate_ref.query][climate_ref.query].
 Each builder takes the same filter as its reader and returns a SQLAlchemy ``Select``,
 which you can narrow further with ``.where()`` before running it in a session.
 
@@ -84,8 +84,8 @@ with Database.from_config(config, read_only=True) as db:
 ```
 """
 
-from climate_ref.results.datasets import DatasetFilter
-from climate_ref.results.filters import (
+from climate_ref.query.filters import (
+    DatasetFilter,
     DiagnosticFilter,
     ExecutionGroupFilter,
     InputDatasetFilter,

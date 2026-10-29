@@ -9,17 +9,20 @@
   "description": [
     "Most Python constraints here are lower bounds, so bumping a constraint is almost never required.",
     "Freshness comes from the uv.lock instead, which is why rangeStrategy is update-lockfile.",
-    "Groups are drawn so that anything able to move a diagnostic result stays reviewable on its own."
+    "Tooling that cannot change a diagnostic result merges itself once CI is green.",
+    "Anything able to move a diagnostic result, and every major, waits for a review."
   ],
   "timezone": "Australia/Melbourne",
   "dependencyDashboardTitle": "Renovate Dependency Dashboard",
   "labels": ["dependencies"],
   "minimumReleaseAge": "3 days",
   "internalChecksFilter": "strict",
-  "prConcurrentLimit": 3,
-  "prHourlyLimit": 2,
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 0,
   "schedule": ["on monday"],
   "rangeStrategy": "update-lockfile",
+  "platformAutomerge": false,
+  "automergeType": "pr",
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["on monday"]
@@ -68,7 +71,8 @@
         "prettyprinter",
         "pandas-indexing"
       ],
-      "groupName": "python docs dependencies"
+      "groupName": "python docs dependencies",
+      "automerge": true
     },
     {
       "description": "Linting, typing and test tooling, safe to batch hard",
@@ -91,7 +95,8 @@
         "pre-commit/pre-commit-hooks",
         "citation-file-format/cffconvert"
       ],
-      "groupName": "python dev tooling"
+      "groupName": "python dev tooling",
+      "automerge": true
     },
     {
       "description": "These can shift numerical output, so keep them out of the general batch",
@@ -121,16 +126,19 @@
     },
     {
       "matchManagers": ["github-actions"],
-      "groupName": "github actions"
+      "groupName": "github actions",
+      "automerge": true
     },
     {
-      "matchManagers": ["dockerfile"],
+      "description": "The same image can be pinned in the Dockerfiles, compose file and Helm values, so bump them together",
+      "matchManagers": ["dockerfile", "docker-compose", "helm-values"],
       "groupName": "container images"
     },
     {
-      "description": "A major is never hidden inside a batch",
+      "description": "A major is never hidden inside a batch and never merges itself",
       "matchUpdateTypes": ["major"],
       "groupName": null,
+      "automerge": false,
       "schedule": ["at any time"]
     },
     {

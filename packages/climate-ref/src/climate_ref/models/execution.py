@@ -1,24 +1,20 @@
 import datetime
 import enum
 import pathlib
-from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from loguru import logger
 from sqlalchemy import (
     BigInteger,
     Column,
-    ColumnElement,
     Enum,
     Float,
     ForeignKey,
-    Select,
+    Index,
     String,
     Table,
     UniqueConstraint,
-    func,
     inspect,
-    select,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
@@ -311,6 +307,8 @@ class Execution(CreatedUpdatedMixin, Base):
     """
 
     __tablename__ = "execution"
+    # Lets each group's newest execution be read from the index without sorting the group's executions.
+    __table_args__ = (Index("ix_execution_group_created_at", "execution_group_id", "created_at", "id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -669,86 +667,3 @@ class ExecutionOutput(DimensionMixin, CreatedUpdatedMixin, Base):
             description=description,
             **dimensions,
         )
-
-
-# There are two forms to select for the "latest" execution.
-# These selectors are outside of climate_ref.reader as they are used by the models.
-# The grouped max is fast across many groups, the ordered limit-1 lookup is fast for one group or a page.
-def _select_latest_execution(*where: ColumnElement[bool]) -> Select[tuple[Execution]]:
-    """Select the latest ``Execution`` matching ``where``."""
-    return select(Execution).where(*where).order_by(Execution.created_at.desc(), Execution.id.desc()).limit(1)
-
-
-def select_latest_execution(execution_group_id: int) -> Select[tuple[Execution]]:
-    """
-    Build the ``Select`` for one group's latest ``Execution``, which returns no row if it has none.
-
-    The latest is chosen by ``created_at``, then id, and retracted executions count.
-    """
-    return _select_latest_execution(Execution.execution_group_id == execution_group_id)
-
-
-def latest_execution_id(among_executions: Sequence[ColumnElement[bool]] = ()) -> Any:
-    """
-    Correlated subquery of the outer ``ExecutionGroup``'s latest execution id, or ``NULL`` if it has none.
-
-    ``among_executions`` works as in
-    [select_latest_executions][climate_ref.results.queries.select_latest_executions].
-    """
-    return (
-        _select_latest_execution(Execution.execution_group_id == ExecutionGroup.id, *among_executions)
-        .with_only_columns(Execution.id)
-        .correlate(ExecutionGroup)
-        .scalar_subquery()
-    )
-
-
-def select_latest_executions(
-    among_executions: Sequence[ColumnElement[bool]] = (),
-) -> Select[tuple[int, int]]:
-    """
-    Build a ``Select`` of the latest execution in each execution group.
-
-    "Latest" is the greatest ``created_at``, with the greatest ``id`` breaking a tie,
-    the same ordering as [select_latest_execution][climate_ref.results.queries.select_latest_execution].
-    Retracted executions are not skipped, so a retracted latest execution still wins its group.
-
-    Parameters
-    ----------
-    among_executions
-        Predicates on ``Execution`` applied *before* picking the latest,
-        so the winner is the newest execution *among those matching*.
-        For example ``[Execution.successful.is_(True)]`` picks each group's latest successful execution.
-        Group-level filters (diagnostic, provider, dirty, version) belong on the outer query instead,
-        where they narrow which groups are returned without changing which execution wins.
-
-    Returns
-    -------
-        A ``Select`` with ``execution_group_id`` and ``execution_id`` columns,
-        one row per group that has at least one matching execution.
-        Call ``.subquery()`` to join or filter against it.
-    """
-    # Grouped max rather than row_number: with a predicate, SQLite 3.40 rescans a filtered window
-    # subquery for every outer row when it is left-joined to execution_group.
-    newest = (
-        select(
-            Execution.execution_group_id,
-            func.max(Execution.created_at).label("created_at"),
-        )
-        .where(*among_executions)
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
-    return (
-        select(
-            Execution.execution_group_id.label("execution_group_id"),
-            func.max(Execution.id).label("execution_id"),
-        )
-        .join(
-            newest,
-            (Execution.execution_group_id == newest.c.execution_group_id)
-            & (Execution.created_at == newest.c.created_at),
-        )
-        .where(*among_executions)
-        .group_by(Execution.execution_group_id)
-    )

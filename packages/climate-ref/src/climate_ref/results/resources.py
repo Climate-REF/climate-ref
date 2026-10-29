@@ -34,7 +34,7 @@ with Database.from_config(config, read_only=True) as db:
 import math
 import statistics
 from collections.abc import Sequence
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 import attrs
 import pandas as pd
@@ -42,15 +42,15 @@ from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
 from climate_ref.models.execution import Execution
-from climate_ref.results._page import Page
-from climate_ref.results.filters import ResourceFilter
-from climate_ref.results.queries import (
+from climate_ref.query import (
     GroupBy,
+    ResourceFilter,
     count,
     paginate,
     select_execution_resources,
     select_resource_summary,
 )
+from climate_ref.results._page import Page, check_paging
 from climate_ref_core.resources import MemorySource
 
 Confidence = Literal["good", "thin", "none"]
@@ -60,8 +60,8 @@ _GOOD_SAMPLE_COUNT = 10
 """
 Samples needed before a profile is reported as ``good``.
 
-Below ten samples the 95th percentile sits between the top two observations,
-so it carries no information the maximum does not already carry.
+The interpolated 95th percentile sits between the top two observations for every sample count up to 20,
+so below ten it is barely distinguishable from the maximum.
 """
 
 _BYTES_PER_GIB = 1024**3
@@ -85,13 +85,15 @@ def _percentile(values: Sequence[float], quantile: float) -> float:
     values
         Observations, in any order.
     quantile
-        Fraction between 0 and 1.
+        Fraction strictly between 0 and 1.
 
     Returns
     -------
     :
         The interpolated percentile.
     """
+    if not 0 < quantile < 1:
+        raise ValueError(f"quantile must be between 0 and 1 exclusive, not {quantile!r}")
     if len(values) == 1:
         return float(values[0])
 
@@ -481,7 +483,7 @@ class ResourceProfile:
         The value is one of ``"none"``, ``"thin"`` and ``"good"``:
 
         ``none`` when there are no usable samples at all,
-        ``thin`` below ten samples, where the p95 is indistinguishable from the maximum,
+        ``thin`` below ten samples, where the p95 sits next to the maximum and the sample is small,
         and ``good`` at or above ten.
         """
         if self.sample_count == 0:
@@ -722,7 +724,7 @@ class ResourcesReader:
     Reach it as ``reader.resources`` rather than constructing it directly.
 
     Every method takes an optional
-    [ResourceFilter][climate_ref.results.filters.ResourceFilter] to choose which executions count.
+    [ResourceFilter][climate_ref.query.filters.ResourceFilter] to choose which executions count.
     Pick the method by how much to combine:
 
     * ``measurements`` and ``measurement`` return one record per execution.
@@ -773,7 +775,8 @@ class ResourcesReader:
         Parameters
         ----------
         filters
-            Restricts the executions considered. ``None`` means no restriction.
+            Restricts the executions considered.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
         offset
             Rows to skip before the returned page.
         limit
@@ -798,6 +801,7 @@ class ResourcesReader:
             slowest = page.to_pandas().nlargest(10, "wall_seconds")
         ```
         """
+        check_paging(offset, limit)
         stmt = select_execution_resources(filters)
         total_count = count(self.session, stmt) if with_count else None
 
@@ -814,7 +818,8 @@ class ResourcesReader:
         Parameters
         ----------
         filters
-            Restricts the executions considered. ``None`` means no restriction.
+            Restricts the executions considered.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
 
         Returns
         -------
@@ -847,7 +852,8 @@ class ResourcesReader:
         Parameters
         ----------
         filters
-            Restricts the executions considered. ``None`` means no restriction.
+            Restricts the executions considered.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
         group_by
             ``"diagnostic"`` for one summary per diagnostic, or ``"provider"`` for one per provider.
 
@@ -935,7 +941,8 @@ class ResourcesReader:
         Parameters
         ----------
         filters
-            Which executions to aggregate. ``None`` means no restriction.
+            Which executions to aggregate.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
         group_by
             ``diagnostic`` for one profile per diagnostic,
             or ``provider`` for the worker-sizing roll-up across a provider's diagnostics.
@@ -971,6 +978,8 @@ class ResourcesReader:
             pools = Reader(db).resources.profiles(group_by="provider")
         ```
         """
+        if group_by not in get_args(GroupBy):
+            raise ValueError(f"group_by must be one of {get_args(GroupBy)}, not {group_by!r}")
         filters = filters or ResourceFilter()
         # Sorting here is cheaper than SQLite's unindexed sort, and ``limit_seen`` needs this order.
         unordered = self.session.execute(select_execution_resources(filters).order_by(None)).all()

@@ -1,12 +1,12 @@
 """
-``attrs`` field converters for the results filters.
+``attrs`` field converters for the query filters.
 
 Each converter takes one value or a sequence of them and returns a tuple, leaving ``None`` as is.
 """
 
 import datetime
 import enum
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from climate_ref.models.execution import ExecutionFailureReason
 from climate_ref_core.source_types import SourceDatasetType
@@ -48,6 +48,11 @@ def _as_failure_reasons(
     (<ExecutionFailureReason.DiagnosticError: 'diagnostic_error'>,)
     """
     return _as_enum_tuple(ExecutionFailureReason, value)
+
+
+def _as_source_type(value: SourceDatasetType | str) -> SourceDatasetType:
+    """Convert a source type, its value or its name to a ``SourceDatasetType``."""
+    return _as_member(SourceDatasetType, value)
 
 
 def _as_source_types(
@@ -130,3 +135,43 @@ def _as_naive_utc(value: datetime.datetime | None) -> datetime.datetime | None:
     if value is None or value.tzinfo is None:
         return value
     return value.astimezone(datetime.UTC).replace(tzinfo=None)
+
+
+def _as_facets(
+    value: Mapping[str, Sequence[str]] | None,
+) -> Mapping[str, tuple[str, ...]] | None:
+    """
+    Copy a facets mapping into a ``dict`` of ``tuple`` values.
+
+    A bare ``str`` value is kept whole rather than split into characters.
+
+    Examples
+    --------
+    >>> _as_facets({"source_id": "TEST-MODEL"})
+    {'source_id': ('TEST-MODEL',)}
+    """
+    if value is None:
+        return None
+    return {k: _as_str_tuple(v) or () for k, v in value.items()}
+
+
+def _as_dimensions(
+    value: Mapping[str, str | Sequence[str]] | None,
+) -> Mapping[str, tuple[str, ...]] | None:
+    """
+    Copy a dimensions mapping into a ``dict`` of ``tuple`` values.
+
+    A string is one alternative. Anything other than a string, list or tuple is rejected,
+    because a set has no order and any other iterable would be read as one value.
+
+    Examples
+    --------
+    >>> _as_dimensions({"source_id": "TEST-MODEL", "experiment_id": ["a", "b"]})
+    {'source_id': ('TEST-MODEL',), 'experiment_id': ('a', 'b')}
+    """
+    if value is None:
+        return None
+    for key, wanted in value.items():
+        if not isinstance(wanted, str | list | tuple):
+            raise TypeError(f"Dimension {key!r} must be a string, list or tuple, not {type(wanted).__name__}")
+    return _as_facets(value)

@@ -255,3 +255,22 @@ jobs:
         if: always()
         run: |
           docker compose down -v
+
+  # The only check the ruleset requires, so jobs can change without touching repo settings.
+  ci-pass:
+    if: always()
+    permissions: {}
+    needs:
+      - pre-commit
+      - tests-core
+      - tests-integration
+      - tests-providers
+      - imports-without-extras
+      - check-build
+      - check-for-changelog
+      - smoke-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if a required job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1

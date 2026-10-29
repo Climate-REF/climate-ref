@@ -9,6 +9,14 @@ from collections.abc import Iterator
 import attrs
 
 
+def check_paging(offset: int, limit: int | None) -> None:
+    """Raise ``ValueError`` for a negative ``offset`` or ``limit``, before it reaches a query."""
+    if offset < 0:
+        raise ValueError(f"'offset' must be >= 0: {offset}")
+    if limit is not None and limit < 0:
+        raise ValueError(f"'limit' must be >= 0: {limit}")
+
+
 @attrs.frozen(kw_only=True)
 class Page[T]:
     """

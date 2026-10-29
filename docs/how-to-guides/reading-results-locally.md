@@ -50,6 +50,7 @@ It holds the database and exposes one sub-reader per domain as a property:
 - `reader.executions` — execution groups and executions,
 - `reader.datasets` — ingested datasets,
 - `reader.diagnostics` — diagnostics and their status counts,
+- `reader.resources` — time, CPU and memory use of executions,
 - `reader.artifacts` — filesystem paths for execution outputs.
 
 `reader.artifacts` needs to know where output files live,
@@ -106,7 +107,8 @@ filters = MetricValueFilter(
 )
 ```
 
-`DatasetFilter` describes datasets rather than executions, so it has its own fields, covered under [Datasets](#datasets).
+`DatasetFilter` describes datasets rather than executions.
+It shares the diagnostic and provider fields, and its other fields are covered under [Datasets](#datasets).
 
 ## Scalar and series values
 
@@ -134,7 +136,9 @@ with Database.from_config(config, read_only=True) as db:
 ```
 
 Pass a `MetricValueFilter` to narrow the query.
-Every field is optional; `None`/empty means "do not constrain on this axis".
+Every field is optional.
+By default only promoted versions are read and retracted executions are left out.
+An empty list matches nothing.
 Dimension filters go through the `dimensions` map,
 keyed by any registered CV dimension;
 a string is an equality match and a sequence is an `IN` match:
@@ -153,13 +157,13 @@ with Database.from_config(config, read_only=True) as db:
     df = Reader(db).values.scalar_values(filters=filters).to_pandas()
 ```
 
-An unknown dimension key raises `KeyError` rather than silently returning the wrong data.
+An unknown dimension key raises `ValueError`.
 `diagnostic_slug`/`provider_slug` are exact matches;
 `diagnostic_contains`/`provider_contains` are case-insensitive substring matches for search.
 
 #### Outlier detection
 
-Scalar reads can flag outliers using a source-id-aware IQR test,
+Scalar reads can flag outliers using a model-aware IQR test,
 configured with an `OutlierPolicy`.
 Detection is off by default:
 
@@ -175,6 +179,10 @@ with Database.from_config(config, read_only=True) as db:
     df = collection.to_pandas()    # gains `is_outlier` / `verification_status` columns
 ```
 
+Each diagnostic, region, experiment and other label is tested on its own,
+comparing one mean per model.
+Reference values are never flagged.
+NaN and infinite model values always are.
 With `include_unverified=False` (the default) flagged values are removed before pagination
 and excluded from `total_count`.
 When detection runs, `to_pandas()` adds `is_outlier` and `verification_status` columns.
@@ -246,9 +254,9 @@ with Database.from_config(config, read_only=True) as db:
     latest = reader.executions.latest_execution(execution_group_id=1)
 ```
 
-`group()`, `groups()` and `latest_execution()`
-all agree on which execution is "latest" for a group
-(ranked by `created_at DESC, id DESC`).
+The newest execution is ranked by `created_at DESC, id DESC`.
+`group()` and `latest_execution()` ignore retraction, while `groups()` applies its filter first,
+so they can pick different executions.
 
 `reader.diagnostics.list()` returns per-diagnostic status counts in `DiagnosticView.groups`:
 
@@ -290,7 +298,17 @@ By default `DatasetFilter.latest_only` is `True`,
 so a listing returns exactly one row per dataset — the latest version — rather than every version,
 deduplicated with that source type's version key.
 
-`get(slug)` fetches a single dataset by slug, returning the latest version on a tie
+`DatasetFilter.include_retracted` and `DatasetFilter.latest_only` are about datasets,
+not executions, unlike the fields with the same names on the other filters.
+
+`execution_ids` keeps the datasets those executions used.
+The diagnostic fields (`diagnostic_slug`, `provider_slug`, `diagnostic_contains`, `provider_contains`)
+keep the datasets used by an execution of a matching diagnostic.
+Like the other filters, these skip retracted and superseded executions.
+`execution_ids` does not.
+`slug_contains` takes one string or a list and keeps datasets whose slug contains any of them.
+
+`get(slug)` fetches a single dataset by slug, retracted or not
 (or `None` when no dataset has that slug):
 
 ```python
@@ -354,7 +372,7 @@ It exports only what you *name to make a call*:
 
 - the `Reader` entry point,
 - the filter objects you construct and pass in
-  (`MetricValueFilter`, `ExecutionGroupFilter`, `DatasetFilter`, `DiagnosticFilter`),
+  (`MetricValueFilter`, `ExecutionGroupFilter`, `DatasetFilter`, `DiagnosticFilter`, `ResourceFilter`),
 - the `OutlierPolicy` value object.
 
 Everything the package *returns* — the DTOs (`ScalarValue`, `ExecutionGroupView`, `DatasetView`, …),

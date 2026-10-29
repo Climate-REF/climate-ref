@@ -1,18 +1,31 @@
 from __future__ import annotations
 
+import fcntl
 import json
+import os
+from collections.abc import Generator
+from contextlib import contextmanager
 from enum import StrEnum
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+import typer
 from loguru import logger
 from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from climate_ref_core.env import env
+
 if TYPE_CHECKING:
     import pandas as pd
 
 _BYTES_PER_UNIT = 1024
+
+LOCK_ENVVAR = "REF_LOCK"
+LOCK_FILE_ENVVAR = "REF_LOCK_FILE"
+LOCK_HELD_EXIT_CODE = 75
+"""``EX_TEMPFAIL``, so callers can tell a skipped run from a failed one"""
 
 
 class OutputFormat(StrEnum):
@@ -202,3 +215,48 @@ def render_dataframe(
         print(json.dumps(records, default=str, indent=2))
     else:
         pretty_print_df(df, console=console)
+
+
+def resolve_lock_file(lock: bool, lock_file: Path | None) -> Path | None:
+    """
+    Pick the lock file for a command, or None when locking is off
+
+    A lock file path turns locking on by itself.
+    ``--lock`` alone uses ``ref.lock`` in the REF configuration directory.
+    """
+    if lock_file is not None:
+        return lock_file
+    if lock:
+        return env.path("REF_CONFIGURATION").resolve() / "ref.lock"
+    return None
+
+
+@contextmanager
+def exclusive_lock(path: Path | None) -> Generator[None]:
+    """
+    Hold an exclusive advisory lock on ``path`` for the duration of the block
+
+    Exits with ``LOCK_HELD_EXIT_CODE`` straight away if another process holds the lock.
+    The holder's PID is written to the file to help track down a stale holder.
+    POSIX locks are used because NFS clients and the exporting host only see each other's POSIX locks.
+    """
+    if path is None:
+        yield
+        return
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a+") as lock_file:
+        try:
+            fcntl.lockf(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except (BlockingIOError, PermissionError):
+            lock_file.seek(0)
+            holder = lock_file.read().strip() or "unknown"
+            logger.error(f"Another process holds the lock file {path} (PID {holder}). Exiting.")
+            raise typer.Exit(code=LOCK_HELD_EXIT_CODE)
+        try:
+            lock_file.truncate(0)
+            lock_file.write(f"{os.getpid()}\n")
+            lock_file.flush()
+            yield
+        finally:
+            fcntl.lockf(lock_file, fcntl.LOCK_UN)

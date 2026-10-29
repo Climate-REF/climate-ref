@@ -20,9 +20,9 @@ from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
 from climate_ref.models.dataset import CMIP6Dataset, Dataset, DatasetFile
-from climate_ref.models.dataset_query import DatasetFilter, select_datasets
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup, execution_datasets
+from climate_ref.query import DatasetFilter, select_datasets
 from climate_ref_core.source_types import SourceDatasetType
 
 
@@ -91,6 +91,7 @@ def db_with_versions(db_seeded):
     }
     db_seeded.dq_execution_id = execution.id
     db_seeded.dq_diagnostic_slug = diag.slug
+    db_seeded.dq_provider_slug = diag.provider.slug
     return db_seeded
 
 
@@ -108,25 +109,36 @@ class TestSelectDatasetsLatestVersionDedup:
         assert db_with_versions.dq_ids["v10"] in ids
         assert db_with_versions.dq_ids["v2"] not in ids
 
-    def test_ties_at_max_version_both_survive(self, db_with_versions):
-        """RANK (not ROW_NUMBER): two rows tied at the max ``version_key`` in a partition both survive.
-
-        Pins the tie behaviour at the SQL layer so a future ``rank()`` -> ``row_number()`` regression is
-        caught in CI, not only by the pandas parity tests.
-        """
+    def test_ties_at_max_version_keep_one_row(self, db_with_versions):
+        """Rows tied at the max ``version_key`` collapse to one: latest ``updated_at``, then highest id."""
         tie_a = _make_cmip6(slug="dq.TIE-MODEL.tas.v10.a", source_id="TIE-MODEL", version="v10")
         tie_b = _make_cmip6(slug="dq.TIE-MODEL.tas.v10.b", source_id="TIE-MODEL", version="v10")
         older = _make_cmip6(slug="dq.TIE-MODEL.tas.v2", source_id="TIE-MODEL", version="v2")
         db_with_versions.session.add_all([tie_a, tie_b, older])
         db_with_versions.session.flush()
-        tie_ids = {tie_a.id, tie_b.id}
 
         stmt = select_datasets(
             DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("TIE-MODEL",)}),
             latest_group_by=ID_COLS,
         )
         rows = db_with_versions.session.execute(stmt).scalars().unique().all()
-        assert {r.id for r in rows} == tie_ids
+        assert [r.id for r in rows] == [tie_b.id]
+
+    def test_unparseable_versions_keep_one_row(self, db_with_versions):
+        """Versions that all map to ``version_key == -1`` still give exactly one latest row."""
+        rows_in = [
+            _make_cmip6(slug=f"dq.UNP-MODEL.tas.{v}", source_id="UNP-MODEL", version=v)
+            for v in ("vX", "latest", "1.0")
+        ]
+        db_with_versions.session.add_all(rows_in)
+        db_with_versions.session.flush()
+
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("UNP-MODEL",)}),
+            latest_group_by=ID_COLS,
+        )
+        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
+        assert len(rows) == 1
 
     def test_non_conforming_version_survives_alone_in_its_group(self, db_with_versions):
         stmt = select_datasets(
@@ -152,7 +164,7 @@ class TestSelectDatasetsLatestVersionDedup:
         stmt = select_datasets(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
-                execution_id=db_with_versions.dq_execution_id,
+                execution_ids=db_with_versions.dq_execution_id,
                 diagnostic_slug=db_with_versions.dq_diagnostic_slug,
             ),
             latest_group_by=ID_COLS,
@@ -185,13 +197,42 @@ class TestSelectDatasetsLatestVersionDedup:
         assert db_with_versions.dq_ids["v2"] in ids
         assert db_with_versions.dq_ids["v10"] in ids
 
-    def test_latest_only_requires_latest_group_by(self):
-        """``latest_only=True`` (the default) with no ``latest_group_by`` is rejected: the two must be
-        supplied together, so a caller cannot silently receive an un-deduplicated result."""
-        with pytest.raises(ValueError, match="latest_group_by"):
+    def test_latest_group_by_defaults_to_adapter(self, db_with_versions):
+        """The default filter works without ``latest_group_by``: it comes from the source type's adapter."""
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("TEST-MODEL",)})
+        )
+        explicit = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("TEST-MODEL",)}),
+            latest_group_by=ID_COLS,
+        )
+        session = db_with_versions.session
+        assert (
+            session.execute(stmt).scalars().unique().all()
+            == session.execute(explicit).scalars().unique().all()
+        )
+        assert db_with_versions.dq_ids["v2"] not in {r.id for r in session.execute(stmt).scalars().unique()}
+
+    @pytest.mark.parametrize("facet", ["finalised", "id", "slug", "version_key", "retracted_at"])
+    def test_base_columns_are_not_facets(self, db_with_versions, facet):
+        with pytest.raises(ValueError, match="Unknown facet"):
+            select_datasets(DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={facet: ("1",)}))
+
+    def test_finalised_facet_points_at_filter_field(self):
+        with pytest.raises(ValueError, match=r"DatasetFilter\.finalised"):
             select_datasets(
-                DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("TEST-MODEL",)})
+                DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"finalised": ("True",)})
             )
+
+    def test_source_type_accepts_name(self):
+        assert DatasetFilter(source_type="CMIP6").source_type is SourceDatasetType.CMIP6
+
+    def test_order_is_unique(self, db_with_versions):
+        """Rows sharing ``updated_at`` are ordered by ``id`` descending so paging is stable."""
+        stmt = select_datasets(DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False))
+        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
+        keys = [(r.updated_at, r.id) for r in rows]
+        assert keys == sorted(keys, reverse=True)
 
     def test_source_type_is_required(self):
         """``DatasetFilter`` has no default ``source_type``: a typed listing must choose a type."""
@@ -222,6 +263,26 @@ class TestSlugContains:
         )
         rows = db_with_versions.session.execute(stmt).scalars().unique().all()
         assert {r.id for r in rows} == {db_with_versions.dq_ids["v2"]}
+
+    def test_any_of_a_list(self, db_with_versions):
+        stmt = select_datasets(
+            DatasetFilter(
+                source_type=SourceDatasetType.CMIP6,
+                slug_contains=["tas.v2", "pr.latest"],
+                latest_only=False,
+            )
+        )
+        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
+        assert {r.id for r in rows} == {
+            db_with_versions.dq_ids["v2"],
+            db_with_versions.dq_ids["nonconforming"],
+        }
+
+    def test_empty_list_matches_nothing(self, db_with_versions):
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, slug_contains=[], latest_only=False)
+        )
+        assert db_with_versions.session.execute(stmt).scalars().unique().all() == []
 
 
 class TestRetractedFiltering:
@@ -382,3 +443,73 @@ def test_get_dataset_adapter_covers_all_four_subclasses():
     ):
         adapter = get_dataset_adapter(source_type.value)
         assert adapter.dataset_id_metadata
+
+
+class TestDiagnosticAndExecutionFields:
+    def _ids(self, db, **kwargs):
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False, **kwargs)
+        )
+        return {r.id for r in db.session.execute(stmt).scalars().unique().all()}
+
+    def test_execution_ids(self, db_with_versions):
+        ids = self._ids(db_with_versions, execution_ids=[db_with_versions.dq_execution_id, 999999])
+        assert ids == {db_with_versions.dq_ids["v10"]}
+
+    def test_empty_execution_ids_match_nothing(self, db_with_versions):
+        assert self._ids(db_with_versions, execution_ids=[]) == set()
+
+    def test_provider_slug(self, db_with_versions):
+        ids = self._ids(db_with_versions, provider_slug=db_with_versions.dq_provider_slug)
+        assert db_with_versions.dq_ids["v10"] in ids
+        assert self._ids(db_with_versions, provider_slug="no-such-provider") == set()
+
+    def test_retracted_execution_excluded_by_default(self, db_with_versions):
+        db = db_with_versions
+        v10 = db.dq_ids["v10"]
+        slug = db.dq_provider_slug
+        db.session.execute(update(Execution).where(Execution.id == db.dq_execution_id).values(retracted=True))
+        db.session.commit()
+
+        assert self._ids(db, provider_slug=slug) == set()
+        assert v10 in self._ids(db, provider_slug=slug, include_retracted_executions=True)
+
+    def test_execution_ids_ignore_retraction_and_version(self, db_with_versions):
+        db = db_with_versions
+        db.session.execute(update(Execution).where(Execution.id == db.dq_execution_id).values(retracted=True))
+        db.session.execute(update(Diagnostic).values(promoted_version=2))
+        db.session.commit()
+
+        assert self._ids(db, execution_ids=[db.dq_execution_id]) == {db.dq_ids["v10"]}
+        assert self._ids(db, execution_ids=[db.dq_execution_id], provider_slug=db.dq_provider_slug) == {
+            db.dq_ids["v10"]
+        }
+
+    def test_superseded_version_excluded_by_default(self, db_with_versions):
+        db = db_with_versions
+        slug = db.dq_diagnostic_slug
+        db.session.execute(update(Diagnostic).values(promoted_version=2))
+        db.session.commit()
+
+        assert self._ids(db, diagnostic_slug=slug) == set()
+        assert db.dq_ids["v10"] in self._ids(db, diagnostic_slug=slug, include_superseded=True)
+
+    def test_include_retracted_executions_leaves_dataset_retraction(self, db_with_versions):
+        db = db_with_versions
+        db.session.execute(
+            update(Dataset)
+            .where(Dataset.id == db.dq_ids["v10"])
+            .values(retracted_at=datetime.datetime(2026, 1, 1))
+        )
+        db.session.commit()
+        kwargs = {"provider_slug": db.dq_provider_slug, "include_retracted_executions": True}
+
+        assert self._ids(db, **kwargs) == set()
+        assert self._ids(db, include_retracted=True, **kwargs) == {db.dq_ids["v10"]}
+
+    def test_diagnostic_contains(self, db_with_versions):
+        search = db_with_versions.dq_diagnostic_slug[1:].upper()
+        assert db_with_versions.dq_ids["v10"] in self._ids(db_with_versions, diagnostic_contains=search)
+
+    def test_source_type_from_string(self):
+        assert DatasetFilter(source_type="cmip6").source_type is SourceDatasetType.CMIP6

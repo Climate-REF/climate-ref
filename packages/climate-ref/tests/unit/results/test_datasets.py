@@ -178,6 +178,13 @@ class TestFacetFiltering:
                 DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"nonexistent_facet": ("x",)})
             )
 
+    def test_finalised_facet_raises(self, db_with_datasets):
+        reader = Reader(db_with_datasets)
+        with pytest.raises(ValueError, match="Unknown facet 'finalised'"):
+            reader.datasets.list(
+                DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"finalised": ("True",)})
+            )
+
     def test_source_type_is_required(self):
         """``DatasetFilter`` has no default ``source_type``: a typed listing must choose a type."""
         with pytest.raises(TypeError):
@@ -258,7 +265,7 @@ class TestExecutionIdJoin:
         coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
-                execution_id=db_with_datasets.execution_id,
+                execution_ids=db_with_datasets.execution_id,
                 latest_only=False,
             )
         )
@@ -268,7 +275,7 @@ class TestExecutionIdJoin:
     def test_execution_id_no_match(self, db_with_datasets):
         reader = Reader(db_with_datasets)
         coll = reader.datasets.list(
-            DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_id=999999, latest_only=False)
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_ids=999999, latest_only=False)
         )
         assert len(coll) == 0
 
@@ -304,7 +311,7 @@ class TestDiagnosticSlugJoin:
         coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
-                execution_id=db_with_datasets.execution_id,
+                execution_ids=db_with_datasets.execution_id,
                 diagnostic_slug=db_with_datasets.diagnostic_slug,
                 latest_only=False,
             )

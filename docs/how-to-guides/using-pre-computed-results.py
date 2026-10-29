@@ -247,7 +247,11 @@ diagnostic = next(d for d in diagnostics if d.name == diagnostic_name)
 for group in diagnostic.execution_groups:
     execution = executions_get.sync(group, client=client)
     if execution.key.endswith("ssp585"):
-        ssp585_outputs = execution.latest_execution.outputs
+        latest_execution = max(
+            (e for e in execution.executions if e.successful),
+            key=lambda e: e.created_at,
+        )
+        ssp585_outputs = latest_execution.outputs
         break
 else:
     msg = "Failed to find the ssp585 execution group"

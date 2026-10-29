@@ -10,7 +10,7 @@ Its [values][climate_ref.results.reader.Reader.values] reader,
 [ValuesReader][climate_ref.results.values.ValuesReader], gets scalar and series values.
 A read returns a collection that you can loop over or turn into a DataFrame with ``to_pandas()``.
 
-Pass a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter] to choose which values you get,
+Pass a [MetricValueFilter][climate_ref.query.filters.MetricValueFilter] to choose which values you get,
 and an [OutlierPolicy][climate_ref.results.outliers.OutlierPolicy] to flag unusual scalar values.
 
 Examples
@@ -33,35 +33,36 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import attrs
-import numpy as np
 import pandas as pd
-from sqlalchemy import select
-from sqlalchemy.orm import Session, aliased, joinedload
+from sqlalchemy import Select, case, func, select
+from sqlalchemy.orm import Session, joinedload
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.metric_value import MetricValue, MetricValueType, ScalarMetricValue, SeriesMetricValue
-from climate_ref.models.provider import Provider
-from climate_ref.results._page import Page
-from climate_ref.results.filters import MetricValueFilter
-from climate_ref.results.frames import (
-    collect_facets,
-    facets_from_columns,
-    scalar_values_to_frame,
-    series_values_to_frame,
-)
-from climate_ref.results.outliers import OutlierPolicy, flag_outliers
-from climate_ref.results.queries import (
+from climate_ref.query import (
+    MetricValueFilter,
     count,
     paginate,
-    select_scalar_values,
-    select_series_values,
     select_value_ids,
 )
+from climate_ref.results._page import Page, check_paging
+from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
+from climate_ref.results.outliers import OutlierPolicy, select_outlier_flags
 
-_ID_CHUNK = 900
-"""Ids per ``IN`` lookup, below the 999 bound parameters SQLite allowed before 3.32."""
+
+def _select_page(
+    entity: type[MetricValue], value_ids: Select[Any], offset: int, limit: int | None
+) -> Select[Any]:
+    """
+    Select a page of ``entity`` by paging ``value_ids`` first, then loading only those rows.
+
+    SQLite would otherwise filter through ``ix_metric_value_type``, which reads every value of that type.
+    """
+    ids = value_ids.subquery("value_ids")
+    page = paginate(select(ids.c.id).order_by(ids.c.id), offset, limit).subquery("value_page")
+    return select(entity).where(entity.id.in_(select(page.c.id))).order_by(entity.id)
 
 
 def _split_kind(dimensions: Mapping[str, str]) -> tuple[str, dict[str, str]]:
@@ -345,18 +346,6 @@ def _to_facets(facet_map: Mapping[str, Sequence[Any]]) -> tuple[Facet, ...]:
     return tuple(Facet(key=k, values=tuple(v)) for k, v in facet_map.items())
 
 
-def _diagnostic_id_of(table: Any) -> Any:
-    """Scalar subquery for the diagnostic id of each value's execution."""
-    execution = aliased(Execution)
-    group = aliased(ExecutionGroup)
-    return (
-        select(group.diagnostic_id)
-        .join(execution, execution.execution_group_id == group.id)
-        .where(execution.id == table.execution_id)
-        .scalar_subquery()
-    )
-
-
 class ValuesReader:
     """
     Gets the metric values that diagnostics produced, to compare models or plot against observations.
@@ -405,14 +394,17 @@ class ValuesReader:
         """
         Get single-number metric values, to compare models in a table.
 
-        Call it with a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]
+        Call it with a [MetricValueFilter][climate_ref.query.filters.MetricValueFilter]
         to choose the diagnostic, models, experiments or metric.
+        With the default ``latest_only=False``, a rerun group gives values from each non-retracted execution,
+        so the same value can appear more than once.
         For large results, set ``limit`` to read them in pages.
 
         Parameters
         ----------
         filters
-            Which values to get. ``None`` gets every value from the current version of each diagnostic.
+            Which values to get.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
         outliers
             Flags unusual values, e.g. ``OutlierPolicy(method="iqr")``. It is off by default.
         include_unverified
@@ -437,7 +429,9 @@ class ValuesReader:
 
         Notes
         -----
-        Outlier flags compare each value with the others for the same metric, across all matching values.
+        Outlier flags compare each value with the other models in its cell, across all matching values.
+        A cell is one diagnostic and one combination of labels apart from the model ones,
+        as described in [climate_ref.results.outliers][].
         So ``offset`` and ``limit`` do not change which values are flagged.
         ``facets`` cover all matching values, including those dropped as outliers or left out by ``limit``.
 
@@ -464,6 +458,7 @@ class ValuesReader:
         df = collection.to_pandas()
         ```
         """
+        check_paging(offset, limit)
         filters = filters or MetricValueFilter()
         policy = outliers or OutlierPolicy(method="off")
 
@@ -480,11 +475,12 @@ class ValuesReader:
             )
 
         # No outlier detection: page and count in SQL so we never materialise the whole table.
-        base_stmt = select_scalar_values(filters)
         value_ids = select_value_ids(MetricValueType.SCALAR, filters)
         facets = self._facets(value_ids) if with_facets else ()
         total_count = count(self.session, value_ids) if with_count else None
-        load_stmt = paginate(base_stmt.options(self._scalar_loader(include_context)), offset, limit)
+        load_stmt = _select_page(ScalarMetricValue, value_ids, offset, limit).options(
+            self._scalar_loader(include_context)
+        )
         rows = list(self.session.execute(load_stmt).scalars().all())
         items = tuple(self._to_scalar_dto(r, include_context) for r in rows)
         return ScalarValueCollection(
@@ -510,108 +506,54 @@ class ValuesReader:
         include_context: bool,
     ) -> ScalarValueCollection:
         """
-        Run detection over the full filtered set so IQR bounds are globally consistent, then filter and page.
+        Flag every matching value in the database so the bounds do not depend on the page, then page.
 
-        Only the columns detection needs are loaded for every row, and only the returned page becomes DTOs.
+        Only the values on the page are loaded.
+        The counts ride along on each row of the page, so detection runs once unless the page is empty.
         """
-        dims = ScalarMetricValue._cv_dimensions
-        for g in policy.group_by:
-            if g not in dims:
-                raise KeyError(f"Unknown outlier group_by dimension {g!r}")
-        table = MetricValue.__table__.c
-        detect_stmt = (
-            select_value_ids(MetricValueType.SCALAR, filters)
-            .with_only_columns(
-                table.id, table.execution_id, table.value, *(table[d] for d in dims), _diagnostic_id_of(table)
+        value_ids = select_value_ids(MetricValueType.SCALAR, filters)
+        flags = select_outlier_flags(value_ids, policy).subquery("outlier_flags")
+        facets = self._facets(value_ids) if with_facets else ()
+        flagged_sum = func.sum(case((flags.c.is_outlier, 1), else_=0))
+        counted = select(
+            flags.c.id,
+            flags.c.is_outlier,
+            func.count().over().label("matched"),
+            flagged_sum.over().label("flagged"),
+        ).subquery("outlier_counted")
+        page_ids = select(counted).order_by(counted.c.id)
+        if not include_unverified:
+            page_ids = page_ids.where(~counted.c.is_outlier)
+        page = paginate(page_ids, offset, limit).subquery("outlier_page")
+        page_stmt = (
+            select(ScalarMetricValue, page.c.is_outlier, page.c.matched, page.c.flagged)
+            .join(page, page.c.id == ScalarMetricValue.id)
+            .options(self._scalar_loader(include_context))
+            .order_by(page.c.id)
+        )
+        rows = self.session.execute(page_stmt).all()
+        if rows:
+            matched, flagged = rows[0].matched, rows[0].flagged
+        else:
+            matched, flagged = self.session.execute(select(func.count(), func.coalesce(flagged_sum, 0))).one()
+        total_count = (matched if include_unverified else matched - flagged) if with_count else None
+        items = tuple(
+            attrs.evolve(
+                self._to_scalar_dto(row, include_context),
+                is_outlier=bool(is_outlier),
+                verification_status="unverified" if is_outlier else "verified",
             )
-            .order_by(table.id)
+            for row, is_outlier, _, _ in rows
         )
-        # Core execution, because the ORM result layer adds a third to this fetch, so flush as it would.
-        if self.session.autoflush:
-            self.session.flush()
-        scalar_rows = self.session.connection().execute(detect_stmt).tuples().all()
-        _, _, values, *dim_columns, diagnostic_ids = (
-            zip(*scalar_rows) if scalar_rows else [()] * (4 + len(dims))
-        )
-        facets = _to_facets(facets_from_columns(dims, dim_columns)) if with_facets else ()
-        detection_dims = {*policy.group_by, "source_id"}
-        frame = pd.DataFrame(
-            {
-                "value": values,
-                "diagnostic_id": diagnostic_ids,
-                **{k: column for k, column in zip(dims, dim_columns) if k in detection_dims},
-            }
-        )
-
-        # Diagnostics measure different things under the same metric names, so never pool them.
-        is_outlier = flag_outliers(frame, attrs.evolve(policy, group_by=("diagnostic_id", *policy.group_by)))
-        outlier_count = int(is_outlier.sum())
-        kept = np.arange(len(scalar_rows)) if include_unverified else np.flatnonzero(~is_outlier)
-
-        total_count = len(kept) if with_count else None
-        page = kept[offset : offset + limit] if limit is not None else kept[offset:]
-        items = self._scalar_page(scalar_rows, is_outlier, page.tolist(), include_context)
         return ScalarValueCollection(
             items=items,
             total_count=total_count,
             facets=facets,
             offset=offset,
             limit=limit,
-            had_outliers=outlier_count > 0,
-            outlier_count=outlier_count,
+            had_outliers=flagged > 0,
+            outlier_count=flagged,
         )
-
-    def _scalar_page(
-        self, rows: Sequence[Any], is_outlier: np.ndarray, positions: list[int], include_context: bool
-    ) -> tuple[ScalarValue, ...]:
-        """DTOs for the detection rows at ``positions``, fetching the columns detection did not need."""
-        dims = ScalarMetricValue._cv_dimensions
-        columns: list[Any] = [
-            ScalarMetricValue.id,
-            Execution.execution_group_id,
-            ScalarMetricValue.attributes,
-        ]
-        if include_context:
-            columns += [Diagnostic.slug.label("diagnostic_slug"), Provider.slug.label("provider_slug")]
-        extra_stmt = select(*columns).join(Execution, ScalarMetricValue.execution_id == Execution.id)
-        if include_context:
-            extra_stmt = (
-                extra_stmt.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id)
-                .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-                .join(Provider, Diagnostic.provider_id == Provider.id)
-            )
-        extras: dict[int, Any] = {}
-        ids = [rows[i][0] for i in positions]
-        for start in range(0, len(ids), _ID_CHUNK):
-            chunk = ids[start : start + _ID_CHUNK]
-            for row in self.session.execute(extra_stmt.where(ScalarMetricValue.id.in_(chunk))):
-                extras[row.id] = row
-
-        items = []
-        for i in positions:
-            row_id, execution_id, value, *dim_values, _ = rows[i]
-            extra = extras.get(row_id)
-            if extra is None:
-                # Deleted by another transaction since detection read it.
-                continue
-            kind, dimensions = _split_kind({k: v for k, v in zip(dims, dim_values) if v is not None})
-            flagged = bool(is_outlier[i])
-            items.append(
-                ScalarValue(
-                    id=row_id,
-                    execution_id=execution_id,
-                    execution_group_id=extra.execution_group_id,
-                    value=value,
-                    kind=kind,
-                    dimensions=dimensions,
-                    attributes=dict(extra.attributes or {}),
-                    is_outlier=flagged,
-                    verification_status="unverified" if flagged else "verified",
-                    diagnostic_slug=extra.diagnostic_slug if include_context else None,
-                    provider_slug=extra.provider_slug if include_context else None,
-                )
-            )
-        return tuple(items)
 
     def series_values(  # noqa: PLR0913
         self,
@@ -626,15 +568,18 @@ class ValuesReader:
         """
         Get series of values, such as time series, to plot.
 
-        Call it with a [MetricValueFilter][climate_ref.results.filters.MetricValueFilter]
+        Call it with a [MetricValueFilter][climate_ref.query.filters.MetricValueFilter]
         to choose the diagnostic and models.
+        With the default ``latest_only=False``, a rerun group gives series from each non-retracted execution,
+        so the same series can appear more than once.
         Set ``reference_only`` on the filter to get the observational series or the model series.
         For large results, set ``limit`` to read them in pages.
 
         Parameters
         ----------
         filters
-            Which series to get. ``None`` gets every series from the current version of each diagnostic.
+            Which series to get.
+            ``None`` uses the default filter: promoted versions only, with retracted executions left out.
         offset
             Number of series to skip, to read the next page.
         limit
@@ -665,14 +610,16 @@ class ValuesReader:
         df = collection.to_pandas()
         ```
         """
+        check_paging(offset, limit)
         filters = filters or MetricValueFilter()
 
-        base_stmt = select_series_values(filters)
         value_ids = select_value_ids(MetricValueType.SERIES, filters)
         facets = self._facets(value_ids) if with_facets else ()
         total_count = count(self.session, value_ids) if with_count else None
 
-        load_stmt = paginate(base_stmt.options(self._series_loader(include_context)), offset, limit)
+        load_stmt = _select_page(SeriesMetricValue, value_ids, offset, limit).options(
+            self._series_loader(include_context)
+        )
         rows = list(self.session.execute(load_stmt).scalars().unique().all())
 
         items = tuple(self._to_series_dto(r, include_context) for r in rows)

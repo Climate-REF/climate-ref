@@ -1,6 +1,7 @@
 """Unit tests for the execution-group / execution read layer."""
 
 import datetime
+import functools
 
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
@@ -14,6 +15,7 @@ from climate_ref.models.execution import (
     ResultOutputType,
 )
 from climate_ref.provider_registry import _register_provider
+from climate_ref.query import DatasetFilter, select_diagnostics, select_execution_outputs
 from climate_ref.results import (
     DiagnosticFilter,
     ExecutionGroupFilter,
@@ -21,7 +23,6 @@ from climate_ref.results import (
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results.queries import select_diagnostics, select_execution_outputs
 
 
 def test_import_smoke() -> None:
@@ -810,6 +811,19 @@ class TestGroupRules:
         assert len(coll) == 0
 
     @pytest.mark.parametrize("paging", [{"offset": -1}, {"limit": -1}])
-    def test_negative_paging_raises(self, db_with_groups, paging):
-        with pytest.raises(ValueError, match="must be >= 0"):
-            Reader(db_with_groups).executions.groups(**paging)
+    @pytest.mark.parametrize(
+        "read",
+        [
+            lambda reader: reader.executions.groups,
+            lambda reader: reader.diagnostics.list,
+            lambda reader: functools.partial(reader.datasets.list, DatasetFilter(source_type="cmip6")),
+            lambda reader: reader.resources.measurements,
+            lambda reader: reader.values.scalar_values,
+            lambda reader: reader.values.series_values,
+        ],
+        ids=["groups", "diagnostics", "datasets", "measurements", "scalar_values", "series_values"],
+    )
+    def test_negative_paging_raises_before_querying(self, db_with_groups, count_queries, paging, read):
+        with count_queries(db_with_groups) as statements, pytest.raises(ValueError, match="must be >= 0"):
+            read(Reader(db_with_groups))(**paging)
+        assert statements == []

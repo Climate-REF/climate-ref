@@ -148,6 +148,25 @@ SCENARIOS = [
         call=lambda r, t: r.values.series_values(_diagnostic(t), limit=100),
     ),
     Scenario(
+        id="values.series.diagnostic-dimension-filter",
+        call=lambda r, t: r.values.series_values(
+            _diagnostic(t, dimensions={"source_id": t.source_id}), limit=100
+        ),
+    ),
+    Scenario(
+        id="values.series.sparse-diagnostic-page",
+        call=lambda r, t: r.values.series_values(
+            MetricValueFilter(
+                diagnostic_slug=t.sparse_series_diagnostic_slug,
+                provider_slug=t.sparse_series_provider_slug,
+                include_retracted=True,
+            ),
+            limit=500,
+        ),
+        # A busy diagnostic fills the page early, so only a sparse one shows a read of every series.
+        budget_seconds=0.1,
+    ),
+    Scenario(
         id="values.series.diagnostic-reference-page",
         call=lambda r, t: r.values.series_values(_diagnostic(t, reference_only=True), limit=100),
     ),

@@ -17,7 +17,13 @@ when their solve run started: created by then, not yet retracted, and the latest
 The grey list, diagnostic code and dataset files are today's, so an execution they have since changed
 stays unmatched.
 
-Dry run by default. Pass `--apply` to rewrite the links. Run it with the deployment's environment, e.g.
+With `--retract-orphans`, groups the current solve no longer produces have their latest execution retracted
+when it is unmatched and its links may be wrong:
+it links a dataset of the wrong source type, or its diagnostic declares a fallback source type.
+
+Dry run by default. Pass `--apply` to rewrite the links.
+Run it with the climate-ref version that solves the database,
+because groups are keyed by diagnostic version, e.g.
 
     kubectl exec -i <pod running climate-ref> -- \
         python - --provider pmp < scripts/repair-execution-datasets.py
@@ -35,7 +41,7 @@ import attrs
 import pandas as pd
 import typer
 from loguru import logger
-from sqlalchemy import column, delete, select, table, text
+from sqlalchemy import column, delete, func, select, table, text, update
 
 from climate_ref.config import Config
 from climate_ref.data_catalog import DataCatalog
@@ -48,6 +54,7 @@ from climate_ref.query.datasets import select_datasets
 from climate_ref.query.filters import DatasetFilter
 from climate_ref.solver import DiagnosticExecution, ExecutionSolver, SolveFilterOptions, matches_filter
 from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
+from climate_ref_core.diagnostics import DataRequirement, Diagnostic
 
 app = typer.Typer()
 
@@ -84,6 +91,7 @@ class Planner:
     legacy_slugs: dict[str, str] = attrs.field(factory=dict)
     links: dict[int, list[int]] = attrs.field(factory=lambda: collections.defaultdict(list))
     matched: set[int] = attrs.field(factory=set)
+    produced: set[int] = attrs.field(factory=set)
     rewrites: dict[int, list[int]] = attrs.field(factory=dict)
     counts: collections.Counter[str] = attrs.field(factory=collections.Counter)
     examples: list[str] = attrs.field(factory=list)
@@ -144,6 +152,8 @@ class Planner:
             if group_id is None:
                 self.counts["solved, no group yet"] += 1
                 continue
+            if only is None:
+                self.produced.add(group_id)
             candidates = {
                 *self.executions.get((group_id, potential.datasets.hash), []),
                 *self.executions.get((group_id, self.legacy_hash(potential.datasets)), []),
@@ -232,6 +242,56 @@ def _legacy_slugs(db: Database) -> dict[str, str]:
     return legacy
 
 
+def _in_scope(
+    planner: Planner, solver: ExecutionSolver, filters: SolveFilterOptions
+) -> dict[int, Diagnostic]:
+    """Map the id of each registered diagnostic the filters select to the diagnostic."""
+    return {
+        planner.diagnostic_ids[(provider.slug, diagnostic.slug)]: diagnostic
+        for provider in solver.provider_registry.providers
+        for diagnostic in provider.diagnostics()
+        if matches_filter(diagnostic, filters) and (provider.slug, diagnostic.slug) in planner.diagnostic_ids
+    }
+
+
+def _uses_fallback(diagnostic: Diagnostic) -> bool:
+    requirements = [
+        requirement
+        for item in diagnostic.data_requirements
+        for requirement in ((item,) if isinstance(item, DataRequirement) else item)
+    ]
+    return any(requirement.fallback_source_types for requirement in requirements)
+
+
+def _orphans(
+    planner: Planner, solver: ExecutionSolver, db: Database, filters: SolveFilterOptions, flagged: set[int]
+) -> list[int]:
+    """Find the latest executions to retract in groups the current solve no longer produces."""
+    in_scope = _in_scope(planner, solver, filters)
+    with db.session.begin():
+        latest = db.session.execute(
+            select(
+                ExecutionGroup.id,
+                ExecutionGroup.diagnostic_id,
+                ExecutionGroup.diagnostic_version,
+                func.max(Execution.id),
+            )
+            .join(Execution, Execution.execution_group_id == ExecutionGroup.id)
+            .group_by(ExecutionGroup.id)
+        ).all()
+    orphans = []
+    for group_id, diagnostic_id, diagnostic_version, execution_id in latest:
+        diagnostic = in_scope.get(diagnostic_id)
+        # Groups of an older diagnostic version are never solved again, so they are not orphans.
+        if diagnostic is None or diagnostic_version != diagnostic.version:
+            continue
+        if group_id in planner.produced or execution_id in planner.matched:
+            continue
+        if execution_id in flagged or _uses_fallback(diagnostic):
+            orphans.append(execution_id)
+    return sorted(orphans)
+
+
 def _solve_runs(db: Database) -> list[tuple[datetime.datetime, list[tuple[int, int]]]]:
     """Group every execution into solve runs, as ``(run start, [(execution id, diagnostic id)])``."""
     rows = db.session.execute(
@@ -268,10 +328,8 @@ def _repair_as_of_run(
     planner: Planner, solver: ExecutionSolver, db: Database, filters: SolveFilterOptions
 ) -> None:
     in_scope = {
-        planner.diagnostic_ids[(provider.slug, diagnostic.slug)]: diagnostic.slug
-        for provider in solver.provider_registry.providers
-        for diagnostic in provider.diagnostics()
-        if matches_filter(diagnostic, filters) and (provider.slug, diagnostic.slug) in planner.diagnostic_ids
+        diagnostic_id: diagnostic.slug
+        for diagnostic_id, diagnostic in _in_scope(planner, solver, filters).items()
     }
     with db.session.begin():
         runs = _solve_runs(db)
@@ -325,6 +383,12 @@ def main(  # noqa: PLR0913
     dedupe: Annotated[
         bool, typer.Option(help="Also rewrite executions whose links are right but repeated once per file.")
     ] = False,
+    retract_orphans: Annotated[
+        bool,
+        typer.Option(
+            help="Retract the latest execution of groups no longer solved when its links may be wrong."
+        ),
+    ] = False,
     show: Annotated[int, typer.Option(help="Number of example changes to print.")] = 20,
 ) -> None:
     """Plan, and with ``--apply`` write, the corrected execution dataset links."""
@@ -348,6 +412,7 @@ def main(  # noqa: PLR0913
     with db.session.begin():
         flagged = {row[0] for row in db.session.execute(text(_MISMATCHED_TYPES_SQL))}
     unrepaired = sorted(flagged - planner.rewrites.keys())
+    orphans = _orphans(planner, solver, db, filters, flagged) if retract_orphans else []
 
     for line in planner.examples:
         print(line)
@@ -360,6 +425,8 @@ def main(  # noqa: PLR0913
     print(f"executions to rewrite: {len(planner.rewrites)}")
     print(f"linking a dataset of the wrong source type: {len(flagged)}")
     print(f"of those, not repaired by this run: {len(unrepaired)} e.g. {unrepaired[:show]}")
+    if retract_orphans:
+        print(f"executions to retract in groups no longer solved: {len(orphans)} e.g. {orphans[:show]}")
 
     if not apply:
         print("Dry run, nothing written. Pass --apply to rewrite.")
@@ -383,6 +450,15 @@ def main(  # noqa: PLR0913
                 ],
             )
         logger.info(f"Rewrote {start + len(batch)}/{len(pending)} executions")
+
+    for start in range(0, len(orphans), BATCH_SIZE):
+        with db.session.begin():
+            db.session.execute(
+                update(Execution)
+                .where(Execution.id.in_(orphans[start : start + BATCH_SIZE]))
+                .values(retracted=True)
+            )
+        logger.info(f"Retracted {min(start + BATCH_SIZE, len(orphans))}/{len(orphans)} executions")
 
 
 if __name__ == "__main__":

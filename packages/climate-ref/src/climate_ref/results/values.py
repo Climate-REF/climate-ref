@@ -34,7 +34,7 @@ from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy import case, func, select
+from sqlalchemy import Select, case, func, select
 from sqlalchemy.orm import Session, joinedload
 
 from climate_ref.database import Database
@@ -45,13 +45,24 @@ from climate_ref.query import (
     MetricValueFilter,
     count,
     paginate,
-    select_scalar_values,
-    select_series_values,
     select_value_ids,
 )
 from climate_ref.results._page import Page, check_paging
 from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
 from climate_ref.results.outliers import OutlierPolicy, select_outlier_flags
+
+
+def _select_page(
+    entity: type[MetricValue], value_ids: Select[Any], offset: int, limit: int | None
+) -> Select[Any]:
+    """
+    Select a page of ``entity`` by paging ``value_ids`` first, then loading only those rows.
+
+    SQLite would otherwise filter through ``ix_metric_value_type``, which reads every value of that type.
+    """
+    ids = value_ids.subquery("value_ids")
+    page = paginate(select(ids.c.id).order_by(ids.c.id), offset, limit).subquery("value_page")
+    return select(entity).where(entity.id.in_(select(page.c.id))).order_by(entity.id)
 
 
 def _split_kind(dimensions: Mapping[str, str]) -> tuple[str, dict[str, str]]:
@@ -464,11 +475,12 @@ class ValuesReader:
             )
 
         # No outlier detection: page and count in SQL so we never materialise the whole table.
-        base_stmt = select_scalar_values(filters)
         value_ids = select_value_ids(MetricValueType.SCALAR, filters)
         facets = self._facets(value_ids) if with_facets else ()
         total_count = count(self.session, value_ids) if with_count else None
-        load_stmt = paginate(base_stmt.options(self._scalar_loader(include_context)), offset, limit)
+        load_stmt = _select_page(ScalarMetricValue, value_ids, offset, limit).options(
+            self._scalar_loader(include_context)
+        )
         rows = list(self.session.execute(load_stmt).scalars().all())
         items = tuple(self._to_scalar_dto(r, include_context) for r in rows)
         return ScalarValueCollection(
@@ -601,12 +613,13 @@ class ValuesReader:
         check_paging(offset, limit)
         filters = filters or MetricValueFilter()
 
-        base_stmt = select_series_values(filters)
         value_ids = select_value_ids(MetricValueType.SERIES, filters)
         facets = self._facets(value_ids) if with_facets else ()
         total_count = count(self.session, value_ids) if with_count else None
 
-        load_stmt = paginate(base_stmt.options(self._series_loader(include_context)), offset, limit)
+        load_stmt = _select_page(SeriesMetricValue, value_ids, offset, limit).options(
+            self._series_loader(include_context)
+        )
         rows = list(self.session.execute(load_stmt).scalars().unique().all())
 
         items = tuple(self._to_series_dto(r, include_context) for r in rows)

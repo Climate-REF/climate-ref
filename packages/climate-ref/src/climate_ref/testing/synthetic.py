@@ -335,7 +335,14 @@ class _Writer:
         groups: list[tuple[Any, ...]] = []
         executions: list[tuple[Any, ...]] = []
         self.successful_executions: dict[int, list[int]] = {}
+        self.execution_groups: list[int] = []
+        # Each group draws on one model era, like a solved group.
+        eras = [t for t in self.datasets if SourceDatasetType[t].is_model_output]
+        era_weights = [self.datasets[t] for t in eras]
+        self.group_eras: dict[int, str] = {}
         for gid in range(1, self.n_groups + 1):
+            era = rng.choices(eras, era_weights)[0] if eras else "CMIP6"
+            self.group_eras[gid] = era
             diagnostic_id = 1 + (gid - 1) % s.diagnostics
             version = (
                 _PROMOTED_VERSION - 1 if rng.random() < s.superseded_group_fraction else _PROMOTED_VERSION
@@ -347,7 +354,9 @@ class _Writer:
                     diagnostic_id,
                     f"key-{gid}",
                     rng.random() < s.dirty_group_fraction,
-                    json.dumps({"cmip6": [["source_id", f"source-{gid % 50}"], ["member_id", "r1i1p1f1"]]}),
+                    json.dumps(
+                        {era.lower(): [["source_id", f"source-{gid % 50}"], ["member_id", "r1i1p1f1"]]}
+                    ),
                     _timestamp(created),
                     _timestamp(created),
                     version,
@@ -381,6 +390,7 @@ class _Writer:
                         "oom" if successful is False and rng.random() < _OOM_FRACTION else None,
                     )
                 )
+                self.execution_groups.append(gid)
                 if successful and version == _PROMOTED_VERSION:
                     self.successful_executions.setdefault(diagnostic_id, []).append(eid)
         self.n_executions = len(executions)
@@ -425,12 +435,16 @@ class _Writer:
         rng = self.rng
         dataset_id = 0
         self.dataset_ids: list[int] = []
+        self.dataset_types: dict[int, str] = {}
+        self.datasets_by_type: dict[str, list[int]] = {}
         for dataset_type, count in self.datasets.items():
             table = Dataset.__mapper__.polymorphic_map[SourceDatasetType[dataset_type]].class_.__tablename__
             first = dataset_id + 1
             dataset_id += count
             ids = range(first, dataset_id + 1)
             self.dataset_ids.extend(ids)
+            self.dataset_types.update(dict.fromkeys(ids, dataset_type))
+            self.datasets_by_type[dataset_type] = list(ids)
             _insert(
                 self.con,
                 "dataset",
@@ -456,12 +470,22 @@ class _Writer:
 
     def _execution_links(self) -> None:
         s, rng = self.shape, self.rng
+        reference = [
+            i
+            for t, ids in self.datasets_by_type.items()
+            if not SourceDatasetType[t].is_model_output
+            for i in ids
+        ]
+        pools = {era: self.datasets_by_type.get(era, []) + reference for era in set(self.group_eras.values())}
+        # A group draws on its era and on the types of the datasets its executions used.
+        source_types = set(self.group_eras.items())
 
         def links() -> Iterator[tuple[int, int]]:
             for eid in range(1, self.n_executions + 1):
-                for did in rng.sample(
-                    self.dataset_ids, min(len(self.dataset_ids), max(1, round(s.datasets_per_execution)))
-                ):
+                gid = self.execution_groups[eid - 1]
+                pool = pools[self.group_eras[gid]]
+                for did in rng.sample(pool, min(len(pool), max(1, round(s.datasets_per_execution)))):
+                    source_types.add((gid, self.dataset_types[did]))
                     yield eid, did
 
         def outputs() -> Iterator[tuple[Any, ...]]:
@@ -479,6 +503,12 @@ class _Writer:
                     )
 
         _insert(self.con, "execution_dataset", ["execution_id", "dataset_id"], links())
+        _insert(
+            self.con,
+            "execution_group_source_type",
+            ["execution_group_id", "source_type"],
+            sorted(source_types),
+        )
         _insert(
             self.con,
             "execution_output",

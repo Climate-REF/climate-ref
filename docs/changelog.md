@@ -21,6 +21,42 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.20.3 (2026-10-29)
+
+### Bug Fixes
+
+- Requires intake-esgf 2026.11.28, so downloaded files follow the umask instead of landing as 0600
+  and STAC searches by `file_start` or `file_end` no longer fail on fx variables. ([#1041](https://github.com/Climate-REF/climate-ref/pull/1041))
+
+### Improved Documentation
+
+- Fixed the "Using pre-computed results" notebook, which broke after the API replaced `latest_execution` with a list of `executions`. ([#1038](https://github.com/Climate-REF/climate-ref/pull/1038))
+
+
+## climate-ref 0.20.2 (2026-10-27)
+
+### Improvements
+
+- Sped up reading pages of series values, and of scalar values without outlier detection, when few values match.
+  They now read only the values of the matching executions rather than every value of that type. ([#1036](https://github.com/Climate-REF/climate-ref/pull/1036))
+
+### Bug Fixes
+
+- Fixed the `regional-historical-trend` diagnostic reporting reference dataset trends in place of the model's trends when both were in the same output file. ([#1019](https://github.com/Climate-REF/climate-ref/pull/1019))
+- Required cartopy 0.26 in the ESMValTool environment, so the climate drivers for fire diagnostic no longer fails while plotting its maps. ([#1035](https://github.com/Climate-REF/climate-ref/pull/1035))
+
+### Trivial/Internal Changes
+
+- [#1024](https://github.com/Climate-REF/climate-ref/pull/1024), [#1032](https://github.com/Climate-REF/climate-ref/pull/1032)
+
+
+## climate-ref 0.20.1 (2026-10-24)
+
+### Bug Fixes
+
+- Fixed the synthetic test database in `climate_ref.testing.synthetic` recording no source types for its execution groups, so filtering it by `source_types` matched nothing. Each group now draws on one model era. ([#1023](https://github.com/Climate-REF/climate-ref/pull/1023))
+
+
 ## climate-ref 0.20.0 (2026-10-23)
 
 ### Highlights

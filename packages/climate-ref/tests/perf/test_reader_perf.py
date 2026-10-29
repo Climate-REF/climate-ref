@@ -16,7 +16,9 @@ import pytest
 from climate_ref.models.metric_value import MetricValueType
 from climate_ref.results import (
     DatasetFilter,
+    DiagnosticFilter,
     ExecutionGroupFilter,
+    InputDatasetFilter,
     MetricValueFilter,
     OutlierPolicy,
     Reader,
@@ -26,6 +28,8 @@ from climate_ref_core.source_types import SourceDatasetType
 
 _EVERY_EXECUTION = frozenset({"execution", "execution_group"})
 _EVERY_GROUP = frozenset({"execution_group"})
+# obs4MIPs also has a `source_id` but only a few dozen datasets, so a scan of it is cheap.
+_OBS4MIPS = frozenset({"obs4mips_dataset"})
 
 
 @attrs.frozen(kw_only=True)
@@ -35,6 +39,16 @@ class Scenario:
     budget_seconds: float = 0.5
     allowed_scans: frozenset[str] = frozenset()
     """Large tables this call has to read in full, e.g. a summary over every execution."""
+    found: Callable[[Any], bool] | None = None
+    """Whether the call found anything, for a filter that would look fast if it matched nothing."""
+
+
+def _any(result: Any) -> bool:
+    return len(result) > 0
+
+
+def _any_groups(result: Any) -> bool:
+    return sum(d.groups.total for d in result) > 0
 
 
 def _diagnostic(t, **kwargs):
@@ -88,6 +102,19 @@ SCENARIOS = [
         ),
     ),
     Scenario(
+        id="values.scalar.diagnostic-page-cmip6",
+        call=lambda r, t: r.values.scalar_values(_diagnostic(t, source_types="cmip6"), limit=100),
+        found=_any,
+    ),
+    Scenario(
+        id="values.scalar.diagnostic-page-input-model",
+        call=lambda r, t: r.values.scalar_values(
+            _diagnostic(t, input_datasets=InputDatasetFilter(facets={"source_id": t.source_id})), limit=100
+        ),
+        allowed_scans=_OBS4MIPS,
+        found=_any,
+    ),
+    Scenario(
         id="values.scalar.execution-page",
         call=lambda r, t: r.values.scalar_values(
             MetricValueFilter(execution_ids=[t.execution_id], include_retracted=True), limit=100
@@ -121,6 +148,25 @@ SCENARIOS = [
         call=lambda r, t: r.values.series_values(_diagnostic(t), limit=100),
     ),
     Scenario(
+        id="values.series.diagnostic-dimension-filter",
+        call=lambda r, t: r.values.series_values(
+            _diagnostic(t, dimensions={"source_id": t.source_id}), limit=100
+        ),
+    ),
+    Scenario(
+        id="values.series.sparse-diagnostic-page",
+        call=lambda r, t: r.values.series_values(
+            MetricValueFilter(
+                diagnostic_slug=t.sparse_series_diagnostic_slug,
+                provider_slug=t.sparse_series_provider_slug,
+                include_retracted=True,
+            ),
+            limit=500,
+        ),
+        # A busy diagnostic fills the page early, so only a sparse one shows a read of every series.
+        budget_seconds=0.1,
+    ),
+    Scenario(
         id="values.series.diagnostic-reference-page",
         call=lambda r, t: r.values.series_values(_diagnostic(t, reference_only=True), limit=100),
     ),
@@ -141,6 +187,21 @@ SCENARIOS = [
         # No filter, so every group is checked for a promoted, non-retracted execution.
         allowed_scans=_EVERY_GROUP,
     ),
+    Scenario(
+        id="executions.groups.page-cmip6",
+        call=lambda r, t: r.executions.groups(ExecutionGroupFilter(source_types="cmip6"), limit=50),
+        allowed_scans=_EVERY_GROUP,
+        found=_any,
+    ),
+    Scenario(
+        id="executions.groups.input-model",
+        call=lambda r, t: r.executions.groups(
+            ExecutionGroupFilter(input_datasets=InputDatasetFilter(facets={"source_id": t.source_id})),
+            limit=50,
+        ),
+        allowed_scans=_EVERY_GROUP | _OBS4MIPS,
+        found=_any,
+    ),
     Scenario(id="executions.group", call=lambda r, t: r.executions.group(t.execution_group_id)),
     Scenario(
         id="executions.latest-execution",
@@ -152,6 +213,26 @@ SCENARIOS = [
         id="diagnostics.list",
         call=lambda r, t: r.diagnostics.list(),
         allowed_scans=_EVERY_EXECUTION,
+    ),
+    Scenario(
+        id="diagnostics.list.cmip6",
+        call=lambda r, t: r.diagnostics.list(DiagnosticFilter(source_types="cmip6")),
+        allowed_scans=_EVERY_EXECUTION,
+        found=_any_groups,
+    ),
+    Scenario(
+        id="diagnostics.list.cmip6-or-no-model",
+        call=lambda r, t: r.diagnostics.list(DiagnosticFilter(source_types="cmip6", or_no_model_input=True)),
+        allowed_scans=_EVERY_EXECUTION,
+        found=_any_groups,
+    ),
+    Scenario(
+        id="diagnostics.list.input-model",
+        call=lambda r, t: r.diagnostics.list(
+            DiagnosticFilter(input_datasets=InputDatasetFilter(facets={"source_id": t.source_id}))
+        ),
+        allowed_scans=_EVERY_EXECUTION | _OBS4MIPS,
+        found=_any_groups,
     ),
     Scenario(
         id="diagnostics.with-scalar-values",
@@ -199,4 +280,5 @@ def test_reader_scenario(scenario: Scenario, measure, targets) -> None:
 
     unexpected = measurement.large_table_scans - scenario.allowed_scans
     assert not unexpected, f"reads every row of {sorted(unexpected)}"
+    assert scenario.found is None or scenario.found(measurement.result), "found nothing to read"
     assert measurement.median_seconds <= scenario.budget_seconds

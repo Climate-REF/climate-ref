@@ -9,12 +9,13 @@ This solves against the current database, matches each solved execution to the e
 in its group that share its `dataset_hash`, and resolves the dataset ids from the `instance_id` of every row.
 It never trusts the catalog index, so it also runs on an image without the fix.
 
+Migration `d6e7f8a9b0c1` rewrote obs4MIPs-style and multi-activity CMIP6 `instance_id`s
+but not the hashes stored on executions, so a hash is also computed from the ids as they were before it.
+
 With `--as-of-run`, executions left unmatched are solved again against the datasets available
 when their solve run started: created by then, not yet retracted, and the latest version at that time.
-Production changed its hash function around 2026-10-14, so older executions cannot match by hash.
-Their stored links are checked instead: everything outside obs4MIPs must agree with the solve,
-and the rest must be obs4MIPs ids or row positions, which is what the bug wrote.
-The grey list and diagnostic code are today's, so an execution they have since changed stays unmatched.
+The grey list, diagnostic code and dataset files are today's, so an execution they have since changed
+stays unmatched.
 
 Dry run by default. Pass `--apply` to rewrite the links. Run it with the deployment's environment, e.g.
 
@@ -27,13 +28,14 @@ Solving the current catalog may finalise unfinalised datasets, which writes thei
 import argparse
 import collections
 import datetime
+import hashlib
 import sys
 from collections.abc import Iterable
 
 import attrs
 import pandas as pd
 from loguru import logger
-from sqlalchemy import delete, select, text
+from sqlalchemy import column, delete, select, table, text
 
 from climate_ref.config import Config
 from climate_ref.data_catalog import DataCatalog
@@ -45,7 +47,7 @@ from climate_ref.models.provider import Provider as ProviderModel
 from climate_ref.query.datasets import select_datasets
 from climate_ref.query.filters import DatasetFilter
 from climate_ref.solver import DiagnosticExecution, ExecutionSolver, SolveFilterOptions, matches_filter
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
 
 BATCH_SIZE = 500
 
@@ -76,9 +78,8 @@ class Planner:
     diagnostic_ids: dict[tuple[str, str], int] = attrs.field(factory=dict)
     group_ids: dict[tuple[str, int, int], int] = attrs.field(factory=dict)
     executions: dict[tuple[int, str], list[int]] = attrs.field(factory=lambda: collections.defaultdict(list))
-    hashes: dict[int, str] = attrs.field(factory=dict)
-    by_group: dict[int, list[int]] = attrs.field(factory=lambda: collections.defaultdict(list))
     dataset_ids: dict[str, int] = attrs.field(factory=dict)
+    legacy_slugs: dict[str, str] = attrs.field(factory=dict)
     links: dict[int, list[int]] = attrs.field(factory=lambda: collections.defaultdict(list))
     matched: set[int] = attrs.field(factory=set)
     rewrites: dict[int, list[int]] = attrs.field(factory=dict)
@@ -107,28 +108,28 @@ class Planner:
             select(Execution.id, Execution.execution_group_id, Execution.dataset_hash)
         ):
             self.executions[(group_id, dataset_hash)].append(execution_id)
-            self.hashes[execution_id] = dataset_hash
-            self.by_group[group_id].append(execution_id)
         for dataset_id, slug in session.execute(select(Dataset.id, Dataset.slug)):
             self.dataset_ids[slug] = dataset_id
         for execution_id, dataset_id in session.execute(
             select(execution_datasets.c.execution_id, execution_datasets.c.dataset_id)
         ):
             self.links[execution_id].append(dataset_id)
+        self.legacy_slugs = _legacy_slugs(db)
 
-    def consider(  # noqa: PLR0912
-        self,
-        potentials: Iterable[DiagnosticExecution],
-        only: set[int] | None = None,
-        position_limit: int | None = None,
-    ) -> None:
-        """
-        Plan rewrites for the executions matching ``potentials``, limited to ``only`` when given.
+    def legacy_hash(self, datasets: ExecutionDatasetCollection) -> str:
+        """Compute the ``dataset_hash`` these datasets had before migration ``d6e7f8a9b0c1``."""
+        parts = []
+        for source_type, collection in datasets.items():
+            values = sorted(
+                self.legacy_slugs.get(str(slug), str(slug))
+                for slug in collection.datasets[collection.slug_column]
+            )
+            digest = hashlib.sha1("\n".join(values).encode("utf-8")).hexdigest()  # noqa: S324
+            parts.append(f"{source_type.value}:{digest}")
+        return hashlib.sha1("\n".join(sorted(parts)).encode("utf-8")).hexdigest()  # noqa: S324
 
-        With ``position_limit``, an execution in the group whose hash differs is still accepted
-        when its stored links agree with the solve outside obs4MIPs,
-        and its other links are obs4MIPs ids or row positions below the limit.
-        """
+    def consider(self, potentials: Iterable[DiagnosticExecution], only: set[int] | None = None) -> None:
+        """Plan rewrites for the executions matching ``potentials``, limited to ``only`` when given."""
         for potential in potentials:
             self.counts["solved"] += 1
             diagnostic_id = self.diagnostic_ids.get((potential.provider.slug, potential.diagnostic.slug))
@@ -141,41 +142,30 @@ class Planner:
             if group_id is None:
                 self.counts["solved, no group yet"] += 1
                 continue
-            if position_limit is None:
-                candidates = self.executions.get((group_id, potential.datasets.hash), [])
-            else:
-                candidates = self.by_group.get(group_id, [])
-            matching = [execution_id for execution_id in candidates if only is None or execution_id in only]
+            candidates = {
+                *self.executions.get((group_id, potential.datasets.hash), []),
+                *self.executions.get((group_id, self.legacy_hash(potential.datasets)), []),
+            }
+            matching = sorted(
+                execution_id for execution_id in candidates if only is None or execution_id in only
+            )
             if not matching:
                 self.counts["solved, no execution with this dataset hash"] += 1
                 continue
 
-            slugs_by_type = {
-                source_type: {str(slug) for slug in collection.datasets[collection.slug_column]}
-                for source_type, collection in potential.datasets.items()
+            slugs = {
+                str(slug)
+                for _, collection in potential.datasets.items()
+                for slug in collection.datasets[collection.slug_column]
             }
-            missing = sorted(
-                slug for slugs in slugs_by_type.values() for slug in slugs if slug not in self.dataset_ids
-            )
+            missing = sorted(slug for slug in slugs if slug not in self.dataset_ids)
             if missing:
                 self.counts["skipped, slug not in dataset table"] += len(matching)
                 logger.warning(f"{potential.execution_slug()}: unknown slugs {missing[:3]}")
                 continue
-            ids_by_type = {
-                source_type: {self.dataset_ids[slug] for slug in slugs}
-                for source_type, slugs in slugs_by_type.items()
-            }
-            expected = sorted(set().union(*ids_by_type.values()))
+            expected = sorted(self.dataset_ids[slug] for slug in slugs)
 
             for execution_id in matching:
-                if position_limit is not None:
-                    if self.hashes[execution_id] == potential.datasets.hash:
-                        self.counts["as-of hash match"] += 1
-                    elif _consistent(self.links.get(execution_id, []), ids_by_type, position_limit):
-                        self.counts["as-of relaxed match"] += 1
-                    else:
-                        self.counts["as-of relaxed match rejected"] += 1
-                        continue
                 self.matched.add(execution_id)
                 current = self.links.get(execution_id, [])
                 if sorted(set(current)) != expected:
@@ -193,20 +183,48 @@ class Planner:
                     )
 
 
-def _consistent(
-    current: list[int], ids_by_type: dict[SourceDatasetType, set[int]], position_limit: int
-) -> bool:
-    """Whether stored links could have come from these datasets, given only obs4MIPs ids were corrupted."""
-    obs = ids_by_type.get(SourceDatasetType.obs4MIPs, set())
-    trusted = set().union(
-        *(ids for source_type, ids in ids_by_type.items() if source_type != SourceDatasetType.obs4MIPs)
-    )
-    rest = set(current) - trusted
-    return (
-        trusted <= set(current)
-        and bool(rest) == bool(obs)
-        and all(dataset_id in obs or dataset_id < position_limit for dataset_id in rest)
-    )
+_CMIP6_ID_COLUMNS = (
+    "activity_id",
+    "institution_id",
+    "source_id",
+    "experiment_id",
+    "member_id",
+    "table_id",
+    "variable_id",
+    "grid_label",
+    "version",
+)
+_REFERENCE_ID_COLUMNS = (
+    "activity_id",
+    "activity_id",
+    "institution_id",
+    "source_id",
+    "frequency",
+    "variable_id",
+    "nominal_resolution",
+    "grid_label",
+    "version",
+)
+
+
+def _legacy_slugs(db: Database) -> dict[str, str]:
+    """Map each rewritten ``instance_id`` to the one it had before migration ``d6e7f8a9b0c1``."""
+    sources = [("cmip6_dataset", ("CMIP6",), _CMIP6_ID_COLUMNS)] + [
+        (name, (), _REFERENCE_ID_COLUMNS)
+        for name in ("obs4mips_dataset", "obs4ref_dataset", "pmp_climatology_dataset")
+    ]
+    legacy = {}
+    for name, prefix, columns in sources:
+        unique = sorted(set(columns))
+        sub = table(name, column("instance_id"), *(column(c) for c in unique))
+        for row in db.session.execute(select(sub)).mappings():
+            values = dict(row)
+            if values.get("nominal_resolution"):
+                values["nominal_resolution"] = values["nominal_resolution"].replace(" ", "")
+            parts = [*prefix, *(values[c] for c in columns)]
+            if None not in parts:
+                legacy[values["instance_id"]] = ".".join(parts)
+    return legacy
 
 
 def _solve_runs(db: Database) -> list[tuple[datetime.datetime, list[tuple[int, int]]]]:
@@ -278,17 +296,10 @@ def _repair_as_of_run(
         logger.info(
             f"Run at {start}: {len(unmatched)} unmatched executions across {len(diagnostics)} diagnostics"
         )
-        # A fallback merge renumbered rows from zero, so a corrupted id is below the obs4 row count.
-        position_limit = sum(
-            len(catalogs[source_type].to_frame())
-            for source_type in (SourceDatasetType.obs4MIPs, SourceDatasetType.obs4REF)
-            if source_type in catalogs
-        )
         as_of = ExecutionSolver(provider_registry=solver.provider_registry, data_catalog=catalogs)
         planner.consider(
             as_of.solve(SolveFilterOptions(provider=args.provider, diagnostic=diagnostics)),
             only=set(unmatched),
-            position_limit=position_limit,
         )
 
 

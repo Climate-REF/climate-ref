@@ -1,0 +1,15 @@
+# ==============================================================================
+# == File checks
+# ==============================================================================
+
+[file.format]
+# Check FILE002
+severity = "H"
+expected_format = "HDF5"
+expected_data_model = "NETCDF4_CLASSIC"
+
+[file.compression]
+# Check FILE003
+severity = "H"
+expected_complevel = 1
+expected_shuffle = true

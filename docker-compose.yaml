@@ -19,7 +19,7 @@ services:
     ports:
       - "5432:5432"
   flower:
-    image: mher/flower:2.0.1
+    image: mher/flower:2.2.0
     restart: always
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1

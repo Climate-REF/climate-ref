@@ -246,7 +246,7 @@ class TestSolveLockFile:
         )
         try:
             assert holder.stdout.readline().strip() == "held"
-            result = invoke_cli(["solve", "--lock-file", str(lock_path)], expected_exit_code=1)
+            result = invoke_cli(["solve", "--lock-file", str(lock_path)], expected_exit_code=75)
         finally:
             holder.communicate()
 

@@ -24,6 +24,8 @@ _BYTES_PER_UNIT = 1024
 
 LOCK_ENVVAR = "REF_LOCK"
 LOCK_FILE_ENVVAR = "REF_LOCK_FILE"
+LOCK_HELD_EXIT_CODE = 75
+"""``EX_TEMPFAIL``, so callers can tell a skipped run from a failed one"""
 
 
 class OutputFormat(StrEnum):
@@ -234,7 +236,7 @@ def exclusive_lock(path: Path | None) -> Generator[None]:
     """
     Hold an exclusive advisory lock on ``path`` for the duration of the block
 
-    Exits with a non-zero code straight away if another process holds the lock.
+    Exits with ``LOCK_HELD_EXIT_CODE`` straight away if another process holds the lock.
     The holder's PID is written to the file to help track down a stale holder.
     POSIX locks are used because NFS clients and the exporting host only see each other's POSIX locks.
     """
@@ -250,7 +252,7 @@ def exclusive_lock(path: Path | None) -> Generator[None]:
             lock_file.seek(0)
             holder = lock_file.read().strip() or "unknown"
             logger.error(f"Another process holds the lock file {path} (PID {holder}). Exiting.")
-            raise typer.Exit(code=1)
+            raise typer.Exit(code=LOCK_HELD_EXIT_CODE)
         try:
             lock_file.truncate(0)
             lock_file.write(f"{os.getpid()}\n")

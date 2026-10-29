@@ -141,7 +141,7 @@ def solve(  # noqa: PLR0913
         bool,
         typer.Option(
             help="Hold an exclusive lock while solving. "
-            "A solve that cannot take the lock exits non-zero without solving, "
+            "A solve that cannot take the lock exits with code 75 without solving, "
             "so overlapping scheduled solves do not clash. "
             "Uses ref.lock in the REF configuration directory unless --lock-file is given.",
             envvar=LOCK_ENVVAR,

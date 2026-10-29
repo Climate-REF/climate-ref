@@ -21,6 +21,18 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.20.3 (2026-10-29)
+
+### Bug Fixes
+
+- Requires intake-esgf 2026.11.28, so downloaded files follow the umask instead of landing as 0600
+  and STAC searches by `file_start` or `file_end` no longer fail on fx variables. ([#1041](https://github.com/Climate-REF/climate-ref/pull/1041))
+
+### Improved Documentation
+
+- Fixed the "Using pre-computed results" notebook, which broke after the API replaced `latest_execution` with a list of `executions`. ([#1038](https://github.com/Climate-REF/climate-ref/pull/1038))
+
+
 ## climate-ref 0.20.2 (2026-10-27)
 
 ### Improvements

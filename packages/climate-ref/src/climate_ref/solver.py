@@ -323,9 +323,9 @@ def union_with_fallbacks(
             taken = taken.assign(activity_id=primary_type.name)
         if len(merged):
             beaten = _obs_dataset_key(merged["instance_id"]).isin(_obs_dataset_key(taken["instance_id"]))
-            merged = pd.concat([merged[~beaten], taken], ignore_index=True)
+            merged = pd.concat([merged[~beaten], taken])
         else:
-            merged = taken.reset_index(drop=True)
+            merged = taken
         changed = True
 
     if not changed:

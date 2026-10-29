@@ -25,15 +25,15 @@ Dry run by default. Pass `--apply` to rewrite the links. Run it with the deploym
 Solving the current catalog may finalise unfinalised datasets, which writes their metadata even in a dry run.
 """
 
-import argparse
 import collections
 import datetime
 import hashlib
-import sys
 from collections.abc import Iterable
+from typing import Annotated
 
 import attrs
 import pandas as pd
+import typer
 from loguru import logger
 from sqlalchemy import column, delete, select, table, text
 
@@ -48,6 +48,8 @@ from climate_ref.query.datasets import select_datasets
 from climate_ref.query.filters import DatasetFilter
 from climate_ref.solver import DiagnosticExecution, ExecutionSolver, SolveFilterOptions, matches_filter
 from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
+
+app = typer.Typer()
 
 BATCH_SIZE = 500
 
@@ -260,14 +262,13 @@ def _all_versions(solver: ExecutionSolver, db: Database) -> dict[SourceDatasetTy
 
 
 def _repair_as_of_run(
-    planner: Planner, solver: ExecutionSolver, db: Database, args: argparse.Namespace
+    planner: Planner, solver: ExecutionSolver, db: Database, filters: SolveFilterOptions
 ) -> None:
     in_scope = {
         planner.diagnostic_ids[(provider.slug, diagnostic.slug)]: diagnostic.slug
         for provider in solver.provider_registry.providers
         for diagnostic in provider.diagnostics()
-        if matches_filter(diagnostic, SolveFilterOptions(provider=args.provider, diagnostic=args.diagnostic))
-        and (provider.slug, diagnostic.slug) in planner.diagnostic_ids
+        if matches_filter(diagnostic, filters) and (provider.slug, diagnostic.slug) in planner.diagnostic_ids
     }
     with db.session.begin():
         runs = _solve_runs(db)
@@ -298,43 +299,47 @@ def _repair_as_of_run(
         )
         as_of = ExecutionSolver(provider_registry=solver.provider_registry, data_catalog=catalogs)
         planner.consider(
-            as_of.solve(SolveFilterOptions(provider=args.provider, diagnostic=diagnostics)),
+            as_of.solve(SolveFilterOptions(provider=filters.provider, diagnostic=diagnostics)),
             only=set(unmatched),
         )
 
 
-def main() -> int:
+@app.command(help=__doc__)
+def main(  # noqa: PLR0913
+    apply: Annotated[bool, typer.Option(help="Rewrite the links instead of reporting.")] = False,
+    provider: Annotated[
+        list[str] | None, typer.Option(help="Only solve providers matching this slug.")
+    ] = None,
+    diagnostic: Annotated[
+        list[str] | None, typer.Option(help="Only solve diagnostics matching this slug.")
+    ] = None,
+    as_of_run: Annotated[
+        bool,
+        typer.Option(
+            help="Solve unmatched executions again against the datasets available when their run started."
+        ),
+    ] = False,
+    dedupe: Annotated[
+        bool, typer.Option(help="Also rewrite executions whose links are right but repeated once per file.")
+    ] = False,
+    show: Annotated[int, typer.Option(help="Number of example changes to print.")] = 20,
+) -> None:
     """Plan, and with ``--apply`` write, the corrected execution dataset links."""
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("--apply", action="store_true", help="Rewrite the links instead of reporting.")
-    parser.add_argument("--provider", action="append", help="Only solve providers matching this slug.")
-    parser.add_argument("--diagnostic", action="append", help="Only solve diagnostics matching this slug.")
-    parser.add_argument(
-        "--as-of-run",
-        action="store_true",
-        help="Solve unmatched executions again against the datasets available when their run started.",
-    )
-    parser.add_argument(
-        "--dedupe",
-        action="store_true",
-        help="Also rewrite executions whose links are right but repeated once per file.",
-    )
-    parser.add_argument("--show", type=int, default=20, help="Number of example changes to print.")
-    args = parser.parse_args()
+    filters = SolveFilterOptions(provider=provider, diagnostic=diagnostic)
 
     config = Config.default()
     db = Database.from_config(config, run_migrations=False)
 
-    planner = Planner(dedupe=args.dedupe, show=args.show)
+    planner = Planner(dedupe=dedupe, show=show)
     with db.session.begin():
         planner.load(db)
     logger.info(f"Loaded {len(planner.links)} executions with links and {len(planner.dataset_ids)} datasets")
 
     solver = ExecutionSolver.build_from_db(config, db)
-    planner.consider(solver.solve(SolveFilterOptions(provider=args.provider, diagnostic=args.diagnostic)))
+    planner.consider(solver.solve(filters))
     current_matched = len(planner.matched)
-    if args.as_of_run:
-        _repair_as_of_run(planner, solver, db, args)
+    if as_of_run:
+        _repair_as_of_run(planner, solver, db, filters)
 
     # Executions linking a dataset outside their group's source types are wrong for certain.
     with db.session.begin():
@@ -347,15 +352,15 @@ def main() -> int:
     for name, value in planner.counts.items():
         print(f"{name}: {value}")
     print(f"executions matched by the current solve: {current_matched}")
-    if args.as_of_run:
+    if as_of_run:
         print(f"executions matched by an as-of-run solve: {len(planner.matched) - current_matched}")
     print(f"executions to rewrite: {len(planner.rewrites)}")
     print(f"linking a dataset of the wrong source type: {len(flagged)}")
-    print(f"of those, not repaired by this run: {len(unrepaired)} e.g. {unrepaired[: args.show]}")
+    print(f"of those, not repaired by this run: {len(unrepaired)} e.g. {unrepaired[:show]}")
 
-    if not args.apply:
+    if not apply:
         print("Dry run, nothing written. Pass --apply to rewrite.")
-        return 0
+        return
 
     pending = sorted(planner.rewrites.items())
     for start in range(0, len(pending), BATCH_SIZE):
@@ -375,8 +380,7 @@ def main() -> int:
                 ],
             )
         logger.info(f"Rewrote {start + len(batch)}/{len(pending)} executions")
-    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    app()

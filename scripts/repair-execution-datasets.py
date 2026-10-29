@@ -155,33 +155,35 @@ class Planner:
                 self.counts["solved, no execution with this dataset hash"] += 1
                 continue
 
-            slugs = {
+            # One row per file, as `register_datasets` writes them.
+            slugs = [
                 str(slug)
                 for _, collection in potential.datasets.items()
                 for slug in collection.datasets[collection.slug_column]
-            }
-            missing = sorted(slug for slug in slugs if slug not in self.dataset_ids)
+            ]
+            missing = sorted({slug for slug in slugs if slug not in self.dataset_ids})
             if missing:
                 self.counts["skipped, slug not in dataset table"] += len(matching)
                 logger.warning(f"{potential.execution_slug()}: unknown slugs {missing[:3]}")
                 continue
-            expected = sorted(self.dataset_ids[slug] for slug in slugs)
+            per_file = sorted(self.dataset_ids[slug] for slug in slugs)
+            distinct = sorted(set(per_file))
 
             for execution_id in matching:
                 self.matched.add(execution_id)
                 current = self.links.get(execution_id, [])
-                if sorted(set(current)) != expected:
+                if sorted(set(current)) != distinct:
                     self.counts["wrong links"] += 1
-                elif self.dedupe and len(current) != len(expected):
+                elif self.dedupe and len(current) != len(distinct):
                     self.counts["duplicate links"] += 1
                 else:
                     self.counts["already correct"] += 1
                     continue
-                self.rewrites[execution_id] = expected
+                self.rewrites[execution_id] = distinct if self.dedupe else per_file
                 if len(self.examples) < self.show:
                     self.examples.append(
                         f"execution {execution_id} ({potential.execution_slug()}): "
-                        f"{sorted(set(current))} -> {expected}"
+                        f"{sorted(set(current))} -> {distinct}"
                     )
 
 

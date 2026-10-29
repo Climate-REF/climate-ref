@@ -126,7 +126,10 @@ def main() -> int:  # noqa: PLR0912, PLR0915
     examples: list[str] = []
     for potential in solver.solve(filters):
         counts["solved"] += 1
-        diagnostic_id = diagnostic_ids[(potential.provider.slug, potential.diagnostic.slug)]
+        diagnostic_id = diagnostic_ids.get((potential.provider.slug, potential.diagnostic.slug))
+        if diagnostic_id is None:
+            counts["solved, diagnostic not registered yet"] += 1
+            continue
         group_id = group_ids.get((potential.dataset_key, diagnostic_id, potential.diagnostic.version))
         if group_id is None:
             counts["solved, no group yet"] += 1

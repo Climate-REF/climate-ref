@@ -33,7 +33,7 @@ So CI checks recorded results instead.
   `test_case_version`, bumped by each mint that changes the bundle,
   and `diagnostic_version`, the `Diagnostic.version` at mint time.
 
-A baseline can have no native files yet, eg. one from a fork that cannot mint.
+A baseline can have no native files yet, e.g. one from a fork that cannot mint.
 It is still checked through its committed bundle.
 
 ## Commands
@@ -96,6 +96,7 @@ It needs approval through the `native-baselines` GitHub Environment and refuses 
 Its inputs are `provider`, `diagnostic` (one or more, blank for all), `test_case`,
 `bump_version` and `dry_run`.
 It commits the new `regression/` and `manifest.json` to the branch, then builds the diff report.
+With `dry_run`, it only checks and previews, and uploads and commits nothing.
 If one diagnostic fails, the rest are still committed.
 
 /// warning | The mint commit does not re-run the PR gate

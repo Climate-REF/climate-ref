@@ -29,6 +29,7 @@ cd packages/climate-ref-myprovider
 mv src/climate_ref_example src/climate_ref_myprovider
 rm -r tests/test-data
 grep -rl 'climate.ref.example' . | xargs perl -pi -e 's/climate([_-])ref\1example/climate$1ref$1myprovider/g'
+cd ../..
 ```
 
 Then edit by hand:
@@ -59,7 +60,10 @@ class GlobalMeanTimeseries(Diagnostic):
             source_type=SourceDatasetType.CMIP6,
             filters=(FacetFilter(facets={"variable_id": ("tas", "rsut")}),),
             group_by=("source_id", "variable_id", "experiment_id", "variant_label"),
-            constraints=(AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),),
+            constraints=(
+                RequireContiguousTimerange(group_by=("instance_id",)),
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+            ),
         ),
     )
 
@@ -78,6 +82,10 @@ class GlobalMeanTimeseries(Diagnostic):
             cmec_metric_bundle=metric_bundle,
         )
 ```
+
+The example's `format_cmec_metric_bundle` returns fixed zeros as placeholders.
+Replace it with your real values, and pass any time series as `series=`
+(see [step 4](#4-describe-the-results)).
 
 - `slug` must be unique within the provider.
 - `version` starts at `1`. Bump it when the results change.

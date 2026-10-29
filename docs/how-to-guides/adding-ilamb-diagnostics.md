@@ -23,7 +23,7 @@ mrro-LORA:
 ```
 
 - Name the entry `<variable>-<dataset>`.
-  The slug is the name in lower case, eg. `mrro-lora`.
+  The slug is the name in lower case, e.g. `mrro-lora`.
 - `sources` names the variable and its reference data.
 - `version` defaults to `2`. Bump it when the results change.
 - `test_source_id` sets the model for the test cases. It defaults to `CanESM5`.

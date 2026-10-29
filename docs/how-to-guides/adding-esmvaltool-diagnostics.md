@@ -21,17 +21,25 @@ class GlobalMeanTimeseries(ESMValToolDiagnostic):
     @staticmethod
     def update_recipe(recipe: Recipe, input_files: dict[SourceDatasetType, pandas.DataFrame]) -> None:
         recipe["datasets"].clear()
+        recipe["diagnostics"].pop("map")
         variables = recipe["diagnostics"]["timeseries"]["variables"]
         variables.clear()
-        variables.update(dataframe_to_recipe(input_files[get_cmip_source_type(input_files)]))
+
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
+        recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
+        for variable in recipe_variables.values():
+            variable["preprocessor"] = "annual_mean_global"
+            variable["caption"] = "Annual global mean {long_name} according to {dataset}."
+        variables.update(recipe_variables)
 ```
 
 `update_recipe` edits the recipe in place.
 It usually swaps in the datasets from `input_files` and removes the parts it does not need.
-Supplementary datasets such as `areacella` arrive in `input_files` too, so drop them from the variables.
+Supplementary datasets such as `areacella` arrive in `input_files` too, so drop them from the variables,
+as the example does.
 If the diagnostic takes CMIP6 and CMIP7, handle both. `tcr.py` shows how.
 
-Add the class to `__all__` in `diagnostics/__init__.py` to register it.
+To register the class, import it in `diagnostics/__init__.py` and add its name to `__all__`.
 
 ## Recipes
 

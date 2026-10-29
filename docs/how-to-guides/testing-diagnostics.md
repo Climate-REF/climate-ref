@@ -2,12 +2,12 @@
 
 A test case is a small set of real input data for one run of a diagnostic.
 Each diagnostic declares its own.
-CI checks every test case on every pull request,
+CI checks the test cases on every pull request,
 against a recorded set of results called a regression baseline.
 
 ## Defining test cases
 
-Add a `test_data_spec` to the diagnostic:
+Add a `test_data_spec` attribute to the diagnostic:
 
 ```python
 from climate_ref_core.esgf import CMIP6Request
@@ -98,6 +98,9 @@ These tests are slow, so they need `--slow`:
 uv run pytest packages/climate-ref-example/tests/integration/test_diagnostics.py --slow
 ```
 
+A test case with no fetched data or no baseline is skipped, unless `REF_TEST_CASES_STRICT=true` is set.
+Diagnostics listed in `REF_TEST_CASES_SKIP` are always skipped.
+
 ## Regression baselines
 
 A baseline has two parts:
@@ -141,7 +144,7 @@ because the gate then fails.
 | Outcome | Meaning |
 | --- | --- |
 | **skip** | Nothing relevant changed, or there is no baseline to check yet. |
-| **replay** | CI rebuilt the results from the stored files, and they matched. |
+| **replay** | Something that could change the results moved, so CI rebuilds them from the stored files. The replay job fails if they no longer match. |
 | **fail** | The baseline does not match the code. Usually `version` was bumped and nothing was minted yet. |
 
 Run the same gate locally with `make regression-gate`.
@@ -153,5 +156,6 @@ Drift means the results no longer match `regression/`.
 - Run `ref test-cases run` and diff `output/latest/regression/` against `regression/`.
 - Run `ref test-cases replay --provider my-provider`.
   If replay passes but `run` drifts, your change moved the results.
-  If replay fails too, the baseline needs minting again.
+  If replay fails too, read its error first.
+  Mint again only when the stored baseline is missing or out of date.
 - Debug with pytest, using `--slow --pdb` and the test id `{diagnostic}/{test_case}`.

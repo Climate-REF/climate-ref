@@ -137,6 +137,23 @@ class ExecutionView:
     updated_at: Any
     """Timestamp the execution was last updated."""
 
+    @classmethod
+    def from_model(cls, execution: Execution) -> "ExecutionView":
+        """Build a view of an ``Execution`` row."""
+        return cls(
+            id=execution.id,
+            execution_group_id=execution.execution_group_id,
+            successful=execution.successful,
+            failure_reason=execution.failure_reason,
+            dataset_hash=execution.dataset_hash,
+            retracted=execution.retracted,
+            output_fragment=execution.output_fragment,
+            path=execution.path,
+            provider_version=execution.provider_version,
+            created_at=execution.created_at,
+            updated_at=execution.updated_at,
+        )
+
 
 @attrs.frozen(kw_only=True)
 class ExecutionGroupView:
@@ -217,6 +234,22 @@ class ExecutionGroupView:
     def failure_reason(self) -> str | None:
         """Why the newest execution failed, or ``None``. See ``ExecutionView.failure_reason``."""
         return self.latest.failure_reason if self.latest else None
+
+    @classmethod
+    def from_model(cls, eg: ExecutionGroup, latest: Execution | None) -> "ExecutionGroupView":
+        """Build a view of an ``ExecutionGroup`` row and its latest execution."""
+        return cls(
+            id=eg.id,
+            key=eg.key,
+            diagnostic_slug=eg.diagnostic.slug,
+            provider_slug=eg.diagnostic.provider.slug,
+            dirty=eg.dirty,
+            diagnostic_version=eg.diagnostic_version,
+            selectors=dict(eg.selectors),
+            created_at=eg.created_at,
+            updated_at=eg.updated_at,
+            latest=ExecutionView.from_model(latest) if latest is not None else None,
+        )
 
 
 @attrs.frozen(kw_only=True)
@@ -360,35 +393,6 @@ class ExecutionsReader:
         """The database session the queries run in."""
         return self._session if self._session is not None else self._db.session
 
-    def _to_execution_view(self, execution: Execution) -> ExecutionView:
-        return ExecutionView(
-            id=execution.id,
-            execution_group_id=execution.execution_group_id,
-            successful=execution.successful,
-            failure_reason=execution.failure_reason,
-            dataset_hash=execution.dataset_hash,
-            retracted=execution.retracted,
-            output_fragment=execution.output_fragment,
-            path=execution.path,
-            provider_version=execution.provider_version,
-            created_at=execution.created_at,
-            updated_at=execution.updated_at,
-        )
-
-    def _to_group_view(self, eg: ExecutionGroup, latest: Execution | None) -> ExecutionGroupView:
-        return ExecutionGroupView(
-            id=eg.id,
-            key=eg.key,
-            diagnostic_slug=eg.diagnostic.slug,
-            provider_slug=eg.diagnostic.provider.slug,
-            dirty=eg.dirty,
-            diagnostic_version=eg.diagnostic_version,
-            selectors=dict(eg.selectors),
-            created_at=eg.created_at,
-            updated_at=eg.updated_at,
-            latest=self._to_execution_view(latest) if latest is not None else None,
-        )
-
     def group_rows(
         self, filters: ExecutionGroupFilter | None = None
     ) -> list[tuple[ExecutionGroup, Execution | None]]:
@@ -496,7 +500,7 @@ class ExecutionsReader:
             total_count = count(self.session, select_execution_group_ids(filters)) if with_count else None
             stmt = paginate(select_execution_groups(filters), offset, limit)
             page = list(self.session.execute(stmt).tuples().all())
-        items = tuple(self._to_group_view(eg, latest) for eg, latest in page)
+        items = tuple(ExecutionGroupView.from_model(eg, latest) for eg, latest in page)
 
         return ExecutionGroupCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
@@ -522,7 +526,7 @@ class ExecutionsReader:
         ```
         """
         execution = self.session.execute(select_latest_execution(execution_group_id)).scalar_one_or_none()
-        return self._to_execution_view(execution) if execution is not None else None
+        return ExecutionView.from_model(execution) if execution is not None else None
 
     def group(self, execution_group_id: int) -> ExecutionGroupView | None:
         """
@@ -546,7 +550,7 @@ class ExecutionsReader:
         if eg is None:
             return None
         latest = self.session.execute(select_latest_execution(execution_group_id)).scalar_one_or_none()
-        return self._to_group_view(eg, latest)
+        return ExecutionGroupView.from_model(eg, latest)
 
     def execution(self, execution_id: int) -> ExecutionView | None:
         """
@@ -561,7 +565,7 @@ class ExecutionsReader:
         ```
         """
         execution = self.session.get(Execution, execution_id)
-        return self._to_execution_view(execution) if execution is not None else None
+        return ExecutionView.from_model(execution) if execution is not None else None
 
     def outputs(self, execution_id: int) -> tuple[OutputView, ...]:
         """

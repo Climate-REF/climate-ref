@@ -47,6 +47,8 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("executions", "resources"),
     ("providers", "list"),
     ("providers", "show"),
+    ("solves", "list"),
+    ("solves", "inspect"),
     # test-cases commands operate on test artifacts (filesystem, native store, manifests).
     # None persist diagnostic executions to the database, so they never need a pre-migration backup.
     ("test-cases", "fetch"),
@@ -267,6 +269,7 @@ _SUBCOMMANDS: dict[str, _Subcommand] = {
     "diagnostics": _Subcommand("climate_ref.cli.diagnostics", "app", "View diagnostic metadata"),
     "executions": _Subcommand("climate_ref.cli.executions", "app", "View execution groups and their results"),
     "providers": _Subcommand("climate_ref.cli.providers", "app", "Manage the REF providers."),
+    "solves": _Subcommand("climate_ref.cli.solves", "app", "View past solves and what they did"),
     "test-cases": _Subcommand(
         "climate_ref.cli.test_cases", "app", "Test data management commands for diagnostic development."
     ),

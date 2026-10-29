@@ -226,7 +226,8 @@ class TestSolveLockFile:
         assert mock_solve.call_count == 1
         assert lock_path.read_text().strip().isdigit()
 
-    def test_exits_when_lock_held(self, sample_data_dir, db, invoke_cli, mock_solve, tmp_path):
+    def test_exits_when_lock_held(self, sample_data_dir, db, invoke_cli, mock_solve, tmp_path, mocker):
+        open_database = mocker.patch("climate_ref.database.Database.from_config")
         lock_path = tmp_path / "solve.lock"
         lock_path.write_text("12345\n")
 
@@ -250,6 +251,7 @@ class TestSolveLockFile:
             holder.communicate()
 
         mock_solve.assert_not_called()
+        open_database.assert_not_called()
         assert "PID 12345" in result.stderr
         assert lock_path.read_text() == "12345\n"
 

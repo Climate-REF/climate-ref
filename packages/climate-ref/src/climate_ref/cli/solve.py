@@ -169,7 +169,6 @@ def solve(  # noqa: PLR0913
     from climate_ref.solver import SolveFilterOptions, solve_required_executions
 
     config = ctx.obj.config
-    db = ctx.obj.database
 
     _validate_provider_filter(config, provider)
 
@@ -186,6 +185,8 @@ def solve(  # noqa: PLR0913
     )
 
     with exclusive_lock(resolve_lock_file(lock, lock_file)):
+        # Opening the database backs it up and migrates it, so it must happen under the lock
+        db = ctx.obj.database
         outcome = solve_required_executions(
             config=config,
             db=db,

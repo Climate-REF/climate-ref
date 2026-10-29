@@ -168,18 +168,19 @@ class Planner:
                 continue
             per_file = sorted(self.dataset_ids[slug] for slug in slugs)
             distinct = sorted(set(per_file))
+            target = distinct if self.dedupe else per_file
 
             for execution_id in matching:
                 self.matched.add(execution_id)
                 current = self.links.get(execution_id, [])
                 if sorted(set(current)) != distinct:
                     self.counts["wrong links"] += 1
-                elif self.dedupe and len(current) != len(distinct):
-                    self.counts["duplicate links"] += 1
+                elif sorted(current) != target:
+                    self.counts["duplicate links" if self.dedupe else "wrong per-file counts"] += 1
                 else:
                     self.counts["already correct"] += 1
                     continue
-                self.rewrites[execution_id] = distinct if self.dedupe else per_file
+                self.rewrites[execution_id] = target
                 if len(self.examples) < self.show:
                     self.examples.append(
                         f"execution {execution_id} ({potential.execution_slug()}): "

@@ -29,12 +29,18 @@ because groups are keyed by diagnostic version, e.g.
         python - --provider pmp < scripts/repair-execution-datasets.py
 
 Solving the current catalog may finalise unfinalised datasets, which writes their metadata even in a dry run.
+So every run holds the lock that `ref solve --lock` takes, and exits 75 when another process holds it.
+Pass `--lock-file` when the database's writers use another lock file.
 """
 
 import collections
+import contextlib
 import datetime
+import fcntl
 import hashlib
-from collections.abc import Iterable
+import os
+from collections.abc import Generator, Iterable
+from pathlib import Path
 from typing import Annotated
 
 import attrs
@@ -55,8 +61,12 @@ from climate_ref.query.filters import DatasetFilter
 from climate_ref.solver import DiagnosticExecution, ExecutionSolver, SolveFilterOptions, matches_filter
 from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic
+from climate_ref_core.env import env
 
 app = typer.Typer()
+
+# Matches `ref solve --lock`, so a scheduled solve can tell a held lock from a failure.
+LOCK_HELD_EXIT_CODE = 75
 
 BATCH_SIZE = 500
 
@@ -365,35 +375,36 @@ def _repair_as_of_run(
         )
 
 
-@app.command(help=__doc__)
-def main(  # noqa: PLR0913
-    apply: Annotated[bool, typer.Option(help="Rewrite the links instead of reporting.")] = False,
-    provider: Annotated[
-        list[str] | None, typer.Option(help="Only solve providers matching this slug.")
-    ] = None,
-    diagnostic: Annotated[
-        list[str] | None, typer.Option(help="Only solve diagnostics matching this slug.")
-    ] = None,
-    as_of_run: Annotated[
-        bool,
-        typer.Option(
-            help="Solve unmatched executions again against the datasets available when their run started."
-        ),
-    ] = False,
-    dedupe: Annotated[
-        bool, typer.Option(help="Also rewrite executions whose links are right but repeated once per file.")
-    ] = False,
-    retract_orphans: Annotated[
-        bool,
-        typer.Option(
-            help="Retract the latest execution of groups no longer solved when its links may be wrong."
-        ),
-    ] = False,
-    show: Annotated[int, typer.Option(help="Number of example changes to print.")] = 20,
-) -> None:
-    """Plan, and with ``--apply`` write, the corrected execution dataset links."""
-    filters = SolveFilterOptions(provider=provider, diagnostic=diagnostic)
+@contextlib.contextmanager
+def _exclusive_lock(path: Path) -> Generator[None]:
+    """Hold the POSIX lock `ref solve --lock` takes, or exit 75 when another process holds it."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a+") as handle:
+        try:
+            fcntl.lockf(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except (BlockingIOError, PermissionError):
+            handle.seek(0)
+            logger.error(f"Another process holds {path} (PID {handle.read().strip() or 'unknown'})")
+            raise typer.Exit(code=LOCK_HELD_EXIT_CODE)
+        try:
+            handle.truncate(0)
+            handle.write(f"{os.getpid()}\n")
+            handle.flush()
+            yield
+        finally:
+            fcntl.lockf(handle, fcntl.LOCK_UN)
 
+
+def _repair(  # noqa: PLR0913
+    filters: SolveFilterOptions,
+    *,
+    apply: bool,
+    as_of_run: bool,
+    dedupe: bool,
+    retract_orphans: bool,
+    show: int,
+) -> None:
+    """Plan, and with ``apply`` write, the corrected execution dataset links."""
     config = Config.default()
     db = Database.from_config(config, run_migrations=False)
 
@@ -459,6 +470,53 @@ def main(  # noqa: PLR0913
                 .values(retracted=True)
             )
         logger.info(f"Retracted {min(start + BATCH_SIZE, len(orphans))}/{len(orphans)} executions")
+
+
+@app.command(help=__doc__)
+def main(  # noqa: PLR0913
+    apply: Annotated[bool, typer.Option(help="Rewrite the links instead of reporting.")] = False,
+    provider: Annotated[
+        list[str] | None, typer.Option(help="Only solve providers matching this slug.")
+    ] = None,
+    diagnostic: Annotated[
+        list[str] | None, typer.Option(help="Only solve diagnostics matching this slug.")
+    ] = None,
+    as_of_run: Annotated[
+        bool,
+        typer.Option(
+            help="Solve unmatched executions again against the datasets available when their run started."
+        ),
+    ] = False,
+    dedupe: Annotated[
+        bool, typer.Option(help="Also rewrite executions whose links are right but repeated once per file.")
+    ] = False,
+    retract_orphans: Annotated[
+        bool,
+        typer.Option(
+            help="Retract the latest execution of groups no longer solved when its links may be wrong."
+        ),
+    ] = False,
+    show: Annotated[int, typer.Option(help="Number of example changes to print.")] = 20,
+    lock_file: Annotated[
+        Path | None,
+        typer.Option(
+            help="Lock file shared with the database's other writers. "
+            "Defaults to the one `ref solve --lock` uses.",
+            envvar="REF_LOCK_FILE",
+        ),
+    ] = None,
+) -> None:
+    """Plan, and with ``--apply`` write, the corrected execution dataset links."""
+    filters = SolveFilterOptions(provider=provider, diagnostic=diagnostic)
+    with _exclusive_lock(lock_file or env.path("REF_CONFIGURATION").resolve() / "ref.lock"):
+        _repair(
+            filters,
+            apply=apply,
+            as_of_run=as_of_run,
+            dedupe=dedupe,
+            retract_orphans=retract_orphans,
+            show=show,
+        )
 
 
 if __name__ == "__main__":

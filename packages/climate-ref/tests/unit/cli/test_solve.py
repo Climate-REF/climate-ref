@@ -1,3 +1,6 @@
+import subprocess
+import sys
+
 import pytest
 
 from climate_ref.solver import SolveOutcome
@@ -212,6 +215,75 @@ class TestSolve:
         _args, kwargs = mock_solve.call_args
         assert kwargs["wait"] is False
         assert kwargs["timeout"] == 30
+
+
+class TestSolveLockFile:
+    def test_takes_lock_and_records_pid(self, sample_data_dir, db, invoke_cli, mock_solve, tmp_path):
+        lock_path = tmp_path / "locks" / "solve.lock"
+
+        invoke_cli(["solve", "--lock-file", str(lock_path)])
+
+        assert mock_solve.call_count == 1
+        assert lock_path.read_text().strip().isdigit()
+
+    def test_exits_when_lock_held(self, sample_data_dir, db, invoke_cli, mock_solve, tmp_path):
+        lock_path = tmp_path / "solve.lock"
+        lock_path.write_text("12345\n")
+
+        # POSIX locks never conflict within one process, so the holder has to be another process
+        holder = subprocess.Popen(  # noqa: S603
+            [
+                sys.executable,
+                "-c",
+                "import fcntl, sys; f = open(sys.argv[1], 'a+'); fcntl.lockf(f, fcntl.LOCK_EX); "
+                "print('held', flush=True); sys.stdin.read()",
+                str(lock_path),
+            ],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        try:
+            assert holder.stdout.readline().strip() == "held"
+            result = invoke_cli(["solve", "--lock-file", str(lock_path)], expected_exit_code=1)
+        finally:
+            holder.communicate()
+
+        mock_solve.assert_not_called()
+        assert "PID 12345" in result.stderr
+        assert lock_path.read_text() == "12345\n"
+
+    def test_lock_uses_default_location(
+        self, sample_data_dir, db, invoke_cli, mock_solve, tmp_path, monkeypatch
+    ):
+        monkeypatch.setenv("REF_CONFIGURATION", str(tmp_path / "ref-config"))
+
+        invoke_cli(["solve", "--lock"])
+
+        assert (tmp_path / "ref-config" / "ref.lock").exists()
+
+    def test_lock_from_env(self, sample_data_dir, db, invoke_cli, mock_solve, tmp_path, monkeypatch):
+        monkeypatch.setenv("REF_CONFIGURATION", str(tmp_path / "ref-config"))
+        monkeypatch.setenv("REF_LOCK", "true")
+
+        invoke_cli(["solve"])
+
+        assert (tmp_path / "ref-config" / "ref.lock").exists()
+
+    def test_no_lock_by_default(self, sample_data_dir, db, invoke_cli, mock_solve, mocker):
+        lock = mocker.patch("climate_ref.cli._utils.fcntl.lockf")
+
+        invoke_cli(["solve"])
+
+        lock.assert_not_called()
+
+    def test_lock_file_from_env(self, sample_data_dir, db, invoke_cli, mock_solve, tmp_path, monkeypatch):
+        lock_path = tmp_path / "solve.lock"
+        monkeypatch.setenv("REF_LOCK_FILE", str(lock_path))
+
+        invoke_cli(["solve"])
+
+        assert lock_path.exists()
 
 
 @pytest.mark.parametrize(

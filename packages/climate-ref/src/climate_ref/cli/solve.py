@@ -1,9 +1,16 @@
+from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 import typer
 from loguru import logger
 
-from climate_ref.cli._utils import parse_facet_filters
+from climate_ref.cli._utils import (
+    LOCK_ENVVAR,
+    LOCK_FILE_ENVVAR,
+    exclusive_lock,
+    parse_facet_filters,
+    resolve_lock_file,
+)
 
 if TYPE_CHECKING:
     from climate_ref.config import Config
@@ -130,6 +137,24 @@ def solve(  # noqa: PLR0913
             "Only applies to executors that run diagnostics on this host."
         ),
     ] = True,
+    lock: Annotated[
+        bool,
+        typer.Option(
+            help="Hold an exclusive lock while solving. "
+            "A solve that cannot take the lock exits non-zero without solving, "
+            "so overlapping scheduled solves do not clash. "
+            "Uses ref.lock in the REF configuration directory unless --lock-file is given.",
+            envvar=LOCK_ENVVAR,
+        ),
+    ] = False,
+    lock_file: Annotated[
+        Path | None,
+        typer.Option(
+            help="Lock file to use, which also turns on --lock. "
+            "Every process that should be serialised must use the same path.",
+            envvar=LOCK_FILE_ENVVAR,
+        ),
+    ] = None,
 ) -> None:
     """
     Solve for executions that require recalculation
@@ -160,21 +185,22 @@ def solve(  # noqa: PLR0913
         exclude_diagnostic=exclude_diagnostic,
     )
 
-    outcome = solve_required_executions(
-        config=config,
-        db=db,
-        dry_run=dry_run,
-        execute=execute,
-        wait=wait,
-        timeout=timeout,
-        one_per_provider=one_per_provider,
-        one_per_diagnostic=one_per_diagnostic,
-        filters=filters,
-        limit=limit,
-        rerun_failed=rerun_failed,
-        check_health=check_health,
-    )
-    if not dry_run:
-        db.optimize()
+    with exclusive_lock(resolve_lock_file(lock, lock_file)):
+        outcome = solve_required_executions(
+            config=config,
+            db=db,
+            dry_run=dry_run,
+            execute=execute,
+            wait=wait,
+            timeout=timeout,
+            one_per_provider=one_per_provider,
+            one_per_diagnostic=one_per_diagnostic,
+            filters=filters,
+            limit=limit,
+            rerun_failed=rerun_failed,
+            check_health=check_health,
+        )
+        if not dry_run:
+            db.optimize()
     if not outcome.ok:
         raise typer.Exit(code=1)

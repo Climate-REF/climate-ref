@@ -1,17 +1,45 @@
 """
-Typed, detached read surface for solves.
+What did each solve run, and how did it go?
 
+Every ``ref solve`` that is not a dry run is recorded.
+Use this to find the executions a solve created, which of them failed,
+and which datasets were new or retracted since the previous solve.
 [SolvesReader][climate_ref.results.solves.SolvesReader] is reached via
 [Reader.solves][climate_ref.results.reader.Reader.solves].
-Execution outcomes are joined live through ``Execution.solve_id`` rather than stored on the solve.
+Execution outcomes are counted when read, through ``Execution.solve_id``, rather than stored on the solve.
 
 A solve's window runs from the start of the previous solve, of any status, up to its own start.
 The datasets created or retracted in that window are the ones the solve saw first.
 The first solve's window has no start.
+
+It returns:
+
+* [SolveCollection][climate_ref.results.solves.SolveCollection]: a list of solves,
+  with ``to_pandas()`` for a table.
+* [SolveView][climate_ref.results.solves.SolveView]: one solve.
+* [SolveOutcomes][climate_ref.results.solves.SolveOutcomes]: how many of a solve's executions
+  succeeded, failed or are still pending.
+* [SolveExecutionView][climate_ref.results.solves.SolveExecutionView]: one execution a solve created,
+  with its diagnostic and group.
+* [SolveWindow][climate_ref.results.solves.SolveWindow]: the span of dataset changes a solve saw first.
+
+Examples
+--------
+The most recent solve and why its executions failed:
+
+```python
+from climate_ref.results import Reader
+
+with Database.from_config(config, read_only=True) as db:
+    reader = Reader(db)
+    latest = reader.solves.list(limit=1).items[0]
+    outcomes = reader.solves.outcomes(latest.id)
+    print(latest.status, outcomes.failed, dict(outcomes.failure_reasons))
+```
 """
 
 import datetime
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from typing import Any
 
 import attrs
@@ -25,7 +53,8 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import Execution, ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.models.solve import Solve, SolveStage, SolveStatus
-from climate_ref.query import count, latest_execution_id
+from climate_ref.query import count, latest_execution_id, paginate
+from climate_ref.results._page import Page, check_paging
 from climate_ref.results.datasets import DatasetCollection, DatasetView, dataset_subtypes
 from climate_ref.results.executions import ExecutionGroupView, ExecutionView
 
@@ -82,23 +111,15 @@ class SolveView:
 
 
 @attrs.frozen(kw_only=True)
-class SolveCollection:
-    """An immutable page of solves, most recent first."""
+class SolveCollection(Page[SolveView]):
+    """
+    The solves that ``reader.solves.list`` found, most recent first.
 
-    items: tuple[SolveView, ...]
-    """The solves on this page."""
-
-    total_count: int
-    """Total solves before ``limit``."""
-
-    limit: int | None
-    """Page size requested, or ``None`` when the whole result was returned."""
-
-    def __iter__(self) -> Iterator[SolveView]:
-        return iter(self.items)
-
-    def __len__(self) -> int:
-        return len(self.items)
+    Loop over it, or use ``len()``, to get the [SolveView][climate_ref.results.solves.SolveView]
+    objects on this page.
+    Call ``to_pandas()`` to get a table.
+    ``total_count`` is the number of solves before ``offset`` and ``limit``.
+    """
 
     def to_pandas(self) -> pd.DataFrame:
         """DataFrame with one row per solve, with the columns emitted even when the collection is empty."""
@@ -182,10 +203,22 @@ class SolveWindow:
 
 class SolvesReader:
     """
-    Solve read domain.
+    Which solves have run, what did they create and which datasets did they see first?
 
-    Constructed from a [Database][climate_ref.database.Database], which owns the session.
-    All read methods return detached DTOs that outlive the session.
+    Reach it as ``Reader(db).solves``.
+    Use ``list`` to page through solves and ``get`` to fetch one by id.
+    The other methods take a solve id and read what that solve created or saw.
+    The results can be used after the database is closed.
+
+    Examples
+    --------
+    ```python
+    with Database.from_config(config, read_only=True) as db:
+        reader = Reader(db)
+        solve = reader.solves.get(12)
+        failed = [e for e in reader.solves.executions(12) if e.execution.successful is False]
+        new = reader.solves.new_datasets(12, limit=20).to_pandas()
+    ```
     """
 
     def __init__(self, database: Database, *, session: Session | None = None) -> None:
@@ -197,23 +230,77 @@ class SolvesReader:
         """The underlying database session."""
         return self._session if self._session is not None else self._db.session
 
-    def list(self, *, limit: int | None = None) -> SolveCollection:
-        """List solves, most recent first."""
+    def list(
+        self,
+        *,
+        offset: int = 0,
+        limit: int | None = None,
+        with_count: bool = True,
+    ) -> SolveCollection:
+        """
+        Which solves have run?
+
+        Parameters
+        ----------
+        offset
+            Solves to skip, most recent first.
+        limit
+            Maximum solves to return. ``None`` returns the rest.
+        with_count
+            Set ``False`` to skip counting the solves. ``total_count`` is then ``None``.
+
+        Returns
+        -------
+        SolveCollection
+            The page of solves, most recent first.
+            ``total_count`` is the number of solves before ``offset`` and ``limit``.
+
+        Examples
+        --------
+        ```python
+        with Database.from_config(config, read_only=True) as db:
+            df = Reader(db).solves.list(limit=20).to_pandas()
+        ```
+        """
+        check_paging(offset, limit)
         stmt = select(Solve)
-        total_count = count(self.session, stmt)
-        stmt = stmt.order_by(Solve.started_at.desc(), Solve.id.desc())
-        if limit is not None:
-            stmt = stmt.limit(limit)
+        total_count = count(self.session, stmt) if with_count else None
+        stmt = paginate(stmt.order_by(Solve.started_at.desc(), Solve.id.desc()), offset, limit)
         items = tuple(SolveView.from_model(s) for s in self.session.execute(stmt).scalars())
-        return SolveCollection(items=items, total_count=total_count, limit=limit)
+        return SolveCollection(items=items, total_count=total_count, offset=offset, limit=limit)
 
     def get(self, solve_id: int) -> SolveView | None:
-        """Fetch one solve by id, or ``None`` when no solve has that id."""
+        """
+        Fetch one solve by id.
+
+        Parameters
+        ----------
+        solve_id
+            Primary key of the solve.
+
+        Returns
+        -------
+        SolveView or None
+            The solve, or ``None`` if no solve has that id.
+        """
         solve = self.session.get(Solve, solve_id)
         return SolveView.from_model(solve) if solve is not None else None
 
     def outcomes(self, solve_id: int) -> SolveOutcomes:
-        """Count the outcomes of the executions a solve created."""
+        """
+        How many of the executions a solve created succeeded, failed or are still pending?
+
+        Parameters
+        ----------
+        solve_id
+            Primary key of the solve.
+
+        Returns
+        -------
+        SolveOutcomes
+            The counts, with failures broken down by reason.
+            Every count is zero when no solve has that id.
+        """
         rows = self.session.execute(
             select(Execution.successful, Execution.failure_reason, func.count())
             .where(Execution.solve_id == solve_id)
@@ -234,11 +321,43 @@ class SolvesReader:
         )
 
     def executions(self, solve_id: int, *, limit: int | None = None) -> tuple[SolveExecutionView, ...]:
-        """List the executions the solve created, oldest first."""
+        """
+        Which executions did the solve create?
+
+        Parameters
+        ----------
+        solve_id
+            Primary key of the solve.
+        limit
+            Maximum executions to return. ``None`` returns them all.
+
+        Returns
+        -------
+        tuple of SolveExecutionView
+            The executions, oldest first.
+            Empty when no solve has that id.
+        """
         return self._execution_views(Execution.solve_id == solve_id, limit=limit)
 
     def reaped_executions(self, solve_id: int, *, limit: int | None = None) -> tuple[SolveExecutionView, ...]:
-        """List the executions the solve's preflight marked as abandoned or never started, oldest first."""
+        """
+        Which executions did the solve's preflight mark as abandoned or never started?
+
+        These were created by earlier solves, not by this one.
+
+        Parameters
+        ----------
+        solve_id
+            Primary key of the solve.
+        limit
+            Maximum executions to return. ``None`` returns them all.
+
+        Returns
+        -------
+        tuple of SolveExecutionView
+            The executions, oldest first.
+            Empty when no solve has that id.
+        """
         return self._execution_views(Execution.reaped_by_solve_id == solve_id, limit=limit)
 
     def _execution_views(
@@ -265,7 +384,22 @@ class SolvesReader:
         )
 
     def groups(self, solve_id: int) -> tuple[ExecutionGroupView, ...]:
-        """List the execution groups the solve created, with their latest execution."""
+        """
+        Which execution groups did the solve create?
+
+        Groups that already existed are left out, even if the solve ran them again.
+
+        Parameters
+        ----------
+        solve_id
+            Primary key of the solve.
+
+        Returns
+        -------
+        tuple of ExecutionGroupView
+            The groups, ordered by id, each with its latest execution.
+            Empty when no solve has that id.
+        """
         stmt = (
             select(ExecutionGroup, Execution)
             .options(joinedload(ExecutionGroup.diagnostic).joinedload(Diagnostic.provider))
@@ -276,7 +410,21 @@ class SolvesReader:
         return tuple(ExecutionGroupView.from_model(eg, latest) for eg, latest in self.session.execute(stmt))
 
     def window(self, solve_id: int) -> SolveWindow | None:
-        """Find the window of a solve, or ``None`` when no solve has that id."""
+        """
+        When does the span of dataset changes a solve saw first start and end?
+
+        Pass the result to ``new_datasets`` and ``retracted_datasets`` to avoid looking it up twice.
+
+        Parameters
+        ----------
+        solve_id
+            Primary key of the solve.
+
+        Returns
+        -------
+        SolveWindow or None
+            The window, or ``None`` if no solve has that id.
+        """
         end = self.session.execute(select(Solve.started_at).where(Solve.id == solve_id)).scalar_one_or_none()
         if end is None:
             return None
@@ -288,13 +436,63 @@ class SolvesReader:
     def new_datasets(
         self, solve_id: int, *, limit: int | None = None, window: SolveWindow | None = None
     ) -> DatasetCollection:
-        """List the datasets created in the solve's window, ordered by slug."""
+        """
+        Which datasets were ingested since the previous solve?
+
+        The first solve counts every dataset as new.
+
+        Parameters
+        ----------
+        solve_id
+            Primary key of the solve.
+        limit
+            Maximum datasets to return. ``None`` returns them all.
+        window
+            The solve's window, if you already have it from ``window``.
+            ``None`` looks it up.
+
+        Returns
+        -------
+        DatasetCollection
+            The datasets, ordered by slug, without their files.
+            ``total_count`` is the number of datasets before ``limit``.
+            Empty when no solve has that id.
+
+        Examples
+        --------
+        ```python
+        with Database.from_config(config, read_only=True) as db:
+            solves = Reader(db).solves
+            window = solves.window(12)
+            new = solves.new_datasets(12, window=window)
+            retracted = solves.retracted_datasets(12, window=window)
+        ```
+        """
         return self._window_datasets(window or self.window(solve_id), Dataset.created_at, limit=limit)
 
     def retracted_datasets(
         self, solve_id: int, *, limit: int | None = None, window: SolveWindow | None = None
     ) -> DatasetCollection:
-        """List the datasets retracted in the solve's window, ordered by slug."""
+        """
+        Which datasets were retracted since the previous solve?
+
+        Parameters
+        ----------
+        solve_id
+            Primary key of the solve.
+        limit
+            Maximum datasets to return. ``None`` returns them all.
+        window
+            The solve's window, if you already have it from ``window``.
+            ``None`` looks it up.
+
+        Returns
+        -------
+        DatasetCollection
+            The datasets, ordered by slug, without their files.
+            ``total_count`` is the number of datasets before ``limit``.
+            Empty when no solve has that id.
+        """
         return self._window_datasets(window or self.window(solve_id), Dataset.retracted_at, limit=limit)
 
     def _window_datasets(

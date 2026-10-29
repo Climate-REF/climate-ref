@@ -123,6 +123,16 @@ def test_list_limit(db_with_solves):
     assert collection.total_count == 2
 
 
+def test_list_offset(db_with_solves):
+    db, first_id, _, _ = db_with_solves
+
+    collection = Reader(db).solves.list(offset=1, limit=1, with_count=False)
+
+    assert [s.id for s in collection] == [first_id]
+    assert collection.offset == 1
+    assert collection.total_count is None
+
+
 def test_list_empty_has_columns(db_seeded):
     df = Reader(db_seeded).solves.list().to_pandas()
 

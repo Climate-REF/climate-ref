@@ -42,7 +42,7 @@ def list_(
 
     render_dataframe(collection.to_pandas(), console=ctx.obj.console, output_format=output_format)
 
-    if collection.total_count > limit:
+    if (collection.total_count or 0) > limit:
         logger.warning(
             f"Displaying {limit} of {collection.total_count} solves. "
             f"Use the `--limit` option to display more."

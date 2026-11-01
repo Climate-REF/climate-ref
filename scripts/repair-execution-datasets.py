@@ -1,77 +1,44 @@
 """
-Rebuild the dataset links of executions from a fresh solve.
+Rewrite the dataset links that the obs4REF fallback merge broke.
 
-From 2026-09-02 the obs4REF fallback merge dropped the catalog index,
-so `execution_dataset` stored row positions instead of dataset ids
-and an execution could link datasets it never used.
+From 2026-09-02 that merge stored row positions instead of dataset ids
+for executions of diagnostics that declare a fallback source type.
+This fixes the latest execution of each affected group when it succeeded,
+by matching it to a fresh solve on `dataset_hash`, and only counts the other affected executions.
 
-This solves against the current database, matches each solved execution to the existing executions
-in its group that share its `dataset_hash`, and resolves the dataset ids from the `instance_id` of every row.
-It never trusts the catalog index, so it also runs on an image without the fix.
-
-Migration `d6e7f8a9b0c1` rewrote obs4MIPs-style and multi-activity CMIP6 `instance_id`s
-but not the hashes stored on executions, so a hash is also computed from the ids as they were before it.
-
-With `--as-of-run`, executions left unmatched are solved again against the datasets available
-when their solve run started: created by then, not yet retracted, and the latest version at that time.
-The grey list, diagnostic code and dataset files are today's, so an execution they have since changed
-stays unmatched.
-
-With `--retract-orphans`, groups the current solve no longer produces have their latest execution retracted
-when it is unmatched and its links may be wrong:
-it links a dataset of the wrong source type, or its diagnostic declares a fallback source type.
-
+Groups are keyed by diagnostic version,
+so run it again with the release that produced each unmatched version it reports.
 Dry run by default. Pass `--apply` to rewrite the links.
-Run it with the climate-ref version that solves the database,
-because groups are keyed by diagnostic version, e.g.
+Solving may write dataset metadata even in a dry run, so run it while nothing else writes the database, e.g.
 
     kubectl exec -i <pod running climate-ref> -- \
         python - --provider pmp < scripts/repair-execution-datasets.py
-
-Solving the current catalog may finalise unfinalised datasets, which writes their metadata even in a dry run.
-So every run holds the lock that `ref solve --lock` takes, and exits 75 when another process holds it.
-Pass `--lock-file` when the database's writers use another lock file.
 """
 
 import collections
-import contextlib
 import datetime
-import fcntl
 import hashlib
-import os
-from collections.abc import Generator, Iterable
-from pathlib import Path
+from collections.abc import Iterable
 from typing import Annotated
 
 import attrs
-import pandas as pd
 import typer
 from loguru import logger
-from sqlalchemy import column, delete, func, select, table, text, update
+from sqlalchemy import column, delete, select, table, text
 
 from climate_ref.config import Config
-from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.models import Dataset, Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic as DiagnosticModel
 from climate_ref.models.execution import execution_datasets
 from climate_ref.models.provider import Provider as ProviderModel
-from climate_ref.query.datasets import select_datasets
-from climate_ref.query.filters import DatasetFilter
 from climate_ref.solver import DiagnosticExecution, ExecutionSolver, SolveFilterOptions, matches_filter
-from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
+from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic
-from climate_ref_core.env import env
 
 app = typer.Typer()
 
-# Matches `ref solve --lock`, so a scheduled solve can tell a held lock from a failure.
-LOCK_HELD_EXIT_CODE = 75
-
 BATCH_SIZE = 500
-
-# Executions are created in bursts by each ingest-solve run, so a longer gap starts a new run.
-RUN_GAP = datetime.timedelta(minutes=30)
 
 # obs4REF datasets legitimately stand in for obs4MIPs.
 _MISMATCHED_TYPES_SQL = """
@@ -92,16 +59,18 @@ WHERE NOT EXISTS (
 class Planner:
     """Matches solved executions to existing ones and collects the links to rewrite."""
 
-    dedupe: bool
     show: int
     diagnostic_ids: dict[tuple[str, str], int] = attrs.field(factory=dict)
     group_ids: dict[tuple[str, int, int], int] = attrs.field(factory=dict)
+    group_versions: dict[int, tuple[int, int]] = attrs.field(factory=dict)
     executions: dict[tuple[int, str], list[int]] = attrs.field(factory=lambda: collections.defaultdict(list))
+    execution_groups: dict[int, int] = attrs.field(factory=dict)
+    successful: set[int] = attrs.field(factory=set)
+    latest: set[int] = attrs.field(factory=set)
     dataset_ids: dict[str, int] = attrs.field(factory=dict)
     legacy_slugs: dict[str, str] = attrs.field(factory=dict)
     links: dict[int, list[int]] = attrs.field(factory=lambda: collections.defaultdict(list))
     matched: set[int] = attrs.field(factory=set)
-    produced: set[int] = attrs.field(factory=set)
     rewrites: dict[int, list[int]] = attrs.field(factory=dict)
     counts: collections.Counter[str] = attrs.field(factory=collections.Counter)
     examples: list[str] = attrs.field(factory=list)
@@ -124,10 +93,25 @@ class Planner:
             )
         ):
             self.group_ids[(key, diagnostic_id, diagnostic_version)] = group_id
-        for execution_id, group_id, dataset_hash in session.execute(
-            select(Execution.id, Execution.execution_group_id, Execution.dataset_hash)
+            self.group_versions[group_id] = (diagnostic_id, diagnostic_version)
+        # The latest execution of a group is the one the API serves, as `select_latest_execution` picks it.
+        newest: dict[int, tuple[datetime.datetime, int]] = {}
+        for execution_id, group_id, dataset_hash, created_at, successful in session.execute(
+            select(
+                Execution.id,
+                Execution.execution_group_id,
+                Execution.dataset_hash,
+                Execution.created_at,
+                Execution.successful,
+            )
         ):
             self.executions[(group_id, dataset_hash)].append(execution_id)
+            self.execution_groups[execution_id] = group_id
+            if successful:
+                self.successful.add(execution_id)
+            order = (created_at, execution_id)
+            newest[group_id] = max(newest.get(group_id, order), order)
+        self.latest = {execution_id for _, execution_id in newest.values()}
         for dataset_id, slug in session.execute(select(Dataset.id, Dataset.slug)):
             self.dataset_ids[slug] = dataset_id
         for execution_id, dataset_id in session.execute(
@@ -135,6 +119,17 @@ class Planner:
         ):
             self.links[execution_id].append(dataset_id)
         self.legacy_slugs = _legacy_slugs(db)
+
+    def buckets(self, diagnostic_ids: set[int]) -> dict[str, set[int]]:
+        """Split the executions of these diagnostics by whether they are the latest and succeeded."""
+        buckets: dict[str, set[int]] = collections.defaultdict(set)
+        for execution_id, group_id in self.execution_groups.items():
+            if self.group_versions[group_id][0] not in diagnostic_ids:
+                continue
+            position = "latest" if execution_id in self.latest else "superseded"
+            outcome = "successful" if execution_id in self.successful else "failed"
+            buckets[f"{position} {outcome}"].add(execution_id)
+        return buckets
 
     def legacy_hash(self, datasets: ExecutionDatasetCollection) -> str:
         """Compute the ``dataset_hash`` these datasets had before migration ``d6e7f8a9b0c1``."""
@@ -148,8 +143,8 @@ class Planner:
             parts.append(f"{source_type.value}:{digest}")
         return hashlib.sha1("\n".join(sorted(parts)).encode("utf-8")).hexdigest()  # noqa: S324
 
-    def consider(self, potentials: Iterable[DiagnosticExecution], only: set[int] | None = None) -> None:
-        """Plan rewrites for the executions matching ``potentials``, limited to ``only`` when given."""
+    def consider(self, potentials: Iterable[DiagnosticExecution], only: set[int]) -> None:
+        """Plan rewrites for the executions in ``only`` that match ``potentials``."""
         for potential in potentials:
             self.counts["solved"] += 1
             diagnostic_id = self.diagnostic_ids.get((potential.provider.slug, potential.diagnostic.slug))
@@ -162,17 +157,13 @@ class Planner:
             if group_id is None:
                 self.counts["solved, no group yet"] += 1
                 continue
-            if only is None:
-                self.produced.add(group_id)
             candidates = {
                 *self.executions.get((group_id, potential.datasets.hash), []),
                 *self.executions.get((group_id, self.legacy_hash(potential.datasets)), []),
             }
-            matching = sorted(
-                execution_id for execution_id in candidates if only is None or execution_id in only
-            )
+            matching = sorted(candidates & only)
             if not matching:
-                self.counts["solved, no execution with this dataset hash"] += 1
+                self.counts["solved, no latest successful execution with this dataset hash"] += 1
                 continue
 
             # One row per file, as `register_datasets` writes them.
@@ -186,9 +177,8 @@ class Planner:
                 self.counts["skipped, slug not in dataset table"] += len(matching)
                 logger.warning(f"{potential.execution_slug()}: unknown slugs {missing[:3]}")
                 continue
-            per_file = sorted(self.dataset_ids[slug] for slug in slugs)
-            distinct = sorted(set(per_file))
-            target = distinct if self.dedupe else per_file
+            target = sorted(self.dataset_ids[slug] for slug in slugs)
+            distinct = sorted(set(target))
 
             for execution_id in matching:
                 self.matched.add(execution_id)
@@ -196,7 +186,7 @@ class Planner:
                 if sorted(set(current)) != distinct:
                     self.counts["wrong links"] += 1
                 elif sorted(current) != target:
-                    self.counts["duplicate links" if self.dedupe else "wrong per-file counts"] += 1
+                    self.counts["wrong per-file counts"] += 1
                 else:
                     self.counts["already correct"] += 1
                     continue
@@ -252,18 +242,6 @@ def _legacy_slugs(db: Database) -> dict[str, str]:
     return legacy
 
 
-def _in_scope(
-    planner: Planner, solver: ExecutionSolver, filters: SolveFilterOptions
-) -> dict[int, Diagnostic]:
-    """Map the id of each registered diagnostic the filters select to the diagnostic."""
-    return {
-        planner.diagnostic_ids[(provider.slug, diagnostic.slug)]: diagnostic
-        for provider in solver.provider_registry.providers
-        for diagnostic in provider.diagnostics()
-        if matches_filter(diagnostic, filters) and (provider.slug, diagnostic.slug) in planner.diagnostic_ids
-    }
-
-
 def _uses_fallback(diagnostic: Diagnostic) -> bool:
     requirements = [
         requirement
@@ -273,171 +251,73 @@ def _uses_fallback(diagnostic: Diagnostic) -> bool:
     return any(requirement.fallback_source_types for requirement in requirements)
 
 
-def _orphans(
-    planner: Planner, solver: ExecutionSolver, db: Database, filters: SolveFilterOptions, flagged: set[int]
-) -> list[int]:
-    """Find the latest executions to retract in groups the current solve no longer produces."""
-    in_scope = _in_scope(planner, solver, filters)
-    with db.session.begin():
-        latest = db.session.execute(
-            select(
-                ExecutionGroup.id,
-                ExecutionGroup.diagnostic_id,
-                ExecutionGroup.diagnostic_version,
-                func.max(Execution.id),
-            )
-            .join(Execution, Execution.execution_group_id == ExecutionGroup.id)
-            .group_by(ExecutionGroup.id)
-        ).all()
-    orphans = []
-    for group_id, diagnostic_id, diagnostic_version, execution_id in latest:
-        diagnostic = in_scope.get(diagnostic_id)
-        # Groups of an older diagnostic version are never solved again, so they are not orphans.
-        if diagnostic is None or diagnostic_version != diagnostic.version:
-            continue
-        if group_id in planner.produced or execution_id in planner.matched:
-            continue
-        if execution_id in flagged or _uses_fallback(diagnostic):
-            orphans.append(execution_id)
-    return sorted(orphans)
-
-
-def _solve_runs(db: Database) -> list[tuple[datetime.datetime, list[tuple[int, int]]]]:
-    """Group every execution into solve runs, as ``(run start, [(execution id, diagnostic id)])``."""
-    rows = db.session.execute(
-        select(Execution.created_at, Execution.id, ExecutionGroup.diagnostic_id)
-        .join(ExecutionGroup, ExecutionGroup.id == Execution.execution_group_id)
-        .order_by(Execution.created_at)
-    ).all()
-    runs: list[tuple[datetime.datetime, list[tuple[int, int]]]] = []
-    previous = None
-    for created_at, execution_id, diagnostic_id in rows:
-        if previous is None or created_at - previous > RUN_GAP:
-            runs.append((created_at, []))
-        runs[-1][1].append((execution_id, diagnostic_id))
-        previous = created_at
-    return runs
-
-
-def _all_versions(solver: ExecutionSolver, db: Database) -> dict[SourceDatasetType, pd.DataFrame]:
-    """Load every version of every dataset, retracted ones included, keyed by dataset id."""
-    frames = {}
-    for source_type, catalog in solver.data_catalog.items():
-        adapter = catalog.adapter
-        if adapter is None:
-            continue
-        query = select_datasets(
-            DatasetFilter(source_type=source_type, latest_only=False, include_retracted=True)
-        )
-        adapter._dataset_query = lambda query=query: query  # type: ignore[method-assign]
-        frames[source_type] = adapter.load_catalog(db)
-    return frames
-
-
-def _repair_as_of_run(
-    planner: Planner, solver: ExecutionSolver, db: Database, filters: SolveFilterOptions
-) -> None:
-    in_scope = {
-        diagnostic_id: diagnostic.slug
-        for diagnostic_id, diagnostic in _in_scope(planner, solver, filters).items()
+def _affected_diagnostics(planner: Planner, solver: ExecutionSolver, filters: SolveFilterOptions) -> set[int]:
+    """Find the ids of the registered diagnostics the filters select that declare a fallback source type."""
+    return {
+        planner.diagnostic_ids[(provider.slug, diagnostic.slug)]
+        for provider in solver.provider_registry.providers
+        for diagnostic in provider.diagnostics()
+        if matches_filter(diagnostic, filters)
+        and _uses_fallback(diagnostic)
+        and (provider.slug, diagnostic.slug) in planner.diagnostic_ids
     }
-    with db.session.begin():
-        runs = _solve_runs(db)
-        availability = db.session.execute(select(Dataset.id, Dataset.created_at, Dataset.retracted_at)).all()
-    frames = _all_versions(solver, db)
-    created = pd.to_datetime(pd.Series({row.id: row.created_at for row in availability}))
-    retracted = pd.to_datetime(pd.Series({row.id: row.retracted_at for row in availability}))
-
-    for start, members in runs:
-        unmatched = {
-            execution_id: diagnostic_id
-            for execution_id, diagnostic_id in members
-            if diagnostic_id in in_scope and execution_id not in planner.matched
-        }
-        if not unmatched:
-            continue
-        available = created.index[(created <= start) & (retracted.isna() | (retracted > start))]
-        catalogs = {}
-        for source_type, frame in frames.items():
-            adapter = solver.data_catalog[source_type].adapter
-            assert adapter is not None
-            catalogs[source_type] = DataCatalog.from_frame(
-                adapter.filter_latest_versions(frame[frame.index.isin(available)])
-            )
-        diagnostics = sorted({in_scope[diagnostic_id] for diagnostic_id in unmatched.values()})
-        logger.info(
-            f"Run at {start}: {len(unmatched)} unmatched executions across {len(diagnostics)} diagnostics"
-        )
-        as_of = ExecutionSolver(provider_registry=solver.provider_registry, data_catalog=catalogs)
-        planner.consider(
-            as_of.solve(SolveFilterOptions(provider=filters.provider, diagnostic=diagnostics)),
-            only=set(unmatched),
-        )
 
 
-@contextlib.contextmanager
-def _exclusive_lock(path: Path) -> Generator[None]:
-    """Hold the POSIX lock `ref solve --lock` takes, or exit 75 when another process holds it."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a+") as handle:
-        try:
-            fcntl.lockf(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except (BlockingIOError, PermissionError):
-            handle.seek(0)
-            logger.error(f"Another process holds {path} (PID {handle.read().strip() or 'unknown'})")
-            raise typer.Exit(code=LOCK_HELD_EXIT_CODE)
-        try:
-            handle.truncate(0)
-            handle.write(f"{os.getpid()}\n")
-            handle.flush()
-            yield
-        finally:
-            fcntl.lockf(handle, fcntl.LOCK_UN)
-
-
-def _repair(  # noqa: PLR0913
-    filters: SolveFilterOptions,
-    *,
-    apply: bool,
-    as_of_run: bool,
-    dedupe: bool,
-    retract_orphans: bool,
-    show: int,
+@app.command(help=__doc__)
+def main(
+    apply: Annotated[bool, typer.Option(help="Rewrite the links instead of reporting.")] = False,
+    provider: Annotated[
+        list[str] | None, typer.Option(help="Only solve providers matching this slug.")
+    ] = None,
+    diagnostic: Annotated[
+        list[str] | None, typer.Option(help="Only solve diagnostics matching this slug.")
+    ] = None,
+    show: Annotated[int, typer.Option(help="Number of example changes and ids to print.")] = 20,
 ) -> None:
-    """Plan, and with ``apply`` write, the corrected execution dataset links."""
+    """Plan, and with ``--apply`` write, the corrected execution dataset links."""
+    filters = SolveFilterOptions(provider=provider, diagnostic=diagnostic)
+
     config = Config.default()
     db = Database.from_config(config, run_migrations=False)
 
-    planner = Planner(dedupe=dedupe, show=show)
+    planner = Planner(show=show)
     with db.session.begin():
         planner.load(db)
     logger.info(f"Loaded {len(planner.links)} executions with links and {len(planner.dataset_ids)} datasets")
 
     solver = ExecutionSolver.build_from_db(config, db)
-    planner.consider(solver.solve(filters))
-    current_matched = len(planner.matched)
-    if as_of_run:
-        _repair_as_of_run(planner, solver, db, filters)
+    buckets = planner.buckets(_affected_diagnostics(planner, solver, filters))
+    targets = buckets["latest successful"]
+    planner.consider(solver.solve(filters), only=targets)
 
     # Executions linking a dataset outside their group's source types are wrong for certain.
     with db.session.begin():
         flagged = {row[0] for row in db.session.execute(text(_MISMATCHED_TYPES_SQL))}
-    unrepaired = sorted(flagged - planner.rewrites.keys())
-    orphans = _orphans(planner, solver, db, filters, flagged) if retract_orphans else []
+    unrepaired = sorted((flagged & targets) - planner.rewrites.keys())
+    unmatched = sorted(targets - planner.matched)
+    slugs = {diagnostic_id: slug for (_, slug), diagnostic_id in planner.diagnostic_ids.items()}
+    unmatched_versions = collections.Counter(
+        (slugs[diagnostic_id], version)
+        for diagnostic_id, version in (
+            planner.group_versions[planner.execution_groups[execution_id]] for execution_id in unmatched
+        )
+    )
 
     for line in planner.examples:
         print(line)
     print()
     for name, value in planner.counts.items():
         print(f"{name}: {value}")
-    print(f"executions matched by the current solve: {current_matched}")
-    if as_of_run:
-        print(f"executions matched by an as-of-run solve: {len(planner.matched) - current_matched}")
+    print("executions of diagnostics that declare a fallback source type:")
+    for name, ids in sorted(buckets.items()):
+        print(f"  {name}: {len(ids)} e.g. {sorted(ids)[:show]}")
+    print(f"latest successful executions matched: {len(planner.matched)}")
     print(f"executions to rewrite: {len(planner.rewrites)}")
-    print(f"linking a dataset of the wrong source type: {len(flagged)}")
-    print(f"of those, not repaired by this run: {len(unrepaired)} e.g. {unrepaired[:show]}")
-    if retract_orphans:
-        print(f"executions to retract in groups no longer solved: {len(orphans)} e.g. {orphans[:show]}")
+    print(f"latest successful executions not matched: {len(unmatched)}, by diagnostic version:")
+    for (slug, version), value in unmatched_versions.most_common():
+        print(f"  {slug} v{version}: {value}")
+    print(f"executions linking a dataset of the wrong source type: {len(flagged)}")
+    print(f"of those, latest successful and not repaired: {len(unrepaired)} e.g. {unrepaired[:show]}")
 
     if not apply:
         print("Dry run, nothing written. Pass --apply to rewrite.")
@@ -461,62 +341,6 @@ def _repair(  # noqa: PLR0913
                 ],
             )
         logger.info(f"Rewrote {start + len(batch)}/{len(pending)} executions")
-
-    for start in range(0, len(orphans), BATCH_SIZE):
-        with db.session.begin():
-            db.session.execute(
-                update(Execution)
-                .where(Execution.id.in_(orphans[start : start + BATCH_SIZE]))
-                .values(retracted=True)
-            )
-        logger.info(f"Retracted {min(start + BATCH_SIZE, len(orphans))}/{len(orphans)} executions")
-
-
-@app.command(help=__doc__)
-def main(  # noqa: PLR0913
-    apply: Annotated[bool, typer.Option(help="Rewrite the links instead of reporting.")] = False,
-    provider: Annotated[
-        list[str] | None, typer.Option(help="Only solve providers matching this slug.")
-    ] = None,
-    diagnostic: Annotated[
-        list[str] | None, typer.Option(help="Only solve diagnostics matching this slug.")
-    ] = None,
-    as_of_run: Annotated[
-        bool,
-        typer.Option(
-            help="Solve unmatched executions again against the datasets available when their run started."
-        ),
-    ] = False,
-    dedupe: Annotated[
-        bool, typer.Option(help="Also rewrite executions whose links are right but repeated once per file.")
-    ] = False,
-    retract_orphans: Annotated[
-        bool,
-        typer.Option(
-            help="Retract the latest execution of groups no longer solved when its links may be wrong."
-        ),
-    ] = False,
-    show: Annotated[int, typer.Option(help="Number of example changes to print.")] = 20,
-    lock_file: Annotated[
-        Path | None,
-        typer.Option(
-            help="Lock file shared with the database's other writers. "
-            "Defaults to the one `ref solve --lock` uses.",
-            envvar="REF_LOCK_FILE",
-        ),
-    ] = None,
-) -> None:
-    """Plan, and with ``--apply`` write, the corrected execution dataset links."""
-    filters = SolveFilterOptions(provider=provider, diagnostic=diagnostic)
-    with _exclusive_lock(lock_file or env.path("REF_CONFIGURATION").resolve() / "ref.lock"):
-        _repair(
-            filters,
-            apply=apply,
-            as_of_run=as_of_run,
-            dedupe=dedupe,
-            retract_orphans=retract_orphans,
-            show=show,
-        )
 
 
 if __name__ == "__main__":

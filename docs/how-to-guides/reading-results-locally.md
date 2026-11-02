@@ -46,12 +46,13 @@ so the read layer never mutates the database you point it at.
 `Reader` is a thin entry point.
 It holds the database and exposes one sub-reader per domain as a property:
 
-- `reader.values` — scalar and series metric values,
-- `reader.executions` — execution groups and executions,
-- `reader.datasets` — ingested datasets,
-- `reader.diagnostics` — diagnostics and their status counts,
-- `reader.resources` — time, CPU and memory use of executions,
-- `reader.artifacts` — filesystem paths for execution outputs.
+- `reader.values`: scalar and series metric values,
+- `reader.executions`: execution groups and executions,
+- `reader.datasets`: ingested datasets,
+- `reader.diagnostics`: diagnostics and their status counts,
+- `reader.resources`: time, CPU and memory use of executions,
+- `reader.solves`: past solves, the executions each one created and the datasets it saw first,
+- `reader.artifacts`: filesystem paths for execution outputs.
 
 `reader.artifacts` needs to know where output files live,
 so it is only available when you pass a results root to the constructor:
@@ -140,8 +141,8 @@ Every field is optional.
 By default only promoted versions are read and retracted executions are left out.
 An empty list matches nothing.
 Dimension filters go through the `dimensions` map,
-keyed by any registered CV dimension;
-a string is an equality match and a sequence is an `IN` match:
+keyed by any registered CV dimension.
+A string is an equality match and a sequence is an `IN` match:
 
 ```python
 filters = MetricValueFilter(
@@ -158,7 +159,7 @@ with Database.from_config(config, read_only=True) as db:
 ```
 
 An unknown dimension key raises `ValueError`.
-`diagnostic_slug`/`provider_slug` are exact matches;
+`diagnostic_slug`/`provider_slug` are exact matches.
 `diagnostic_contains`/`provider_contains` are case-insensitive substring matches for search.
 
 #### Outlier detection
@@ -220,8 +221,8 @@ with Database.from_config(config, read_only=True) as db:
 
 `reader.executions` reads execution groups and the individual executions within them.
 
-`groups()` returns an `ExecutionGroupCollection`;
-each `ExecutionGroupView` carries its `latest` execution (or `None` if it has no execution yet):
+`groups()` returns an `ExecutionGroupCollection`.
+Each `ExecutionGroupView` carries its `latest` execution (or `None` if it has no execution yet):
 
 ```python
 from climate_ref.results import ExecutionGroupFilter
@@ -273,8 +274,8 @@ with Database.from_config(config, read_only=True) as db:
 ## Datasets
 
 `reader.datasets` reads the datasets that have been ingested into the database.
-`list()` returns a `DatasetCollection`;
-`to_pandas()` gives one row per dataset with the base columns plus the source-type facets expanded:
+`list()` returns a `DatasetCollection`.
+Its `to_pandas()` gives one row per dataset with the base columns plus the source-type facets expanded:
 
 ```python
 from climate_ref.results import DatasetFilter
@@ -295,7 +296,7 @@ This is a deliberate divergence from the other readers,
 whose `filters` argument is optional and defaults to "everything".
 
 By default `DatasetFilter.latest_only` is `True`,
-so a listing returns exactly one row per dataset — the latest version — rather than every version,
+so a listing returns exactly one row per dataset (the latest version) rather than every version,
 deduplicated with that source type's version key.
 
 `DatasetFilter.include_retracted` and `DatasetFilter.latest_only` are about datasets,
@@ -338,6 +339,37 @@ with Database.from_config(config, read_only=True) as db:
         print(diagnostic.provider_slug, diagnostic.diagnostic_slug, groups.successful, groups.total)
 ```
 
+## Solves
+
+`reader.solves` reads the record of each `ref solve` that was not a dry run.
+`list()` returns a `SolveCollection` of `SolveView` objects, most recent first.
+The other methods take a solve id:
+
+```python
+with Database.from_config(config, read_only=True) as db:
+    solves = Reader(db).solves
+
+    df = solves.list(limit=20).to_pandas()
+
+    outcomes = solves.outcomes(12)
+    print(outcomes.succeeded, outcomes.failed, outcomes.pending, dict(outcomes.failure_reasons))
+
+    for e in solves.executions(12):
+        print(e.provider_slug, e.diagnostic_slug, e.group_key, e.execution.successful)
+
+    window = solves.window(12)
+    new = solves.new_datasets(12, window=window)
+    retracted = solves.retracted_datasets(12, window=window)
+```
+
+Outcomes are counted when you read them, so they change as pending executions finish.
+`groups()` returns only the execution groups the solve created, not groups it ran again.
+`reaped_executions()` returns the executions the solve's preflight marked as abandoned or never started.
+
+A solve's window runs from the start of the previous solve up to its own start.
+`new_datasets()` and `retracted_datasets()` return the datasets created or retracted in that window.
+The first solve counts every dataset as new.
+
 ## Artifacts: resolving output paths
 
 `reader.artifacts` turns the fragments an execution stores
@@ -362,7 +394,8 @@ with Database.from_config(config, read_only=True) as db:
 
 Every resolver is containment-guarded:
 a fragment that would escape the results root raises `ValueError` rather than returning a path outside it.
-The resolver returns paths only — opening and reading the files stays with you
+The resolver returns paths only.
+Opening and reading the files stays with you
 (e.g. via `xarray.open_dataset`).
 
 ## Package conventions
@@ -375,9 +408,9 @@ It exports only what you *name to make a call*:
   (`MetricValueFilter`, `ExecutionGroupFilter`, `DatasetFilter`, `DiagnosticFilter`, `ResourceFilter`),
 - the `OutlierPolicy` value object.
 
-Everything the package *returns* — the DTOs (`ScalarValue`, `ExecutionGroupView`, `DatasetView`, …),
-their collections, and the per-domain sub-reader classes reached via `reader.values` etc. —
-lives in the relevant domain submodule.
+Everything the package *returns* lives in the relevant domain submodule.
+This covers the DTOs (`ScalarValue`, `ExecutionGroupView`, `DatasetView` and so on),
+their collections, and the per-domain sub-reader classes reached via `reader.values` etc.
 Import them from there on the rare occasion you need to name one:
 
 ```python

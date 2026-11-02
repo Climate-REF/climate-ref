@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.15' and platform_machine == 'ARM64' and sys_platform == 'win32'",
@@ -2029,7 +2029,7 @@ wheels = [
 
 [[package]]
 name = "ipython"
-version = "9.17.1"
+version = "9.18.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
@@ -2038,14 +2038,14 @@ dependencies = [
     { name = "matplotlib-inline" },
     { name = "pexpect", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
     { name = "prompt-toolkit" },
-    { name = "psutil", marker = "sys_platform != 'cygwin' and sys_platform != 'emscripten'" },
+    { name = "psutil", marker = "sys_platform != 'android' and sys_platform != 'cygwin' and sys_platform != 'emscripten'" },
     { name = "pygments" },
     { name = "stack-data" },
     { name = "traitlets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b9/32/99451b1283ec5d92ad77073f12e1c667dc10775384d8f15c2914207149dd/ipython-9.17.1.tar.gz", hash = "sha256:8919be8c27f20a6f4423145028063f6637b42a03ce57665bb12015ee1f073529", size = 4539289, upload-time = "2026-09-01T08:29:32.6Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/38/04/0d945c72d5b77527273ecb4c66aa2436de7a3b3bbe3da345bf053232b886/ipython-9.18.1.tar.gz", hash = "sha256:6319c0f5372c196397899479e6db1783dd7937abae06815d1317e8d5d51aaaaf", size = 4437314, upload-time = "2026-11-02T09:19:55.55Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2d/1e/65b59cf518c106aa755e7f7da3099027738687a862ec785060702a481320/ipython-9.17.1-py3-none-any.whl", hash = "sha256:6d1645743cfd1a07eb695d85aa2b5fa66721f8cbae9431d4049f7084bbf06509", size = 639038, upload-time = "2026-09-01T08:29:30.673Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/1c/91da4a1c541b75e97eb99d09c6a9b0534de55bb4a466669d1170e39b915c/ipython-9.18.1-py3-none-any.whl", hash = "sha256:997ce9140d374531a61069c70c0f9ef299d6dd3559ea0f94b8af589726e3c1d5", size = 649819, upload-time = "2026-11-02T09:19:53.32Z" },
 ]
 
 [[package]]
@@ -3346,7 +3346,7 @@ wheels = [
 
 [[package]]
 name = "notebook"
-version = "7.6.3"
+version = "7.6.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jupyter-builder" },
@@ -3356,9 +3356,9 @@ dependencies = [
     { name = "notebook-shim" },
     { name = "tornado" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/42/ac/aedb759dc683dcd129f6c75271bab5eb23020b0f7969163c726343718e1e/notebook-7.6.3.tar.gz", hash = "sha256:e2c08e469c0ae20bb0b3214f0ab77e79653317a2f8e5b34c10361c66874a5b50", size = 5501618, upload-time = "2026-09-21T18:07:24.261Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/0c/17a9c9029b0b79153969231d534a6820192b59508f7d8cbab451478e6c71/notebook-7.6.4.tar.gz", hash = "sha256:8aec433e08811af5c8d0e8cff23bf5079d85fd2912cee162894933f26f443d9e", size = 5579554, upload-time = "2026-10-30T07:36:04.168Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/f7/907b98438cf00bdc4e296570058f29a347214bb42338a48e3b7eae58ae2a/notebook-7.6.3-py3-none-any.whl", hash = "sha256:ad7e0eb765fba836cd4a2ab0c7a3a26cde1d91665fbf6f533b6ae7b2de6d88d2", size = 5548452, upload-time = "2026-09-21T18:07:21.563Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/23/0c29eb93adccca4dda803617ded4a93d4672929eb2b35e0bde7f066680d9/notebook-7.6.4-py3-none-any.whl", hash = "sha256:15e8a5eefb01f198016f11616426db0486f24404bfa869ec276d5ff8311b533c", size = 5626426, upload-time = "2026-10-30T07:36:01.352Z" },
 ]
 
 [[package]]
@@ -3556,16 +3556,16 @@ name = "parsl"
 version = "2026.2.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "dill", marker = "sys_platform != 'win32'" },
-    { name = "filelock", marker = "sys_platform != 'win32'" },
-    { name = "psutil", marker = "sys_platform != 'win32'" },
-    { name = "pyzmq", marker = "sys_platform != 'win32'" },
-    { name = "requests", marker = "sys_platform != 'win32'" },
-    { name = "setproctitle", marker = "sys_platform != 'win32'" },
-    { name = "sortedcontainers", marker = "sys_platform != 'win32'" },
-    { name = "tblib", marker = "sys_platform != 'win32'" },
-    { name = "typeguard", marker = "sys_platform != 'win32'" },
-    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
+    { name = "dill" },
+    { name = "filelock" },
+    { name = "psutil" },
+    { name = "pyzmq" },
+    { name = "requests" },
+    { name = "setproctitle" },
+    { name = "sortedcontainers" },
+    { name = "tblib" },
+    { name = "typeguard" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d6/ba/40228c8e434304d959eb4d47924d60967bdf490401720efb8af81dd52db2/parsl-2026.2.16.tar.gz", hash = "sha256:dc34015c07d8a05157f0e62b88eda42087be86856fe1fbc1f513109fcd38b7b8", size = 375580, upload-time = "2026-02-16T22:51:04.583Z" }
 wheels = [
@@ -3620,7 +3620,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "ptyprocess" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -5222,7 +5222,7 @@ name = "typeguard"
 version = "4.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2b/e8/66e25efcc18542d58706ce4e50415710593721aae26e794ab1dec34fb66f/typeguard-4.5.1.tar.gz", hash = "sha256:f6f8ecbbc819c9bc749983cc67c02391e16a9b43b8b27f15dc70ed7c4a007274", size = 80121, upload-time = "2026-02-19T16:09:03.392Z" }
 wheels = [

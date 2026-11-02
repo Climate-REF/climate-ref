@@ -21,6 +21,23 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.20.4 (2026-11-02)
+
+### Features
+
+- Added `--lock` and `--lock-file` options to `ref solve`, also settable with `REF_LOCK` and `REF_LOCK_FILE`.
+  A solve that cannot take the lock exits with code 75 without solving, so overlapping scheduled solves no longer clash.
+  `--lock` uses `ref.lock` in the REF configuration directory. ([#1042](https://github.com/Climate-REF/climate-ref/pull/1042))
+
+### Bug Fixes
+
+- Fixed executions recording the wrong input datasets when obs4MIPs data was filled in from obs4REF, which could list unrelated CMIP6 datasets on an execution.
+  Releases v0.18.0 to v0.20.3 are affected when obs4REF data has been ingested, and upgrading does not correct executions that already exist.
+
+  To repair them, back up the database and run [`scripts/repair-execution-datasets.py`](https://github.com/Climate-REF/climate-ref/blob/main/scripts/repair-execution-datasets.py) with the climate-ref version that produced the executions, either before or after upgrading.
+  It is a dry run unless given `--apply`. ([#1039](https://github.com/Climate-REF/climate-ref/pull/1039))
+
+
 ## climate-ref 0.20.3 (2026-10-29)
 
 ### Bug Fixes

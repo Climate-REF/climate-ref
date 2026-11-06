@@ -54,7 +54,7 @@ dependencies = [
 
     # Temporarily pin fastprogress dependency (from intake-esm) due to bug in recent version
     # https://github.com/AnswerDotAI/fastprogress/issues/117
-    "fastprogress==1.0.5"
+    "fastprogress==1.1.6"
 ]
 
 [project.optional-dependencies]

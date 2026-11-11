@@ -125,8 +125,8 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
     reconstruction_inputs = (f"executions/{_STABLE_SESSION_NAME}/{_PROVENANCE_GLOB}",)
     """Raw provenance YAML that :meth:`build_execution_result` re-scans to discover the run's outputs.
 
-    These files are not referenced by the CMEC output bundle, so ``copy_execution_outputs`` would not
-    curate them; declaring them here persists them into the baseline so a ``replay`` can rebuild the
+    These files are not referenced by the CMEC output bundle, so the regression native set would not
+    include them; declaring them here persists them into the baseline so a ``replay`` can rebuild the
     bundle. ``prepare_regression_output`` first stabilises the timestamped session directory to
     ``recipe`` and every path the provenance contains is then under the execution output directory, so
     the native sanitiser rewrites them to ``<OUTPUT_DIR>`` and the captured blobs stay portable.

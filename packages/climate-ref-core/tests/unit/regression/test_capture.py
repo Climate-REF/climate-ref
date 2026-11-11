@@ -16,7 +16,9 @@ from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.capture import (
     _redact_source_paths,
     build_native_snapshot,
+    copy_native_outputs,
     materialise_native,
+    native_output_files,
     write_committed_bundle,
 )
 from climate_ref_core.regression.manifest import COMMITTED_BUNDLE_FILES, NativeEntry, sha256_file
@@ -285,6 +287,74 @@ def test_redact_source_paths_leaves_other_tokens_untouched():
         "<OUTPUT_DIR>/input_ENSO.json",
     ):
         assert _redact_source_paths(token_path) == token_path
+
+
+class _FakeResult:
+    def __init__(self, metric_bundle_filename, output_bundle_filename=None, series_filename=None):
+        self.metric_bundle_filename = metric_bundle_filename
+        self.output_bundle_filename = output_bundle_filename
+        self.series_filename = series_filename
+
+
+def _touch(base, *names):
+    for name in names:
+        (base / name).parent.mkdir(parents=True, exist_ok=True)
+        (base / name).touch()
+
+
+def test_native_output_files_leaves_out_run_artefacts(tmp_path):
+    # Logs and other files the bundles do not name change between runs, so they are not stored
+    base = _seed_execution(tmp_path, "frag", output_dir=tmp_path, test_data_dir=tmp_path)
+    _touch(base, "run/main_log.txt")
+    result = _FakeResult("diagnostic.json", "output.json", "series.json")
+
+    files = native_output_files(base, result)
+
+    assert [p.as_posix() for p in files] == ["diagnostic.json", "output.json", "series.json"]
+
+
+def test_native_output_files_includes_reconstruction_inputs(tmp_path):
+    _touch(
+        tmp_path,
+        "bundle.json",
+        "run/a/provenance.yml",
+        "run/b/provenance.yml",
+        "a/b/c/deep_cmec.json",
+        "leave_me_alone.log",
+    )
+    result = _FakeResult("bundle.json")
+
+    files = native_output_files(tmp_path, result, ("run/*/provenance.yml", "**/*_cmec.json"))
+
+    assert [p.as_posix() for p in files] == [
+        "bundle.json",
+        "run/a/provenance.yml",
+        "run/b/provenance.yml",
+        "a/b/c/deep_cmec.json",
+    ]
+
+
+def test_native_output_files_dedupes_and_skips_directories(tmp_path):
+    _touch(tmp_path, "bundle.json", "series.json", "run/keep.yml")
+    result = _FakeResult("bundle.json", series_filename="series.json")
+
+    files = native_output_files(tmp_path, result, ("*.json", "run", "run/*"))
+
+    assert [p.as_posix() for p in files] == ["bundle.json", "series.json", "run/keep.yml"]
+
+
+def test_copy_native_outputs(tmp_path):
+    source = tmp_path / "execution"
+    _touch(source, "bundle.json", "run/a/provenance.yml", "run/main_log.txt")
+    destination = tmp_path / "slot"
+
+    copied = copy_native_outputs(source, destination, _FakeResult("bundle.json"), ("run/*/provenance.yml",))
+
+    assert [p.as_posix() for p in copied] == ["bundle.json", "run/a/provenance.yml"]
+    assert sorted(p.relative_to(destination).as_posix() for p in destination.rglob("*") if p.is_file()) == [
+        "bundle.json",
+        "run/a/provenance.yml",
+    ]
 
 
 def test_build_native_snapshot_digests_relpaths(tmp_path):

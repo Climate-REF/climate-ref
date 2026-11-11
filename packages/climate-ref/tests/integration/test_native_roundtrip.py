@@ -43,7 +43,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
+from climate_ref_core.output_files import PlaceholderMap
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
@@ -54,6 +54,7 @@ from climate_ref_core.regression import (
     Tolerance,
     assert_bundle_regression,
     build_native_snapshot,
+    copy_native_outputs,
     materialise_native,
     write_committed_bundle,
 )
@@ -88,7 +89,7 @@ class _SyntheticNestedDiagnostic(Diagnostic):
                 main_log_debug.txt
 
     The CMEC ``output.json`` registers the nested data file in the ``data``
-    section (so ``copy_execution_outputs`` curates it) and uses the *absolute
+    section (so ``copy_native_outputs`` captures it) and uses the *absolute
     paths* of ``index.html`` and ``main_log_debug.txt`` as ``html`` /
     ``provenance.log`` values.
     The ``html`` entry is additionally keyed by its absolute path, exercising the
@@ -162,7 +163,7 @@ class _SyntheticNestedDiagnostic(Diagnostic):
         """
         recipe_dir = definition.output_directory / _RECIPE_SUBDIR
 
-        # HONESTY: read back the nested native data file.  ``copy_execution_outputs``
+        # HONESTY: read back the nested native data file.  ``copy_native_outputs``
         # only captures files registered in the bundle, so on replay this file must
         # have been materialised from the store; otherwise this raises.
         data_path = definition.output_directory / _NATIVE_DATA_RELPATH
@@ -176,8 +177,8 @@ class _SyntheticNestedDiagnostic(Diagnostic):
         output_args = CMECOutput.create_template()
 
         # The nested data file: ``filename`` is the relative path under the output
-        # directory so ``copy_execution_outputs`` (which resolves filenames against
-        # the output directory) curates it into the native set.
+        # directory so ``copy_native_outputs`` (which resolves filenames against
+        # the output directory) captures it into the native set.
         output_args[OutputCV.DATA.value]["synth_data"] = {
             OutputCV.FILENAME.value: _NATIVE_DATA_RELPATH,
             OutputCV.LONG_NAME.value: "Synthetic nested data",
@@ -279,7 +280,6 @@ def _capture_execution(
     *,
     regression_dir: Path,
     placeholders: PlaceholderMap,
-    include_log: bool = False,
     extra_globs: tuple[str, ...] = (),
 ) -> tuple[dict[str, str], dict[str, NativeEntry]]:
     """
@@ -287,16 +287,11 @@ def _capture_execution(
 
     Mirrors the capture-path mechanics used by ``ref test-cases mint``
     (:mod:`climate_ref.cli.test_cases._stages`), composed here from the shipped
-    building blocks (``copy_execution_outputs``, ``write_committed_bundle``,
+    building blocks (``copy_native_outputs``, ``write_committed_bundle``,
     ``build_native_snapshot``) for exercising the full round trip in one call.
     """
-    relpaths = copy_execution_outputs(
-        scratch_directory,
-        results_directory,
-        fragment,
-        result,
-        include_log=include_log,
-        extra_globs=extra_globs,
+    relpaths = copy_native_outputs(
+        scratch_directory / fragment, results_directory / fragment, result, extra_globs
     )
     base_dir = results_directory / fragment
     committed = write_committed_bundle(base_dir, regression_dir, placeholders=placeholders)
@@ -1023,7 +1018,7 @@ class _ReconstructionInputDiagnostic(Diagnostic):
         data_path.write_bytes(b"RECON-DATA\x00\x01")
 
         # The provenance names the data file the bundle should register. It is NOT itself
-        # referenced by the bundle, so ``copy_execution_outputs`` would not curate it -- only
+        # referenced by the bundle, so ``copy_native_outputs`` would not capture it -- only
         # ``reconstruction_inputs`` keeps it in the persisted set.
         prov_path = definition.output_directory / _RECON_PROVENANCE_RELPATH
         prov_path.parent.mkdir(parents=True, exist_ok=True)

@@ -649,12 +649,13 @@ class Diagnostic(AbstractDiagnostic):
 
     reconstruction_inputs: tuple[str, ...] = ()
     """
-    Extra output globs to persist into the results/regression set, beyond the files the
+    Extra output globs to persist into the regression baseline, beyond the files the
     CMEC output bundle references.
 
     :meth:`build_execution_result` for some providers re-derives the bundle by re-scanning raw
     execution artefacts (e.g. ESMValTool ``diagnostic_provenance.yml`` or the PMP driver's ``*_cmec.json``)
-    that the curated output set would otherwise exclude.
+    that the native set (:func:`~climate_ref_core.regression.capture.native_output_files`)
+    would otherwise exclude.
     Declaring those globs here makes them part of the persisted baseline,
     so a ``replay`` can rebuild the bundle from the stored native set alone.
 

@@ -1,5 +1,7 @@
 """Unit tests for :mod:`climate_ref_core.output_files`."""
 
+from pathlib import Path
+
 import pytest
 
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
@@ -10,6 +12,7 @@ from climate_ref_core.output_files import (
     PlaceholderMap,
     copy_execution_outputs,
     copy_output_file,
+    referenced_output_files,
 )
 from climate_ref_core.pycmec.output import CMECOutput
 
@@ -266,40 +269,6 @@ def _seed(scratch, fragment, *names):
         path.touch()
 
 
-def test_copy_execution_outputs_curated_set(tmp_path):
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    _seed(scratch, fragment, EXECUTION_LOG_FILENAME, "bundle.json", "series.json")
-
-    result = _FakeResult(metric_bundle_filename="bundle.json", series_filename="series.json")
-    copied = copy_execution_outputs(scratch, results, fragment, result, include_log=True)
-
-    names = {p.as_posix() for p in copied}
-    assert names == {EXECUTION_LOG_FILENAME, "bundle.json", "series.json"}
-    for name in names:
-        assert (results / fragment / name).exists()
-
-
-def test_copy_execution_outputs_excludes_log_by_default(tmp_path):
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    _seed(scratch, fragment, "bundle.json")
-
-    result = _FakeResult(metric_bundle_filename="bundle.json")
-    copied = copy_execution_outputs(scratch, results, fragment, result)
-
-    assert [p.as_posix() for p in copied] == ["bundle.json"]
-    assert not (results / fragment / EXECUTION_LOG_FILENAME).exists()
-
-
-def test_copy_execution_outputs_requires_metric_bundle(tmp_path):
-    result = _FakeResult(metric_bundle_filename=None)
-    with pytest.raises(ValueError, match="without a metric bundle"):
-        copy_execution_outputs(tmp_path / "scratch", tmp_path / "results", "frag", result)
-
-
 def _write_output_bundle(scratch, fragment, bundle_filename, referenced):
     """Seed a CMEC output bundle plus the plots/data/html files it references."""
     cmec_output = CMECOutput(**CMECOutput.create_template())
@@ -313,150 +282,154 @@ def _write_output_bundle(scratch, fragment, bundle_filename, referenced):
     cmec_output.dump_to_json(scratch / fragment / bundle_filename)
 
 
-def test_copy_execution_outputs_includes_output_bundle_and_referenced_files(tmp_path):
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    _seed(scratch, fragment, "bundle.json")
+def test_referenced_output_files(tmp_path):
+    # The metric bundle, output bundle and the files it references, and the series bundle
     _write_output_bundle(
-        scratch,
-        fragment,
+        tmp_path,
+        "frag",
         "output.json",
         referenced=[
             ("plots", "fig1", "fig_1.png"),
             ("plots", "fig2", "nested/fig_2.png"),
+            ("data", "d1", "data_1.nc"),
             ("html", "index", "index.html"),
         ],
     )
-
-    result = _FakeResult(metric_bundle_filename="bundle.json", output_bundle_filename="output.json")
-    copied = copy_execution_outputs(scratch, results, fragment, result)
-
-    names = {p.as_posix() for p in copied}
-    assert names == {"bundle.json", "output.json", "fig_1.png", "nested/fig_2.png", "index.html"}
-    for name in names:
-        assert (results / fragment / name).exists()
-
-
-def test_copy_execution_outputs_full_curated_set(tmp_path):
-    # Exercises every branch together: log + metric + output bundle (+ referenced) + series.
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    _seed(scratch, fragment, EXECUTION_LOG_FILENAME, "bundle.json", "series.json")
-    _write_output_bundle(scratch, fragment, "output.json", referenced=[("data", "d1", "data_1.nc")])
-
     result = _FakeResult(
         metric_bundle_filename="bundle.json",
         output_bundle_filename="output.json",
         series_filename="series.json",
     )
-    copied = copy_execution_outputs(scratch, results, fragment, result, include_log=True)
 
-    names = {p.as_posix() for p in copied}
-    assert names == {
-        EXECUTION_LOG_FILENAME,
+    files = referenced_output_files(tmp_path / "frag", result)
+
+    assert [p.as_posix() for p in files] == [
         "bundle.json",
         "output.json",
+        "fig_1.png",
+        "nested/fig_2.png",
         "data_1.nc",
+        "index.html",
         "series.json",
-    }
-    for name in names:
-        assert (results / fragment / name).exists()
+    ]
 
 
-def test_copy_execution_outputs_empty_output_bundle(tmp_path):
-    # An output bundle that references no files still copies the bundle itself.
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    _seed(scratch, fragment, "bundle.json")
-    _write_output_bundle(scratch, fragment, "output.json", referenced=[])
+def test_referenced_output_files_accepts_absolute_filenames(tmp_path):
+    output_directory = tmp_path / "frag"
+    _write_output_bundle(tmp_path, "frag", "output.json", referenced=[("plots", "fig1", "fig_1.png")])
+    result = _FakeResult(
+        metric_bundle_filename=output_directory / "bundle.json",
+        output_bundle_filename=output_directory / "output.json",
+    )
 
+    files = referenced_output_files(output_directory, result)
+
+    assert [p.as_posix() for p in files] == ["bundle.json", "output.json", "fig_1.png"]
+
+
+def test_referenced_output_files_without_output_bundle(tmp_path):
+    result = _FakeResult(metric_bundle_filename="bundle.json")
+
+    assert referenced_output_files(tmp_path, result) == [Path("bundle.json")]
+
+
+def test_referenced_output_files_missing_output_bundle(tmp_path):
     result = _FakeResult(metric_bundle_filename="bundle.json", output_bundle_filename="output.json")
-    copied = copy_execution_outputs(scratch, results, fragment, result)
 
-    assert {p.as_posix() for p in copied} == {"bundle.json", "output.json"}
+    with pytest.raises(FileNotFoundError):
+        referenced_output_files(tmp_path, result)
 
 
-def test_copy_execution_outputs_extra_globs_persists_unreferenced_files(tmp_path):
-    # Raw artefacts the bundle does not reference are persisted when declared via extra_globs.
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
+def test_referenced_output_files_requires_metric_bundle(tmp_path):
+    result = _FakeResult(metric_bundle_filename=None)
+    with pytest.raises(ValueError, match="without a metric bundle"):
+        referenced_output_files(tmp_path, result)
+
+
+def _dirs(tmp_path):
+    return (tmp_path / "scratch").resolve(), (tmp_path / "results").resolve()
+
+
+def _copied(copied):
+    return {p.as_posix() for p in copied}
+
+
+def test_copy_execution_outputs_copies_everything(tmp_path):
+    scratch, results = _dirs(tmp_path)
     _seed(
         scratch,
-        fragment,
+        "frag",
+        EXECUTION_LOG_FILENAME,
         "bundle.json",
-        "run/a/provenance.yml",
-        "run/b/provenance.yml",
-        "driver_cmip6_cmec.json",
-        "leave_me_alone.log",
+        "run/main_log.txt",
+        "run/diag/script/log.txt",
     )
 
-    result = _FakeResult(metric_bundle_filename="bundle.json")
-    copied = copy_execution_outputs(
-        scratch,
-        results,
-        fragment,
-        result,
-        extra_globs=("run/*/provenance.yml", "*_cmec.json"),
-    )
+    copied = copy_execution_outputs(scratch, results, "frag")
 
-    names = {p.as_posix() for p in copied}
-    assert names == {
+    assert _copied(copied) == {
+        EXECUTION_LOG_FILENAME,
         "bundle.json",
-        "run/a/provenance.yml",
-        "run/b/provenance.yml",
-        "driver_cmip6_cmec.json",
+        "run/main_log.txt",
+        "run/diag/script/log.txt",
     }
-    for name in names:
-        assert (results / fragment / name).exists()
-    # A file matched by no glob is not persisted.
-    assert not (results / fragment / "leave_me_alone.log").exists()
+    for name in _copied(copied):
+        assert (results / "frag" / name).exists()
 
 
-def test_copy_execution_outputs_extra_globs_supports_recursive_patterns(tmp_path):
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    _seed(scratch, fragment, "bundle.json", "a/b/c/deep.yml")
+def test_copy_execution_outputs_exclude_files_and_directories(tmp_path):
+    scratch, results = _dirs(tmp_path)
+    _seed(
+        scratch,
+        "frag",
+        "executions/recipe_1/preproc/diag/tas/tas.nc",
+        "executions/recipe_1/run/resource_usage.txt",
+        "executions/recipe_1/run/diag/script/resource_usage.txt",
+        "executions/recipe_1/run/diag/script/log.txt",
+        "executions/recipe_1/work/diag/script/out.nc",
+    )
 
-    result = _FakeResult(metric_bundle_filename="bundle.json")
-    copied = copy_execution_outputs(scratch, results, fragment, result, extra_globs=("**/*.yml",))
-
-    assert {p.as_posix() for p in copied} == {"bundle.json", "a/b/c/deep.yml"}
-
-
-def test_copy_execution_outputs_extra_globs_deduped_against_curated(tmp_path):
-    # A glob that also matches an already-curated file must not duplicate its manifest key.
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    _seed(scratch, fragment, "bundle.json", "series.json", "extra.yml")
-
-    result = _FakeResult(metric_bundle_filename="bundle.json", series_filename="series.json")
     copied = copy_execution_outputs(
         scratch,
         results,
-        fragment,
-        result,
-        extra_globs=("*.json", "*.yml"),  # *.json also matches the curated bundle/series files
+        "frag",
+        exclude=(
+            "executions/*/preproc",
+            "executions/*/run/resource_usage.txt",
+            "executions/*/run/*/*/resource_usage.txt",
+        ),
     )
 
-    names = [p.as_posix() for p in copied]
-    assert sorted(names) == ["bundle.json", "extra.yml", "series.json"]
-    assert len(names) == len(set(names)), "curated files must not be duplicated by an extra glob"
+    assert _copied(copied) == {
+        "executions/recipe_1/run/diag/script/log.txt",
+        "executions/recipe_1/work/diag/script/out.nc",
+    }
+    assert not (results / "frag" / "executions/recipe_1/preproc").exists()
 
 
-def test_copy_execution_outputs_extra_globs_skips_directories(tmp_path):
-    # A glob that matches a directory is ignored; only files under it are copied.
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    _seed(scratch, fragment, "bundle.json", "run/keep.yml")
+def test_copy_execution_outputs_ignores_symlinks(tmp_path):
+    # Input data is symlinked into the execution directory and must not be copied
+    scratch, results = _dirs(tmp_path)
+    _seed(scratch, "frag", "plot.png")
+    inputs = tmp_path / "inputs"
+    (inputs / "nested").mkdir(parents=True)
+    (inputs / "tas.nc").write_text("data")
+    (inputs / "nested" / "pr.nc").write_text("data")
+    (scratch / "frag" / "climate_data").mkdir()
+    (scratch / "frag" / "climate_data" / "tas.nc").symlink_to(inputs / "tas.nc")
+    (scratch / "frag" / "linked_dir").symlink_to(inputs / "nested")
 
-    result = _FakeResult(metric_bundle_filename="bundle.json")
-    copied = copy_execution_outputs(scratch, results, fragment, result, extra_globs=("run", "run/*"))
+    copied = copy_execution_outputs(scratch, results, "frag")
 
-    assert {p.as_posix() for p in copied} == {"bundle.json", "run/keep.yml"}
+    assert _copied(copied) == {"plot.png"}
+
+
+def test_copy_execution_outputs_missing_directory(tmp_path):
+    scratch, results = _dirs(tmp_path)
+
+    assert copy_execution_outputs(scratch, results, "frag") == []
+
+
+def test_copy_execution_outputs_rejects_identical_directories(tmp_path):
+    with pytest.raises(ValueError, match="must differ"):
+        copy_execution_outputs(tmp_path, tmp_path, "frag")

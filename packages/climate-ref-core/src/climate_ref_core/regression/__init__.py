@@ -13,7 +13,9 @@ These data will be able to be fetched from an object store in CI and replayed lo
 
 from climate_ref_core.regression.capture import (
     build_native_snapshot,
+    copy_native_outputs,
     materialise_native,
+    native_output_files,
     write_committed_bundle,
 )
 from climate_ref_core.regression.compare import (
@@ -68,8 +70,10 @@ __all__ = [
     "build_report_store",
     "compare_json_content",
     "compute_committed_digests",
+    "copy_native_outputs",
     "decide_coupling",
     "materialise_native",
+    "native_output_files",
     "paths_under",
     "sha256_bytes",
     "sha256_file",

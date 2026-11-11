@@ -509,7 +509,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 )
 
         # Add the index.html file
-        index_html = f"{result_dir}/index.html"
+        index_html = f"{definition.as_relative_path(result_dir / 'index.html')}"
         output_args[OutputCV.HTML.value][index_html] = {
             OutputCV.FILENAME.value: index_html,
             OutputCV.LONG_NAME.value: "Results page",

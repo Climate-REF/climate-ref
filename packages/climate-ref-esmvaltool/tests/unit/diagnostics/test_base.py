@@ -188,6 +188,12 @@ def test_build_metric_result(metric_definition, mock_diagnostic):
     captions = {p["long_name"] for p in plots.values()}
     assert len(captions) == 4
 
+    # The results page is registered by its path relative to the output directory
+    index_html = "executions/recipe_test/index.html"
+    assert list(output_bundle[OutputCV.HTML.value]) == [index_html]
+    assert output_bundle[OutputCV.HTML.value][index_html][OutputCV.FILENAME.value] == index_html
+    assert output_bundle[OutputCV.INDEX.value] == index_html
+
 
 def test_series_extraction(tmp_path, metric_definition, mock_diagnostic, mocker):
     # Definition of the netcdf files to extract series from

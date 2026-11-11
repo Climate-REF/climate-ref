@@ -45,6 +45,13 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
     Provider for PMP diagnostics.
     """
 
+    results_exclude = (
+        # Input timeseries the ENSO driver joins into one file for EnsoMetrics, a full copy of the input data
+        "ref_landmask/*_concatenated_*.nc",
+        # The join's temporary file, which is only left behind if the worker is killed mid-write
+        "ref_landmask/*.tmp",
+    )
+
     def configure(self, config: Any) -> None:
         """Configure the provider."""
         super().configure(config)

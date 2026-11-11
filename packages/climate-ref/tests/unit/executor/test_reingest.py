@@ -164,6 +164,7 @@ def mock_result_factory(mocker):
         series_filename=pathlib.Path("series.json"),
     ):
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = True
         mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
         mock_result.output_bundle_filename = output_bundle_filename
@@ -460,6 +461,7 @@ class TestReingestExecution:
         """Should return False when build_execution_result returns unsuccessful."""
         mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = False
         mock_result.metric_bundle_filename = None
         mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
@@ -484,6 +486,7 @@ class TestReingestExecution:
         """Should return False when result is successful but metric_bundle_filename is None."""
         mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = True
         mock_result.metric_bundle_filename = None
         mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)

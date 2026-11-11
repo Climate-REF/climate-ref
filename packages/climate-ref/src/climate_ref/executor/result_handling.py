@@ -10,9 +10,8 @@ This is useful for local testing and debugging.
 """
 
 import pathlib
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from concurrent.futures import Future
-from functools import partial
 from typing import TYPE_CHECKING, Any, get_args
 
 from attrs import define
@@ -28,7 +27,7 @@ from climate_ref.models.execution import (
     ResultOutputType,
 )
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, ensure_relative_path
-from climate_ref_core.exceptions import ResultValidationError
+from climate_ref_core.exceptions import InvalidProviderException, ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import MetricValueKind
 from climate_ref_core.metric_values import ScalarMetricValue as TScalar
@@ -519,9 +518,12 @@ def record_failure(
         logger.warning(f"Could not write the failure reason to {log_path}", exc_info=True)
 
 
-def copy_execution_files(
-    config: "Config", execution: Execution, provider: "Callable[[], DiagnosticProvider]"
-) -> None:
+# Raised when an execution's files cannot be copied to results,
+# including when its provider is not installed, so its exclusions are unknown
+_COPY_ERRORS = (OSError, ValueError, KeyError, InvalidProviderException)
+
+
+def copy_execution_files(config: "Config", execution: Execution, provider: "DiagnosticProvider") -> None:
     """
     Copy every file an execution wrote from scratch to its results directory
 
@@ -532,26 +534,20 @@ def copy_execution_files(
     execution
         The execution whose files are copied
     provider
-        Returns the provider of the execution's diagnostic,
+        The provider of the execution's diagnostic,
         whose [results_exclude][climate_ref_core.providers.DiagnosticProvider.results_exclude]
-        lists the files not to copy.
-        If it cannot be resolved, all the files are copied.
+        lists the files not to copy
 
     Raises
     ------
     OSError
         If a file could not be copied
     """
-    try:
-        exclude = tuple(str(pattern) for pattern in provider().results_exclude)
-    except Exception:
-        logger.opt(exception=True).warning(
-            f"Could not resolve the provider of {execution}, so none of its files are excluded from results"
-        )
-        exclude = ()
-
     copy_execution_outputs(
-        config.paths.scratch, config.paths.results, execution.output_fragment, exclude=exclude
+        config.paths.scratch,
+        config.paths.results,
+        execution.output_fragment,
+        exclude=tuple(str(pattern) for pattern in provider.results_exclude),
     )
 
 
@@ -564,7 +560,9 @@ def _check_copied_outputs(
     Raises
     ------
     OSError
-        If the copy failed (``copy_error``), or a file is missing from the results directory
+        If a file is missing from the results directory
+    Exception
+        ``copy_error``, if the copy failed
     """
     if copy_error is not None:
         raise copy_error
@@ -584,8 +582,8 @@ def _try_copy_execution_files(
 ) -> Exception | None:
     """Copy the files of a handled execution, returning the error instead of raising it."""
     try:
-        copy_execution_files(config, execution, lambda: result.definition.diagnostic.provider)
-    except (OSError, ValueError) as exc:
+        copy_execution_files(config, execution, result.definition.diagnostic.provider)
+    except _COPY_ERRORS as exc:
         logger.opt(exception=True).warning(f"Could not copy the outputs of {execution}")
         return exc
     return None
@@ -605,8 +603,8 @@ def record_lost_execution(config: "Config", execution: Execution, detail: str) -
     The group's dirty flag is left alone.
     """
     try:
-        copy_execution_files(config, execution, partial(_execution_provider, execution))
-    except (OSError, ValueError) as e:
+        copy_execution_files(config, execution, _execution_provider(execution))
+    except _COPY_ERRORS as e:
         logger.warning(f"Could not copy the partial outputs of lost execution {execution.id}: {e}")
     record_failure(config, execution, ExecutionFailureReason.SystemError, detail)
 
@@ -702,7 +700,7 @@ def handle_execution_result(  # noqa: PLR0913
     # Every file the bundles name must have been copied, as only files in results are served by the API
     try:
         _check_copied_outputs(config, execution, result, copy_error)
-    except (OSError, ValueError) as exc:
+    except _COPY_ERRORS as exc:
         # The diagnostic reported success but a file its bundle references is
         # missing or unreadable. Fail this execution rather than aborting the
         # whole result-collection loop.

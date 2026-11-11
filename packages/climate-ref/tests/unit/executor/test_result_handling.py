@@ -30,7 +30,7 @@ from climate_ref.models.execution import (
 from climate_ref.models.metric_value import MetricValueType
 from climate_ref.models.provider import Provider as ProviderModel
 from climate_ref_core.diagnostics import ExecutionResult
-from climate_ref_core.exceptions import ResultValidationError
+from climate_ref_core.exceptions import InvalidProviderException, ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import ScalarMetricValue as TScalar
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
@@ -61,7 +61,7 @@ def mock_execution_result(mocker):
 @pytest.fixture
 def mock_definition(mocker, definition_factory):
     definition = definition_factory(
-        diagnostic=mocker.Mock(),
+        diagnostic=mocker.Mock(**{"provider.results_exclude": ()}),
     )
 
     # Ensure that the output directory exists and a log file is available
@@ -285,7 +285,7 @@ def test_handle_execution_result_missing_log_file_leaves_dirty(
     config, db, mock_execution_result, mocker, definition_factory
 ):
     """Missing log file suggests the process was killed, so dirty should remain True"""
-    definition = definition_factory(diagnostic=mocker.Mock())
+    definition = definition_factory(diagnostic=mocker.Mock(**{"provider.results_exclude": ()}))
     # Do NOT create the log file
     definition.output_directory.mkdir(parents=True, exist_ok=True)
 
@@ -360,7 +360,7 @@ def test_failure_trailer_is_written_on_reingest(config, db, mock_execution_resul
 def test_missing_log_creates_results_log_with_trailer(
     config, db, mock_execution_result, mocker, definition_factory
 ):
-    definition = definition_factory(diagnostic=mocker.Mock())
+    definition = definition_factory(diagnostic=mocker.Mock(**{"provider.results_exclude": ()}))
     definition.output_directory.mkdir(parents=True, exist_ok=True)
     result = ExecutionResult(
         definition=definition, successful=True, metric_bundle_filename=pathlib.Path("diagnostic.json")
@@ -501,23 +501,50 @@ class TestCopiedOutputs:
         # Only the file the output bundle references is registered
         assert mock_result_output.call_count == 1
 
-    def test_unresolved_provider_copies_everything(
+    @pytest.mark.parametrize("error", [KeyError("gone"), InvalidProviderException("gone", "not installed")])
+    def test_unresolved_provider_fails_success(
+        self, config, mock_execution_result, mocker, scratch_files, error
+    ):
+        # Without the provider, its exclusions are unknown, so nothing is copied or ingested
+        type(scratch_files.diagnostic).provider = mocker.PropertyMock(side_effect=error)
+        db = mocker.MagicMock()
+        db.session = mocker.MagicMock(spec=Session)
+        result = ExecutionResult.build_from_output_bundle(
+            definition=scratch_files,
+            cmec_output_bundle=CMECOutput(**CMECOutput.create_template()),
+            cmec_metric_bundle=CMECMetric(**CMECMetric.create_template()),
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.ResultError)
+        mock_execution_result.mark_successful.assert_not_called()
+        assert self._results(config, mock_execution_result) == {EXECUTION_LOG_FILENAME}
+        assert "could not copy outputs" in _results_log(config, mock_execution_result).read_text()
+
+    def test_unresolved_provider_still_records_failure(
         self, config, db, mock_execution_result, mocker, scratch_files
     ):
-        # Without the provider's exclusions, nothing can be left out
         type(scratch_files.diagnostic).provider = mocker.PropertyMock(side_effect=KeyError("gone"))
         result = ExecutionResult(definition=scratch_files, successful=False, metric_bundle_filename=None)
 
         handle_execution_result(config, db, mock_execution_result, result)
 
-        mock_execution_result.mark_failed.assert_called_once()
-        assert self._results(config, mock_execution_result) == {
-            EXECUTION_LOG_FILENAME,
-            "run/log.txt",
-            "run/resource_usage.txt",
-            "preproc/tas.nc",
-            "plots/partial.png",
-        }
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.DiagnosticError)
+        assert self._results(config, mock_execution_result) == {EXECUTION_LOG_FILENAME}
+
+    def test_lost_execution_with_unresolved_provider_still_fails(
+        self, config, mock_execution_result, mocker, scratch_files
+    ):
+        mocker.patch(
+            "climate_ref.executor.result_handling.resolve_diagnostic",
+            side_effect=InvalidProviderException("gone", "not installed"),
+        )
+
+        record_lost_execution(config, mock_execution_result, "worker lost")
+
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
+        assert self._results(config, mock_execution_result) == {EXECUTION_LOG_FILENAME}
 
     def test_excluded_referenced_file_fails_execution(
         self, config, mock_execution_result, mocker, scratch_files
@@ -654,7 +681,7 @@ class TestResourceUsagePersistence:
         self, config, db, mock_execution_result, mocker, definition_factory, resource_usage
     ):
         """The earliest early return, taken before the log file is even found."""
-        definition = definition_factory(diagnostic=mocker.Mock())
+        definition = definition_factory(diagnostic=mocker.Mock(**{"provider.results_exclude": ()}))
         definition.output_directory.mkdir(parents=True, exist_ok=True)
 
         result = ExecutionResult(
@@ -922,6 +949,7 @@ def mock_result_factory(mocker):
         series_filename=pathlib.Path("series.json"),
     ):
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = True
         mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
         mock_result.output_bundle_filename = output_bundle_filename

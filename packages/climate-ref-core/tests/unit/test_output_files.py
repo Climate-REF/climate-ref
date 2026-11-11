@@ -424,8 +424,3 @@ def test_copy_execution_outputs_missing_directory(tmp_path):
     scratch, results = _dirs(tmp_path)
 
     assert copy_execution_outputs(scratch, results, "frag") == []
-
-
-def test_copy_execution_outputs_rejects_identical_directories(tmp_path):
-    with pytest.raises(ValueError, match="must differ"):
-        copy_execution_outputs(tmp_path, tmp_path, "frag")

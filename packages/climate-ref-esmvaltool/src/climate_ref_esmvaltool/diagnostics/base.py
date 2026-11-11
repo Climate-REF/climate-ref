@@ -509,7 +509,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 )
 
         # Add the index.html file
-        index_html = f"{definition.as_relative_path(result_dir / 'index.html')}"
+        index_html = str(definition.as_relative_path(result_dir / "index.html"))
         output_args[OutputCV.HTML.value][index_html] = {
             OutputCV.FILENAME.value: index_html,
             OutputCV.LONG_NAME.value: "Results page",
@@ -518,8 +518,8 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         output_args[OutputCV.INDEX.value] = index_html
 
         # Add the (debug) log file
-        output_args[OutputCV.PROVENANCE.value][OutputCV.LOG.value] = (
-            f"{definition.as_relative_path(result_dir / 'run' / 'main_log_debug.txt')}"
+        output_args[OutputCV.PROVENANCE.value][OutputCV.LOG.value] = str(
+            definition.as_relative_path(result_dir / "run" / "main_log_debug.txt")
         )
 
         # Update the diagnostic and output bundle with diagnostic specific executions.

@@ -88,7 +88,7 @@ class DiagnosticProvider:
     Each pattern is matched against a file's POSIX path relative to the execution output directory
     (see :func:`fnmatch.fnmatchcase`).
     ``*`` also matches ``/``, so ``preproc/*`` excludes everything under ``preproc``.
-    Files the output bundle references are always copied.
+    A successful execution fails if a file its output bundle references is excluded.
     """
 
     def __init__(self, name: str, version: str, slug: str | None = None) -> None:

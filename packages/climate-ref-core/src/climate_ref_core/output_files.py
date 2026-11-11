@@ -337,9 +337,6 @@ def copy_execution_outputs(
     :
         The copied files, each relative to ``fragment``.
     """
-    if results_directory == scratch_directory:
-        raise ValueError("results_directory and scratch_directory must differ")
-
     input_directory = scratch_directory / fragment
     if not input_directory.is_dir():
         return []

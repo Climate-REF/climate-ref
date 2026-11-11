@@ -76,6 +76,9 @@ class Targets:
     execution_group_id: int
     dataset_slug: str
     source_id: str
+    sparse_series_provider_slug: str
+    sparse_series_diagnostic_slug: str
+    """The diagnostic with the fewest series, the worst case for a read that filters series one by one."""
 
 
 @pytest.fixture(scope="session")
@@ -95,6 +98,12 @@ def targets(perf_database_path: Path) -> Targets:
         "SELECT source_id FROM metric_value WHERE execution_id = ? AND source_id IS NOT NULL LIMIT 1",
         (execution_id,),
     ).fetchone()
+    sparse_diagnostic_slug, sparse_provider_slug = con.execute(
+        "SELECT d.slug, p.slug FROM metric_value mv JOIN execution e ON e.id = mv.execution_id "
+        "JOIN execution_group g ON g.id = e.execution_group_id JOIN diagnostic d ON d.id = g.diagnostic_id "
+        "JOIN provider p ON p.id = d.provider_id WHERE mv.type = 'SERIES' "
+        "GROUP BY d.id ORDER BY count(*), d.id LIMIT 1"
+    ).fetchone()
     con.close()
     return Targets(
         provider_slug=provider_slug,
@@ -103,6 +112,8 @@ def targets(perf_database_path: Path) -> Targets:
         execution_group_id=group_id,
         dataset_slug=dataset_slug,
         source_id=source_id,
+        sparse_series_provider_slug=sparse_provider_slug,
+        sparse_series_diagnostic_slug=sparse_diagnostic_slug,
     )
 
 

@@ -2,18 +2,18 @@
   "catalog_hash": "466fc164dd008856b4d0d0f6d232c76ceb0f61da",
   "committed": {
     "diagnostic.json": "065346bd643892d904efd9fb14f3f12591158b4534aaf64baf392570852ae211",
-    "output.json": "9de82915b651621525be5c693af42c759980cbba3f6fe1fc1545e9f1bed3f574",
+    "output.json": "2c0566df937d77d07c768f68327eeb6e3be422e4ee7f1a065630288bdeafa367",
     "series.json": "e788ea32cb1d12eef7029ad75bf22415c5287d286afe0fee3545c4451244380c"
   },
   "diagnostic_version": 6,
   "native": {
     "diagnostic.json": {
-      "sha256": "6aa3b931f28ca2c10789bd6c12cafc9df667c77a0e47a3e451db8b4ed8b164cb",
-      "size": 8301
+      "sha256": "06b3dc1ff798751de4d648663a9cd78b39cb44dddc33d3d7f98cf5efac67801f",
+      "size": 8320
     },
     "output.json": {
-      "sha256": "86fe35260562dec8ea0b6f1375be6076eb4e4515a5f54ba49b8b8c15c82b9144",
-      "size": 4436
+      "sha256": "55ead5cf6fcd8eb45f8e89f3bac0341b68389902300b80944f559be0d5e628d2",
+      "size": 7161
     },
     "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_doubleITCZ_AC_basicTest.png": {
       "sha256": "0f3b1ba0ae66c286cd8c17fa6323ba9ff71a117a389a93648afb63125d1a2859",
@@ -56,8 +56,32 @@
       "size": 390513
     },
     "pr_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "cca0817f726a3da87518d10f536662915ce22479de5f5f6eeadf1ad0ff849ed6",
-      "size": 21764
+      "sha256": "bea4690cc57d231bd6a065400ea6a3a0a0b59835a95362e3d1e6cf2c6bcab545",
+      "size": 21771
+    },
+    "pr_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {
+      "sha256": "d3a9bd2e9a8c7962b360b12e647e21e482998308868e7f0a4972082e235fcbef",
+      "size": 2717783
+    },
+    "pr_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+      "sha256": "2fc3cdaf8180a133fda9ed7b96644bb0d54030b3183f533a704e072d7fc2fd5f",
+      "size": 574037
+    },
+    "pr_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc": {
+      "sha256": "5274325b8262a0c6057d20db499edaeb7b477bb50242b2117eaa79201ac30c13",
+      "size": 257421
+    },
+    "pr_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc": {
+      "sha256": "b98dc32adc324c6df0c77a38270916fa7dab1b7e64ebe002ed930b96cef971db",
+      "size": 257421
+    },
+    "pr_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc": {
+      "sha256": "412e8ead2e6199184a8ba3946d2dec44f346cb19f3ba55658a1e22ce2adf86f5",
+      "size": 257421
+    },
+    "pr_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc": {
+      "sha256": "bc8d480e5348cbc5a28d37a30207d01baa9e6eb13ce40d1fff6c58dcc8525855",
+      "size": 257421
     },
     "series.json": {
       "sha256": "a53a16c560ffec447a6a0b9becf6ed5354a3abca608562fe5ad1c9d664ff9b5f",
@@ -65,5 +89,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 9
+  "test_case_version": 10
 }

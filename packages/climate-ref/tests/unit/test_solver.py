@@ -2014,7 +2014,7 @@ class TestObs4REFFallback:
 
         # A is taken from obs4MIPs only, B comes from obs4REF and keeps its dataset id.
         assert merged["source_id"].tolist() == ["A", "B"]
-        assert merged.index.tolist() == [0, 1]
+        assert merged.index.tolist() == [0, 11]
         assert merged["instance_id"].iloc[1].startswith("obs4REF.")
 
     def test_the_merged_catalog_cannot_reload_away_the_obs4ref_rows(self):
@@ -2054,6 +2054,7 @@ class TestObs4REFFallback:
         merged = union_with_fallbacks(obs4mips, [obs4ref], SourceDatasetType.obs4MIPs)
 
         assert merged["source_id"].tolist() == ["B", "A"]
+        assert merged.index.tolist() == [1, 10]
         assert merged["instance_id"].tolist() == [
             "obs4MIPs.obs4MIPs.INST.B.mon.ts.gn.v20240101",
             "obs4REF.obs4REF.INST.A.mon.ts.gn.v20250101",
@@ -2078,10 +2079,11 @@ class TestObs4REFFallback:
 
     def test_obs4ref_alone_still_groups_as_obs4mips(self):
         # A deployment that fetched only the registry is the ordinary case, not an edge case.
-        obs4ref = self._frame("obs4REF", ["A"]).assign(activity_id="obs4REF")
+        obs4ref = self._frame("obs4REF", ["A"], start=10).assign(activity_id="obs4REF")
 
         merged = union_with_fallbacks(pd.DataFrame(), [obs4ref], SourceDatasetType.obs4MIPs)
 
+        assert merged.index.tolist() == [10]
         assert merged["activity_id"].tolist() == ["obs4MIPs"]
         assert merged["instance_id"].tolist() == obs4ref["instance_id"].tolist()
 
@@ -2123,7 +2125,7 @@ class TestDeclaredFallbacks:
 
         assert catalog["source_id"].tolist() == ["A", "B"]
         assert catalog["activity_id"].tolist() == ["obs4MIPs", "obs4MIPs"]
-        assert catalog.index.tolist() == [0, 1]
+        assert catalog.index.tolist() == [0, 10]
 
     def test_an_undeclared_collection_is_left_out(self):
         catalogs = {
@@ -2172,7 +2174,7 @@ class TestDeclaredFallbacks:
         assert twice is once
         pd.testing.assert_frame_equal(once, twice)
         assert once["source_id"].tolist() == ["A", "B"]
-        assert once.index.tolist() == [0, 1]
+        assert once.index.tolist() == [0, 11]
 
 
 class TestProviderHealth:

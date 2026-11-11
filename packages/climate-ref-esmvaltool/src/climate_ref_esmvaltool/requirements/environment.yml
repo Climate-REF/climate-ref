@@ -3,7 +3,8 @@ channels:
   - nodefaults
 
 dependencies:
-  - cartopy
+  # 0.25 raises "getX called on empty Point" in pcolormesh (SciTools/cartopy#2640).
+  - cartopy >=0.26
   - cf-units
   - dask
   - esmvaltool-base
@@ -13,6 +14,8 @@ dependencies:
   - matplotlib-base <3.11
   - numpy
   - pandas
+  # The compiled dependencies are built for the regular ABI, not the free-threaded cp314t one.
+  - python_abi * *_cp314
   - requests
   - scikit-learn
   - scipy

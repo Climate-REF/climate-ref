@@ -2,18 +2,18 @@
   "catalog_hash": "a9cce7f2ad0e55b185e8960d56ea4f454149f57a",
   "committed": {
     "diagnostic.json": "8a159b923540db792f27d88cf44890ecd6a6eb9b3216fd8eb9f2917627612f07",
-    "output.json": "d18f3b047d13e82e1798c0c55d58297ddbe5f8dc5fb8f50e077b59cc96400a76",
+    "output.json": "b21a73145f82de554cbfdbabc4b05f68cab3a43bdd3a6f3267df2acb89626be3",
     "series.json": "493623e9b3cbe328b718310828269f4fe1478508d35aa50875670f16eb3b803e"
   },
   "diagnostic_version": 6,
   "native": {
     "diagnostic.json": {
-      "sha256": "dca4c2d93c121436d204968d6d73f93db627536f3e3c83a8b32b1d6c594b65dc",
-      "size": 8962
+      "sha256": "418d73972a31169eb544945a04707a9f4c97b0ca391e6fcab39b640a06a62c5a",
+      "size": 8981
     },
     "output.json": {
-      "sha256": "716dfb3a1db45ed5120a0b50ef3d75b9284a61205e63588a5029ab1b81d31479",
-      "size": 4527
+      "sha256": "eba23540949b00d2da3e869b117ccf9a9dbfa8d013eafad8cfec1b57c6a55f3b",
+      "size": 8242
     },
     "series.json": {
       "sha256": "0238c6194f2c8b7ff6c6ce1748432c736a95157f50a339affc00847edaeea829",
@@ -40,8 +40,16 @@
       "size": 358386
     },
     "ta-200_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "a9d5f8bd4b4b25b7ac2ae8c728e63db3ec4790fdca0139fa0bf633e868642e2e",
-      "size": 12605
+      "sha256": "2b71a621897accdeeab394d6b5cb8f5bab2f74af6da2a0533cc8e598d983f549",
+      "size": 12612
+    },
+    "ta-200_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+      "sha256": "f5d1852d648b18c0b6d27112130c5b939546993e9da91ec3d57586439cb6c9d8",
+      "size": 485804
+    },
+    "ta-500_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+      "sha256": "471acb388fad8c2fb34d6810d9712097ea6ba60b154bdb2719385c3cd6bedf2c",
+      "size": 483705
     },
     "ta-850/ta-850_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
       "sha256": "26d52d49080feb19e3347d0185139f5688df4fb872468a7a4ec3dc01bd293558",
@@ -64,10 +72,34 @@
       "size": 354835
     },
     "ta-850_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "004fd8347446b4590670a13c70b73ec7fd9219f2538b9c4c8af170bcfd42e5cc",
-      "size": 12592
+      "sha256": "f2459adcb7ce40c4bb03416792abf8cdf0023459304cee8dc29b54dece431524",
+      "size": 12599
+    },
+    "ta-850_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+      "sha256": "47f070f846bac5263c85a138e76e4e8e502b7bda985d7880cd8466b0bb7fc00c",
+      "size": 478203
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {
+      "sha256": "4e917e9f93b0194086eefd665d5b95d52f648cfa6aec1ce0cd623d109e1fcffc",
+      "size": 50484498
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc": {
+      "sha256": "27e13ad6dc692a5b3767778b43b03841486cf71e9687554269a091f49c6bf84f",
+      "size": 4244635
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc": {
+      "sha256": "fc6e1e16200504830e369534921ca2478c35f1091f705bd28cf91c59fdf800c7",
+      "size": 4244635
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc": {
+      "sha256": "8b3ba22196c26d1469352f707c3acd82d8b2bdbcc7b798b1e837b6f22482d35a",
+      "size": 4244635
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc": {
+      "sha256": "f80aa23b638e9f653cd4a4c2921d400506324611487b11f2cff3af95ea590b02",
+      "size": 4244635
     }
   },
   "schema": 2,
-  "test_case_version": 6
+  "test_case_version": 7
 }

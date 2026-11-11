@@ -1,10 +1,82 @@
 {
-  "data": {},
+  "data": {
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {
+      "description": "Monthly means of the model",
+      "dimensions": {
+        "experiment_id": "historical",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "variable_id": "ta"
+      },
+      "filename": "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc",
+      "long_name": "Model annual cycle climatology"
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc": {
+      "description": "DJF mean of the model",
+      "dimensions": {
+        "experiment_id": "historical",
+        "member_id": "r1i1p1f1",
+        "season": "djf",
+        "source_id": "ACCESS-ESM1-5",
+        "variable_id": "ta"
+      },
+      "filename": "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc",
+      "long_name": "Model DJF climatology"
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc": {
+      "description": "JJA mean of the model",
+      "dimensions": {
+        "experiment_id": "historical",
+        "member_id": "r1i1p1f1",
+        "season": "jja",
+        "source_id": "ACCESS-ESM1-5",
+        "variable_id": "ta"
+      },
+      "filename": "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc",
+      "long_name": "Model JJA climatology"
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc": {
+      "description": "MAM mean of the model",
+      "dimensions": {
+        "experiment_id": "historical",
+        "member_id": "r1i1p1f1",
+        "season": "mam",
+        "source_id": "ACCESS-ESM1-5",
+        "variable_id": "ta"
+      },
+      "filename": "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc",
+      "long_name": "Model MAM climatology"
+    },
+    "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc": {
+      "description": "SON mean of the model",
+      "dimensions": {
+        "experiment_id": "historical",
+        "member_id": "r1i1p1f1",
+        "season": "son",
+        "source_id": "ACCESS-ESM1-5",
+        "variable_id": "ta"
+      },
+      "filename": "ta_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc",
+      "long_name": "Model SON climatology"
+    }
+  },
   "diagnostics": {},
   "html": {},
   "index": "index.html",
   "metrics": null,
   "plots": {
+    "ta-200_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+      "description": "Annual mean and seasonal means of the model",
+      "dimensions": {
+        "experiment_id": "historical",
+        "level": "200",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "variable_id": "ta"
+      },
+      "filename": "ta-200_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png",
+      "long_name": "Model climatology"
+    },
     "ta-200_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
@@ -34,6 +106,30 @@
       "dimensions": null,
       "filename": "ta-200/ta-200_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png",
       "long_name": "Plot"
+    },
+    "ta-500_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+      "description": "Annual mean and seasonal means of the model",
+      "dimensions": {
+        "experiment_id": "historical",
+        "level": "500",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "variable_id": "ta"
+      },
+      "filename": "ta-500_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png",
+      "long_name": "Model climatology"
+    },
+    "ta-850_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+      "description": "Annual mean and seasonal means of the model",
+      "dimensions": {
+        "experiment_id": "historical",
+        "level": "850",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "variable_id": "ta"
+      },
+      "filename": "ta-850_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png",
+      "long_name": "Model climatology"
     },
     "ta-850_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
       "description": "Plot produced by the diagnostic",

@@ -14,6 +14,7 @@ from climate_ref_core.diagnostics import (
 from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
 from climate_ref_core.metric_values import SeriesMetricValue
 from climate_ref_core.pycmec.metric import remove_dimensions
+from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
     PMP_RECONSTRUCTION_INPUTS,
@@ -323,6 +324,65 @@ def combine_results_files(results_files: list[Any], output_directory: str | Path
 # ===================================================
 # PMP diagnostics main class: annual cycle diagnostic
 # ===================================================
+
+
+def _add_climatology_outputs(
+    output_bundle: CMECOutput,
+    definition: ExecutionDefinition,
+    plots: list[Path],
+    data: list[Path],
+    dimensions: dict[str, str],
+) -> None:
+    """
+    Register the model climatologies PMP computes before comparing them with the reference
+
+    Parameters
+    ----------
+    output_bundle
+        Output bundle the files are added to
+    definition
+        Definition of the diagnostic execution
+    plots
+        Quick-look plots of the climatologies, one per level of a 3D variable
+    data
+        Climatology files, named ``..._clims.<years>.<period>.<version>.nc``
+    dimensions
+        Dimensions shared by every climatology
+    """
+    for plot in plots:
+        relative_path = str(definition.as_relative_path(plot))
+        # A 3D variable is plotted per level, named like ``ta-200_...``
+        _, _, level = plot.name.split("_", 1)[0].partition("-")
+        output_bundle.update(
+            OutputCV.PLOTS.value,
+            short_name=plot.name,
+            dict_content={
+                OutputCV.FILENAME.value: relative_path,
+                OutputCV.LONG_NAME.value: "Model climatology",
+                OutputCV.DESCRIPTION.value: "Annual mean and seasonal means of the model",
+                OutputCV.DIMENSIONS.value: {**dimensions, "level": level} if level else dimensions,
+            },
+        )
+    for datafile in data:
+        relative_path = str(definition.as_relative_path(datafile))
+        # The version after the period may itself contain dots, so count from the front
+        period = datafile.name.split("_clims.", 1)[1].split(".")[1]
+        # ``AC`` is the annual cycle of monthly means rather than an annual mean, so it has no season
+        season = None if period == "AC" else period.lower()
+        output_bundle.update(
+            OutputCV.DATA.value,
+            short_name=datafile.name,
+            dict_content={
+                OutputCV.FILENAME.value: relative_path,
+                OutputCV.LONG_NAME.value: (
+                    f"Model {period} climatology" if season else "Model annual cycle climatology"
+                ),
+                OutputCV.DESCRIPTION.value: (
+                    f"{period} mean of the model" if season else "Monthly means of the model"
+                ),
+                OutputCV.DIMENSIONS.value: {**dimensions, "season": season} if season else dimensions,
+            },
+        )
 
 
 class AnnualCycle(CommandLineDiagnostic):
@@ -665,6 +725,11 @@ class AnnualCycle(CommandLineDiagnostic):
             definition.as_relative_path(f)
             for f in sorted(results_directory.glob(f"{variable_dir_pattern}/*.nc"))
         ]
+        # The model climatologies the first command computes are written to the top level:
+        # a NetCDF file per period (spanning every level of a 3D variable)
+        # and a quick-look plot of them per level.
+        climatology_plots = sorted(results_directory.glob(f"{variable_dir_pattern}_*_clims.*.png"))
+        climatology_data = sorted(results_directory.glob(f"{variable_id}_*_clims.*.nc"))
 
         # Prepare the output bundles
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_file, png_files, data_files)
@@ -679,6 +744,14 @@ class AnnualCycle(CommandLineDiagnostic):
             "variable_id": input_datasets["variable_id"].unique()[0],
             "reference_source_id": reference_collection["source_id"].unique()[0],
         }
+        _add_climatology_outputs(
+            cmec_output_bundle,
+            definition,
+            climatology_plots,
+            climatology_data,
+            # A climatology is computed from the model alone, so it has no reference
+            {k: v for k, v in common_dimensions.items() if k != "reference_source_id"},
+        )
         cmec_metric_bundle = cmec_metric_bundle.prepend_dimensions(
             {
                 # PMP scalars are model-performance scores against a reference, not reference

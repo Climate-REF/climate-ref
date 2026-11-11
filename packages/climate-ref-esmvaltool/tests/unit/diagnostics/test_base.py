@@ -193,6 +193,10 @@ def test_build_metric_result(metric_definition, mock_diagnostic):
     assert list(output_bundle[OutputCV.HTML.value]) == [index_html]
     assert output_bundle[OutputCV.HTML.value][index_html][OutputCV.FILENAME.value] == index_html
     assert output_bundle[OutputCV.INDEX.value] == index_html
+    assert (
+        output_bundle[OutputCV.PROVENANCE.value][OutputCV.LOG.value]
+        == "executions/recipe_test/run/main_log_debug.txt"
+    )
 
 
 def test_series_extraction(tmp_path, metric_definition, mock_diagnostic, mocker):

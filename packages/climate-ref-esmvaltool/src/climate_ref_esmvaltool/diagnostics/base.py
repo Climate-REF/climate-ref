@@ -518,7 +518,9 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         output_args[OutputCV.INDEX.value] = index_html
 
         # Add the (debug) log file
-        output_args[OutputCV.PROVENANCE.value][OutputCV.LOG.value] = f"{result_dir}/run/main_log_debug.txt"
+        output_args[OutputCV.PROVENANCE.value][OutputCV.LOG.value] = (
+            f"{definition.as_relative_path(result_dir / 'run' / 'main_log_debug.txt')}"
+        )
 
         # Update the diagnostic and output bundle with diagnostic specific executions.
         metric_bundle, output_bundle = self.format_result(

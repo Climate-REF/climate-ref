@@ -18,9 +18,10 @@ from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollect
 from climate_ref_core.diagnostics import CommandLineDiagnostic, ExecutionDefinition
 from climate_ref_core.metric_values import SeriesMetricValue as SeriesMetricValueType
 from climate_ref_core.metric_values.typing import SeriesDefinition
-from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
+from climate_ref_core.output_files import PlaceholderMap
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.output import OutputCV
+from climate_ref_core.regression import copy_native_outputs
 
 
 @pytest.fixture
@@ -186,6 +187,16 @@ def test_build_metric_result(metric_definition, mock_diagnostic):
     assert len(plots) == 4
     captions = {p["long_name"] for p in plots.values()}
     assert len(captions) == 4
+
+    # The results page is registered by its path relative to the output directory
+    index_html = "executions/recipe_test/index.html"
+    assert list(output_bundle[OutputCV.HTML.value]) == [index_html]
+    assert output_bundle[OutputCV.HTML.value][index_html][OutputCV.FILENAME.value] == index_html
+    assert output_bundle[OutputCV.INDEX.value] == index_html
+    assert (
+        output_bundle[OutputCV.PROVENANCE.value][OutputCV.LOG.value]
+        == "executions/recipe_test/run/main_log_debug.txt"
+    )
 
 
 def test_series_extraction(tmp_path, metric_definition, mock_diagnostic, mocker):
@@ -492,9 +503,7 @@ def test_reconstruction_inputs_capture_provenance_for_replay(metric_definition, 
     result = mock_diagnostic.build_execution_result(definition=metric_definition)
 
     results_dir = tmp_path / "results"
-    copied = copy_execution_outputs(
-        output_dir, results_dir, ".", result, extra_globs=mock_diagnostic.reconstruction_inputs
-    )
+    copied = copy_native_outputs(output_dir, results_dir, result, mock_diagnostic.reconstruction_inputs)
 
     prov_relpath = provenance.relative_to(output_dir)
     # The provenance is NOT referenced by the bundle, so only the reconstruction-inputs glob keeps it.

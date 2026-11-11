@@ -164,6 +164,7 @@ def mock_result_factory(mocker):
         series_filename=pathlib.Path("series.json"),
     ):
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = True
         mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
         mock_result.output_bundle_filename = output_bundle_filename
@@ -460,6 +461,7 @@ class TestReingestExecution:
         """Should return False when build_execution_result returns unsuccessful."""
         mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = False
         mock_result.metric_bundle_filename = None
         mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
@@ -484,6 +486,7 @@ class TestReingestExecution:
         """Should return False when result is successful but metric_bundle_filename is None."""
         mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = True
         mock_result.metric_bundle_filename = None
         mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
@@ -708,6 +711,45 @@ class TestReingestExecution:
         results_dir = config.paths.results / new_execution.output_fragment
         assert results_dir.exists(), "Results should be copied to new directory"
         assert (results_dir / "diagnostic.json").exists()
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_keeps_symlinks_to_input_data(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+        tmp_path,
+    ):
+        """Input data linked into the execution directory is neither copied nor rewritten."""
+        input_file = tmp_path / "inputs" / "metadata.json"
+        input_file.parent.mkdir()
+        input_file.write_text(f'{{"path": "{scratch_dir_with_results}"}}')
+        (scratch_dir_with_results / "climate_data").mkdir()
+        (scratch_dir_with_results / "climate_data" / "metadata.json").symlink_to(input_file)
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_execution = (
+            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        )
+        linked = config.paths.scratch / new_execution.output_fragment / "climate_data" / "metadata.json"
+        assert linked.is_symlink()
+        assert input_file.read_text() == f'{{"path": "{scratch_dir_with_results}"}}'
+        results_dir = config.paths.results / new_execution.output_fragment
+        assert not (results_dir / "climate_data" / "metadata.json").exists()
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_does_not_touch_dirty_flag(

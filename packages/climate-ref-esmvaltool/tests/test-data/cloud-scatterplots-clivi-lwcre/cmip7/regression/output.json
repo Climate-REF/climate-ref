@@ -27,14 +27,14 @@
   },
   "diagnostics": {},
   "html": {
-    "<OUTPUT_DIR>/executions/recipe/index.html": {
+    "executions/recipe/index.html": {
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null,
-      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "filename": "executions/recipe/index.html",
       "long_name": "Results page"
     }
   },
-  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "index": "executions/recipe/index.html",
   "metrics": null,
   "plots": {
     "executions/recipe/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP7_CanESM5_r1i1p1f1_gn_1996-2014.png": {

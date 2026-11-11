@@ -5,7 +5,7 @@
 # Dispatch it on the feature branch to update: the result is committed back to that branch for review.
 #
 name: Regression baselines (mint)
-run-name: "Mint ${{ inputs.provider }} (${{ inputs.diagnostic || 'all diagnostics' }})${{ inputs.dry_run && ' [dry run]' || '' }}"
+run-name: "Mint ${{ inputs.provider }} (${{ inputs.diagnostic || 'all diagnostics' }})${{ inputs.from_replay && ' [from replay]' || '' }}${{ inputs.dry_run && ' [dry run]' || '' }}"
 
 on:
   workflow_dispatch:
@@ -24,6 +24,10 @@ on:
         default: ""
       bump_version:
         description: "Always increment test_case_version (it is bumped automatically when the committed bundle changes)"
+        type: boolean
+        default: false
+      from_replay:
+        description: "Rebuild the committed bundles from the stored native baselines, without running the diagnostics (for changes to how results are read)"
         type: boolean
         default: false
       dry_run:
@@ -82,9 +86,12 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
+      # A replay only rebuilds the bundles from the stored native baselines, so needs no input data
       - name: Fetch sample data
+        if: ${{ !inputs.from_replay }}
         run: uv run ref datasets fetch-sample-data
       - name: Set up provider (environment + reference data)
+        if: ${{ !inputs.from_replay }}
         env:
           PROVIDER: ${{ inputs.provider }}
         # Diagnostics read observational reference data that the ESGF fetch does not provide.
@@ -98,6 +105,7 @@ jobs:
           DIAGNOSTIC: ${{ inputs.diagnostic }}
           TEST_CASE: ${{ inputs.test_case }}
           BUMP_VERSION: ${{ inputs.bump_version }}
+          FROM_REPLAY: ${{ inputs.from_replay }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           # Serial, because the runners share an intake-esgf cache backed by SQLite.
@@ -112,7 +120,11 @@ jobs:
             if [ -n "${diagnostic}" ]; then args+=(--diagnostic "${diagnostic}"); fi
             if [ -n "${TEST_CASE}" ]; then args+=(--test-case "${TEST_CASE}"); fi
 
-            uv run ref test-cases fetch "${args[@]}" || echo "::warning::test-case fetch incomplete for ${name}"
+            if [ "${FROM_REPLAY}" = "true" ]; then
+              args+=(--from-replay)
+            else
+              uv run ref test-cases fetch "${args[@]}" || echo "::warning::test-case fetch incomplete for ${name}"
+            fi
 
             if [ "${BUMP_VERSION}" = "true" ]; then args+=(--bump-version); fi
             if [ "${DRY_RUN}" = "true" ]; then args+=(--dry-run); fi

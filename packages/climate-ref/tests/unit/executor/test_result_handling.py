@@ -14,6 +14,7 @@ from climate_ref.executor.result_handling import (
     ingest_execution_result,
     ingest_scalar_values,
     ingest_series_values,
+    record_lost_execution,
     record_resource_usage,
     register_execution_outputs,
 )
@@ -29,7 +30,7 @@ from climate_ref.models.execution import (
 from climate_ref.models.metric_value import MetricValueType
 from climate_ref.models.provider import Provider as ProviderModel
 from climate_ref_core.diagnostics import ExecutionResult
-from climate_ref_core.exceptions import ResultValidationError
+from climate_ref_core.exceptions import InvalidProviderException, ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import ScalarMetricValue as TScalar
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
@@ -60,7 +61,7 @@ def mock_execution_result(mocker):
 @pytest.fixture
 def mock_definition(mocker, definition_factory):
     definition = definition_factory(
-        diagnostic=mocker.Mock(),
+        diagnostic=mocker.Mock(**{"provider.results_exclude": ()}),
     )
 
     # Ensure that the output directory exists and a log file is available
@@ -84,25 +85,12 @@ def test_handle_execution_result_successful(
         mock_definition.to_output_path(metric_bundle_filename),
     )
 
-    mock_copy = mocker.patch("climate_ref.executor.result_handling.copy_output_file")
-    mock_curate = mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
-
     handle_execution_result(config, db, mock_execution_result, result)
 
-    # The log is copied directly (health check); the curated output set is delegated
-    # to copy_execution_outputs (which file lands where is covered by test_output_files).
-    mock_copy.assert_called_once_with(
-        config.paths.scratch,
-        config.paths.results,
-        mock_execution_result.output_fragment,
-        EXECUTION_LOG_FILENAME,
-    )
-    mock_curate.assert_called_once_with(
-        config.paths.scratch,
-        config.paths.results,
-        mock_execution_result.output_fragment,
-        result,
-    )
+    # Everything the execution wrote is copied, including the log
+    results_directory = config.paths.results / mock_execution_result.output_fragment
+    assert (results_directory / metric_bundle_filename).is_file()
+    assert (results_directory / EXECUTION_LOG_FILENAME).is_file()
     mock_execution_result.mark_successful.assert_called_once_with(metric_bundle_filename)
     assert not mock_execution_result.execution_group.dirty
 
@@ -140,24 +128,10 @@ def test_handle_execution_result_with_series(
     ]
     TSeries.dump_to_json(mock_definition.to_output_path(series_filename), series_data)
 
-    mock_copy = mocker.patch("climate_ref.executor.result_handling.copy_output_file")
-    mock_curate = mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
-
     handle_execution_result(config, db, mock_execution_result, result)
 
-    # The log is copied directly
-    mock_copy.assert_called_once_with(
-        config.paths.scratch,
-        config.paths.results,
-        mock_execution_result.output_fragment,
-        EXECUTION_LOG_FILENAME,
-    )
-    mock_curate.assert_called_once_with(
-        config.paths.scratch,
-        config.paths.results,
-        mock_execution_result.output_fragment,
-        result,
-    )
+    results_directory = config.paths.results / mock_execution_result.output_fragment
+    assert (results_directory / series_filename).is_file()
     mock_execution_result.mark_successful.assert_called_once_with(metric_bundle_filename)
     assert not mock_execution_result.execution_group.dirty
 
@@ -279,8 +253,7 @@ def test_handle_execution_result_ingestion_failure_leaves_dirty(
         definition=mock_definition, successful=True, metric_bundle_filename=pathlib.Path("bundle.json")
     )
 
-    mocker.patch("climate_ref.executor.result_handling.copy_output_file")
-    mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+    mocker.patch("climate_ref.executor.result_handling._check_copied_outputs")
     mocker.patch(
         "climate_ref.executor.result_handling.ingest_execution_result",
         side_effect=RuntimeError("boom"),
@@ -312,7 +285,7 @@ def test_handle_execution_result_missing_log_file_leaves_dirty(
     config, db, mock_execution_result, mocker, definition_factory
 ):
     """Missing log file suggests the process was killed, so dirty should remain True"""
-    definition = definition_factory(diagnostic=mocker.Mock())
+    definition = definition_factory(diagnostic=mocker.Mock(**{"provider.results_exclude": ()}))
     # Do NOT create the log file
     definition.output_directory.mkdir(parents=True, exist_ok=True)
 
@@ -340,7 +313,7 @@ def test_handle_execution_result_missing_output_marks_failed(
         definition=mock_definition, successful=True, metric_bundle_filename=pathlib.Path("diagnostic.json")
     )
 
-    # The metric bundle is absent from scratch, so copy_execution_outputs really
+    # The metric bundle is absent from scratch, so the copy check really
     # raises FileNotFoundError (not mocked).
     handle_execution_result(config, db, mock_execution_result, result)
 
@@ -387,7 +360,7 @@ def test_failure_trailer_is_written_on_reingest(config, db, mock_execution_resul
 def test_missing_log_creates_results_log_with_trailer(
     config, db, mock_execution_result, mocker, definition_factory
 ):
-    definition = definition_factory(diagnostic=mocker.Mock())
+    definition = definition_factory(diagnostic=mocker.Mock(**{"provider.results_exclude": ()}))
     definition.output_directory.mkdir(parents=True, exist_ok=True)
     result = ExecutionResult(
         definition=definition, successful=True, metric_bundle_filename=pathlib.Path("diagnostic.json")
@@ -414,7 +387,7 @@ def test_ingest_failure_trailer(config, db, mock_execution_result, mocker, mock_
     result = ExecutionResult(
         definition=mock_definition, successful=True, metric_bundle_filename=pathlib.Path("bundle.json")
     )
-    mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+    mocker.patch("climate_ref.executor.result_handling._check_copied_outputs")
     mocker.patch(
         "climate_ref.executor.result_handling.ingest_execution_result", side_effect=RuntimeError("boom")
     )
@@ -430,7 +403,6 @@ def test_failure_trailer_never_raises(config, db, mock_execution_result, mocker,
     result = ExecutionResult(
         definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=False
     )
-    mocker.patch("climate_ref.executor.result_handling.copy_output_file")
     # A file where the results directory should be makes the trailer unwritable
     blocker = config.paths.results / mock_execution_result.output_fragment
     blocker.parent.mkdir(parents=True, exist_ok=True)
@@ -439,6 +411,194 @@ def test_failure_trailer_never_raises(config, db, mock_execution_result, mocker,
     handle_execution_result(config, db, mock_execution_result, result)
 
     mock_execution_result.mark_failed.assert_called_once()
+
+
+class TestCopiedOutputs:
+    """Everything an execution wrote is copied to results, but only the bundle outputs are registered"""
+
+    @pytest.fixture
+    def scratch_files(self, mock_definition):
+        mock_definition.diagnostic.provider.results_exclude = ("preproc/*", "*/resource_usage.txt")
+        for name in ("run/log.txt", "run/resource_usage.txt", "preproc/tas.nc", "plots/partial.png"):
+            path = mock_definition.to_output_path(name)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(name)
+        return mock_definition
+
+    @staticmethod
+    def _results(config, execution):
+        directory = config.paths.results / execution.output_fragment
+        return {p.relative_to(directory).as_posix() for p in directory.rglob("*") if p.is_file()}
+
+    @pytest.mark.parametrize("retryable", [True, False])
+    def test_failure_copies_partial_outputs(
+        self, config, db, mock_execution_result, scratch_files, retryable
+    ):
+        result = ExecutionResult(
+            definition=scratch_files, successful=False, metric_bundle_filename=None, retryable=retryable
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        assert self._results(config, mock_execution_result) == {
+            EXECUTION_LOG_FILENAME,
+            "run/log.txt",
+            "plots/partial.png",
+        }
+        assert "REF: execution failed" in _results_log(config, mock_execution_result).read_text()
+
+    def test_missing_log_copies_partial_outputs(self, config, db, mock_execution_result, scratch_files):
+        scratch_files.to_output_path(EXECUTION_LOG_FILENAME).unlink()
+        result = ExecutionResult(definition=scratch_files, successful=False, metric_bundle_filename=None)
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        assert self._results(config, mock_execution_result) == {
+            EXECUTION_LOG_FILENAME,
+            "run/log.txt",
+            "plots/partial.png",
+        }
+
+    def test_missing_output_copies_partial_outputs(self, config, db, mock_execution_result, scratch_files):
+        result = ExecutionResult(
+            definition=scratch_files, successful=True, metric_bundle_filename=pathlib.Path("diagnostic.json")
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.ResultError)
+        assert "run/log.txt" in self._results(config, mock_execution_result)
+
+    def test_success_copies_unreferenced_files(self, config, mock_execution_result, mocker, scratch_files):
+        db = mocker.MagicMock()
+        db.session = mocker.MagicMock(spec=Session)
+        cmec_output = CMECOutput(**CMECOutput.create_template())
+        cmec_output.update(
+            "plots",
+            short_name="partial",
+            dict_content={"long_name": "", "filename": "plots/partial.png", "description": ""},
+        )
+        result = ExecutionResult.build_from_output_bundle(
+            definition=scratch_files,
+            cmec_output_bundle=cmec_output,
+            cmec_metric_bundle=CMECMetric(**CMECMetric.create_template()),
+        )
+        mock_result_output = mocker.patch(
+            "climate_ref.executor.result_handling.ExecutionOutput.build", spec=ExecutionOutput
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_successful.assert_called_once()
+        assert self._results(config, mock_execution_result) == {
+            EXECUTION_LOG_FILENAME,
+            "diagnostic.json",
+            "output.json",
+            "series.json",
+            "run/log.txt",
+            "plots/partial.png",
+        }
+        # Only the file the output bundle references is registered
+        assert mock_result_output.call_count == 1
+
+    @pytest.mark.parametrize("error", [KeyError("gone"), InvalidProviderException("gone", "not installed")])
+    def test_unresolved_provider_fails_success(
+        self, config, mock_execution_result, mocker, scratch_files, error
+    ):
+        # Without the provider, its exclusions are unknown, so nothing is copied or ingested
+        type(scratch_files.diagnostic).provider = mocker.PropertyMock(side_effect=error)
+        db = mocker.MagicMock()
+        db.session = mocker.MagicMock(spec=Session)
+        result = ExecutionResult.build_from_output_bundle(
+            definition=scratch_files,
+            cmec_output_bundle=CMECOutput(**CMECOutput.create_template()),
+            cmec_metric_bundle=CMECMetric(**CMECMetric.create_template()),
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.ResultError)
+        mock_execution_result.mark_successful.assert_not_called()
+        assert self._results(config, mock_execution_result) == {EXECUTION_LOG_FILENAME}
+        assert "could not copy outputs" in _results_log(config, mock_execution_result).read_text()
+
+    def test_unresolved_provider_still_records_failure(
+        self, config, db, mock_execution_result, mocker, scratch_files
+    ):
+        type(scratch_files.diagnostic).provider = mocker.PropertyMock(side_effect=KeyError("gone"))
+        result = ExecutionResult(definition=scratch_files, successful=False, metric_bundle_filename=None)
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.DiagnosticError)
+        assert self._results(config, mock_execution_result) == {EXECUTION_LOG_FILENAME}
+
+    def test_lost_execution_with_unresolved_provider_still_fails(
+        self, config, mock_execution_result, mocker, scratch_files
+    ):
+        mocker.patch(
+            "climate_ref.executor.result_handling.resolve_diagnostic",
+            side_effect=InvalidProviderException("gone", "not installed"),
+        )
+
+        record_lost_execution(config, mock_execution_result, "worker lost")
+
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
+        assert self._results(config, mock_execution_result) == {EXECUTION_LOG_FILENAME}
+
+    def test_excluded_referenced_file_fails_execution(
+        self, config, mock_execution_result, mocker, scratch_files
+    ):
+        # The provider excludes a file that the output bundle references
+        scratch_files.diagnostic.provider.results_exclude = ("plots/*",)
+        db = mocker.MagicMock()
+        db.session = mocker.MagicMock(spec=Session)
+        cmec_output = CMECOutput(**CMECOutput.create_template())
+        cmec_output.update(
+            "plots",
+            short_name="partial",
+            dict_content={"long_name": "", "filename": "plots/partial.png", "description": ""},
+        )
+        result = ExecutionResult.build_from_output_bundle(
+            definition=scratch_files,
+            cmec_output_bundle=cmec_output,
+            cmec_metric_bundle=CMECMetric(**CMECMetric.create_template()),
+        )
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.ResultError)
+        mock_execution_result.mark_successful.assert_not_called()
+        assert "plots/partial.png" not in self._results(config, mock_execution_result)
+        trailer = _results_log(config, mock_execution_result).read_text()
+        assert "could not copy outputs" in trailer
+        assert "plots/partial.png" in trailer
+
+    def test_symlinks_are_not_copied(self, config, db, mock_execution_result, scratch_files):
+        link = scratch_files.to_output_path("run/link.txt")
+        link.symlink_to(scratch_files.to_output_path("run/log.txt"))
+        result = ExecutionResult(definition=scratch_files, successful=False, metric_bundle_filename=None)
+
+        handle_execution_result(config, db, mock_execution_result, result)
+
+        assert "run/log.txt" in self._results(config, mock_execution_result)
+        assert "run/link.txt" not in self._results(config, mock_execution_result)
+
+    def test_lost_execution_copies_partial_outputs(
+        self, config, mock_execution_result, mocker, scratch_files
+    ):
+        mocker.patch(
+            "climate_ref.executor.result_handling.resolve_diagnostic", return_value=scratch_files.diagnostic
+        )
+
+        record_lost_execution(config, mock_execution_result, "worker lost")
+
+        mock_execution_result.mark_failed.assert_called_once_with(ExecutionFailureReason.SystemError)
+        assert self._results(config, mock_execution_result) == {
+            EXECUTION_LOG_FILENAME,
+            "run/log.txt",
+            "plots/partial.png",
+        }
 
 
 @pytest.fixture
@@ -486,8 +646,7 @@ class TestResourceUsagePersistence:
             test_data_dir / "cmec-output" / "pr_v3-LR_0101_1x1_esmf_metrics_default_v20241023_cmec.json",
             mock_definition.to_output_path(metric_bundle_filename),
         )
-        mocker.patch("climate_ref.executor.result_handling.copy_output_file")
-        mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+        mocker.patch("climate_ref.executor.result_handling._check_copied_outputs")
 
         handle_execution_result(config, db, mock_execution_result, result, queue_seconds=3.25)
 
@@ -522,7 +681,7 @@ class TestResourceUsagePersistence:
         self, config, db, mock_execution_result, mocker, definition_factory, resource_usage
     ):
         """The earliest early return, taken before the log file is even found."""
-        definition = definition_factory(diagnostic=mocker.Mock())
+        definition = definition_factory(diagnostic=mocker.Mock(**{"provider.results_exclude": ()}))
         definition.output_directory.mkdir(parents=True, exist_ok=True)
 
         result = ExecutionResult(
@@ -561,8 +720,7 @@ class TestResourceUsagePersistence:
             metric_bundle_filename=pathlib.Path("bundle.json"),
             resource_usage=resource_usage,
         )
-        mocker.patch("climate_ref.executor.result_handling.copy_output_file")
-        mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+        mocker.patch("climate_ref.executor.result_handling._check_copied_outputs")
         mocker.patch(
             "climate_ref.executor.result_handling.ingest_execution_result",
             side_effect=RuntimeError("boom"),
@@ -617,8 +775,7 @@ class TestResourceUsagePersistence:
             test_data_dir / "cmec-output" / "pr_v3-LR_0101_1x1_esmf_metrics_default_v20241023_cmec.json",
             mock_definition.to_output_path(metric_bundle_filename),
         )
-        mocker.patch("climate_ref.executor.result_handling.copy_output_file")
-        mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+        mocker.patch("climate_ref.executor.result_handling._check_copied_outputs")
 
         handle_execution_result(config, db, mock_execution_result, result)
 
@@ -792,6 +949,7 @@ def mock_result_factory(mocker):
         series_filename=pathlib.Path("series.json"),
     ):
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = True
         mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
         mock_result.output_bundle_filename = output_bundle_filename

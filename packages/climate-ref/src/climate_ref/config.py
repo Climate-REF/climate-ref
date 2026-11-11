@@ -107,6 +107,32 @@ def _bool(value: str | bool) -> bool:
     raise ValueError(f"Cannot interpret {value!r} as a boolean")
 
 
+def _optional_seconds(value: str | float | None) -> float | None:
+    """
+    Convert a value to a positive number of seconds, treating an unset or empty value as "no limit"
+
+    Parameters
+    ----------
+    value
+        Value to convert
+
+    Returns
+    -------
+        The number of seconds, or None if no limit was configured
+
+    Raises
+    ------
+    ValueError
+        The value is not a positive number
+    """
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+    seconds = float(value)
+    if seconds <= 0:
+        raise ValueError(f"Cannot interpret {value!r} as a positive number of seconds")
+    return seconds
+
+
 def _optional_path(path: str | Path | None) -> Path | None:
     """
     Convert a value to a path, treating an unset or empty value as "not configured"
@@ -363,6 +389,18 @@ class ExecutorConfig:
     so turning it off leaves that command without new samples.
     Set it to `false` where the sampling thread is unwelcome,
     for example in a memory-constrained container or a profiling run.
+    """
+
+    execution_timeout: float | None = env_field(
+        name="EXECUTOR_EXECUTION_TIMEOUT", converter=_optional_seconds, default=None
+    )
+    """
+    Longest time, in seconds, that a command run in a conda environment may take.
+
+    A command that exceeds the limit is killed together with all of its child processes
+    and the execution is marked as failed.
+    By default there is no limit, so only the walltime of the surrounding job applies.
+    Applies to the providers that run diagnostics through a conda environment (ESMValTool and PMP).
     """
 
     config: dict[str, Any] = field(factory=dict)

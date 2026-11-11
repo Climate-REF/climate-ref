@@ -5,7 +5,7 @@ from sqlalchemy import BigInteger, ColumnElement, ForeignKey, event, func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
-from climate_ref.models.base import Base
+from climate_ref.models.base import Base, utcnow
 from climate_ref_core.datasets import version_sort_key
 from climate_ref_core.source_types import SourceDatasetType
 
@@ -36,9 +36,10 @@ class Dataset(Base):
     """
     Type of dataset
     """
-    created_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now())
+    # Python-side so it compares with `Solve.started_at` at sub-second precision on one clock.
+    created_at: Mapped[datetime.datetime] = mapped_column(default=utcnow, server_default=func.now())
     """
-    When the dataset was added to the database
+    When the dataset was added to the database, as a naive UTC timestamp
     """
     updated_at: Mapped[datetime.datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
     """

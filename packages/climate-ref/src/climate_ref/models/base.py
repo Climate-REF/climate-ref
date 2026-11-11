@@ -1,9 +1,15 @@
+import datetime
 import math
 from typing import Any, TypeVar
 
 from sqlalchemy import JSON, Dialect, MetaData
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.types import TypeDecorator
+
+
+def utcnow() -> datetime.datetime:
+    """Naive UTC timestamp, matching how the database stores times."""
+    return datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
 
 
 def replace_non_finite(value: Any) -> Any:

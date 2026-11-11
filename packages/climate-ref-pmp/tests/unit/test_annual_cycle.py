@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 import pandas as pd
 import pytest
 from climate_ref_pmp import AnnualCycle
@@ -8,6 +11,7 @@ from climate_ref_pmp.pmp_driver import _get_resource
 from climate_ref.solver import solve_executions
 from climate_ref_core.datasets import DatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import ExecutionDefinition
+from climate_ref_core.pycmec.output import CMECOutput
 
 
 def test_expected_executions():
@@ -342,3 +346,56 @@ def test_transform_results_empty_results_and_dimensions():
     }
     with pytest.raises(ValueError, match="'model' is not in list"):
         _transform_results(input_data)
+
+
+def test_build_execution_result_registers_climatologies(mocker, solved_definition_factory):
+    diagnostic = AnnualCycle()
+    diagnostic.provider = pmp_provider
+    definition = solved_definition_factory(diagnostic)
+    output_dir = definition.output_directory
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    datasets = definition.datasets[SourceDatasetType.CMIP6].datasets
+    variable_id = datasets["variable_id"].unique()[0]
+    source_id = datasets["source_id"].unique()[0]
+    stem = f"{variable_id}_{source_id}_historical_r1i1p1f1_clims.198101-200512"
+
+    cmec_file = output_dir / "results_cmec.json"
+    cmec_file.write_text(
+        json.dumps(
+            {
+                "DIMENSIONS": {
+                    "json_structure": ["region", "statistic"],
+                    "region": {"global": {}},
+                    "statistic": {"rmse": {}},
+                },
+                "RESULTS": {"global": {"rmse": 1.0}},
+                "provenance": {},
+            }
+        )
+    )
+    mocker.patch(
+        "climate_ref_pmp.diagnostics.annual_cycle.transform_results_files", return_value=([cmec_file], [])
+    )
+    files = [
+        f"{stem}.AC.v5.png",
+        *(f"{stem}.{period}.v5.nc" for period in ("AC", "DJF", "JJA", "MAM", "SON")),
+        f"{variable_id}/{variable_id}_{source_id}_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png",
+    ]
+    for name in files:
+        (output_dir / name).parent.mkdir(parents=True, exist_ok=True)
+        (output_dir / name).touch()
+
+    result = diagnostic.build_execution_result(definition)
+
+    output = CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
+    assert sorted(output.plots) == sorted(Path(name).name for name in files if name.endswith(".png"))
+    assert sorted(output.data) == sorted(name for name in files if name.endswith(".nc"))
+
+    climatology_plot = output.plots[f"{stem}.AC.v5.png"]
+    assert climatology_plot.long_name == "Model climatology"
+    assert climatology_plot.dimensions["source_id"] == source_id
+    assert "reference_source_id" not in climatology_plot.dimensions
+    assert "season" not in output.data[f"{stem}.AC.v5.nc"].dimensions
+    assert output.data[f"{stem}.DJF.v5.nc"].dimensions["season"] == "djf"
+    assert output.data[f"{stem}.DJF.v5.nc"].long_name == "Model DJF climatology"

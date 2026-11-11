@@ -1,0 +1,120 @@
+# ==============================================================================
+# == Geophysical variable metadata checks
+# ==============================================================================
+
+[variable.existence]
+# Checks VAR001
+severity = "H"
+
+[variable.type]
+# Checks VAR005
+severity = "H"
+data_type = "float"
+
+[variable.dimensions]
+# Checks VAR006 VAR002 DIM001 DIM002 DIM003
+severity = "H"
+
+# ==============================================================================
+# == Geophysical variable attributes checks
+# ==============================================================================
+
+[variable.attributes.long_name]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "M"
+value_type = "str"
+is_required = true
+cv_source_term_key = "long_name"
+
+[variable.attributes.standard_name]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_term_key = "cf_standard_name"
+
+[variable.attributes.units]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_term_key = "units"
+
+[variable.attributes.cell_methods]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "M"
+value_type = "str"
+is_required = true
+cv_source_term_key = "cell_methods"
+
+[variable.attributes.cell_measures]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "M"
+value_type = "str"
+is_required = true
+cv_source_term_key = "cell_measures"
+
+[variable.attributes.history]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "L"
+value_type = "str"
+is_required = false
+pattern = ".*"
+
+[variable.attributes.comment]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "L"
+value_type = "str"
+is_required = false
+pattern = ".*"
+
+[variable.attributes.description]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "L"
+value_type = "str"
+is_required = false
+pattern = ".*"
+
+[variable.attributes.fill_value]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "H"
+value_type = "float"
+is_required = true
+constant = 1.0e20
+
+[variable.attributes.missing_value]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "H"
+value_type = "float"
+is_required = true
+constant = 1.0e20
+# A valider ?
+#threshold = "1.0e20"
+#is_above_threshold = true
+
+[variable.attributes.scale_factor]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "H"
+value_type = "float"
+is_required = true
+
+[variable.attributes.add_offset]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "H"
+value_type = "float"
+is_required = true
+
+[variable.attributes.deflated_level]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+attribute_name = "_DeflateLevel"
+severity = "H"
+value_type = "int"
+is_required = false
+is_postive = true
+
+[variable.attributes.coordinates]
+# Checks ATTR001 ATTR002 ATTR003 ATTR004
+severity = "H"
+value_type = "str"
+is_required = false
+as_variable = true

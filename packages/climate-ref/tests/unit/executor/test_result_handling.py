@@ -418,7 +418,7 @@ class TestCopiedOutputs:
 
     @pytest.fixture
     def scratch_files(self, mock_definition):
-        mock_definition.diagnostic.provider.results_exclude = ("preproc", "*/resource_usage.txt")
+        mock_definition.diagnostic.provider.results_exclude = ("preproc/*", "*/resource_usage.txt")
         for name in ("run/log.txt", "run/resource_usage.txt", "preproc/tas.nc", "plots/partial.png"):
             path = mock_definition.to_output_path(name)
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -550,7 +550,7 @@ class TestCopiedOutputs:
         self, config, mock_execution_result, mocker, scratch_files
     ):
         # The provider excludes a file that the output bundle references
-        scratch_files.diagnostic.provider.results_exclude = ("plots",)
+        scratch_files.diagnostic.provider.results_exclude = ("plots/*",)
         db = mocker.MagicMock()
         db.session = mocker.MagicMock(spec=Session)
         cmec_output = CMECOutput(**CMECOutput.create_template())

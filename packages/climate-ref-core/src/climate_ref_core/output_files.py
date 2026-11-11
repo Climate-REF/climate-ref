@@ -5,7 +5,7 @@ This module groups every operation that manipulates the files produced by a diag
 Execution output is written to the ``scratch`` directory.
 When the execution is handled, successful or not,
 everything it wrote is copied from the scratch directory to the results directory,
-apart from symlinks and the globs its provider excludes
+apart from symlinks and the files its provider excludes
 (:attr:`~climate_ref_core.providers.DiagnosticProvider.results_exclude`).
 
 Of these, REF ingests the files named by a successful execution's bundles
@@ -26,6 +26,7 @@ This ensures that the regression data is machine independent.
 from __future__ import annotations
 
 import shutil
+from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -297,20 +298,6 @@ def referenced_output_files(output_directory: Path, result: ExecutionResult) -> 
     return list(dict.fromkeys(relative))
 
 
-def _excluded_paths(input_directory: Path, exclude: tuple[str, ...]) -> tuple[set[Path], set[Path]]:
-    """Resolve ``exclude`` globs into the excluded files and the directories excluded with their contents."""
-    files: set[Path] = set()
-    directories: set[Path] = set()
-    for pattern in exclude:
-        for match in input_directory.glob(pattern):
-            relative = match.relative_to(input_directory)
-            if match.is_dir() and not match.is_symlink():
-                directories.add(relative)
-            else:
-                files.add(relative)
-    return files, directories
-
-
 def copy_execution_outputs(
     scratch_directory: Path,
     results_directory: Path,
@@ -339,8 +326,9 @@ def copy_execution_outputs(
     fragment
         The per-execution fragment under both base directories.
     exclude
-        Globs (relative to the execution directory, see :meth:`pathlib.Path.glob`) of files not to copy.
-        A glob that matches a directory excludes everything in it.
+        Patterns (see :func:`fnmatch.fnmatchcase`) of files not to copy,
+        matched against each file's POSIX path relative to the execution directory.
+        ``*`` also matches ``/``, so ``preproc/*`` excludes everything under ``preproc``.
         Providers declare these in
         :attr:`~climate_ref_core.providers.DiagnosticProvider.results_exclude`.
 
@@ -356,20 +344,16 @@ def copy_execution_outputs(
     if not input_directory.is_dir():
         return []
 
-    excluded_files, excluded_directories = _excluded_paths(input_directory, exclude)
-
     copied: list[Path] = []
     for directory, dirnames, filenames in input_directory.walk():
         relative_directory = directory.relative_to(input_directory)
         # Symlinked directories are pruned, so the walk never leaves the execution directory
-        dirnames[:] = sorted(
-            name
-            for name in dirnames
-            if not (directory / name).is_symlink() and relative_directory / name not in excluded_directories
-        )
+        dirnames[:] = sorted(name for name in dirnames if not (directory / name).is_symlink())
         for name in sorted(filenames):
             relative = relative_directory / name
-            if relative in excluded_files or (directory / name).is_symlink():
+            if (directory / name).is_symlink() or any(
+                fnmatchcase(relative.as_posix(), pattern) for pattern in exclude
+            ):
                 continue
             copied.append(copy_output_file(scratch_directory, results_directory, fragment, relative))
     return copied

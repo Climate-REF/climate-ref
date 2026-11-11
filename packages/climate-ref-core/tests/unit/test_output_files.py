@@ -377,7 +377,7 @@ def test_copy_execution_outputs_copies_everything(tmp_path):
         assert (results / "frag" / name).exists()
 
 
-def test_copy_execution_outputs_exclude_files_and_directories(tmp_path):
+def test_copy_execution_outputs_exclude(tmp_path):
     scratch, results = _dirs(tmp_path)
     _seed(
         scratch,
@@ -393,11 +393,7 @@ def test_copy_execution_outputs_exclude_files_and_directories(tmp_path):
         scratch,
         results,
         "frag",
-        exclude=(
-            "executions/*/preproc",
-            "executions/*/run/resource_usage.txt",
-            "executions/*/run/*/*/resource_usage.txt",
-        ),
+        exclude=("executions/*/preproc/*", "executions/*/resource_usage.txt"),
     )
 
     assert _copied(copied) == {

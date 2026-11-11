@@ -79,14 +79,15 @@ class DiagnosticProvider:
 
     results_exclude: tuple[str, ...] = ()
     """
-    Globs of execution files not to copy to the results directory.
+    Patterns of execution files not to copy to the results directory.
 
     Every file an execution writes is copied from scratch to results, whether it succeeded or failed,
     so that its logs and partial outputs can be inspected.
     List the files here that are too large or not useful there, such as intermediate data.
-    A glob that matches a directory excludes everything in it.
 
-    Patterns are relative to the execution output directory (see :meth:`pathlib.Path.glob`).
+    Each pattern is matched against a file's POSIX path relative to the execution output directory
+    (see :func:`fnmatch.fnmatchcase`).
+    ``*`` also matches ``/``, so ``preproc/*`` excludes everything under ``preproc``.
     Files the output bundle references are always copied.
     """
 

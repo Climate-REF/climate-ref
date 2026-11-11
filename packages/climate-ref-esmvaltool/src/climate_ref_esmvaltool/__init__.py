@@ -34,10 +34,9 @@ class ESMValToolProvider(CondaDiagnosticProvider):
 
     results_exclude = (
         # Preprocessed input data, which ESMValCore only deletes after a successful run
-        "executions/*/preproc",
+        "executions/*/preproc/*",
         # Sampled every second, these can grow to tens of MB
-        "executions/*/run/resource_usage.txt",
-        "executions/*/run/*/*/resource_usage.txt",
+        "executions/*/resource_usage.txt",
     )
 
     def fetch_data(self, config: Any) -> None:

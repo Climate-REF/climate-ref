@@ -94,6 +94,7 @@ def rewrite_tree(
     Keys are applied longest-first so that an overlapping shorter path cannot
     partially shadow a longer one.
     Only files matching ``globs`` are rewritten while binary artefacts are never touched.
+    Symlinks are skipped, so the files they point at are never changed.
 
     Parameters
     ----------
@@ -107,6 +108,8 @@ def rewrite_tree(
     ordered = ordered_replacements(replacements)
     for glob in globs:
         for file in sorted(directory.rglob(glob)):
+            if file.is_symlink():
+                continue
             text = file.read_text(encoding="utf-8")
             rewritten = text
             for old, new in ordered:

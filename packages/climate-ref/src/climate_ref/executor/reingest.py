@@ -299,7 +299,8 @@ def reingest_execution(
                 new_scratch_dir = config.paths.scratch / new_fragment
                 new_results_dir = config.paths.results / new_fragment
                 new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copytree(scratch_dir, new_scratch_dir)
+                # Symlinks point at input data (e.g. ESMValTool's climate_data), which is not copied
+                shutil.copytree(scratch_dir, new_scratch_dir, symlinks=True)
                 # Re-point any absolute paths embedded in the copied artifacts
                 # (e.g. ESMValTool's diagnostic_provenance.yml) from the original
                 # scratch directory to the new one so build_execution_result can

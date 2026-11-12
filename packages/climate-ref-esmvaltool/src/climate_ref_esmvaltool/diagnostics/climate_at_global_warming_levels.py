@@ -19,6 +19,56 @@ from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cm
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
+VARIABLES = ("pr", "tas")
+CMIP7_BRANDED_VARIABLES = ("pr_tavg-u-hxy-u", "tas_tavg-h2m-hxy-u")
+CMIP7_MATCHING_FACETS = ("source_id", "variant_label", "grid_label", "variable_id")
+CONCENTRATION_DRIVEN_SCENARIOS = tuple(f"scen7-{s}" for s in ("h", "hl", "m", "ml", "l", "ln", "vl"))
+EMISSIONS_DRIVEN_SCENARIOS = tuple(f"esm-{s}" for s in CONCENTRATION_DRIVEN_SCENARIOS)
+PARENT_EXPERIMENTS = ("historical", "esm-hist")
+
+
+def _cmip7_requirement(scenarios: tuple[str, ...], parent_experiment: str) -> tuple[DataRequirement]:
+    """Build a CMIP7 requirement that pairs each scenario with its own parent historical run."""
+    return (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP7,
+            filters=(
+                FacetFilter(
+                    facets={
+                        "branded_variable": CMIP7_BRANDED_VARIABLES,
+                        "experiment_id": scenarios,
+                        "frequency": "mon",
+                        "region": "glb",
+                    },
+                ),
+            ),
+            group_by=("experiment_id",),
+            constraints=(
+                AddSupplementaryDataset(
+                    supplementary_facets={"experiment_id": parent_experiment},
+                    matching_facets=(*CMIP7_MATCHING_FACETS, "branded_variable", "frequency", "region"),
+                    optional_matching_facets=tuple(),
+                ),
+                RequireTimerange(
+                    group_by=CMIP7_MATCHING_FACETS,
+                    start=PartialDateTime(year=1850, month=1),
+                    end=PartialDateTime(year=2100, month=12),
+                ),
+                RequireFacets(
+                    "experiment_id",
+                    required_facets=(parent_experiment,),
+                    group_by=CMIP7_MATCHING_FACETS,
+                ),
+                RequireFacets(
+                    "variable_id",
+                    required_facets=VARIABLES,
+                    group_by=("experiment_id", "source_id", "variant_label", "grid_label"),
+                ),
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+            ),
+        ),
+    )
+
 
 class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
     """
@@ -29,23 +79,13 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
     slug = "climate-at-global-warming-levels"
     base_recipe = "recipe_calculate_gwl_exceedance_stats.yml"
 
-    variables = (
-        "pr",
-        "tas",
-    )
+    variables = VARIABLES
 
     matching_facets = (
         "source_id",
         "member_id",
         "grid_label",
         "table_id",
-        "variable_id",
-    )
-
-    cmip7_matching_facets = (
-        "source_id",
-        "variant_label",
-        "grid_label",
         "variable_id",
     )
 
@@ -93,46 +133,8 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
                 ),
             ),
         ),
-        (
-            DataRequirement(
-                source_type=SourceDatasetType.CMIP7,
-                filters=(
-                    FacetFilter(
-                        facets={
-                            "experiment_id": (
-                                # TODO: Redetermine the scenario naming for CMIP7 and update these accordingly
-                            ),
-                            "frequency": "mon",
-                            "region": "glb",
-                        },
-                    ),
-                ),
-                group_by=("experiment_id",),
-                constraints=(
-                    AddSupplementaryDataset(
-                        supplementary_facets={"experiment_id": "historical"},
-                        matching_facets=cmip7_matching_facets,
-                        optional_matching_facets=tuple(),
-                    ),
-                    RequireTimerange(
-                        group_by=cmip7_matching_facets,
-                        start=PartialDateTime(year=1850, month=1),
-                        end=PartialDateTime(year=2100, month=12),
-                    ),
-                    RequireFacets(
-                        "experiment_id",
-                        required_facets=("historical",),
-                        group_by=cmip7_matching_facets,
-                    ),
-                    RequireFacets(
-                        "variable_id",
-                        required_facets=variables,
-                        group_by=("experiment_id", "source_id", "variant_label", "grid_label"),
-                    ),
-                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
-                ),
-            ),
-        ),
+        _cmip7_requirement(CONCENTRATION_DRIVEN_SCENARIOS, parent_experiment="historical"),
+        _cmip7_requirement(EMISSIONS_DRIVEN_SCENARIOS, parent_experiment="esm-hist"),
     )
     facets = ("experiment_id", "global_warming_level", "metric")
 
@@ -175,31 +177,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            # Disabling test until we have scenarios available for CMIP7
-            # TestCase(
-            #     name="cmip7",
-            #     description="Test with CMIP7 data.",
-            #     requests=(
-            #         ConvertedCMIP7Request(
-            #             slug="cmip7",
-            #             facets={
-            #                 "experiment_id": ["ssp245", "historical"],
-            #                 "source_id": "CanESM5",
-            #                 "variable_id": ["areacella", "pr", "tas"],
-            #                 "branded_variable": [
-            #                     "areacella_ti-u-hxy-u",
-            #                     "pr_tavg-u-hxy-u",
-            #                     "tas_tavg-h2m-hxy-u",
-            #                 ],
-            #                 "variant_label": "r1i1p1f1",
-            #                 "frequency": ["fx", "mon"],
-            #                 "region": "glb",
-            #             },
-            #             remove_ensembles=True,
-            #             time_span=("1850", "2100"),
-            #         ),
-            #     ),
-            # ),
+            # TODO: add a native CMIP7 scenario test case once a baseline is minted
         )
     )
 
@@ -216,12 +194,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             diagnostic.pop("additional_datasets")
         group_by: tuple[str, ...]
         if cmip_source == SourceDatasetType.CMIP7:
-            group_by = (
-                "source_id",
-                "variant_label",
-                "grid_label",
-                "variable_id",
-            )
+            group_by = CMIP7_MATCHING_FACETS
         else:
             group_by = (
                 "source_id",
@@ -235,7 +208,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             group_by=group_by,
         )
         datasets = recipe_variables["tas"]["additional_datasets"]
-        datasets = [ds for ds in datasets if ds["exp"] != "historical"]
+        datasets = [ds for ds in datasets if ds["exp"] not in PARENT_EXPERIMENTS]
         for dataset in datasets:
             dataset.pop("timerange")
         recipe["datasets"] = datasets

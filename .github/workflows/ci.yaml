@@ -235,6 +235,17 @@ jobs:
         run: |
           echo "No changelog present."
           exit 1
+      - name: Require a diagnostics fragment when a diagnostic version changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          if git diff "$BASE_SHA" HEAD -- 'packages/climate-ref-*/src' | grep -qE '^\+\s*version = [0-9]+'; then
+            if ! git diff --name-only --diff-filter=AM "$BASE_SHA" HEAD -- 'changelog/*.diagnostics*.md' | grep -q .; then
+              echo "A diagnostic version changed but no changelog/<PR>.diagnostics.md fragment was added."
+              exit 1
+            fi
+          fi
 
   smoke-test:
     runs-on: ubuntu-latest

@@ -110,3 +110,10 @@ def test_update_recipe_drops_parent_only_datasets() -> None:
     ClimateAtGlobalWarmingLevels.update_recipe(recipe, {SourceDatasetType.CMIP7: pd.DataFrame(rows)})
 
     assert [dataset["exp"] for dataset in recipe["datasets"]] == [["esm-hist", "esm-scen7-m"]]
+    assert "branding_suffix" not in recipe["datasets"][0]
+    brandings = {
+        variable["short_name"]: variable["branding_suffix"]
+        for diagnostic in recipe["diagnostics"].values()
+        for variable in diagnostic["variables"].values()
+    }
+    assert brandings == {"pr": "tavg-u-hxy-u", "tas": "tavg-h2m-hxy-u"}

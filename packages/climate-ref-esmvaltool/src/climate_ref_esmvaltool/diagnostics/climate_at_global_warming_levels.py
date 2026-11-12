@@ -211,6 +211,8 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
         datasets = [ds for ds in datasets if ds["exp"] not in PARENT_EXPERIMENTS]
         for dataset in datasets:
             dataset.pop("timerange")
+            # The datasets are shared by tas and pr, so the branding is set per variable instead.
+            dataset.pop("branding_suffix", None)
         recipe["datasets"] = datasets
 
         # Specify the timeranges
@@ -231,6 +233,12 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             "preprocessor": "multi_model_gwl_stats",
             "timerange": "2000/2100",
         }
+
+        if cmip_source == SourceDatasetType.CMIP7:
+            branding = dict(branded.split("_", 1) for branded in CMIP7_BRANDED_VARIABLES)
+            for diagnostic in diagnostics.values():
+                for variable in diagnostic["variables"].values():
+                    variable["branding_suffix"] = branding[variable["short_name"]]
 
     @staticmethod
     def format_result(

@@ -1,0 +1,84 @@
+name: Epic
+description: Propose a larger piece of work delivered through several issues
+title: "Epic: "
+type: Epic
+projects: ["Climate-REF/10"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        An epic describes an outcome, not a list of tasks.
+        The work itself happens in sub-issues linked to this one.
+        See the [REF Roadmap](https://github.com/orgs/Climate-REF/projects/10) for how epics are tracked.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What is true when this epic is closed? Write it from the point of view of whoever benefits.
+      placeholder: Modelling centres can compare their CMIP7 submissions against obs4REF datasets in the portal.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why now
+      description: The need or opportunity behind this, and any deadline.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      value: |
+        -
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      value: |
+        -
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Observable conditions that let us close this epic.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: dropdown
+    id: origin
+    attributes:
+      label: Origin
+      options:
+        - Governance panel
+        - Sponsored
+        - Community
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Backend
+        - Frontend
+        - Diagnostics
+        - Data
+        - Infrastructure
+        - Docs and community
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: The RFC or governance decision, related issues, and any design notes.
+  - type: textarea
+    id: approach
+    attributes:
+      label: Approach
+      description: How we plan to deliver it, or the open questions that need answering first. Leave blank if unknown.

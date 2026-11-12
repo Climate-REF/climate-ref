@@ -21,6 +21,17 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.20.5 (2026-11-12)
+
+### Bug Fixes
+
+- Registered the model climatologies computed by the PMP annual cycle diagnostic as outputs: the NetCDF files for the annual cycle and each season, and their summary plots. ([#1053](https://github.com/Climate-REF/climate-ref/pull/1053))
+
+### Trivial/Internal Changes
+
+- [#1034](https://github.com/Climate-REF/climate-ref/pull/1034), [#1054](https://github.com/Climate-REF/climate-ref/pull/1054)
+
+
 ## climate-ref 0.20.4 (2026-11-02)
 
 ### Features

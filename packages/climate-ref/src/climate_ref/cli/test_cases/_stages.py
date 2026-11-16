@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from loguru import logger
 
 from climate_ref_core.diagnostics import ExecutionDefinition
-from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
+from climate_ref_core.output_files import PlaceholderMap
 from climate_ref_core.regression import (
     COMMITTED_BUNDLE_FILES,
     COMMITTED_DIRNAME,
@@ -35,7 +35,11 @@ from climate_ref_core.regression import (
     assert_bundle_regression,
     materialise_native,
 )
-from climate_ref_core.regression.capture import build_native_snapshot, write_committed_bundle
+from climate_ref_core.regression.capture import (
+    build_native_snapshot,
+    copy_native_outputs,
+    write_committed_bundle,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -108,8 +112,8 @@ def slot_native_relpaths(slot: Path) -> list[Path]:
     """
     Return the native files in a slot -- everything except the rebuilt bundle.
 
-    A slot is populated only by a source stage with the curated output set, so this is
-    exactly the curated native set (it excludes the ``regression/`` subdirectory written
+    A slot is populated only by a source stage with the native set, so this is
+    exactly that set (it excludes the ``regression/`` subdirectory written
     by :func:`stage_build`).
     """
     relpaths: list[Path] = []
@@ -142,11 +146,11 @@ def stage_execute(  # noqa: PLR0913
         raise StageError("execution was not successful")
 
     real_output_dir = result.definition.output_directory
-    # Copy the curated subset from the real execution dir into the slot, flat (fragment=".").
+    # Copy the native set from the real execution dir into the slot, flat.
     # The copied bundle text still references real_output_dir, so build substitutes that.
     # The diagnostic's reconstruction_inputs (raw artefacts build_execution_result re-scans) are
     # captured alongside, so a replay can rebuild the bundle from the persisted set alone.
-    copy_execution_outputs(real_output_dir, slot, ".", result, extra_globs=diag.reconstruction_inputs)
+    copy_native_outputs(real_output_dir, slot, result, diag.reconstruction_inputs)
     return SourceOutputs(result=result, bundle_output_dir=real_output_dir)
 
 

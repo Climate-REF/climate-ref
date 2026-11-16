@@ -97,7 +97,7 @@ def test_broken_diagnostic_does_not_orphan_submitted_execution(
 def test_failure_recording_survives_permission_error_on_copy(
     mocker, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool
 ):
-    mocker.patch.object(result_handling, "copy_output_file", side_effect=PermissionError("read-only"))
+    mocker.patch.object(result_handling, "copy_execution_outputs", side_effect=PermissionError("read-only"))
     executor = LocalExecutor(database=db_with_provider, config=config, pool=thread_pool, task_timeout=0.0)
     definition = definition_factory(diagnostic=mock_diagnostic)
     execution_id, eg_id, _ = _seed_execution(db_with_provider, provider, "mock", config, key="perm-error")
@@ -150,10 +150,15 @@ def test_failed_rerun_of_clean_group_is_marked_dirty(
         )
     else:
         mocker.patch.object(result_handling, "copy_execution_outputs")
+        mocker.patch.object(result_handling, "_check_copied_outputs")
         mocker.patch.object(result_handling, "ingest_execution_result", side_effect=ValueError("bad bundle"))
 
     with db_with_provider.session.begin():
         execution = db_with_provider.session.get(Execution, execution_id)
+        # A log in scratch, so the failure is the one under test rather than a missing log
+        scratch_log = config.paths.scratch / execution.output_fragment / EXECUTION_LOG_FILENAME
+        scratch_log.parent.mkdir(parents=True, exist_ok=True)
+        scratch_log.touch()
         handle_execution_result(config, db_with_provider, execution, result)
 
     execution, group = _state(db_with_provider, execution_id, eg_id)

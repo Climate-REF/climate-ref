@@ -10,8 +10,9 @@ This is useful for local testing and debugging.
 """
 
 import pathlib
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from concurrent.futures import Future
+from functools import partial
 from typing import TYPE_CHECKING, Any, get_args
 
 from attrs import define
@@ -27,12 +28,13 @@ from climate_ref.models.execution import (
     ResultOutputType,
 )
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, ensure_relative_path
-from climate_ref_core.exceptions import ResultValidationError
+from climate_ref_core.exceptions import InvalidProviderException, ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import MetricValueKind
 from climate_ref_core.metric_values import ScalarMetricValue as TScalar
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
-from climate_ref_core.output_files import copy_execution_outputs, copy_output_file
+from climate_ref_core.output_files import copy_execution_outputs, referenced_output_files
+from climate_ref_core.providers import resolve_diagnostic
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputDict
@@ -40,6 +42,7 @@ from climate_ref_core.resources import ResourceUsage
 
 if TYPE_CHECKING:
     from climate_ref.config import Config
+    from climate_ref_core.providers import DiagnosticProvider
 
 # The role of every metric value must be one of these at ingest. This is enforced
 # hard (not warn-only) because ``kind`` is the authoritative role signal: a missing
@@ -516,21 +519,78 @@ def record_failure(
         logger.warning(f"Could not write the failure reason to {log_path}", exc_info=True)
 
 
+# Raised when an execution's files cannot be copied to results,
+# including when its provider is not installed, so its exclusions are unknown
+_COPY_ERRORS = (OSError, ValueError, KeyError, InvalidProviderException)
+
+
+def copy_execution_files(
+    config: "Config", execution: Execution, provider: "Callable[[], DiagnosticProvider]"
+) -> None:
+    """
+    Copy every file an execution wrote from scratch to its results directory, as far as possible
+
+    A failure is logged rather than raised.
+    Whether the files a successful execution needs made it is checked separately
+    (see `_check_copied_outputs`).
+
+    Parameters
+    ----------
+    config
+        The configuration to use
+    execution
+        The execution whose files are copied
+    provider
+        Returns the provider of the execution's diagnostic,
+        whose [results_exclude][climate_ref_core.providers.DiagnosticProvider.results_exclude]
+        lists the files not to copy.
+        Nothing is copied if it cannot be resolved.
+    """
+    try:
+        copy_execution_outputs(
+            config.paths.scratch,
+            config.paths.results,
+            execution.output_fragment,
+            exclude=provider().results_exclude,
+        )
+    except _COPY_ERRORS:
+        logger.opt(exception=True).warning(f"Could not copy the files of {execution} to results")
+
+
+def _check_copied_outputs(config: "Config", execution: Execution, result: "ExecutionResult") -> None:
+    """
+    Check that every file the bundles name was copied to the results directory
+
+    Raises
+    ------
+    FileNotFoundError
+        If the output bundle or a file it names is missing from the results directory
+    """
+    scratch_directory = config.paths.scratch / execution.output_fragment
+    results_directory = config.paths.results / execution.output_fragment
+    missing = [
+        relpath
+        for relpath in referenced_output_files(scratch_directory, result)
+        if not (results_directory / relpath).is_file()
+    ]
+    if missing:
+        raise FileNotFoundError(f"Missing from the results directory: {', '.join(sorted(map(str, missing)))}")
+
+
+def _execution_provider(execution: Execution) -> "DiagnosticProvider":
+    """Resolve the provider of an execution's diagnostic from the installed providers."""
+    diagnostic = execution.execution_group.diagnostic
+    return resolve_diagnostic(f"{diagnostic.provider.slug}/{diagnostic.slug}").provider
+
+
 def record_lost_execution(config: "Config", execution: Execution, detail: str) -> None:
     """
     Fail an execution whose worker died before it returned a result
 
-    The partial log is copied from scratch first, so the results log shows how far it got.
+    Whatever it wrote is copied from scratch first, so the results show how far it got.
     The group's dirty flag is left alone.
     """
-    try:
-        copy_output_file(
-            config.paths.scratch, config.paths.results, execution.output_fragment, EXECUTION_LOG_FILENAME
-        )
-    except FileNotFoundError:
-        logger.debug(f"No partial log for lost execution {execution.id}")
-    except (OSError, ValueError) as e:
-        logger.warning(f"Could not copy the partial log of lost execution {execution.id}: {e}")
+    copy_execution_files(config, execution, partial(_execution_provider, execution))
     record_failure(config, execution, ExecutionFailureReason.SystemError, detail)
 
 
@@ -548,7 +608,9 @@ def handle_execution_result(  # noqa: PLR0913
     Handle the result of a diagnostic execution
 
     This will update the diagnostic execution result with the output of the diagnostic execution.
-    The output will be copied from the scratch directory to the executions directory.
+    Every file the execution wrote is copied from the scratch directory to the results directory,
+    whether it succeeded or failed.
+    Of these, the files named by a successful execution's bundles are ingested into the database.
 
     Parameters
     ----------
@@ -573,15 +635,10 @@ def handle_execution_result(  # noqa: PLR0913
     # A run that ran out of memory or blew up during ingest is exactly the run whose numbers are wanted.
     record_resource_usage(execution, result.resource_usage, queue_seconds)
 
-    # Always copy log data to the results directory
-    try:
-        copy_output_file(
-            config.paths.scratch,
-            config.paths.results,
-            execution.output_fragment,
-            EXECUTION_LOG_FILENAME,
-        )
-    except FileNotFoundError:
+    # Copy everything the execution wrote, so the results show how far a failed execution got
+    copy_execution_files(config, execution, lambda: result.definition.diagnostic.provider)
+
+    if not (config.paths.scratch / execution.output_fragment / EXECUTION_LOG_FILENAME).is_file():
         # An execution abandoned before a worker picked it up has no output directory,
         # so a missing log is expected rather than a sign that something went wrong.
         started = (config.paths.scratch / execution.output_fragment).exists()
@@ -625,21 +682,13 @@ def handle_execution_result(  # noqa: PLR0913
 
     logger.info(f"{execution} successful")
 
-    # Copy the curated subset of outputs that REF persists for a successful execution
-    # (metric bundle, output bundle and the files it references, series)
-    # from scratch to results.
-    # Only the files in results are served by the API.
+    # Every file the bundles name must have been copied, as only files in results are served by the API
     try:
-        copy_execution_outputs(
-            config.paths.scratch,
-            config.paths.results,
-            execution.output_fragment,
-            result,
-        )
-    except (FileNotFoundError, OSError) as exc:
-        # The diagnostic reported success but a file its bundle references is
-        # missing or unreadable. Fail this execution rather than aborting the
-        # whole result-collection loop.
+        _check_copied_outputs(config, execution, result)
+    except (OSError, ValueError) as exc:
+        # The diagnostic reported success but a file its bundle references was not copied,
+        # because it is missing, unreadable or excluded, or the copy failed.
+        # Fail this execution rather than aborting the whole result-collection loop.
         logger.exception(f"Could not copy outputs for {execution}")
         record_failure(
             config, execution, ExecutionFailureReason.ResultError, f"could not copy outputs: {exc!r}"

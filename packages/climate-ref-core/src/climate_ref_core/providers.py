@@ -77,6 +77,20 @@ class DiagnosticProvider:
     Each package that provides diagnostics must implement this interface.
     """
 
+    results_exclude: tuple[str, ...] = ()
+    """
+    Patterns of execution files not to copy to the results directory.
+
+    Every file an execution writes is copied from scratch to results, whether it succeeded or failed,
+    so that its logs and partial outputs can be inspected.
+    List the files here that are too large or not useful there, such as intermediate data.
+
+    Each pattern is matched against a file's POSIX path relative to the execution output directory
+    (see :func:`fnmatch.fnmatchcase`).
+    ``*`` also matches ``/``, so ``preproc/*`` excludes everything under ``preproc``.
+    A successful execution fails if a file its output bundle references is excluded.
+    """
+
     def __init__(self, name: str, version: str, slug: str | None = None) -> None:
         self.name = name
         self.slug = slug or _slugify(name)

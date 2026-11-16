@@ -10,6 +10,7 @@ from climate_ref_pmp import (
 )
 
 from climate_ref_core.data import LayeredResource, PackagedResource
+from climate_ref_core.output_files import copy_execution_outputs
 from climate_ref_core.providers import DataIngestRequest
 from climate_ref_core.source_types import SourceDatasetType
 
@@ -168,3 +169,26 @@ class TestPMPProviderHooks:
         assert provider.data_to_ingest(mocker.Mock()) == [
             DataIngestRequest(SourceDatasetType.PMPClimatology, climatology_dir)
         ]
+
+
+def test_results_exclude(tmp_path):
+    scratch = tmp_path / "scratch"
+    execution = scratch / "frag"
+    kept = (
+        "ENSO_perf_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json",
+        "input_ENSO_perf_ACCESS-ESM1-5_historical_r1i1p1f1_processed.json",
+        "ENSO_perf_ACCESS-ESM1-5_historical_r1i1p1f1_ts.nc",
+        "ref_landmask/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+        "ts/ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.AC.nc",
+    )
+    excluded = (
+        "ref_landmask/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_concatenated_0123abcd.nc",
+        "ref_landmask/tmpk3j2h1g0.tmp",
+    )
+    for name in kept + excluded:
+        (execution / name).parent.mkdir(parents=True, exist_ok=True)
+        (execution / name).touch()
+
+    copied = copy_execution_outputs(scratch, tmp_path / "results", "frag", exclude=provider.results_exclude)
+
+    assert {p.as_posix() for p in copied} == set(kept)

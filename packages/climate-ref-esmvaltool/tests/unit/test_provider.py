@@ -4,6 +4,7 @@ from pathlib import Path
 import pooch
 from climate_ref_esmvaltool import _DATASETS_REGISTRY_NAME, ESMValToolProvider, __version__, provider
 
+from climate_ref_core.output_files import copy_execution_outputs
 from climate_ref_core.providers import DataIngestRequest
 from climate_ref_core.source_types import SourceDatasetType
 
@@ -120,3 +121,30 @@ class TestESMValToolProviderHooks:
 
         result = provider.validate_setup(mock_config)
         assert result is True
+
+
+def test_results_exclude(tmp_path):
+    scratch = tmp_path / "scratch"
+    session = scratch / "frag" / "executions" / "recipe_20260716_142718"
+    kept = (
+        "run/main_log.txt",
+        "run/main_log_debug.txt",
+        "run/cmor_log.txt",
+        "run/recipe_filled.yml",
+        "run/diag/script/log.txt",
+        "work/diag/script/data.nc",
+        "plots/diag/script/plot_provenance.xml",
+    )
+    excluded = (
+        "preproc/diag/tas/CMIP6_CanESM5_Amon_historical_r1i1p1f1_tas_gn_2000-2014.nc",
+        "preproc/diag/tas/metadata.yml",
+        "run/resource_usage.txt",
+        "run/diag/script/resource_usage.txt",
+    )
+    for name in kept + excluded:
+        (session / name).parent.mkdir(parents=True, exist_ok=True)
+        (session / name).touch()
+
+    copied = copy_execution_outputs(scratch, tmp_path / "results", "frag", exclude=provider.results_exclude)
+
+    assert {p.relative_to(session.relative_to(scratch / "frag")).as_posix() for p in copied} == set(kept)

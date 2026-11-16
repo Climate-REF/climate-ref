@@ -1114,7 +1114,7 @@ class TestRunTestCaseCommand:
         catalog_path.touch()
 
         # Create a scratch output directory holding the curated committed bundle.
-        # copy_execution_outputs copies from scratch_root / fragment into a temp results dir,
+        # copy_native_outputs copies from the execution output directory into a temp results dir,
         # so output_dir.parent (scratch_root) must differ from the temp dir it picks.
         scratch_root = tmp_path / "scratch"
         fragment = "frag"

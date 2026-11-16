@@ -164,6 +164,7 @@ def mock_result_factory(mocker):
         series_filename=pathlib.Path("series.json"),
     ):
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = True
         mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
         mock_result.output_bundle_filename = output_bundle_filename
@@ -460,6 +461,7 @@ class TestReingestExecution:
         """Should return False when build_execution_result returns unsuccessful."""
         mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = False
         mock_result.metric_bundle_filename = None
         mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
@@ -484,6 +486,7 @@ class TestReingestExecution:
         """Should return False when result is successful but metric_bundle_filename is None."""
         mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
         mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.definition.diagnostic.provider.results_exclude = ()
         mock_result.successful = True
         mock_result.metric_bundle_filename = None
         mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
@@ -708,6 +711,45 @@ class TestReingestExecution:
         results_dir = config.paths.results / new_execution.output_fragment
         assert results_dir.exists(), "Results should be copied to new directory"
         assert (results_dir / "diagnostic.json").exists()
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_keeps_symlinks_to_input_data(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+        tmp_path,
+    ):
+        """Input data linked into the execution directory is neither copied nor rewritten."""
+        input_file = tmp_path / "inputs" / "metadata.json"
+        input_file.parent.mkdir()
+        input_file.write_text(f'{{"path": "{scratch_dir_with_results}"}}')
+        (scratch_dir_with_results / "climate_data").mkdir()
+        (scratch_dir_with_results / "climate_data" / "metadata.json").symlink_to(input_file)
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_execution = (
+            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        )
+        linked = config.paths.scratch / new_execution.output_fragment / "climate_data" / "metadata.json"
+        assert linked.is_symlink()
+        assert input_file.read_text() == f'{{"path": "{scratch_dir_with_results}"}}'
+        results_dir = config.paths.results / new_execution.output_fragment
+        assert not (results_dir / "climate_data" / "metadata.json").exists()
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_does_not_touch_dirty_flag(
@@ -1215,7 +1257,35 @@ class TestGetExecutionsForReingest:
             _register_provider(db_seeded, pmp_provider)
             _register_provider(db_seeded, esmvaltool_provider)
 
-    def test_filters_by_success(self, db_seeded):
+    @pytest.fixture
+    def scratch(self, tmp_path):
+        """An empty scratch root; tests create the directories of the executions that keep one."""
+        root = tmp_path / "scratch"
+        root.mkdir()
+        return root
+
+    @staticmethod
+    def _add_group(db, key, *executions):
+        """Add a group with executions given oldest first as ``(fragment, successful, dataset_hash)``."""
+        with db.session.begin():
+            diag = db.session.query(DiagnosticModel).first()
+            eg = ExecutionGroup(key=key, diagnostic_id=diag.id, selectors={})
+            db.session.add(eg)
+            db.session.flush()
+            for fragment, successful, dataset_hash in executions:
+                db.session.add(
+                    Execution(
+                        execution_group_id=eg.id,
+                        successful=successful,
+                        output_fragment=fragment,
+                        dataset_hash=dataset_hash,
+                    )
+                )
+                # Flush each so they are created in order
+                db.session.flush()
+        return eg
+
+    def test_filters_by_success(self, db_seeded, scratch):
         """By default should only return successful executions."""
         with db_seeded.session.begin():
             diag = db_seeded.session.query(DiagnosticModel).first()
@@ -1232,11 +1302,15 @@ class TestGetExecutionsForReingest:
                 )
             )
 
-        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id], include_failed=False)
+        (scratch / "out-s").mkdir()
+
+        results = get_executions_for_reingest(
+            db_seeded, scratch=scratch, execution_group_ids=[eg.id], include_failed=False
+        )
         assert len(results) == 1
         assert results[0][1].successful is True
 
-    def test_include_failed(self, db_seeded):
+    def test_include_failed(self, db_seeded, scratch):
         """With include_failed=True, should also return failed executions."""
         with db_seeded.session.begin():
             diag = db_seeded.session.query(DiagnosticModel).first()
@@ -1253,10 +1327,14 @@ class TestGetExecutionsForReingest:
                 )
             )
 
-        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id], include_failed=True)
+        (scratch / "out-f").mkdir()
+
+        results = get_executions_for_reingest(
+            db_seeded, scratch=scratch, execution_group_ids=[eg.id], include_failed=True
+        )
         assert len(results) >= 1
 
-    def test_filters_by_group_ids(self, db_seeded):
+    def test_filters_by_group_ids(self, db_seeded, scratch):
         """Should only return executions for specified group IDs."""
         with db_seeded.session.begin():
             diag = db_seeded.session.query(DiagnosticModel).first()
@@ -1282,11 +1360,14 @@ class TestGetExecutionsForReingest:
                 )
             )
 
-        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg1.id])
+        for fragment in ("out-a", "out-b"):
+            (scratch / fragment).mkdir()
+
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, execution_group_ids=[eg1.id])
         assert len(results) == 1
         assert results[0][0].id == eg1.id
 
-    def test_filters_by_provider(self, db_seeded):
+    def test_filters_by_provider(self, db_seeded, scratch):
         """Should filter executions by provider slug."""
         with db_seeded.session.begin():
             diag_pmp = db_seeded.session.query(DiagnosticModel).filter_by(slug="enso_tel").first()
@@ -1314,12 +1395,15 @@ class TestGetExecutionsForReingest:
                 )
             )
 
-        results = get_executions_for_reingest(db_seeded, provider_filters=["pmp"])
+        for fragment in ("out-pmp", "out-esm"):
+            (scratch / fragment).mkdir()
+
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, provider_filters=["pmp"])
         provider_slugs = {eg.diagnostic.provider.slug for eg, _ in results}
         assert "pmp" in provider_slugs
         assert "esmvaltool" not in provider_slugs
 
-    def test_filters_by_diagnostic(self, db_seeded):
+    def test_filters_by_diagnostic(self, db_seeded, scratch):
         """Should filter executions by diagnostic slug."""
         with db_seeded.session.begin():
             diag_pmp = db_seeded.session.query(DiagnosticModel).filter_by(slug="enso_tel").first()
@@ -1347,108 +1431,106 @@ class TestGetExecutionsForReingest:
                 )
             )
 
-        results = get_executions_for_reingest(db_seeded, diagnostic_filters=["enso_tel"])
+        for fragment in ("out-d-pmp", "out-d-esm"):
+            (scratch / fragment).mkdir()
+
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, diagnostic_filters=["enso_tel"])
         diag_slugs = {eg.diagnostic.slug for eg, _ in results}
         assert "enso_tel" in diag_slugs
         assert "enso-characteristics" not in diag_slugs
 
-    def test_filters_out_none_executions(self, db_seeded):
+    def test_filters_out_none_executions(self, db_seeded, scratch):
         """Should filter out execution groups that have no executions."""
         with db_seeded.session.begin():
             diag = db_seeded.session.query(DiagnosticModel).first()
             eg = ExecutionGroup(key="no-exec", diagnostic_id=diag.id, selectors={})
             db_seeded.session.add(eg)
 
-        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id])
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, execution_group_ids=[eg.id])
         assert len(results) == 0
 
-    def test_selects_oldest_execution(self, db_seeded):
-        """Should return the oldest (original) execution, not the latest.
+    def test_selects_newest_execution(self, db_seeded, scratch, caplog):
+        """The newest execution is selected, without a warning, when its scratch directory exists."""
+        for fragment in ("first", "second"):
+            (scratch / fragment).mkdir()
+        eg = self._add_group(db_seeded, "newest", ("first", True, "h1"), ("second", True, "h2"))
 
-        Reingested executions only have results directories, not scratch.
-        Selecting the oldest ensures we always reingest from the execution
-        whose scratch directory actually exists.
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, execution_group_ids=[eg.id])
 
-        The ``output_fragment`` strings used here are literal sentinels;
-        they intentionally distinguish two rows for the ordering check and
-        are *not* meant to mirror the path layout produced by the
-        production code.
-        """
-        with db_seeded.session.begin():
-            diag = db_seeded.session.query(DiagnosticModel).first()
-            eg = ExecutionGroup(key="multi-exec", diagnostic_id=diag.id, selectors={})
-            db_seeded.session.add(eg)
-            db_seeded.session.flush()
+        assert [ex.output_fragment for _, ex in results] == ["second"]
+        assert "instead of its newest execution" not in caplog.text
 
-            original = Execution(
-                execution_group_id=eg.id,
-                successful=True,
-                output_fragment="original_fragment",
-                dataset_hash="h-orig",
-            )
-            db_seeded.session.add(original)
-            db_seeded.session.flush()
+    def test_falls_back_to_newest_with_scratch_and_warns(self, db_seeded, scratch, caplog):
+        """Without a scratch directory for the newest execution, the next newest with one is selected."""
+        for fragment in ("first", "second"):
+            (scratch / fragment).mkdir()
+        eg = self._add_group(
+            db_seeded,
+            "fallback",
+            ("first", True, "h1"),
+            ("second", True, "h2"),
+            ("third", True, "h2"),
+        )
 
-            reingested = Execution(
-                execution_group_id=eg.id,
-                successful=True,
-                output_fragment="reingested_fragment",
-                dataset_hash="h-orig",
-            )
-            db_seeded.session.add(reingested)
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, execution_group_ids=[eg.id])
 
-        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id])
-        assert len(results) == 1
-        _, selected_execution = results[0]
-        assert selected_execution.output_fragment == "original_fragment"
-        assert selected_execution.id == original.id
+        assert [ex.output_fragment for _, ex in results] == ["second"]
+        assert "instead of its newest execution" in caplog.text
+        assert "Its datasets are the same" in caplog.text
 
-    def test_skips_group_when_oldest_is_unsuccessful(self, db_seeded):
-        """When include_failed=False, skip groups whose oldest execution failed."""
-        with db_seeded.session.begin():
-            diag = db_seeded.session.query(DiagnosticModel).first()
-            eg = ExecutionGroup(key="oldest-failed", diagnostic_id=diag.id, selectors={})
-            db_seeded.session.add(eg)
-            db_seeded.session.flush()
+    def test_warns_that_older_datasets_cause_a_rerun(self, db_seeded, scratch, caplog):
+        """Falling back to an execution of different datasets warns that the next solve reruns the group."""
+        (scratch / "first").mkdir()
+        eg = self._add_group(db_seeded, "stale", ("first", True, "h1"), ("second", True, "h2"))
 
-            db_seeded.session.add(
-                Execution(
-                    execution_group_id=eg.id,
-                    successful=False,
-                    output_fragment="oldest-fail",
-                    dataset_hash="h1",
-                )
-            )
-            db_seeded.session.flush()
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, execution_group_ids=[eg.id])
 
-            db_seeded.session.add(
-                Execution(
-                    execution_group_id=eg.id,
-                    successful=True,
-                    output_fragment="newer-success",
-                    dataset_hash="h1",
-                )
-            )
+        assert [ex.output_fragment for _, ex in results] == ["first"]
+        assert "the next solve will rerun the group" in caplog.text
 
-        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id], include_failed=False)
-        assert len(results) == 0, "Should skip group when oldest execution is unsuccessful"
+    def test_skips_group_without_any_scratch_directory(self, db_seeded, scratch, caplog):
+        eg = self._add_group(db_seeded, "no-scratch", ("first", True, "h1"))
 
-    def test_includes_group_when_oldest_unsuccessful_and_include_failed(self, db_seeded):
-        """When include_failed=True, include groups whose oldest execution failed."""
-        with db_seeded.session.begin():
-            diag = db_seeded.session.query(DiagnosticModel).first()
-            eg = ExecutionGroup(key="oldest-failed-incl", diagnostic_id=diag.id, selectors={})
-            db_seeded.session.add(eg)
-            db_seeded.session.flush()
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, execution_group_ids=[eg.id])
 
-            db_seeded.session.add(
-                Execution(
-                    execution_group_id=eg.id,
-                    successful=False,
-                    output_fragment="oldest-fail-incl",
-                    dataset_hash="h1",
-                )
-            )
+        assert results == []
+        assert f"Skipping group {eg.id}" in caplog.text
 
-        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id], include_failed=True)
-        assert len(results) == 1, "Should include group when include_failed=True"
+    def test_skips_failed_execution_with_scratch(self, db_seeded, scratch):
+        """A failed execution is passed over for an older successful one unless failures are included."""
+        for fragment in ("first", "second"):
+            (scratch / fragment).mkdir()
+        eg = self._add_group(
+            db_seeded,
+            "failed-between",
+            ("first", True, "h1"),
+            ("second", False, "h1"),
+            ("third", True, "h1"),
+        )
+
+        default = get_executions_for_reingest(db_seeded, scratch=scratch, execution_group_ids=[eg.id])
+        with_failed = get_executions_for_reingest(
+            db_seeded, scratch=scratch, execution_group_ids=[eg.id], include_failed=True
+        )
+
+        assert [ex.output_fragment for _, ex in default] == ["first"]
+        assert [ex.output_fragment for _, ex in with_failed] == ["second"]
+
+    def test_never_selects_a_running_execution(self, db_seeded, scratch):
+        for fragment in ("first", "second"):
+            (scratch / fragment).mkdir()
+        eg = self._add_group(db_seeded, "running", ("first", False, "h1"), ("second", None, "h1"))
+
+        results = get_executions_for_reingest(
+            db_seeded, scratch=scratch, execution_group_ids=[eg.id], include_failed=True
+        )
+
+        assert [ex.output_fragment for _, ex in results] == ["first"]
+
+    def test_ignores_fragment_escaping_scratch(self, db_seeded, scratch):
+        (scratch.parent / "outside").mkdir()
+        eg = self._add_group(db_seeded, "escape", ("../outside", True, "h1"))
+
+        results = get_executions_for_reingest(db_seeded, scratch=scratch, execution_group_ids=[eg.id])
+
+        assert results == []

@@ -1,9 +1,10 @@
 """
 Capture of regression baselines from a diagnostic execution.
 
-Capture operates on the curated subset of files persisted for an execution,
-not the raw output in the "scratch" directory.
-This avoids the need to maintain a separate ignore list for regression captures.
+Capture operates on the **native set** of an execution (:func:`native_output_files`):
+the files its bundles name plus its diagnostic's reconstruction inputs,
+not everything the execution wrote.
+Logs and other run artefacts change from run to run, so they are left out of the baseline.
 
 It produces two things:
 
@@ -23,7 +24,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from climate_ref_core.output_files import PlaceholderMap
+from climate_ref_core.output_files import PlaceholderMap, copy_output_file, referenced_output_files
 from climate_ref_core.paths import safe_path
 
 from ._quantise import round_floats
@@ -35,6 +36,7 @@ from .manifest import (
 )
 
 if TYPE_CHECKING:
+    from climate_ref_core.diagnostics import ExecutionResult
     from climate_ref_core.regression.store import NativeStore
 
 
@@ -225,6 +227,65 @@ def write_committed_bundle(
     return compute_committed_digests(regression_dir)
 
 
+def native_output_files(
+    output_directory: Path,
+    result: ExecutionResult,
+    reconstruction_inputs: tuple[str, ...] = (),
+) -> list[Path]:
+    """
+    List the files a regression baseline stores for an execution.
+
+    These are the files named by its bundles (:func:`~climate_ref_core.output_files.referenced_output_files`)
+    and any files matching its diagnostic's
+    :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`,
+    which :meth:`~climate_ref_core.diagnostics.Diagnostic.build_execution_result` re-scans,
+    so a replay can rebuild the bundle from the stored files alone.
+
+    Parameters
+    ----------
+    output_directory
+        The execution's output directory.
+    result
+        The successful execution result.
+    reconstruction_inputs
+        Globs relative to ``output_directory`` (see :meth:`pathlib.Path.glob`).
+        Directories they match are skipped.
+
+    Returns
+    -------
+    :
+        The files, relative to ``output_directory``, without duplicates.
+    """
+    files = referenced_output_files(output_directory, result)
+    for glob in reconstruction_inputs:
+        files.extend(
+            match.relative_to(output_directory)
+            for match in sorted(output_directory.glob(glob))
+            if match.is_file()
+        )
+    return list(dict.fromkeys(files))
+
+
+def copy_native_outputs(
+    output_directory: Path,
+    destination: Path,
+    result: ExecutionResult,
+    reconstruction_inputs: tuple[str, ...] = (),
+) -> list[Path]:
+    """
+    Copy the files a regression baseline stores (:func:`native_output_files`) into ``destination``.
+
+    Returns
+    -------
+    :
+        The copied files, relative to both directories.
+    """
+    files = native_output_files(output_directory, result, reconstruction_inputs)
+    for relpath in files:
+        copy_output_file(output_directory, destination, ".", relpath)
+    return files
+
+
 def build_native_snapshot(base_dir: Path, relpaths: list[Path]) -> dict[str, NativeEntry]:
     """
     Record a sha256 + size snapshot of each persisted native file.
@@ -235,7 +296,7 @@ def build_native_snapshot(base_dir: Path, relpaths: list[Path]) -> dict[str, Nat
         The per-execution results directory the relpaths are resolved against.
     relpaths
         The persisted files (relative to ``base_dir``), e.g. the return value of
-        :func:`~climate_ref_core.output_files.copy_execution_outputs`.
+        :func:`copy_native_outputs`.
 
     Returns
     -------

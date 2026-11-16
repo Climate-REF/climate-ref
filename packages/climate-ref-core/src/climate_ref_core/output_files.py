@@ -3,10 +3,14 @@ Raw-file operations on diagnostic execution outputs.
 
 This module groups every operation that manipulates the files produced by a diagnostic execution.
 Execution output is written to the ``scratch`` directory.
-When the execution is ingested,
-a curated subset of outputs are copied from the scratch directory to the results directory:
+When the execution is handled, successful or not,
+everything it wrote is copied from the scratch directory to the results directory,
+apart from symlinks and the files its provider excludes
+(:attr:`~climate_ref_core.providers.DiagnosticProvider.results_exclude`).
 
-- logs
+Of these, REF ingests the files named by a successful execution's bundles
+(:func:`referenced_output_files`):
+
 - the metric bundle
 - the output bundle
 - the files the output bundle references (plots/data/html)
@@ -22,13 +26,13 @@ This ensures that the regression data is machine independent.
 from __future__ import annotations
 
 import shutil
+from fnmatch import fnmatchcase
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from attrs import frozen
 
 from climate_ref_core.diagnostics import ensure_relative_path
-from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.pycmec.output import CMECOutput
 
 if TYPE_CHECKING:
@@ -90,6 +94,7 @@ def rewrite_tree(
     Keys are applied longest-first so that an overlapping shorter path cannot
     partially shadow a longer one.
     Only files matching ``globs`` are rewritten while binary artefacts are never touched.
+    Symlinks are skipped, so the files they point at are never changed.
 
     Parameters
     ----------
@@ -103,6 +108,8 @@ def rewrite_tree(
     ordered = ordered_replacements(replacements)
     for glob in globs:
         for file in sorted(directory.rglob(glob)):
+            if file.is_symlink():
+                continue
             text = file.read_text(encoding="utf-8")
             rewritten = text
             for old, new in ordered:
@@ -242,134 +249,111 @@ def copy_output_file(
     return relative_filename
 
 
-def _copy_output_bundle_files(
-    scratch_directory: Path,
-    results_directory: Path,
-    fragment: Path | str,
-    cmec_output_bundle_filename: Path,
-) -> list[Path]:
-    """Copy the plots/data/html files referenced by a CMEC output bundle."""
-    cmec_output_bundle = CMECOutput.load_from_json(cmec_output_bundle_filename)
-    scratch_base = scratch_directory / fragment
-
-    copied: list[Path] = []
-    for attr in ("plots", "data", "html"):
-        for output_info in (getattr(cmec_output_bundle, attr) or {}).values():
-            filename = ensure_relative_path(output_info.filename, scratch_base)
-            copied.append(copy_output_file(scratch_directory, results_directory, fragment, filename))
-    return copied
-
-
-def _copy_extra_globs(
-    scratch_directory: Path,
-    results_directory: Path,
-    fragment: Path | str,
-    extra_globs: tuple[str, ...],
-    exclude: set[Path],
-) -> list[Path]:
+def referenced_output_files(output_directory: Path, result: ExecutionResult) -> list[Path]:
     """
-    Copy every file matching ``extra_globs`` under the execution fragment into results.
+    List the files a successful execution's bundles name.
 
-    These are *extra* raw artefacts a diagnostic declares
-    (:attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`)
-    beyond the files its CMEC output bundle references,
-    so that :meth:`~climate_ref_core.diagnostics.Diagnostic.build_execution_result`
-    can re-derive its bundle on replay from the persisted set alone.
-    Each glob is resolved against ``scratch_directory / fragment``
-    (so ``**`` and ``/`` in the pattern behave as for :meth:`pathlib.Path.glob`);
-    directories are skipped.
-    """
-    input_directory = scratch_directory / fragment
-
-    copied: list[Path] = []
-    seen: set[Path] = set(exclude)
-    for glob in extra_globs:
-        for match in sorted(input_directory.glob(glob)):
-            if not match.is_file():
-                continue
-            relative = match.relative_to(input_directory)
-            if relative in seen:
-                continue
-            seen.add(relative)
-            copied.append(copy_output_file(scratch_directory, results_directory, fragment, relative))
-    return copied
-
-
-def copy_execution_outputs(  # noqa: PLR0913
-    scratch_directory: Path,
-    results_directory: Path,
-    fragment: Path | str,
-    result: ExecutionResult,
-    *,
-    include_log: bool = False,
-    extra_globs: tuple[str, ...] = (),
-) -> list[Path]:
-    """
-    Copy the curated set of persisted outputs from scratch to results.
-
-    This is the canonical definition of *what REF persists* for a successful execution,
+    These are the files REF ingests into the database:
 
     - the metric bundle
     - the output bundle
     - every file it references (plots/data/html)
     - the series bundle
-    - the execution log (if ``include_log=True``)
-    - any files matching ``extra_globs`` (a diagnostic's declared reconstruction inputs)
+
+    Parameters
+    ----------
+    output_directory
+        The execution's output directory, which holds the output bundle.
+        Absolute filenames in the bundles must be under it.
+    result
+        The successful execution result (must carry a metric bundle filename).
+
+    Raises
+    ------
+    FileNotFoundError
+        If the output bundle does not exist.
+
+    Returns
+    -------
+    :
+        The files, relative to ``output_directory``, without duplicates.
+    """
+    if result.metric_bundle_filename is None:
+        raise ValueError("Cannot list the outputs of a result without a metric bundle")
+
+    filenames: list[Path | str] = [result.metric_bundle_filename]
+    if result.output_bundle_filename:
+        filenames.append(result.output_bundle_filename)
+        output_bundle = output_directory / ensure_relative_path(
+            result.output_bundle_filename, output_directory
+        )
+        if not output_bundle.is_file():
+            raise FileNotFoundError(f"Could not find the output bundle {output_bundle}")
+        cmec_output_bundle = CMECOutput.load_from_json(output_bundle)
+        for attr in ("plots", "data", "html"):
+            filenames.extend(
+                output_info.filename for output_info in (getattr(cmec_output_bundle, attr) or {}).values()
+            )
+    if result.series_filename:
+        filenames.append(result.series_filename)
+
+    relative = (ensure_relative_path(filename, output_directory) for filename in filenames)
+    return list(dict.fromkeys(relative))
+
+
+def copy_execution_outputs(
+    scratch_directory: Path,
+    results_directory: Path,
+    fragment: Path | str,
+    *,
+    exclude: tuple[str, ...] = (),
+) -> list[Path]:
+    """
+    Copy the files an execution wrote from scratch to results.
+
+    This is the canonical definition of *what REF persists* for an execution,
+    whether it succeeded or failed:
+    every file under the execution's output directory, including its log, except
+
+    - symlinks, which point at input data rather than at something the execution wrote
+    - files matching ``exclude``
+
+    Only the files :func:`referenced_output_files` lists are ingested into the database.
 
     Parameters
     ----------
     scratch_directory
         Base scratch directory the diagnostic wrote into.
     results_directory
-        Base results directory to copy the curated subset into.
+        Base results directory to copy into.
     fragment
         The per-execution fragment under both base directories.
-    result
-        The successful execution result (must carry a metric bundle filename).
-    include_log
-        If True, copy the execution log.
-    extra_globs
-        Additional output globs (relative to the execution directory) to persist beyond the
-        bundle-referenced files, e.g. a diagnostic's
-        :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`.
+    exclude
+        Patterns (see :func:`fnmatch.fnmatchcase`) of files not to copy,
+        matched against each file's POSIX path relative to the execution directory.
+        ``*`` also matches ``/``, so ``preproc/*`` excludes everything under ``preproc``.
+        Providers declare these in
+        :attr:`~climate_ref_core.providers.DiagnosticProvider.results_exclude`.
 
     Returns
     -------
     :
-        The copied files, each relative to ``fragment`` (the manifest key set).
+        The copied files, each relative to ``fragment``.
     """
-    if result.metric_bundle_filename is None:
-        raise ValueError("Cannot copy outputs for a result without a metric bundle")
+    input_directory = scratch_directory / fragment
+    if not input_directory.is_dir():
+        return []
 
     copied: list[Path] = []
-
-    if include_log:
-        copied.append(
-            copy_output_file(scratch_directory, results_directory, fragment, EXECUTION_LOG_FILENAME)
-        )
-
-    copied.append(
-        copy_output_file(scratch_directory, results_directory, fragment, result.metric_bundle_filename)
-    )
-
-    if result.output_bundle_filename:
-        output_bundle_relpath = copy_output_file(
-            scratch_directory, results_directory, fragment, result.output_bundle_filename
-        )
-        copied.append(output_bundle_relpath)
-        bundle_path = scratch_directory / fragment / output_bundle_relpath
-        copied.extend(_copy_output_bundle_files(scratch_directory, results_directory, fragment, bundle_path))
-
-    if result.series_filename:
-        copied.append(
-            copy_output_file(scratch_directory, results_directory, fragment, result.series_filename)
-        )
-
-    if extra_globs:
-        copied.extend(
-            _copy_extra_globs(
-                scratch_directory, results_directory, fragment, extra_globs, exclude=set(copied)
-            )
-        )
-
+    for directory, dirnames, filenames in input_directory.walk():
+        relative_directory = directory.relative_to(input_directory)
+        # Symlinked directories are pruned, so the walk never leaves the execution directory
+        dirnames[:] = sorted(name for name in dirnames if not (directory / name).is_symlink())
+        for name in sorted(filenames):
+            relative = relative_directory / name
+            if (directory / name).is_symlink() or any(
+                fnmatchcase(relative.as_posix(), pattern) for pattern in exclude
+            ):
+                continue
+            copied.append(copy_output_file(scratch_directory, results_directory, fragment, relative))
     return copied

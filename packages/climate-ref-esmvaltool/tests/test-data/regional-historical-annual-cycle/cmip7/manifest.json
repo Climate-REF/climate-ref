@@ -2,11 +2,11 @@
   "catalog_hash": "ea67fe0eef24fbd1fdad84837e37f1ca1cd73cc9",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "4face38eb05e1815739e9dd290ddffbb13989edd30ae4483927b3902915abc31",
+    "output.json": "a7e4a9a636d325b6d24d36bf6f86acffa1c2702b374133616d3a1747eecf71cf",
     "series.json": "4f0ca647ac6c73368c22eedbd057b1aa2c960eadb958a2c60516f9e5d315b429"
   },
   "diagnostic_version": 2,
   "native": {},
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

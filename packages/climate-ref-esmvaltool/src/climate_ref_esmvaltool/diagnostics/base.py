@@ -125,8 +125,8 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
     reconstruction_inputs = (f"executions/{_STABLE_SESSION_NAME}/{_PROVENANCE_GLOB}",)
     """Raw provenance YAML that :meth:`build_execution_result` re-scans to discover the run's outputs.
 
-    These files are not referenced by the CMEC output bundle, so ``copy_execution_outputs`` would not
-    curate them; declaring them here persists them into the baseline so a ``replay`` can rebuild the
+    These files are not referenced by the CMEC output bundle, so the regression native set would not
+    include them; declaring them here persists them into the baseline so a ``replay`` can rebuild the
     bundle. ``prepare_regression_output`` first stabilises the timestamped session directory to
     ``recipe`` and every path the provenance contains is then under the execution output directory, so
     the native sanitiser rewrites them to ``<OUTPUT_DIR>`` and the captured blobs stay portable.
@@ -509,7 +509,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 )
 
         # Add the index.html file
-        index_html = f"{result_dir}/index.html"
+        index_html = str(definition.as_relative_path(result_dir / "index.html"))
         output_args[OutputCV.HTML.value][index_html] = {
             OutputCV.FILENAME.value: index_html,
             OutputCV.LONG_NAME.value: "Results page",
@@ -518,7 +518,9 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         output_args[OutputCV.INDEX.value] = index_html
 
         # Add the (debug) log file
-        output_args[OutputCV.PROVENANCE.value][OutputCV.LOG.value] = f"{result_dir}/run/main_log_debug.txt"
+        output_args[OutputCV.PROVENANCE.value][OutputCV.LOG.value] = str(
+            definition.as_relative_path(result_dir / "run" / "main_log_debug.txt")
+        )
 
         # Update the diagnostic and output bundle with diagnostic specific executions.
         metric_bundle, output_bundle = self.format_result(

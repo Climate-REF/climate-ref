@@ -2,7 +2,7 @@
   "catalog_hash": "9f90805601bba62e2fa0db5e13146626382151c8",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "a8589880fc34c8a12ab98fdccf5c893dc58c8d6ba76a72338c8297eb375af1f4",
+    "output.json": "9b4be23ae3741aecb4eafef08fb71b52787de292a712f2ec9b57cfcc6b4ea34a",
     "series.json": "514918953ffd88fad0db82b1dfd3979a7184e1b9643a6d366ad85d6cbf430623"
   },
   "diagnostic_version": 4,
@@ -37,5 +37,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 4
+  "test_case_version": 5
 }

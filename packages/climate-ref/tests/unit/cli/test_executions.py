@@ -1475,6 +1475,9 @@ class TestReingestCLI:
             db_seeded.session.add_all([ex1, ex2])
 
         db_seeded.session.commit()
+        # Reingest only selects executions whose scratch directory still exists
+        for fragment in (ex1.output_fragment, ex2.output_fragment):
+            (config.paths.scratch / fragment).mkdir(parents=True)
         return db_seeded
 
     def test_reingest_no_filters_error(self, invoke_cli, db_seeded):
@@ -1504,11 +1507,11 @@ class TestReingestCLI:
 
     def test_reingest_force_runs(self, db_with_executions, invoke_cli, config):
         """Force mode should skip confirmation. Even if reingest_execution returns False
-        (no output dirs), we exercise the CLI loop and get skip counts."""
+        (empty output dirs), we exercise the CLI loop and get skip counts."""
         result = invoke_cli(["executions", "reingest", "--provider", "pmp", "--force"])
         assert result.exit_code == 0
         assert "Reingest complete" in result.stdout
-        # Output dir doesn't exist so reingest_execution returns False -> skipped
+        # The output dir is empty so reingest_execution returns False -> skipped
         assert "skipped" in result.stdout
 
     def test_reingest_by_group_ids(self, db_with_executions, invoke_cli):
@@ -1536,11 +1539,7 @@ class TestReingestCLI:
 
     def test_reingest_success_path(self, db_with_executions, invoke_cli, config):
         """When reingest_execution succeeds, success_count should increment."""
-        # Create output directory so reingest_execution can find it
         eg = db_with_executions.session.query(ExecutionGroup).filter_by(key="reingest-1").first()
-        ex = eg.executions[0]
-        results_dir = config.paths.results / ex.output_fragment
-        results_dir.mkdir(parents=True, exist_ok=True)
 
         # Mock reingest_execution to return True (success)
         with patch("climate_ref.executor.reingest.reingest_execution", return_value=True):

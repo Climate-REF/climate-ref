@@ -365,9 +365,57 @@ def reingest_execution(
     return True
 
 
-def get_executions_for_reingest(
+def _has_scratch_directory(scratch: "Path", execution: Execution) -> bool:
+    """Whether the scratch directory of an execution still exists."""
+    try:
+        return safe_path(execution.output_fragment, scratch, label="scratch").is_dir()
+    except ValueError:
+        return False
+
+
+def _select_execution_for_reingest(
+    group: ExecutionGroup, scratch: "Path", include_failed: bool
+) -> Execution | None:
+    """
+    Select the newest execution of a group that can be reingested
+
+    Its scratch directory must still exist, as reingest rebuilds the result from the raw outputs there.
+    An execution that is still running is never selected,
+    and a failed one only if ``include_failed`` is set.
+    A warning is logged if the selected execution is not the newest of the group,
+    or if there is none to select.
+    """
+    latest = group.executions[-1]
+    for execution in reversed(group.executions):
+        if execution.successful is None or not (include_failed or execution.successful):
+            continue
+        if not _has_scratch_directory(scratch, execution):
+            continue
+        if execution is not latest:
+            consequence = (
+                "Its datasets differ from the newest execution's, so the next solve will rerun the group."
+                if execution.dataset_hash != latest.dataset_hash
+                else "Its datasets are the same as the newest execution's."
+            )
+            logger.warning(
+                f"Reingesting execution {execution.id} of group {group.id} "
+                f"instead of its newest execution {latest.id}, "
+                "which is still running, failed or has no scratch directory. "
+                f"{consequence}"
+            )
+        return execution
+
+    logger.warning(
+        f"Skipping group {group.id}: none of its executions can be reingested "
+        f"(each is still running{'' if include_failed else ', failed'} or has no scratch directory)"
+    )
+    return None
+
+
+def get_executions_for_reingest(  # noqa: PLR0913
     database: "Database",
     *,
+    scratch: "Path",
     execution_group_ids: Sequence[int] | None = None,
     provider_filters: list[str] | None = None,
     diagnostic_filters: list[str] | None = None,
@@ -376,14 +424,18 @@ def get_executions_for_reingest(
     """
     Query executions eligible for reingest.
 
-    Always selects the **oldest** (original) execution per group so that
-    reingest uses the execution whose scratch directory actually exists.
-    Reingested executions only have results directories, not scratch.
+    Selects the **newest** execution per group whose scratch directory still exists,
+    as reingest rebuilds the result from the raw outputs there.
+    Reingesting an older execution than the group's newest
+    brings back the results of that older execution, and if its datasets differ,
+    the next solve reruns the group, so a warning is logged when that happens.
 
     Parameters
     ----------
     database
         Database instance
+    scratch
+        Root of the scratch directories (``config.paths.scratch``)
     execution_group_ids
         If provided, only include these execution group IDs
     provider_filters
@@ -391,12 +443,12 @@ def get_executions_for_reingest(
     diagnostic_filters
         Filter by diagnostic slug (substring, case-insensitive)
     include_failed
-        If True, also include failed executions
+        If True, also include groups whose newest execution failed, and select failed executions
 
     Returns
     -------
     :
-        List of (ExecutionGroup, oldest Execution) tuples
+        List of (ExecutionGroup, selected Execution) tuples
     """
     # Use the existing filtered query to identify matching execution groups
     results = ExecutionsReader(database).group_rows(
@@ -415,23 +467,21 @@ def get_executions_for_reingest(
 
     group_ids = [eg.id for eg, _ in results]
     if group_ids:
-        # Warm the session identity map so eg.executions[0] below does not
+        # Warm the session identity map so eg.executions below does not
         # issue one SELECT per group.
         database.session.query(ExecutionGroup).filter(ExecutionGroup.id.in_(group_ids)).options(
             selectinload(ExecutionGroup.executions)
         ).all()
 
-    # Filter out entries with no execution, then select the oldest per group.
-    # ExecutionGroup.executions is ordered by created_at ascending,
-    # so [0] is the original execution whose scratch directory exists.
+    # Filter out groups that were never run, then select one execution per group.
+    # ExecutionGroup.executions is ordered by created_at ascending.
     seen: set[int] = set()
     out: list[tuple[ExecutionGroup, Execution]] = []
     for eg, ex in results:
         if ex is None or eg.id in seen:
             continue
         seen.add(eg.id)
-        oldest = eg.executions[0]
-        if not include_failed and not oldest.successful:
-            continue
-        out.append((eg, oldest))
+        selected = _select_execution_for_reingest(eg, scratch, include_failed)
+        if selected is not None:
+            out.append((eg, selected))
     return out

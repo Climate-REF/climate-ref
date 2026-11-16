@@ -1223,8 +1223,8 @@ def resources(  # noqa: PLR0913
 
 
 # `get_executions_for_reingest` stays on the ORM helper by design.
-# it passes`include_superseded=True` and selects `eg.executions[0]`
-# (the oldest / original execution in the group),
+# it passes`include_superseded=True` and selects the newest execution in the group
+# whose scratch directory still exists,
 # which is a different "latest" than `reader.executions` definition.
 # Revisit once a mutable query surface exists.
 @app.command()
@@ -1259,6 +1259,9 @@ def reingest(  # noqa: PLR0913
     the results into the database. Useful when new series definitions or
     metadata extraction logic has been added.
 
+    The newest execution of each group whose scratch directory still exists is reingested.
+    A warning is logged when that is not the group's newest execution.
+
     A new Execution record is always created under the same ExecutionGroup,
     leaving the original execution untouched. Results are treated as immutable.
 
@@ -1287,6 +1290,7 @@ def reingest(  # noqa: PLR0913
 
     results = get_executions_for_reingest(
         db,
+        scratch=config.paths.scratch,
         execution_group_ids=group_ids,
         provider_filters=provider,
         diagnostic_filters=diagnostic,

@@ -123,7 +123,21 @@ jobs:
             if [ "${FROM_REPLAY}" = "true" ]; then
               args+=(--from-replay)
             else
-              uv run ref test-cases fetch "${args[@]}" || echo "::warning::test-case fetch incomplete for ${name}"
+              # Strict, so a catalog that comes out different from the committed one stops the mint
+              # instead of being committed (e.g. one rebuilt from a stale conversion cache).
+              # The failed fetch has already written that catalog, so undo what it wrote before moving on.
+              catalogs=':(glob)packages/**/test-data/**/catalog.yaml'
+              changed_before=$(git ls-files --modified --others --exclude-standard -- "${catalogs}" | sort)
+              if ! uv run ref test-cases fetch --strict "${args[@]}"; then
+                changed_after=$(git ls-files --modified --others --exclude-standard -- "${catalogs}" | sort)
+                comm -13 <(echo "${changed_before}") <(echo "${changed_after}") | while read -r catalog; do
+                  [ -n "${catalog}" ] || continue
+                  git checkout HEAD -- "${catalog}" 2>/dev/null || git clean -fq -- "${catalog}"
+                done
+                echo "::error::test-case fetch failed for ${name}; not minting it"
+                failed+=("${name}")
+                continue
+              fi
             fi
 
             if [ "${BUMP_VERSION}" = "true" ]; then args+=(--bump-version); fi

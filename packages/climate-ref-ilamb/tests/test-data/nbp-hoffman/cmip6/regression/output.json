@@ -45,12 +45,12 @@
       "filename": "CanESM5_None_nbp.png",
       "long_name": ""
     },
-    "nan_None_accumulation.png": {
+    "None_None_accumulation.png": {
       "description": "",
       "dimensions": {
         "region": "None"
       },
-      "filename": "nan_None_accumulation.png",
+      "filename": "None_None_accumulation.png",
       "long_name": ""
     }
   },

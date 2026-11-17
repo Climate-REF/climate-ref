@@ -8,7 +8,7 @@
   "diagnostic_version": 2,
   "native": {
     "CanESM5.csv": {
-      "sha256": "f6eaa980ae88929938fc24e804ec2c0a6538fa4ffc39269f312ba8c20216ead6",
+      "sha256": "7cb7a7aea6c58c660d0453b286caa5f072f6da6f0180f15d8467c2f29b92e147",
       "size": 1680
     },
     "CanESM5.nc": {
@@ -124,11 +124,11 @@
       "size": 22282
     },
     "diagnostic.json": {
-      "sha256": "e2cc85df2d5249c3e2e8bacb001d6e18ce367b0011efbba4efdd37350aca2002",
+      "sha256": "9f8b388da265ceccf303fefe150963ebd82e151495f0f61e4284199f3656511f",
       "size": 3743
     },
     "index.html": {
-      "sha256": "6a5eac4b35993de281b8d8c8c77a65320edae2f259b61661ec148cc1f4845e42",
+      "sha256": "462bbbfc3d623c3e99e912948f52a63c7ceafac3ffb5b69d09847a4993d6d1a2",
       "size": 19248
     },
     "output.json": {

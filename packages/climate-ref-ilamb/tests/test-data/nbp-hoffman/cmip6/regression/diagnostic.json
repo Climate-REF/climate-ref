@@ -70,10 +70,10 @@
               "gn": {
                 "None": {
                   "nbp": {
-                    "Difference Score": 0.925172,
-                    "Trajectory Score": 0.06224862,
-                    "diff(2010)": 6.720196,
-                    "nbp(2010)": 5.269581
+                    "Difference Score": 0.9243662,
+                    "Trajectory Score": 0.06311205,
+                    "diff(2010)": 6.795482,
+                    "nbp(2010)": 5.344866
                   }
                 }
               }

@@ -1,0 +1,91 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "kind",
+      "reference_source_id",
+      "experiment_id",
+      "source_id",
+      "member_id",
+      "grid_label",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "kind": {
+      "model": {}
+    },
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "Timeseries": {}
+    },
+    "reference_source_id": {
+      "RAPID": {}
+    },
+    "region": {
+      "None": {
+        "Description": "Reference data extents",
+        "Generator": "N/A",
+        "LongName": "None"
+      }
+    },
+    "source_id": {
+      "CanESM5": {}
+    },
+    "statistic": {
+      "Bias Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Correlation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Normalized Standard Deviation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Period Mean": {
+        "type": "scalar",
+        "units": "Sv"
+      },
+      "Taylor Score": {
+        "type": "score",
+        "units": "1"
+      }
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "model": {
+      "RAPID": {
+        "historical": {
+          "CanESM5": {
+            "r1i1p1f1": {
+              "gn": {
+                "None": {
+                  "Timeseries": {
+                    "Bias Score": 0.7655733,
+                    "Correlation": 0.1302407,
+                    "Normalized Standard Deviation": 0.6323457,
+                    "Period Mean": 12.56981,
+                    "Taylor Score": 0.4612541
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

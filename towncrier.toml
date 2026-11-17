@@ -18,6 +18,11 @@ issue_format = "[#{issue}](https://github.com/Climate-REF/climate-ref/pull/{issu
   showcontent = true
 
   [[tool.towncrier.type]]
+  directory = "diagnostics"
+  name = "Diagnostic Changes"
+  showcontent = true
+
+  [[tool.towncrier.type]]
   directory = "deprecation"
   name = "Deprecations"
   showcontent = true

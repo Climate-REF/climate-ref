@@ -63,9 +63,9 @@ import xarray as xr
 from climate_ref_client import Client
 from climate_ref_client.api.diagnostics import (
     diagnostics_list,
+    diagnostics_list_execution_groups,
     diagnostics_list_metric_values,
 )
-from climate_ref_client.api.executions import executions_get
 from climate_ref_client.models.metric_value_type import (
     MetricValueType,
 )
@@ -238,17 +238,21 @@ _ = sns.relplot(
 # %%
 diagnostic_name = "Climate at Global Warming Levels"
 diagnostic = next(d for d in diagnostics if d.name == diagnostic_name)
-[executions_get.sync(g, client=client).key for g in diagnostic.execution_groups]
+execution_groups = diagnostics_list_execution_groups.sync(
+    diagnostic.provider.slug,
+    diagnostic.slug,
+    client=client,
+).data
+[group.key for group in execution_groups]
 
 # %% [markdown]
 # Let's select the "ssp585" scenario and look at the output files that were produced:
 
 # %%
-for group in diagnostic.execution_groups:
-    execution = executions_get.sync(group, client=client)
-    if execution.key.endswith("ssp585"):
+for group in execution_groups:
+    if group.key.endswith("ssp585"):
         latest_execution = max(
-            (e for e in execution.executions if e.successful),
+            (e for e in group.executions if e.successful),
             key=lambda e: e.created_at,
         )
         ssp585_outputs = latest_execution.outputs

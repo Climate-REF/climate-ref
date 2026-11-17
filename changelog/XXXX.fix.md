@@ -1,0 +1,1 @@
+Fixed `ref test-cases fetch` writing incomplete catalogs when ESGF files failed to download. Fetching now checks that every file of a dataset arrived, retries the missing ones and fails with the names of the files that are still missing.

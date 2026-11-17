@@ -467,6 +467,32 @@ class TestCmip7VariableRequirements:
         assert cmip7_requirement.constraints[0].required_facets == ("amoc", "msftm")
 
 
+class TestKeepPrimaryBranding:
+    """CMIP7 folds Lmon.mrsos and Emon.mrsol into one ``mrsol`` that only the branding tells apart."""
+
+    def _datasets(self, *branded_variables: str) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "variable_id": [name.split("_", 1)[0] for name in branded_variables],
+                "branded_variable": list(branded_variables),
+            }
+        )
+
+    def test_keeps_the_diagnostic_variable_variant(self):
+        datasets = self._datasets("mrsol_tavg-d10cm-hxy-lnd", "mrsol_tavg-sl-hxy-lnd", "areacella_ti-u-hxy-u")
+
+        kept = standard._keep_primary_branding(datasets, "mrsol", "land")
+
+        assert kept["branded_variable"].tolist() == ["mrsol_tavg-sl-hxy-lnd", "areacella_ti-u-hxy-u"]
+
+    def test_leaves_a_single_variant_alone(self):
+        datasets = self._datasets("mrsol_tavg-d10cm-hxy-lnd", "areacella_ti-u-hxy-u")
+
+        kept = standard._keep_primary_branding(datasets, "mrsol", "land")
+
+        assert kept.equals(datasets)
+
+
 class TestRealmMaskDecoupling:
     """
     Proves mask-loading is independent of realm, not just "is land".

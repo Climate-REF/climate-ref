@@ -338,6 +338,24 @@ def _lookup_dreq_entries(
     return found
 
 
+def _keep_primary_branding(model_datasets: pd.DataFrame, variable_id: str, realm: str) -> pd.DataFrame:
+    """
+    Keep one branded variant of a CMIP7 variable that several CMIP6 variables map onto.
+
+    The Data Request folds some CMIP6 variables into one CMIP7 ``variable_id`` that only the
+    branding tells apart, e.g. ``Lmon.mrsos`` and ``Emon.mrsol`` both become ``mrsol``.
+    ilamb3 cannot combine those into one field, so where the diagnostic's own variable is
+    among them, only its variant is kept.
+    """
+    primary = set(_get_branded_variable((variable_id,), realm))
+    keep = pd.Series(True, index=model_datasets.index)
+    for _, group in model_datasets.groupby("variable_id"):
+        brandings = set(group["branded_variable"])
+        if len(brandings) > 1 and brandings & primary:
+            keep[group.index] = group["branded_variable"].isin(primary)
+    return model_datasets[keep]
+
+
 def _get_cmip7_variable_ids(variable_ids: tuple[str, ...], realm: str) -> tuple[str, ...]:
     """Translate CMIP6 variable IDs to their CMIP7 Data Request IDs."""
     translated: list[str] = []
@@ -1150,6 +1168,9 @@ class ILAMBStandard(Diagnostic):
             available_alternates = [v for v in alternate_vars if v in model_datasets["variable_id"].values]
             if available_alternates and self.variable_id in model_datasets["variable_id"].values:
                 model_datasets = model_datasets[model_datasets["variable_id"] != self.variable_id]
+
+        if cmip_source == SourceDatasetType.CMIP7:
+            model_datasets = _keep_primary_branding(model_datasets, self.variable_id, self.realm)
 
         # In ilamb3, this is run with all the models that we know about to
         # create different colors. For REF this will at least make the model

@@ -119,7 +119,7 @@ jobs:
       with:
         mount-path: '${{ github.workspace }}/cache/ref-config:/cache/ref-config'
     - name: Set up Helm
-      uses: azure/setup-helm@v5.0.1
+      uses: azure/setup-helm@v5.1.0
     - name: Install Chart
       run: |
         helm install test oci://ghcr.io/climate-ref/charts/ref \

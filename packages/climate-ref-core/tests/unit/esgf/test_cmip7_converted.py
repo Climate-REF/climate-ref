@@ -20,6 +20,7 @@ from climate_ref_core.esgf.cmip7_converted import (
     _get_cmip7_cache_dir,
     _invalid_conversion_reason,
     _latest_file,
+    _write_encoding,
 )
 
 
@@ -313,7 +314,7 @@ class TestConvertedCacheIntegrity:
         path = tmp_path / "quantized-o3.nc"
         self._write_file(path, variable_id="o3", data_variable="o3", least_significant_digit=3)
 
-        assert _invalid_conversion_reason(path) == ("ozone dataset uses destructive decimal quantisation: o3")
+        assert _invalid_conversion_reason(path) == "destructive decimal rounding: o3"
 
     def test_rejects_ozone_cache_with_quantized_formula_term(self, tmp_path):
         path = tmp_path / "quantized-o3-coefficients.nc"
@@ -323,13 +324,45 @@ class TestConvertedCacheIntegrity:
         ds["b"] = ("lev", np.array([0.0011, 0.0012]))
         ds.to_netcdf(path, encoding={"b": {"least_significant_digit": 3}})
 
-        assert _invalid_conversion_reason(path) == ("ozone dataset uses destructive decimal quantisation: b")
+        assert _invalid_conversion_reason(path) == "destructive decimal rounding: b"
+
+    def test_rejects_decimal_rounded_cache(self, tmp_path):
+        """Earlier conversions rounded small fluxes such as precipitation to zero."""
+        path = tmp_path / "rounded-pr.nc"
+        self._write_file(path, variable_id="pr", data_variable="pr", least_significant_digit=3)
+
+        assert _invalid_conversion_reason(path) == "destructive decimal rounding: pr"
 
     def test_accepts_scientifically_valid_zero_ozone_cache(self, tmp_path):
         path = tmp_path / "zero-o3.nc"
         self._write_file(path, variable_id="o3", data_variable="o3", values=np.zeros((2, 1)))
 
         assert _invalid_conversion_reason(path) is None
+
+
+class TestWriteEncoding:
+    """Tests for the encoding a converted dataset is written with."""
+
+    def _dataset(self, variable_id: str) -> xr.Dataset:
+        return xr.Dataset(
+            {
+                variable_id: ("time", np.ones(2, dtype=np.float32)),
+                "time_bnds": (("time", "bnds"), np.zeros((2, 2))),
+            },
+            attrs={"variable_id": variable_id},
+        )
+
+    def test_quantises_only_the_data_variable(self):
+        encoding = _write_encoding(self._dataset("pr"))
+
+        assert encoding["pr"]["significant_digits"] == 5
+        assert "significant_digits" not in encoding["time_bnds"]
+        assert all(var_encoding["zlib"] for var_encoding in encoding.values())
+
+    def test_keeps_ozone_lossless(self):
+        encoding = _write_encoding(self._dataset("o3"))
+
+        assert "significant_digits" not in encoding["o3"]
 
 
 class TestConvertFileToCmip7:
@@ -398,10 +431,22 @@ class TestConvertFileToCmip7:
             np.testing.assert_array_equal(converted["time_bnds"].values, time_bounds)
             assert converted.attrs["mip_era"] == "CMIP7"
 
-    def _tas_source(self, path: Path) -> Path:
+    def test_conversion_keeps_small_magnitudes(self, tmp_path, monkeypatch):
+        """Quantisation is relative, so a flux in kg m-2 s-1 keeps its significant digits."""
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path / "cache"))
+        values = np.array([[1.2345678e-5], [3.3e-8]], dtype=np.float32)
+        source = self._tas_source(tmp_path / "tas.nc", values=values)
+
+        output = _convert_file_to_cmip7(source, {**self._TAS_FACETS, "version": "v1"})
+
+        with xr.open_dataset(output) as converted:
+            np.testing.assert_allclose(converted["tas"].values, values, rtol=1e-4)
+            assert converted["tas"].attrs["_QuantizeBitGroomNumberOfSignificantDigits"] == 5
+
+    def _tas_source(self, path: Path, values: np.ndarray | None = None) -> Path:
         times = [cftime.DatetimeNoLeap(2000, 1, 16), cftime.DatetimeNoLeap(2000, 2, 16)]
         xr.Dataset(
-            {"tas": (("time", "lat"), np.ones((2, 1), dtype=np.float32))},
+            {"tas": (("time", "lat"), np.ones((2, 1), dtype=np.float32) if values is None else values)},
             coords={"time": times, "lat": [0.0]},
             attrs={"table_id": "Amon", "variable_id": "tas"},
         ).to_netcdf(path)
@@ -466,7 +511,7 @@ class TestConvertFileToCmip7:
         # Set up mock for open_dataset context manager
         mock_ds = MagicMock()
         mock_ds.attrs = {name: name for name in _MANDATORY_CONVERTED_ATTRS}
-        mock_ds.variables = {"variable_id": MagicMock()}
+        mock_ds.variables = {"variable_id": MagicMock(encoding={})}
         mock_ds.attrs["variable_id"] = "variable_id"
         mock_ds.sizes = {}
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
@@ -742,7 +787,7 @@ class TestConvertFileToCmip7:
         # Set up mocks
         mock_ds = MagicMock()
         mock_ds.attrs = {name: name for name in _MANDATORY_CONVERTED_ATTRS}
-        mock_ds.variables = {"variable_id": MagicMock()}
+        mock_ds.variables = {"variable_id": MagicMock(encoding={})}
         mock_ds.attrs["variable_id"] = "variable_id"
         mock_ds.sizes = {}
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)

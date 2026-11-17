@@ -1,0 +1,1 @@
+Fixed the CMIP6-to-CMIP7 conversion rounding values to three decimal places, which turned small magnitudes such as precipitation in kg m-2 s-1 into zeros. Converted data is now quantised to five significant digits, and cached conversions with the old rounding are rebuilt.

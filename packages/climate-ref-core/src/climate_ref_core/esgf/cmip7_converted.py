@@ -51,34 +51,42 @@ _MANDATORY_CONVERTED_ATTRS = (
     "license_id",
     "tracking_id",
 )
-_LOSSY_DECIMAL_DIGITS = 3
+_SIGNIFICANT_DIGITS = 5
+"""Significant digits kept by the lossy compression of a converted data variable."""
 
 
 def _write_encoding(ds: xr.Dataset) -> dict[str, dict[str, Any]]:
     """
     Per-variable NetCDF encoding for a converted dataset.
 
-    Everything is compressed. Values are also rounded to :data:`_LOSSY_DECIMAL_DIGITS`,
-    except where that would quantise the data away: gpp and o3 magnitudes sit below the
-    rounding floor, and ozone additionally needs lossless hybrid-coordinate coefficients.
+    Everything is compressed. The dataset's own floating-point variable is also quantised
+    to :data:`_SIGNIFICANT_DIGITS` significant digits, which keeps its relative precision
+    whatever its magnitude (fluxes in kg m-2 s-1 are around 1e-5). Coordinates, bounds and
+    ozone stay lossless, as ozone needs exact hybrid-coordinate coefficients.
     """
-    lossless_dataset = ds.attrs.get("variable_id") == "o3"
+    variable_id = ds.attrs.get("variable_id")
 
     encoding: dict[str, dict[str, Any]] = {}
     for var in ds.data_vars:
         var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
-        if not lossless_dataset and str(var) != "gpp":
-            var_encoding["least_significant_digit"] = _LOSSY_DECIMAL_DIGITS
+        if var == variable_id != "o3" and ds[var].dtype.kind == "f":
+            var_encoding["significant_digits"] = _SIGNIFICANT_DIGITS
+            var_encoding["quantize_mode"] = "BitGroom"
         encoding[str(var)] = var_encoding
     return encoding
 
 
-def _quantised_variables(ds: xr.Dataset) -> list[str]:
-    """Name the variables stored with the lossy decimal quantisation the writer applies."""
+def _decimal_rounded_variables(ds: xr.Dataset) -> list[str]:
+    """
+    Name the variables stored with an absolute decimal rounding (``least_significant_digit``).
+
+    Earlier conversions rounded every variable to three decimal places, which zeroes small
+    magnitudes such as precipitation in kg m-2 s-1, so such a cached file cannot be reused.
+    """
     return [
         str(name)
-        for name in ds.data_vars
-        if ds[name].encoding.get("least_significant_digit") == _LOSSY_DECIMAL_DIGITS
+        for name, variable in ds.variables.items()
+        if variable.encoding.get("least_significant_digit") is not None
     ]
 
 
@@ -100,8 +108,8 @@ def _conversion_defect(ds: xr.Dataset) -> str | None:
     variable_id = str(ds.attrs["variable_id"])
     if variable_id not in ds.variables:
         return f"missing data variable: {variable_id}"
-    if variable_id == "o3" and (quantised := _quantised_variables(ds)):
-        return f"ozone dataset uses destructive decimal quantisation: {', '.join(quantised)}"
+    if rounded := _decimal_rounded_variables(ds):
+        return f"destructive decimal rounding: {', '.join(rounded)}"
 
     if "time" in ds.variables and ds.sizes.get("time", 0):
         time = ds["time"]

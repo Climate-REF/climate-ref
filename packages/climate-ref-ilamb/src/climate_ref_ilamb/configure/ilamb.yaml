@@ -47,6 +47,8 @@ mrsos-WangMao:
   test_cmip7:
     # The only published CMIP7 model with both mrsol variants (mrsos and mrsol in CMIP6)
     source_id: CanESM6-0-MR
+    # r1i1p1f1-r5i1p1f1 cannot be pinned: ESGF indexes their fx fields without a base_id
+    variant_label: r6i1p1f1
 
 cSoil-HWSD2:
   version: 3
@@ -115,6 +117,8 @@ burntFractionAll-GFED:
   test_source_id: CESM2
   test_cmip7:
     source_id: CanESM6-0-MR
+    # r1i1p1f1-r5i1p1f1 cannot be pinned: ESGF indexes their fx fields without a base_id
+    variant_label: r6i1p1f1
 
 emp-GLEAMGPCP2.3:
   version: 3

@@ -1,6 +1,7 @@
+import pandas as pd
 import pytest
 from climate_ref_pmp import provider as pmp_provider
-from climate_ref_pmp.diagnostics.enso import ENSO
+from climate_ref_pmp.diagnostics.enso import ENSO, _grid_label
 from climate_ref_pmp.pmp_driver import _get_resource
 
 
@@ -30,3 +31,8 @@ def test_build_cmds(solved_definition_factory):
         "--output_directory",
         str(definition.output_directory),
     ]
+
+
+def test_grid_label_names_every_input_grid():
+    assert _grid_label(pd.DataFrame({"grid_label": ["g115", "g109", "g115"]})) == "g109,g115"
+    assert _grid_label(pd.DataFrame({"grid_label": ["gn", "gn"]})) == "gn"

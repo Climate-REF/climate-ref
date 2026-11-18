@@ -83,6 +83,10 @@ def get_cmip_data_requirements(
     )
 
 
+_DERIVATION_INPUTS = {"swcre": "rsut", "lwcre": "rlut"}
+"""An input of each derived variable, whose datasets locate all its inputs."""
+
+
 def update_recipe(
     recipe: Recipe,
     input_files: dict[SourceDatasetType, pandas.DataFrame],
@@ -110,8 +114,10 @@ def update_recipe(
             if short_name in recipe_variables:
                 var_settings["additional_datasets"] = recipe_variables[short_name]["additional_datasets"]
             else:
-                # For derived variables, use the first available dataset
-                var_settings["additional_datasets"] = datasets
+                # A derived variable needs the grid of its inputs, which can differ from that of
+                # the other variable in CMIP7 data, so it takes the datasets of one of its inputs.
+                source = recipe_variables.get(_DERIVATION_INPUTS.get(short_name, ""))
+                var_settings["additional_datasets"] = source["additional_datasets"] if source else datasets
         # Remove diagnostic-level additional_datasets to avoid CMIP6 reference datasets
         # being merged with CMIP7 per-variable datasets
         diagnostic.pop("additional_datasets", None)

@@ -3,6 +3,7 @@ import os
 from collections.abc import Collection, Iterable
 from typing import Any
 
+import pandas as pd
 from loguru import logger
 
 from climate_ref_core.constraints import AddSupplementaryDataset, SelectSingleGrid
@@ -34,6 +35,16 @@ _BRANDED_VARIABLE_NAMES: dict[str, str] = {
     "rsds": "rsds_tavg-u-hxy-u",
     "rsus": "rsus_tavg-u-hxy-u",
 }
+
+
+def _grid_label(datasets: DatasetCollection | pd.DataFrame) -> str:
+    """
+    Name the grids of the model inputs, for labelling the metrics computed from them.
+
+    CMIP7 inputs can come from several grids (e.g. ACCESS-ESM1-6 tauu on g109 and ts on g115),
+    so the label lists all of them, sorted, rather than whichever came first.
+    """
+    return ",".join(sorted(datasets["grid_label"].unique()))
 
 
 class ENSO(CommandLineDiagnostic):
@@ -405,7 +416,7 @@ class ENSO(CommandLineDiagnostic):
                 "mip_id": model_source_type.value,
                 "source_id": source_id,
                 "member_id": member_id,
-                "grid_label": input_datasets["grid_label"].unique()[0],
+                "grid_label": _grid_label(input_datasets),
                 "experiment_id": experiment_id,
             }
         )

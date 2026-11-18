@@ -8,6 +8,7 @@ from climate_ref_core.constraints import (
     PartialDateTime,
     RequireFacets,
     RequireTimerange,
+    SelectSingleGrid,
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -64,13 +65,16 @@ def get_cmip_data_requirements(
                         facets=cmip7_facets,
                     ),
                 ),
-                group_by=("source_id", "experiment_id", "variant_label", "frequency", "grid_label"),
+                # CMIP7 puts variables on different grid labels (e.g. ACCESS-ESM1-6 cli on g115,
+                # ta on g110), so they are grouped across grids, one grid per variable.
+                group_by=("source_id", "experiment_id", "variant_label", "frequency"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
                         start=PartialDateTime(1996, 1),
                         end=PartialDateTime(2014, 12),
                     ),
+                    SelectSingleGrid(group_by=("source_id", "experiment_id", "variant_label", "variable_id")),
                     RequireFacets("variable_id", variables),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
@@ -130,6 +134,7 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
     name = "Scatterplots of two cloud-relevant variables (clt vs swcre)"
     slug = "cloud-scatterplots-clt-swcre"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
+    version = 2
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clt", "rsut", "rsutcs"),
@@ -202,6 +207,7 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
     name = "Scatterplots of two cloud-relevant variables (clwvi vs pr)"
     slug = "cloud-scatterplots-clwvi-pr"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
+    version = 2
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clwvi", "pr"),
@@ -273,6 +279,7 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
     name = "Scatterplots of two cloud-relevant variables (clivi vs lwcre)"
     slug = "cloud-scatterplots-clivi-lwcre"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
+    version = 2
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clivi", "rlut", "rlutcs"),
@@ -345,6 +352,7 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
     name = "Scatterplots of two cloud-relevant variables (cli vs ta)"
     slug = "cloud-scatterplots-cli-ta"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
+    version = 2
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("cli", "ta"),

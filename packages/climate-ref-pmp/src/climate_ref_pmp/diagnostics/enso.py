@@ -5,7 +5,7 @@ from typing import Any
 
 from loguru import logger
 
-from climate_ref_core.constraints import AddSupplementaryDataset
+from climate_ref_core.constraints import AddSupplementaryDataset, SelectSingleGrid
 from climate_ref_core.datasets import DatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import (
     CommandLineDiagnostic,
@@ -43,7 +43,7 @@ class ENSO(CommandLineDiagnostic):
 
     reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
-    version = 3
+    version = 4
 
     facets = (
         "kind",
@@ -238,8 +238,11 @@ class ENSO(CommandLineDiagnostic):
         cmip7_requirement = DataRequirement(
             source_type=SourceDatasetType.CMIP7,
             filters=tuple(cmip7_filters),
-            group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+            # CMIP7 puts variables on different grid labels (e.g. ACCESS-ESM1-6 tauu on g109,
+            # ts on g115), so they are grouped across grids, one grid per variable.
+            group_by=("source_id", "experiment_id", "variant_label"),
             constraints=(
+                SelectSingleGrid(group_by=("source_id", "experiment_id", "variant_label", "variable_id")),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP7),
             ),

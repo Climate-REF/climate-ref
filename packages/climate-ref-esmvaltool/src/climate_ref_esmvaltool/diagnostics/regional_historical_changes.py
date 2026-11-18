@@ -114,7 +114,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     name = "Regional historical annual cycle of climate variables"
     slug = "regional-historical-annual-cycle"
     base_recipe = "ref/recipe_ref_annual_cycle_region.yml"
-    version = 2
+    version = 3
 
     variables = (
         "hus",
@@ -166,13 +166,16 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                         },
                     ),
                 ),
-                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+                # CMIP7 puts variables on different grid labels (e.g. ACCESS-ESM1-6 hus on g110,
+                # pr on g115), so they are grouped across grids, one grid per variable.
+                group_by=("source_id", "experiment_id", "variant_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
                         start=PartialDateTime(1980, 1),
                         end=PartialDateTime(2009, 12),
                     ),
+                    SelectSingleGrid(group_by=("source_id", "experiment_id", "variant_label", "variable_id")),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),
@@ -385,7 +388,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
     name = "Regional historical mean and anomaly of climate variables"
     slug = "regional-historical-timeseries"
     base_recipe = "ref/recipe_ref_timeseries_region.yml"
-    version = 2
+    version = 3
 
     variables = (
         "hus",
@@ -453,13 +456,16 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                         },
                     ),
                 ),
-                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+                # CMIP7 puts variables on different grid labels (e.g. ACCESS-ESM1-6 hus on g110,
+                # pr on g115), so they are grouped across grids, one grid per variable.
+                group_by=("source_id", "experiment_id", "variant_label"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
                         start=PartialDateTime(1980, 1),
                         end=PartialDateTime(2014, 12),
                     ),
+                    SelectSingleGrid(group_by=("source_id", "experiment_id", "variant_label", "variable_id")),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),

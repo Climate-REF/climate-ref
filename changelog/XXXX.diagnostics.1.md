@@ -1,0 +1,1 @@
+`ilamb/mrsos-wangmao` (version 2, unchanged): Fixed CMIP7 executions failing when a model publishes both `mrsol` variants (top 10 cm and all layers); the all-layer variant the diagnostic is defined for is now used. The version was not bumped, so CMIP6 results are unaffected and only new CMIP7 executions pick up the fix.

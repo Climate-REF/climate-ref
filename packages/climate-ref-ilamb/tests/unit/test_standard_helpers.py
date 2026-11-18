@@ -23,6 +23,7 @@ from ilamb3.dataset import coarsen_dataset, convert
 from ilamb3.run import find_related_variables, setup_transforms
 from ilamb3.transform.amoc import msftmz_to_rapid
 
+from climate_ref.solver import solve_executions
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 
@@ -691,3 +692,91 @@ class TestObs4MIPsSourceRewrite:
             "/data/obs.v10_0.nc",
             "/data/obs.v10_1.nc",
         ]
+
+
+class TestEmpComputesEMinusPForTheModel:
+    """
+    emp-gleamgpcp2.3 compares E - P, which the model has to be given both inputs for.
+
+    The model side used to fall back on ``evspsbl`` as an alternate name for ``emp``,
+    so the model was scored on evaporation alone against the reference's E - P.
+    """
+
+    @pytest.fixture
+    def diagnostic(self):
+        return next(d for d in provider.diagnostics() if d.slug == "emp-gleamgpcp2.3")
+
+    @staticmethod
+    def _dataset(**values: float) -> xr.Dataset:
+        time = pd.date_range("2001-01-01", periods=2, freq="MS")
+        ds = xr.Dataset({name: ("time", np.full(len(time), value)) for name, value in values.items()})
+        ds = ds.assign_coords(time=time)
+        for name in values:
+            ds[name].attrs["units"] = "kg m-2 s-1"
+        return ds
+
+    @pytest.mark.parametrize("cmip_era", [0, 1], ids=["cmip6", "cmip7"])
+    def test_requires_evaporation_and_precipitation(self, diagnostic, cmip_era):
+        constraints = diagnostic.data_requirements[cmip_era][0].constraints
+
+        all_of = [c for c in constraints if getattr(c, "operator", None) == "all"]
+
+        assert [c.required_facets for c in all_of] == [("evspsbl", "pr")]
+
+    def test_model_without_precipitation_is_not_selected(self, diagnostic):
+        rows = [
+            [
+                variable_id,
+                source_id,
+                "historical",
+                "r1i1p1f1",
+                "mon",
+                "gn",
+                table_id,
+                "v20191115",
+                f"{source_id}/{variable_id}.nc",
+            ]
+            for source_id, variables in (
+                ("ACCESS-ESM1-5", ("evspsbl", "pr")),
+                ("CanESM5", ("evspsbl",)),
+            )
+            for variable_id, table_id in (
+                *((variable_id, "Amon") for variable_id in variables),
+                ("areacella", "fx"),
+                ("sftlf", "fx"),
+            )
+        ]
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                rows,
+                columns=(
+                    "variable_id",
+                    "source_id",
+                    "experiment_id",
+                    "member_id",
+                    "frequency",
+                    "grid_label",
+                    "table_id",
+                    "version",
+                    "path",
+                ),
+            ),
+        }
+
+        executions = list(solve_executions(data_catalog, diagnostic, provider=provider))
+
+        assert [dict(e.datasets[SourceDatasetType.CMIP6].selector)["source_id"] for e in executions] == [
+            "ACCESS-ESM1-5"
+        ]
+
+    def test_reference_and_model_both_get_e_minus_p(self, diagnostic):
+        transforms = setup_transforms(diagnostic.ilamb_kwargs)
+
+        reference = self._dataset(et=3.0, pr=5.0)
+        model = self._dataset(evspsbl=2.0, pr=7.0)
+        for transform in transforms:
+            reference = transform(reference)
+            model = transform(model)
+
+        np.testing.assert_allclose(reference["emp"].values, -2.0)
+        np.testing.assert_allclose(model["emp"].values, -5.0)

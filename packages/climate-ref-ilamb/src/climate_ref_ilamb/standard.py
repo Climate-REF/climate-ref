@@ -651,6 +651,7 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
     primary_variable_ids: tuple[str, ...],
     relationship_variable_ids: tuple[str, ...],
     is_land: bool,
+    related_variable_ids: tuple[str, ...] = (),
 ) -> DataRequirement:
     """
     Build a CMIP data requirement with shared constraint logic.
@@ -668,11 +669,14 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
     group_by
         Columns to group executions by
     primary_variable_ids
-        Variables the diagnostic requires (primary + alternates + related)
+        Variables the diagnostic requires (primary + alternates + related), any one of which is enough
     relationship_variable_ids
         Variables used in relationship analyses
     is_land
         Whether this is a land diagnostic (determines supplementary variables)
+    related_variable_ids
+        Model variables the analysis variable is derived from (``related_vars``).
+        Unlike alternates these are all needed, so every one of them must be present.
 
     Returns
     -------
@@ -686,6 +690,14 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
             operator="any",
         ),
     ]
+
+    if related_variable_ids:
+        constraints.append(
+            RequireFacets(
+                "variable_id",
+                required_facets=related_variable_ids,
+            )
+        )
 
     if relationship_variable_ids:
         constraints.append(
@@ -1009,8 +1021,13 @@ class ILAMBStandard(Diagnostic):
 
         relationship_variable_ids = tuple(ilamb_kwargs.get("relationships", {}).keys())
 
+        # Model variables the analysis variable is computed from, e.g. by an `expression` transform.
+        # Unlike `alternate_vars` (synonyms) the diagnostic needs every one of them.
+        related_variable_ids = tuple(ilamb_kwargs.get("related_vars", []))
+
         cmip7_primary_variable_ids = _get_cmip7_variable_ids(primary_variable_ids, realm)
         cmip7_relationship_variable_ids = _get_cmip7_variable_ids(relationship_variable_ids, realm)
+        cmip7_related_variable_ids = _get_cmip7_variable_ids(related_variable_ids, realm)
 
         # Create the data requirement for the dataset under test
         cmip6_requirement = _build_cmip_data_requirement(
@@ -1035,6 +1052,7 @@ class ILAMBStandard(Diagnostic):
             primary_variable_ids=primary_variable_ids,
             relationship_variable_ids=relationship_variable_ids,
             is_land=is_land,
+            related_variable_ids=related_variable_ids,
         )
 
         cmip7_requirement = _build_cmip_data_requirement(
@@ -1049,6 +1067,7 @@ class ILAMBStandard(Diagnostic):
             primary_variable_ids=cmip7_primary_variable_ids,
             relationship_variable_ids=cmip7_relationship_variable_ids,
             is_land=is_land,
+            related_variable_ids=cmip7_related_variable_ids,
         )
 
         # Observational data requirement, normally ilamb3 expects the `sources` to

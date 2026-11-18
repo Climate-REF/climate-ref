@@ -500,6 +500,48 @@ class TestFetchTestDataCommand:
 
         assert "as expected (no CMIP7 msftm yet)" in result.stderr
 
+    def _expected_failure(self, mocker, *, requests):
+        tc = MagicMock(xfail="no CMIP7 data yet", description="test", requests=requests)
+        tc.name = "cmip7"
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+
+    def test_fetch_strict_still_validates_the_catalog_of_an_expected_failure(
+        self, invoke_cli, mocker, tmp_path
+    ):
+        """Only missing data is expected; a catalog that was written must still be usable."""
+        self._expected_failure(mocker, requests=[MagicMock()])
+        paths = MagicMock(catalog=tmp_path / "catalog.yaml", catalog_paths=tmp_path / "paths.yaml")
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog", return_value=(MagicMock(), True)
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery.validate_catalog_paths",
+            side_effect=DatasetResolutionError("catalog points at missing files"),
+        )
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"], expected_exit_code=1)
+
+        assert "catalog points at missing files" in result.stderr
+
+    def test_fetch_strict_accepts_an_expected_failure_without_requests_or_catalog(
+        self, invoke_cli, mocker, tmp_path
+    ):
+        self._expected_failure(mocker, requests=None)
+        paths = MagicMock(catalog=tmp_path / "missing.yaml", catalog_paths=tmp_path / "paths.yaml")
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", return_value=paths)
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"])
+
+        assert "No catalog for cmip7, as expected (no CMIP7 data yet)" in result.stderr
+
     def test_fetch_strict_rejects_changed_catalog(self, invoke_cli, mocker, tmp_path):
         """A catalog changed in one CI job cannot be consumed by a fresh checkout."""
         tc = MagicMock(xfail=None, description="test", requests=[MagicMock()])
@@ -3033,9 +3075,13 @@ class TestCIGateCommand:
         repo, _, _ = self._setup(mocker, tmp_path, current_version=None, xfail="no data yet")
         self._set_base(repo, 1, {"output.json": "a" * 64})
 
-        result = invoke_cli(["test-cases", "ci-gate"])
+        result = invoke_cli(["test-cases", "ci-gate", "--json"])
+
         assert result.exit_code == 0
-        assert "expected to fail: no data yet" in result.output
+        payload = json.loads(result.output[result.output.index("[") :])
+        assert payload == [
+            {"case": "example/test-diag/default", "action": "skip", "reason": "expected to fail: no data yet"}
+        ]
 
     def test_never_managed_skips(self, invoke_cli, mocker, tmp_path):
         # No current manifest and none on the base -> never managed -> SKIP.

@@ -211,6 +211,7 @@ class VerbDriver:
         provider: str | None,
         diagnostic: str | None,
         test_case: str | None,
+        skip_expected_failures: bool = True,
     ) -> None:
         from climate_ref.provider_registry import ProviderRegistry
 
@@ -227,7 +228,7 @@ class VerbDriver:
         for diag, tc in _iter_test_cases(
             self.registry, provider=provider, diagnostic=diagnostic, test_case=test_case
         ):
-            if tc.xfail:
+            if tc.xfail and skip_expected_failures:
                 logger.info(
                     f"Skipping {diag.provider.slug}/{diag.slug}/{tc.name}, expected to fail: {tc.xfail}"
                 )

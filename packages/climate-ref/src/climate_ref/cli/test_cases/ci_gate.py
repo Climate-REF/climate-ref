@@ -189,7 +189,10 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
     repo_root_resolved = repo_root.resolve()
     source_root_cache: dict[str, str | None] = {}
 
-    driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
+    # The gate decides on expected failures itself, recording why they are skipped
+    driver = VerbDriver(
+        ctx, provider=provider, diagnostic=diagnostic, test_case=test_case, skip_expected_failures=False
+    )
     cases = driver.cases
 
     decisions: list[dict[str, str]] = []

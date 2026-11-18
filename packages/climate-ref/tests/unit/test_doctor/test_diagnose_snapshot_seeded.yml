@@ -124,7 +124,7 @@
 - check: unsolvable-diagnostics
   command: ''
   detail: 'Unmet: no cmip6 datasets match experiment_id=historical|esm-hist|land-hist,
-    frequency=mon, table_id=AERmonZ|Amon|CFmon|Emon|EmonZ|LImon|Lmon|Omon|SImon, variable_id=emp|evspsbl.
+    frequency=mon, table_id=AERmonZ|Amon|CFmon|Emon|EmonZ|LImon|Lmon|Omon|SImon, variable_id=emp|evspsbl|pr.
     nothing is ingested as cmip7.'
   remedy: Ingest the data the unmet requirement names, then run the solver again.
   severity: warning

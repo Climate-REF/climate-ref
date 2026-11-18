@@ -1,0 +1,399 @@
+{
+  "data": {
+    "ACCESS-ESM1-6.csv": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "ACCESS-ESM1-6.csv",
+      "long_name": "ACCESS-ESM1-6.csv"
+    },
+    "ACCESS-ESM1-6.nc": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "ACCESS-ESM1-6.nc",
+      "long_name": "ACCESS-ESM1-6.nc"
+    },
+    "Reference.nc": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "Reference.nc",
+      "long_name": "Reference.nc"
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "index.html": {
+      "description": "Page displaying scalars and plots from the ILAMB execution.",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "source_id": "ACCESS-ESM1-6"
+      },
+      "filename": "index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "index.html",
+  "metrics": null,
+  "plots": {
+    "ACCESS-ESM1-6_global_bias.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Bias"
+      },
+      "filename": "ACCESS-ESM1-6_global_bias.png",
+      "long_name": "The bias for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_biasscore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Bias score"
+      },
+      "filename": "ACCESS-ESM1-6_global_biasscore.png",
+      "long_name": "The bias score for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_cycle.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Annual cycle"
+      },
+      "filename": "ACCESS-ESM1-6_global_cycle.png",
+      "long_name": "The annual cycle for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_cyclescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Annual cycle score"
+      },
+      "filename": "ACCESS-ESM1-6_global_cyclescore.png",
+      "long_name": "The annual cycle score for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_mean.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Period Mean"
+      },
+      "filename": "ACCESS-ESM1-6_global_mean.png",
+      "long_name": "The period mean for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_rmse.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "RMSE"
+      },
+      "filename": "ACCESS-ESM1-6_global_rmse.png",
+      "long_name": "The RMSE for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_rmsescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "RMSE score"
+      },
+      "filename": "ACCESS-ESM1-6_global_rmsescore.png",
+      "long_name": "The RMSE score for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_shift.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Shift in maximum month"
+      },
+      "filename": "ACCESS-ESM1-6_global_shift.png",
+      "long_name": "The shift in maximum month for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Maximum month"
+      },
+      "filename": "ACCESS-ESM1-6_global_tmax.png",
+      "long_name": "The maxmimum month for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_global_trace.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Regional mean"
+      },
+      "filename": "ACCESS-ESM1-6_global_trace.png",
+      "long_name": "The regional mean for ACCESS-ESM1-6 over the Global - Land region."
+    },
+    "ACCESS-ESM1-6_tropical_bias.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Bias"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_bias.png",
+      "long_name": "The bias for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_biasscore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Bias score"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_biasscore.png",
+      "long_name": "The bias score for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_cycle.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Annual cycle"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_cycle.png",
+      "long_name": "The annual cycle for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_cyclescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Annual cycle score"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_cyclescore.png",
+      "long_name": "The annual cycle score for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_mean.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Period Mean"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_mean.png",
+      "long_name": "The period mean for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_rmse.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "RMSE"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_rmse.png",
+      "long_name": "The RMSE for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_rmsescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "RMSE score"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_rmsescore.png",
+      "long_name": "The RMSE score for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_shift.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Shift in maximum month"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_shift.png",
+      "long_name": "The shift in maximum month for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Maximum month"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_tmax.png",
+      "long_name": "The maxmimum month for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "ACCESS-ESM1-6_tropical_trace.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Regional mean"
+      },
+      "filename": "ACCESS-ESM1-6_tropical_trace.png",
+      "long_name": "The regional mean for ACCESS-ESM1-6 over the Tropical climates region."
+    },
+    "None_global_taylor.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Taylor diagram"
+      },
+      "filename": "None_global_taylor.png",
+      "long_name": "The Taylor diagram over the Global - Land region."
+    },
+    "None_tropical_taylor.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g115",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Taylor diagram"
+      },
+      "filename": "None_tropical_taylor.png",
+      "long_name": "The Taylor diagram over the Tropical climates region."
+    },
+    "Reference_global_mean.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "statistic": "Period Mean"
+      },
+      "filename": "Reference_global_mean.png",
+      "long_name": "The period mean for the reference data over the Global - Land region."
+    },
+    "Reference_global_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "global",
+        "statistic": "Maximum month"
+      },
+      "filename": "Reference_global_tmax.png",
+      "long_name": "The maxmimum month for the reference data over the Global - Land region."
+    },
+    "Reference_tropical_mean.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "statistic": "Period Mean"
+      },
+      "filename": "Reference_tropical_mean.png",
+      "long_name": "The period mean for the reference data over the Tropical climates region."
+    },
+    "Reference_tropical_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "GLEAMGPCP2.3",
+        "region": "tropical",
+        "statistic": "Maximum month"
+      },
+      "filename": "Reference_tropical_tmax.png",
+      "long_name": "The maxmimum month for the reference data over the Tropical climates region."
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

@@ -150,7 +150,7 @@ toz_test_spec = TestDataSpecification(
                         "region": "glb",
                     },
                     remove_ensembles=True,
-                    time_span=("1950", "2021"),
+                    time_span=("1950-01", "2021-12"),
                 ),
                 Obs4MIPsRequest(
                     slug="obs4mips",
@@ -419,7 +419,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1990", "2001"),
+                        time_span=("1990-01", "2001-12"),
                     ),
                 ),
                 xfail=(

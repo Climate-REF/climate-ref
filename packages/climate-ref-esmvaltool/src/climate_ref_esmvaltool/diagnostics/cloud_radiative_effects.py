@@ -227,7 +227,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("2002", "2021"),
+                        time_span=("2002-01", "2021-12"),
                     ),
                     # fx files are time-independent and thus cannot be filtered by time_span,
                     # so they are fetched separately.

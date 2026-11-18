@@ -256,7 +256,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1980", "2009"),
+                        time_span=("1980-01", "2009-12"),
                     ),
                     # fx files are time-independent and thus cannot be filtered by time_span,
                     # so they are fetched separately.
@@ -561,7 +561,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1980", "2014"),
+                        time_span=("1980-01", "2014-12"),
                     ),
                     # fx files are time-independent and thus cannot be filtered by time_span,
                     # so they are fetched separately.
@@ -831,7 +831,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1980", "2009"),
+                        time_span=("1980-01", "2009-12"),
                     ),
                     # fx files are time-independent and thus cannot be filtered by time_span,
                     # so they are fetched separately.

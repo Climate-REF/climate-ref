@@ -188,7 +188,7 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1996", "2014"),
+                        time_span=("1996-01", "2014-12"),
                     ),
                     # fx files are time-independent and thus cannot be filtered by time_span,
                     # so they are fetched separately.
@@ -273,7 +273,7 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1996", "2014"),
+                        time_span=("1996-01", "2014-12"),
                     ),
                     # fx files are time-independent and thus cannot be filtered by time_span,
                     # so they are fetched separately.
@@ -358,7 +358,7 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1996", "2014"),
+                        time_span=("1996-01", "2014-12"),
                     ),
                     # fx files are time-independent and thus cannot be filtered by time_span,
                     # so they are fetched separately.
@@ -444,7 +444,7 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1996", "2014"),
+                        time_span=("1996-01", "2014-12"),
                     ),
                     # fx files are time-independent and thus cannot be filtered by time_span,
                     # so they are fetched separately.

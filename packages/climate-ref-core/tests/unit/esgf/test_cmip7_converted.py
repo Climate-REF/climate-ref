@@ -326,6 +326,16 @@ class TestConvertedCacheIntegrity:
 
         assert _invalid_conversion_reason(path) == "destructive decimal rounding: b"
 
+    def test_ignores_decimal_rounding_on_a_coordinate(self, tmp_path):
+        """A setting inherited from the source on a coordinate does not trigger endless rebuilds."""
+        path = tmp_path / "rounded-lat.nc"
+        self._write_file(path)
+        with xr.open_dataset(path) as original:
+            ds = original.load()
+        ds.to_netcdf(path, encoding={"lat": {"least_significant_digit": 3}})
+
+        assert _invalid_conversion_reason(path) is None
+
     def test_rejects_decimal_rounded_cache(self, tmp_path):
         """Earlier conversions rounded small fluxes such as precipitation to zero."""
         path = tmp_path / "rounded-pr.nc"
@@ -511,7 +521,7 @@ class TestConvertFileToCmip7:
         # Set up mock for open_dataset context manager
         mock_ds = MagicMock()
         mock_ds.attrs = {name: name for name in _MANDATORY_CONVERTED_ATTRS}
-        mock_ds.variables = {"variable_id": MagicMock(encoding={})}
+        mock_ds.variables = {"variable_id": MagicMock()}
         mock_ds.attrs["variable_id"] = "variable_id"
         mock_ds.sizes = {}
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
@@ -787,7 +797,7 @@ class TestConvertFileToCmip7:
         # Set up mocks
         mock_ds = MagicMock()
         mock_ds.attrs = {name: name for name in _MANDATORY_CONVERTED_ATTRS}
-        mock_ds.variables = {"variable_id": MagicMock(encoding={})}
+        mock_ds.variables = {"variable_id": MagicMock()}
         mock_ds.attrs["variable_id"] = "variable_id"
         mock_ds.sizes = {}
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)

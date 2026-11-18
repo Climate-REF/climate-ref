@@ -80,13 +80,15 @@ def _decimal_rounded_variables(ds: xr.Dataset) -> list[str]:
     """
     Name the variables stored with an absolute decimal rounding (``least_significant_digit``).
 
-    Earlier conversions rounded every variable to three decimal places, which zeroes small
+    Earlier conversions rounded every data variable to three decimal places, which zeroes small
     magnitudes such as precipitation in kg m-2 s-1, so such a cached file cannot be reused.
+    Coordinates are not checked: the writer never rounded them, so a setting there was inherited
+    from the source and would only trigger a rebuild that writes it again.
     """
     return [
         str(name)
-        for name, variable in ds.variables.items()
-        if variable.encoding.get("least_significant_digit") is not None
+        for name, variable in ds.data_vars.items()
+        if variable.encoding.get("least_significant_digit")
     ]
 
 

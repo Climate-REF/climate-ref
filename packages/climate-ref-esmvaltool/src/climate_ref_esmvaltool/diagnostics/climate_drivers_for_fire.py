@@ -184,7 +184,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
-                            "source_id": "CanESM6-0-MR",
+                            "source_id": "UKESM1-3-LL",
                             "variable_id": ["cVeg", "hurs", "pr", "tas", "treeFrac", "vegFrac"],
                             "branding_suffix": [
                                 "tavg-h2m-hxy-u",
@@ -192,7 +192,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                                 "tavg-u-hxy-u",
                                 "tmaxavg-h2m-hxy-u",
                             ],
-                            "variant_label": "r1i1p1f1",
+                            "variant_label": "r1i1p1f2",
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -205,10 +205,10 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                         slug="cmip7-fx",
                         facets={
                             "experiment_id": ["historical"],
-                            "source_id": "CanESM6-0-MR",
+                            "source_id": "UKESM1-3-LL",
                             "variable_id": ["sftlf"],
                             "branding_suffix": ["ti-u-hxy-u"],
-                            "variant_label": "r1i1p1f1",
+                            "variant_label": "r1i1p1f2",
                             "frequency": "fx",
                             "region": "glb",
                         },

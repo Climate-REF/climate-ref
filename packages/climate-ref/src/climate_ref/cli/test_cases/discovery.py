@@ -201,12 +201,17 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                             )
                     if not catalog_written:
                         logger.info(f"  Catalog unchanged for {tc.name}")
+                except (DatasetResolutionError, InvalidDiagnosticException) as e:
+                    if tc.xfail:
+                        # Its data is expected to be missing or incomplete, see TestCase.xfail
+                        logger.info(f"  No usable data for {tc.name}, as expected ({tc.xfail}): {e}")
+                    else:
+                        failed_cases.append(case_id)
+                        logger.warning(f"  Could not build catalog for {tc.name}: {e}")
                 except (
                     OSError,
                     AttributeError,
                     yaml.YAMLError,
-                    DatasetResolutionError,
-                    InvalidDiagnosticException,
                     ValueError,
                 ) as e:
                     failed_cases.append(case_id)

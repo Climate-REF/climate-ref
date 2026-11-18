@@ -75,6 +75,15 @@ class TestCase:
     datasets_file: str | None = None
     """Path to YAML file with dataset specification (relative to package)."""
 
+    xfail: str | None = None
+    """
+    Why this test case is expected to fail, e.g. because no matching data is published yet.
+
+    Fetching tolerates its data not being found, ``mint``, ``run`` and ``replay`` skip it,
+    and its regression test is marked as a strict ``xfail``.
+    Remove it once the case works, which a newly fetched catalog or an XPASS points out.
+    """
+
 
 @frozen
 class TestDataSpecification:
@@ -741,11 +750,13 @@ def collect_test_case_params(provider: DiagnosticProvider) -> list[ParameterSet]
         if diagnostic.test_data_spec is None:
             continue
         for test_case in diagnostic.test_data_spec.test_cases:
+            marks = [pytest.mark.xfail(reason=test_case.xfail, strict=True)] if test_case.xfail else []
             params.append(
                 pytest.param(
                     diagnostic,
                     test_case.name,
                     id=f"{diagnostic.slug}/{test_case.name}",
+                    marks=marks,
                 )
             )
     return params

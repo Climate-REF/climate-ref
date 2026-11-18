@@ -117,6 +117,7 @@ burntFractionAll-GFED:
     source_id: CanESM6-0-MR
 
 emp-GLEAMGPCP2.3:
+  version: 3
   analysis_variable: emp
   sources:
     et: ilamb/evspsbl/GLEAMv3.3a/et.nc
@@ -125,7 +126,13 @@ emp-GLEAMGPCP2.3:
   - select_time:
       vmin: 2000-01
       vmax: 2015-01
+  # An expression is skipped when an input is missing or `emp` already exists,
+  # so the first only applies to the reference (GLEAM `et`) and the second only to the model.
   - expression:
       expr: emp = et - pr
-  alternate_vars:
+  - expression:
+      expr: emp = evspsbl - pr
+  # The model inputs E - P is computed from; both are needed.
+  related_vars:
   - evspsbl
+  - pr

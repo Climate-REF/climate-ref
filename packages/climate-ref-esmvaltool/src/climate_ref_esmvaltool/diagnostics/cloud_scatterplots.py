@@ -12,7 +12,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
@@ -174,24 +174,36 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
-                            "variable_id": ["areacella", "clt", "rsut", "rsutcs"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "clt_tavg-u-hxy-u",
-                                "rsut_tavg-u-hxy-u",
-                                "rsutcs_tavg-u-hxy-u",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["clt", "rsut", "rsutcs"],
+                            "branding_suffix": [
+                                "tavg-u-hxy-u",
                             ],
                             "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1996", "2014"),
+                    ),
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": "historical",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["areacella"],
+                            "branding_suffix": ["ti-u-hxy-u"],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),
@@ -247,23 +259,36 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
-                            "variable_id": ["areacella", "clwvi", "pr"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "clwvi_tavg-u-hxy-u",
-                                "pr_tavg-u-hxy-u",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["clwvi", "pr"],
+                            "branding_suffix": [
+                                "tavg-u-hxy-u",
                             ],
                             "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1996", "2014"),
+                    ),
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": "historical",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["areacella"],
+                            "branding_suffix": ["ti-u-hxy-u"],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),
@@ -319,24 +344,36 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
-                            "variable_id": ["areacella", "clivi", "rlut", "rlutcs"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "clivi_tavg-u-hxy-u",
-                                "rlut_tavg-u-hxy-u",
-                                "rlutcs_tavg-u-hxy-u",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["clivi", "rlut", "rlutcs"],
+                            "branding_suffix": [
+                                "tavg-u-hxy-u",
                             ],
                             "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1996", "2014"),
+                    ),
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": "historical",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["areacella"],
+                            "branding_suffix": ["ti-u-hxy-u"],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),
@@ -392,24 +429,37 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CESM2",
-                            "variable_id": ["areacella", "cli", "ta"],
-                            "table_id": ["fx", "Amon"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "cli_tavg-al-hxy-u",
-                                "ta_tavg-p19-hxy-air",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["cli", "ta"],
+                            "branding_suffix": [
+                                "tavg-al-hxy-u",
+                                "tavg-p19-hxy-air",
                             ],
                             "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1996", "2014"),
+                    ),
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": "historical",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["areacella"],
+                            "branding_suffix": ["ti-u-hxy-u"],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),

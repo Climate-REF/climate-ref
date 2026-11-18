@@ -1,306 +1,306 @@
 _metadata:
-  hash: 82ee685124acc6f4f9b7400d05fae30f2ab4cfa2
+  hash: 6c70ff013aa0759f4b6d95e8926d859fd871ac52
 cmip7:
   slug_column: instance_id
   selector:
     experiment_id: historical
-    grid_label: gn
-    source_id: CanESM5
+    grid_label: g150
+    source_id: CanESM6-0-MR
     variant_label: r1i1p1f1
   datasets:
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branch_time_in_parent: 1332615.0
     branded_variable: sftlf_ti-u-hxy-u
     branding_suffix: ti-u-hxy-u
     calendar: null
     end_time: null
     experiment_id: historical
     external_variables: areacella
-    filename: sftlf_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    filename: sftlf_ti-u-hxy-u_fx_glb_g150_CanESM6-0-MR_historical_r1i1p1f1.nc
     finalised: true
     frequency: fx
-    grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v0
+    grid_label: g150
+    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.g150.v20260629
     institution_id: CCCma
     license_id: CC-BY-4.0
-    long_name: Percentage of the grid  cell occupied by land (including lakes)
+    long_name: Percentage of the Grid Cell Occupied by Land (Including Lakes)
     mip_era: CMIP7
-    nominal_resolution: 500 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_mip_era: CMIP7
+    parent_source_id: CanESM6-0-MR
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: atmos
     region: glb
-    source_id: CanESM5
+    source_id: CanESM6-0-MR
     standard_name: land_area_fraction
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/7e670807-0c52-5bbf-a4e6-864c9f5ed56a
+    tracking_id: hdl:21.14107/a3284c1f-773b-4df0-acfa-5f52df396058
     units: '%'
     variable_id: sftlf
     variant_label: r1i1p1f1
-    version: v0
+    version: v20260629
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branch_time_in_parent: 1332615.0
     branded_variable: cVeg_tavg-u-hxy-lnd
     branding_suffix: tavg-u-hxy-lnd
     calendar: 365_day
     end_time: '2021-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: cVeg_tavg-u-hxy-lnd_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-202112.nc
+    filename: cVeg_tavg-u-hxy-lnd_mon_glb_g150_CanESM6-0-MR_historical_r1i1p1f1_200101-202112.nc
     finalised: true
     frequency: mon
-    grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.cVeg.tavg-u-hxy-lnd.gn.v1
+    grid_label: g150
+    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.cVeg.tavg-u-hxy-lnd.g150.v20260629
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: Carbon Mass in Vegetation
     mip_era: CMIP7
-    nominal_resolution: 500 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_mip_era: CMIP7
+    parent_source_id: CanESM6-0-MR
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: land
     region: glb
-    source_id: CanESM5
+    source_id: CanESM6-0-MR
     standard_name: vegetation_carbon_content
-    start_time: '1850-01-16 12:00:00'
-    time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/6fcb87b7-5ed1-5966-a3b7-3c708705a0c8
+    tracking_id: hdl:21.14107/04a38e4a-a905-4c68-806a-291c6171c7dc
     units: kg m-2
     variable_id: cVeg
     variant_label: r1i1p1f1
-    version: v1
+    version: v20260629
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branch_time_in_parent: 1332615.0
     branded_variable: hurs_tavg-h2m-hxy-u
     branding_suffix: tavg-h2m-hxy-u
     calendar: 365_day
     end_time: '2021-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: hurs_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-202112.nc
+    filename: hurs_tavg-h2m-hxy-u_mon_glb_g150_CanESM6-0-MR_historical_r1i1p1f1_200101-202112.nc
     finalised: true
     frequency: mon
-    grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.hurs.tavg-h2m-hxy-u.gn.v1
+    grid_label: g150
+    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.hurs.tavg-h2m-hxy-u.g150.v20260629
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: Near-Surface Relative Humidity
     mip_era: CMIP7
-    nominal_resolution: 500 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_mip_era: CMIP7
+    parent_source_id: CanESM6-0-MR
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: atmos
     region: glb
-    source_id: CanESM5
+    source_id: CanESM6-0-MR
     standard_name: relative_humidity
-    start_time: '1850-01-16 12:00:00'
-    time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/34623f39-f98c-5e47-b8e2-c97ab808c819
+    tracking_id: hdl:21.14107/d7891e4f-22ec-4b18-851a-4ddf86240887
     units: '%'
     variable_id: hurs
     variant_label: r1i1p1f1
-    version: v1
+    version: v20260629
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branch_time_in_parent: 1332615.0
     branded_variable: pr_tavg-u-hxy-u
     branding_suffix: tavg-u-hxy-u
     calendar: 365_day
     end_time: '2021-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: pr_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-202112.nc
+    filename: pr_tavg-u-hxy-u_mon_glb_g150_CanESM6-0-MR_historical_r1i1p1f1_200101-202112.nc
     finalised: true
     frequency: mon
-    grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v1
+    grid_label: g150
+    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.g150.v20260629
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: Precipitation
     mip_era: CMIP7
-    nominal_resolution: 500 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_mip_era: CMIP7
+    parent_source_id: CanESM6-0-MR
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: atmos
     region: glb
-    source_id: CanESM5
+    source_id: CanESM6-0-MR
     standard_name: precipitation_flux
-    start_time: '1850-01-16 12:00:00'
-    time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/3c75e2d4-53b8-52a0-bb67-4516eb98abcd
+    tracking_id: hdl:21.14107/f415427f-225d-41c3-a107-402aa62ffc82
     units: kg m-2 s-1
     variable_id: pr
     variant_label: r1i1p1f1
-    version: v1
+    version: v20260629
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branch_time_in_parent: 1332615.0
     branded_variable: tas_tavg-h2m-hxy-u
     branding_suffix: tavg-h2m-hxy-u
     calendar: 365_day
     end_time: '2021-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-202112.nc
+    filename: tas_tavg-h2m-hxy-u_mon_glb_g150_CanESM6-0-MR_historical_r1i1p1f1_200101-202112.nc
     finalised: true
     frequency: mon
-    grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v1
+    grid_label: g150
+    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.g150.v20260629
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: Near-Surface Air Temperature
     mip_era: CMIP7
-    nominal_resolution: 500 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_mip_era: CMIP7
+    parent_source_id: CanESM6-0-MR
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: atmos
     region: glb
-    source_id: CanESM5
+    source_id: CanESM6-0-MR
     standard_name: air_temperature
-    start_time: '1850-01-16 12:00:00'
-    time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/411a95cf-d2ab-54ba-ba4b-2a001255fe08
+    tracking_id: hdl:21.14107/1fccf57a-d2f4-486c-927b-5bbe44c9a788
     units: K
     variable_id: tas
     variant_label: r1i1p1f1
-    version: v1
+    version: v20260629
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branch_time_in_parent: 1332615.0
     branded_variable: tas_tmaxavg-h2m-hxy-u
     branding_suffix: tmaxavg-h2m-hxy-u
     calendar: 365_day
     end_time: '2021-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: tas_tmaxavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-202112.nc
+    filename: tas_tmaxavg-h2m-hxy-u_mon_glb_g150_CanESM6-0-MR_historical_r1i1p1f1_200101-202112.nc
     finalised: true
     frequency: mon
-    grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tas.tmaxavg-h2m-hxy-u.gn.v1
+    grid_label: g150
+    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.tas.tmaxavg-h2m-hxy-u.g150.v20260827
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: Daily Maximum Near-Surface Air Temperature
     mip_era: CMIP7
-    nominal_resolution: 500 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_mip_era: CMIP7
+    parent_source_id: CanESM6-0-MR
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: atmos
     region: glb
-    source_id: CanESM5
+    source_id: CanESM6-0-MR
     standard_name: air_temperature
-    start_time: '1850-01-16 12:00:00'
-    time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/41556725-f176-55a5-9ef6-290ac555181c
+    tracking_id: hdl:21.14107/11cdff25-bf8d-4502-9cf1-0530abd2f4c3
     units: K
     variable_id: tas
     variant_label: r1i1p1f1
-    version: v1
+    version: v20260827
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branch_time_in_parent: 1332615.0
     branded_variable: treeFrac_tavg-u-hxy-u
     branding_suffix: tavg-u-hxy-u
     calendar: 365_day
     end_time: '2021-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: treeFrac_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-202112.nc
+    filename: treeFrac_tavg-u-hxy-u_mon_glb_g150_CanESM6-0-MR_historical_r1i1p1f1_200101-202112.nc
     finalised: true
     frequency: mon
-    grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.treeFrac.tavg-u-hxy-u.gn.v1
+    grid_label: g150
+    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.treeFrac.tavg-u-hxy-u.g150.v20260629
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: Tree Cover Percentage
     mip_era: CMIP7
-    nominal_resolution: 500 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_mip_era: CMIP7
+    parent_source_id: CanESM6-0-MR
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: land
     region: glb
-    source_id: CanESM5
+    source_id: CanESM6-0-MR
     standard_name: area_fraction
-    start_time: '1850-01-16 12:00:00'
-    time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/ff82294a-763a-5c48-a133-643e3efa0352
+    tracking_id: hdl:21.14107/bdc8fdfc-3b6e-44bf-8201-5fa1109de2ce
     units: '%'
     variable_id: treeFrac
     variant_label: r1i1p1f1
-    version: v1
+    version: v20260629
   - activity_id: CMIP
     branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branch_time_in_parent: 1332615.0
     branded_variable: vegFrac_tavg-u-hxy-u
     branding_suffix: tavg-u-hxy-u
     calendar: 365_day
     end_time: '2021-12-16 12:00:00'
     experiment_id: historical
     external_variables: areacella
-    filename: vegFrac_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-202112.nc
+    filename: vegFrac_tavg-u-hxy-u_mon_glb_g150_CanESM6-0-MR_historical_r1i1p1f1_200101-202112.nc
     finalised: true
     frequency: mon
-    grid_label: gn
-    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.vegFrac.tavg-u-hxy-u.gn.v1
+    grid_label: g150
+    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.vegFrac.tavg-u-hxy-u.g150.v20260629
     institution_id: CCCma
     license_id: CC-BY-4.0
     long_name: Total Vegetated Percentage Cover
     mip_era: CMIP7
-    nominal_resolution: 500 km
+    nominal_resolution: 100 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
-    parent_mip_era: CMIP6
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_mip_era: CMIP7
+    parent_source_id: CanESM6-0-MR
+    parent_time_units: days since 1850-01-01
     parent_variant_label: r1i1p1f1
     realm: land
     region: glb
-    source_id: CanESM5
+    source_id: CanESM6-0-MR
     standard_name: area_fraction
-    start_time: '1850-01-16 12:00:00'
-    time_range: 1850-01-16 12:00:00-2021-12-16 12:00:00
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/d4001d69-5deb-5c76-b3c2-97c02df860fb
+    tracking_id: hdl:21.14107/40056bfc-a04b-408d-927f-325b8adbc5b0
     units: '%'
     variable_id: vegFrac
     variant_label: r1i1p1f1
-    version: v1
+    version: v20260629

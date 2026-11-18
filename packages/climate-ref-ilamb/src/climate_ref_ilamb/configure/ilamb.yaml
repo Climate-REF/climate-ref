@@ -44,6 +44,9 @@ mrsos-WangMao:
       value: 0
   - soil_moisture_to_vol_fraction
   variable_cmap: Blues
+  test_cmip7:
+    # The only published CMIP7 model with both mrsol variants (mrsos and mrsol in CMIP6)
+    source_id: CanESM6-0-MR
 
 cSoil-HWSD2:
   version: 3
@@ -110,6 +113,8 @@ burntFractionAll-GFED:
       grid_label: gr
       version: v20260128
   test_source_id: CESM2
+  test_cmip7:
+    source_id: CanESM6-0-MR
 
 emp-GLEAMGPCP2.3:
   analysis_variable: emp

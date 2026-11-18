@@ -493,6 +493,31 @@ class TestKeepPrimaryBranding:
         assert kept.equals(datasets)
 
 
+class TestCmip7TestCase:
+    def _request(self, slug: str):
+        diagnostic = next(diagnostic for diagnostic in provider.diagnostics() if diagnostic.slug == slug)
+        return diagnostic.test_data_spec.get_case("cmip7").requests[0]
+
+    def test_uses_published_cmip7_data(self):
+        request = self._request("mrsos-wangmao")
+
+        assert type(request).__name__ == "CMIP7Request"
+        assert request.facets["source_id"] == "CanESM6-0-MR"
+        assert request.facets["variable_id"] == ("areacella", "mrsol", "sftlf")
+        assert request.facets["branding_suffix"] == [
+            "tavg-d10cm-hxy-lnd",
+            "tavg-sl-hxy-lnd",
+            "ti-u-hxy-u",
+        ]
+
+    def test_converts_cmip6_data_where_none_is_published(self):
+        assert type(self._request("amoc-rapid")).__name__ == "ConvertedCMIP7Request"
+
+    def test_leaves_out_a_3d_primary_replaced_by_its_surface_alternate(self):
+        """execute() runs so-woa2023-surface on sos, so the full 3D so is not downloaded."""
+        assert self._request("so-woa2023-surface").facets["variable_id"] == ("areacello", "sftof", "sos")
+
+
 class TestRealmMaskDecoupling:
     """
     Proves mask-loading is independent of realm, not just "is land".

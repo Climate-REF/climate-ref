@@ -13,7 +13,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
     PMP_RECONSTRUCTION_INPUTS,
@@ -149,40 +149,38 @@ class ENSO(CommandLineDiagnostic):
                                 "variable_id": self.model_variables,
                             },
                         ),
-                        ConvertedCMIP7Request(
+                        CMIP7Request(
                             slug=f"enso-{self.slug}-cmip7",
                             facets={
-                                "source_id": "ACCESS-ESM1-5",
+                                "source_id": "ACCESS-ESM1-6",
                                 "experiment_id": "historical",
                                 "variable_id": self.model_variables,
-                                "branded_variable": tuple(
-                                    _BRANDED_VARIABLE_NAMES[v] for v in self.model_variables
-                                ),
+                                "branding_suffix": "tavg-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "mon",
                                 "region": "glb",
                             },
                             time_span=("2000-01", "2014-12"),
                         ),
-                        ConvertedCMIP7Request(
+                        CMIP7Request(
                             slug=f"enso-{self.slug}-areacella-cmip7",
                             facets={
-                                "source_id": "ACCESS-ESM1-5",
+                                "source_id": "ACCESS-ESM1-6",
                                 "experiment_id": "historical",
                                 "variable_id": "areacella",
-                                "branded_variable": "areacella_ti-u-hxy-u",
+                                "branding_suffix": "ti-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "fx",
                                 "region": "glb",
                             },
                         ),
-                        ConvertedCMIP7Request(
+                        CMIP7Request(
                             slug=f"enso-{self.slug}-sftlf-cmip7",
                             facets={
-                                "source_id": "ACCESS-ESM1-5",
+                                "source_id": "ACCESS-ESM1-6",
                                 "experiment_id": "historical",
                                 "variable_id": "sftlf",
-                                "branded_variable": "sftlf_ti-u-hxy-u",
+                                "branding_suffix": "ti-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "fx",
                                 "region": "glb",

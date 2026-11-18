@@ -13,7 +13,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, ExecutionDefinition
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, ConvertedCMIP7Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -239,26 +239,39 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
-                            "source_id": "CanESM5",
-                            "variable_id": ["areacella", *variables],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "hus_tavg-p19-hxy-u",
-                                "pr_tavg-u-hxy-u",
-                                "psl_tavg-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
-                                "ua_tavg-p19-hxy-air",
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": list(variables),
+                            "branding_suffix": [
+                                "tavg-h2m-hxy-u",
+                                "tavg-p19-hxy-air",
+                                "tavg-p19-hxy-u",
+                                "tavg-u-hxy-u",
                             ],
                             "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1980", "2009"),
+                    ),
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": ["historical"],
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["areacella"],
+                            "branding_suffix": ["ti-u-hxy-u"],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),
@@ -531,25 +544,39 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
-                            "source_id": "CanESM5",
+                            "source_id": "ACCESS-ESM1-6",
                             # Subset to keep the committed series.json small; see ``test_variables``
                             # (regions are likewise reduced in reduce_recipe_for_regression_fixture).
-                            "variable_id": ["areacella", *test_variables],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "pr_tavg-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
+                            "variable_id": list(test_variables),
+                            "branding_suffix": [
+                                "tavg-h2m-hxy-u",
+                                "tavg-u-hxy-u",
                             ],
                             "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1980", "2014"),
+                    ),
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": ["historical"],
+                            "source_id": "ACCESS-ESM1-6",
+                            "variable_id": ["areacella"],
+                            "branding_suffix": ["ti-u-hxy-u"],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),
@@ -806,7 +833,8 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                         remove_ensembles=True,
                         time_span=("1980", "2009"),
                     ),
-                    # intake-esgf cannot filter fx files by time, so they are fetched separately.
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
                     CMIP7Request(
                         slug="cmip7-fx",
                         facets={

@@ -10,7 +10,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -124,15 +124,15 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["1pctCO2", "piControl"],
-                            "source_id": "CanESM5",
+                            "source_id": "ACCESS-ESM1-6",
                             "variable_id": ["areacella", "tas"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
+                            "branding_suffix": [
+                                "tavg-h2m-hxy-u",
+                                "ti-u-hxy-u",
                             ],
                             "variant_label": "r1i1p1f1",
                             "frequency": ["fx", "mon"],

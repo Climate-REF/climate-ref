@@ -1,0 +1,1 @@
+Fixed the ILAMB evaporation minus precipitation diagnostic (`emp-gleamgpcp2.3`) scoring the model's evaporation against the reference's evaporation minus precipitation. ILAMB `related_vars` are now all required of a model, not just one of them.

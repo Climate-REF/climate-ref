@@ -2,15 +2,15 @@ import pytest
 from climate_ref_esmvaltool import provider
 
 from climate_ref_core.datasets import SourceDatasetType
-from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.testing import collect_test_case_params
 
 
 @pytest.mark.parametrize(
     "slug,expected_cases",
     [
+        # No CMIP7 model publishes fco2antt for esm-flat10 yet
         ("transient-climate-response-emissions", ["cmip6"]),
-        ("zero-emission-commitment", ["cmip6-1pctCO2-parent", "cmip6-esm-1pctCO2-parent"]),
     ],
 )
 def test_flat10_cases_disabled_until_real_inputs_available(slug, expected_cases):
@@ -31,3 +31,13 @@ def test_flat10_cases_disabled_until_real_inputs_available(slug, expected_cases)
         for alternative in diagnostic.data_requirements
         for requirement in alternative
     )
+
+
+def test_zec_cmip7_case_uses_published_flat10_data():
+    """esm-flat10-zec and its esm-flat10 parent are published for CanESM5-1."""
+    diagnostic = next(d for d in provider.diagnostics() if d.slug == "zero-emission-commitment")
+    case = diagnostic.test_data_spec.get_case("cmip7")
+
+    (request,) = case.requests
+    assert isinstance(request, CMIP7Request)
+    assert request.facets["experiment_id"] == ["esm-flat10", "esm-flat10-zec"]

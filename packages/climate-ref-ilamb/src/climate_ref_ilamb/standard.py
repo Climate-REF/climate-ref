@@ -36,7 +36,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, ConvertedCMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import MetricValueKind, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
@@ -751,8 +751,9 @@ def _build_test_data_spec(  # noqa: PLR0913
         Ignored if no obs_filters provided.
     test_cmip7
         Overrides for the CMIP7 test case: ``source_id`` and ``variant_label`` of the published
-        CMIP7 model to test with (default ACCESS-ESM1-6 r1i1p1f1), or ``converted: true`` to
-        convert ``test_source_id``'s CMIP6 data instead, for variables not published as CMIP7 yet.
+        CMIP7 model to test with (default ACCESS-ESM1-6 r1i1p1f1), and ``xfail``, the reason the
+        case is expected to fail (see :attr:`TestCase.xfail`), e.g. while its variables are not
+        published as CMIP7 yet.
     unused_variable_ids
         Variables the diagnostic would not use when it runs, left out of the CMIP7 request.
 
@@ -766,15 +767,6 @@ def _build_test_data_spec(  # noqa: PLR0913
     else:
         supplementary_vars = ["volcello", "areacello", "sftof"]
     test_variable_ids = tuple(sorted(set(all_variable_ids) | set(supplementary_vars)))
-
-    test_branded_names = sorted(
-        set(
-            _get_branded_variable(
-                tuple(test_variable_ids),
-                realm,
-            )
-        )
-    )
 
     obs4mips_requests: tuple[RegistryRequest | Obs4MIPsRequest, ...] = ()
     if obs_filters and obs_source is not None:
@@ -799,42 +791,27 @@ def _build_test_data_spec(  # noqa: PLR0913
             raise ValueError(f"Invalid obs_source: {obs_source}")
 
     test_cmip7 = test_cmip7 or {}
-    cmip7_request: CMIP7Request | ConvertedCMIP7Request
-    if test_cmip7.get("converted", False):
-        cmip7_request = ConvertedCMIP7Request(
-            slug="cmip7",
-            facets={
-                "experiment_id": "historical",
-                "source_id": test_source_id,
-                "variable_id": test_variable_ids,
-                "branded_variable": test_branded_names,
-                "frequency": ["fx", "mon"],
-                "region": "glb",
-            },
-            remove_ensembles=True,
-        )
-    else:
-        # volcello is only an optional supplement, and its monthly CMIP7 variant is a full 3D field.
-        cmip7_variable_ids = tuple(
-            v for v in test_variable_ids if v != "volcello" and v not in unused_variable_ids
-        )
-        cmip7_request = CMIP7Request(
-            slug="cmip7",
-            facets={
-                "experiment_id": "historical",
-                "source_id": test_cmip7.get("source_id", "ACCESS-ESM1-6"),
-                "variable_id": _get_cmip7_variable_ids(cmip7_variable_ids, realm),
-                # The fx supplements (areacella, sftlf, ...) are not in the realm's DReq tables.
-                "branding_suffix": sorted(
-                    {"ti-u-hxy-u"}
-                    | {name.split("_", 1)[1] for name in _get_branded_variable(cmip7_variable_ids, realm)}
-                ),
-                "variant_label": test_cmip7.get("variant_label", "r1i1p1f1"),
-                "frequency": ["fx", "mon"],
-                "region": "glb",
-            },
-            remove_ensembles=True,
-        )
+    # volcello is only an optional supplement, and its monthly CMIP7 variant is a full 3D field.
+    cmip7_variable_ids = tuple(
+        v for v in test_variable_ids if v != "volcello" and v not in unused_variable_ids
+    )
+    cmip7_request = CMIP7Request(
+        slug="cmip7",
+        facets={
+            "experiment_id": "historical",
+            "source_id": test_cmip7.get("source_id", "ACCESS-ESM1-6"),
+            "variable_id": _get_cmip7_variable_ids(cmip7_variable_ids, realm),
+            # The fx supplements (areacella, sftlf, ...) are not in the realm's DReq tables.
+            "branding_suffix": sorted(
+                {"ti-u-hxy-u"}
+                | {name.split("_", 1)[1] for name in _get_branded_variable(cmip7_variable_ids, realm)}
+            ),
+            "variant_label": test_cmip7.get("variant_label", "r1i1p1f1"),
+            "frequency": ["fx", "mon"],
+            "region": "glb",
+        },
+        remove_ensembles=True,
+    )
 
     return TestDataSpecification(
         test_cases=(
@@ -862,6 +839,7 @@ def _build_test_data_spec(  # noqa: PLR0913
                     cmip7_request,
                     *obs4mips_requests,
                 ),
+                xfail=test_cmip7.get("xfail"),
             ),
         )
     )

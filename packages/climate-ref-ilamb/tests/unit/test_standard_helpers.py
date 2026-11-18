@@ -510,8 +510,12 @@ class TestCmip7TestCase:
             "ti-u-hxy-u",
         ]
 
-    def test_converts_cmip6_data_where_none_is_published(self):
-        assert type(self._request("amoc-rapid")).__name__ == "ConvertedCMIP7Request"
+    def test_is_expected_to_fail_where_no_data_is_published(self):
+        diagnostic = next(d for d in provider.diagnostics() if d.slug == "amoc-rapid")
+        case = diagnostic.test_data_spec.get_case("cmip7")
+
+        assert type(case.requests[0]).__name__ == "CMIP7Request"
+        assert "msftm" in case.xfail
 
     def test_leaves_out_a_3d_primary_replaced_by_its_surface_alternate(self):
         """execute() runs so-woa2023-surface on sos, so the full 3D so is not downloaded."""

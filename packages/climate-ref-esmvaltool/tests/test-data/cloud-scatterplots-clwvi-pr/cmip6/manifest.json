@@ -5,7 +5,7 @@
     "output.json": "077715154290cd404ebc33c68cfc5771b1b820592d4f91c255e402c39a2f3ebd",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 1,
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -16,7 +16,7 @@
       "size": 14340
     },
     "executions/recipe/plots/plot_joint_clwvi_pr_model/plot/png/jointplot_clwvi_pr_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014.png": {
-      "sha256": "a4c7d118a86c2fd4344a068a0731349e7c139e0cfa6b054f0b56c47350f106a3",
+      "sha256": "fe504bf9281d2c97818f2524dd7182bedbcfaaae1ad509d4dce9b3ca18bb8427",
       "size": 95652
     },
     "executions/recipe/run/plot_joint_clwvi_pr_model/plot/diagnostic_provenance.yml": {
@@ -24,20 +24,20 @@
       "size": 2304
     },
     "executions/recipe/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clwvi_histogram.nc": {
-      "sha256": "aa7499880d8c9fb5eb73cfdf9abf5940a0363231350a53ecdd56cc2dbb611df3",
+      "sha256": "79f2c7c28c9ba720dd899376cd8ad0e0abc1756137fca0bccb9d89dd2d817a16",
       "size": 8848
     },
     "executions/recipe/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clwvi_pr_histogram.nc": {
-      "sha256": "45f661482c6dcad137654b9abb37a7317ead782b6d4112aa2ac6fc46fdb1c9ae",
+      "sha256": "f0f8b5dc436fa8edd8a5969570ebaf639d1a7df12ef003e2dd431638d5e9f58e",
       "size": 13296
     },
     "executions/recipe/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_pr_histogram.nc": {
-      "sha256": "4b09a2e89a222400f5e40c3082543d6f3c40aae7dbbe9a728fdaa1ebce9aeb91",
+      "sha256": "667c250c93e10f86208c19e6514296e69405caa80289baeeb87219d7e1bc1803",
       "size": 8848
     },
     "output.json": {
-      "sha256": "3425a949faff613d9d8d6e61dae2fee0170514d7b547fc5c1c693a398c3bee85",
-      "size": 2648
+      "sha256": "ca30e34797a041cddbad03401a57114f969639b4ad249c12c5c659d790a7bbff",
+      "size": 2596
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",

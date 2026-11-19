@@ -1,12 +1,49 @@
 {
-  "catalog_hash": "7bc0768f1683daa96ad45cb293e94f969b4caebc",
+  "catalog_hash": "7824846909952bf0c827e9c13cf6bcd667d1356b",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "c1f2533596a76d4eaf1bef7b1a3a458b43159d737a10689847aaa3cfe4bebd0f",
+    "output.json": "e89b80fd3f02790385b66c4c0b6caed296315a9db141112a50617d9c6ac9c850",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 1,
-  "native": {},
+  "diagnostic_version": 2,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "46f2886996f5618c41a33199bff1b571383d070e0008ad35289b51d2f80120c3",
+      "size": 14524
+    },
+    "executions/recipe/plots/plot_joint_clwvi_pr_model/plot/png/jointplot_clwvi_pr_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014.png": {
+      "sha256": "75f93175b037e6b7c052907c64c5618f90996c0ddfe404e51be8d36e15b8ec7c",
+      "size": 96930
+    },
+    "executions/recipe/run/plot_joint_clwvi_pr_model/plot/diagnostic_provenance.yml": {
+      "sha256": "400fb3d4070288986e6bbc35c622d7f57336709438f53c4cbf87a59f92985250",
+      "size": 2476
+    },
+    "executions/recipe/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014_clwvi_histogram.nc": {
+      "sha256": "ac8c1cfaa0e9bf014d49b41472558aa5e7e85590238ba4c561f6b13ec7319e67",
+      "size": 8856
+    },
+    "executions/recipe/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014_clwvi_pr_histogram.nc": {
+      "sha256": "ed595cf5299270a6c68b23ff4723b49250fb1853e29327380f3a0bec1dce6e77",
+      "size": 13304
+    },
+    "executions/recipe/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014_pr_histogram.nc": {
+      "sha256": "f2025c1913301557a209a2588441e61d093cf98522f1b42fd450071ed2aaf1ca",
+      "size": 8856
+    },
+    "output.json": {
+      "sha256": "81cab2447a6a47f8403e24ffc131acd57f61cf0ad14dd1c5baec2de8c3add1b4",
+      "size": 2692
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

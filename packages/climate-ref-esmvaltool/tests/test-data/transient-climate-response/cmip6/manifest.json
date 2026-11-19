@@ -12,11 +12,11 @@
       "size": 590
     },
     "executions/recipe/index.html": {
-      "sha256": "a9ac3a00f54eabd491f3ecde6373e0d22bc0a8a3877f886a5336f48883d3c99d",
-      "size": 13944
+      "sha256": "963f7bdbaebf15287ab9fe79780494aae47b20242841ddbe9375069d4ed7df15",
+      "size": 13901
     },
     "executions/recipe/plots/tcr/calculate/CanESM5.png": {
-      "sha256": "fc00486bdbc30ed94f191ddcf851faa5d4ca28aafb9893eefa82564f0404d510",
+      "sha256": "7246818482bdf540de588184cf65db36c82930aeb6794dfffbea5061889e6025",
       "size": 122530
     },
     "executions/recipe/run/tcr/calculate/diagnostic_provenance.yml": {
@@ -24,16 +24,16 @@
       "size": 1555
     },
     "executions/recipe/work/tcr/calculate/CanESM5.nc": {
-      "sha256": "6f6cab98616d5fe9c7ac0825980c7f66b86c94aeca4dc63063c2f1e4424566bd",
-      "size": 31193
+      "sha256": "c9d00e57d10ae07b5c7a642fe510558abaa7e77cdda97e9842549fa0c8cb0efd",
+      "size": 31289
     },
     "executions/recipe/work/tcr/calculate/tcr.nc": {
-      "sha256": "a854fab3a7fa5bf96bc1de4da9e3499c5a050ff561bd18ce78fe90723868dadb",
-      "size": 9019
+      "sha256": "494bf69cbf9f15a85ba921dcf1d230906eadc1051b6f12bc1e6b3100d35ee04a",
+      "size": 8987
     },
     "output.json": {
-      "sha256": "33d558a163b402a15f0754c527454b9f75948d64fc78bcebffe82974eaae5686",
-      "size": 2318
+      "sha256": "6b912629942b75ceecc19679d1f5fb2c6dafe444bd8236e21a2c9c22d698d443",
+      "size": 2266
     },
     "series.json": {
       "sha256": "6d231d09ed457c3d0bcb93717a478f31b86ac69fca4beb67647c6af9c04ca87a",

@@ -1,7 +1,7 @@
 {
   "DIMENSIONS": {
     "grid_label": {
-      "gn": {}
+      "g115": {}
     },
     "json_structure": [
       "grid_label",
@@ -17,7 +17,7 @@
       "global": {}
     },
     "source_id": {
-      "CanESM5": {}
+      "ACCESS-ESM1-6": {}
     },
     "variant_label": {
       "r1i1p1f1": {}
@@ -27,11 +27,11 @@
   "NOTES": null,
   "PROVENANCE": null,
   "RESULTS": {
-    "gn": {
-      "CanESM5": {
+    "g115": {
+      "ACCESS-ESM1-6": {
         "r1i1p1f1": {
           "global": {
-            "tcr": 2.74115
+            "tcr": 1.824558
           }
         }
       }

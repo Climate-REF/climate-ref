@@ -16,24 +16,24 @@
       "size": 14390
     },
     "executions/recipe/plots/tcre/calculate/tcre.png": {
-      "sha256": "6145f02a740c3e1ac90cf2f809cc701a5d0e173e06ca982e3e7953b8f8ce0f40",
-      "size": 111737
+      "sha256": "7ec086a8a9ef535405a626846ffd37e15ed1c8ad83306cdf1c02ce0111390909",
+      "size": 111033
     },
     "executions/recipe/run/tcre/calculate/diagnostic_provenance.yml": {
       "sha256": "343266f6eb2f8fce3fa2a1c8e356e51c49338faeb2f0d7ffc6e75dda67b0b0b7",
       "size": 2645
     },
     "executions/recipe/work/tcre/calculate/MPI-ESM1-2-LR.nc": {
-      "sha256": "5072c7ef38ca520f9dbe290d016dfb5fba0a8cc457e64d0b880017d2123cf685",
-      "size": 28705
+      "sha256": "292eefb59797eaea5fe2ff9a91b7ccfb76b6dac4711b7c4b25b713eb5e329791",
+      "size": 28925
     },
     "executions/recipe/work/tcre/calculate/tcre.nc": {
-      "sha256": "83b852855e229a0982207e72fc19ffa80c58e3140e3b7be3eebb6ff0b4d614d5",
-      "size": 9232
+      "sha256": "8ff6240658d6dd2f41714b6d57dcfc99978c8699e913511200d19ada9061f51f",
+      "size": 9089
     },
     "output.json": {
-      "sha256": "e391a64ec1d0a7099b9301f77d465012027c26eb28425482799d4c6abb13843e",
-      "size": 2138
+      "sha256": "44d59469d30122efc5fec49b586e9ef842464bb87fde7a66fe922e8245438a30",
+      "size": 2086
     },
     "series.json": {
       "sha256": "46dfb1c1dd0dfb16ece7e53ffcb15257509093519fa76aec8d1a3fce7bca87c3",

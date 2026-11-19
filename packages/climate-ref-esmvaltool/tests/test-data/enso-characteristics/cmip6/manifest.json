@@ -36,8 +36,8 @@
       "size": 251714
     },
     "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_09pattern.png": {
-      "sha256": "b1045630cb35f5958711a359740bea419d8e8bf6198f48824228c994c51655f2",
-      "size": 181118
+      "sha256": "d8116eb575d40321a605f877b07aaf751ae687d255611f2c20edcebf2495c45f",
+      "size": 181115
     },
     "executions/recipe/plots/diagnostic_metrics/metrics_script/png/CanESM5_10lifecycle.png": {
       "sha256": "565bbcf7f9a89256f318bbe76e6b89e71a9ce0c55c6fbbed572f491547d3d64e",
@@ -64,24 +64,24 @@
       "size": 86005
     },
     "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_2.png": {
-      "sha256": "327d96d3c4ce763b0ae244965819dd617df6145c3b71b9b9f4afef3d5f03f11d",
-      "size": 537975
+      "sha256": "431ec2f56c72570e741042f4ce5cddd4e62d3bebaf8507d4725e9b3e90f5d85e",
+      "size": 544203
     },
     "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_3.png": {
       "sha256": "84272b97738aca2e7dd51ad49773ff07c7dc0fe8effbae7a4f8b646172a2434f",
       "size": 229320
     },
     "executions/recipe/plots/diagnostic_metrics/pattern_script/png/CanESM5_09pattern_level_4.png": {
-      "sha256": "33c5be741328f328cfbc9d31a8fc0022adaa98497c08ae96219c7f339ae0de59",
-      "size": 1160021
+      "sha256": "c1cd05fd11f6f64d41b82b447033bcc8c3c0a4b58e0655502fb6825bd322f791",
+      "size": 1175631
     },
     "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_2.png": {
       "sha256": "77d0c40ecf4cc4de56ddc031d585805d39f97bb8e737275cd5f7d8ee90a2baa0",
       "size": 166647
     },
     "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_11amplitude_level_3.png": {
-      "sha256": "bc735ba708f1d4f5dd79bf9cfdbf8b5d55147dc43d0ac2188fb40182a3ad6ea6",
-      "size": 518435
+      "sha256": "3153eb9d09ef36e2391bd80d5b162a2e0529553d5217f4848e4f62febc9a5108",
+      "size": 525254
     },
     "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_2.png": {
       "sha256": "43fd18ef5a5d0c34c5aaee4b8a8fcecdcabb80b60eaf48cfafd7fef93231bb5e",
@@ -96,16 +96,16 @@
       "size": 270182
     },
     "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_12seasonality_level_5.png": {
-      "sha256": "06bbebf94357d79178401f07ec7b73137365f1d9b0aa4fbd54a5934dc33681fa",
-      "size": 914361
+      "sha256": "f19143a8b6e341a7a3740d7847db1ca985ac3a71882723ec46f5e39dc2aa59b9",
+      "size": 914424
     },
     "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_2.png": {
-      "sha256": "4e6b9d3db767a10e6da8c91e4193b9c1df1fde46b54870f47b0532c2091000b7",
-      "size": 181410
+      "sha256": "ff7afff0ad4fe6364c5515c8263ad79abd19b63c22120f9f9dd50915b1e37025",
+      "size": 181419
     },
     "executions/recipe/plots/diagnostic_seas_skew_amp/seas_asym_amp_script/png/CanESM5_13asymmetry_level_3.png": {
-      "sha256": "5ab3465705c2209e68f801a472b2eb7755ea5bbdb5f7505d3262ec5b26daf675",
-      "size": 894539
+      "sha256": "8bc1e0cad188f519a55469619edb28d403333c9e0b11e82fff36d9ad5551b1f9",
+      "size": 902117
     },
     "executions/recipe/run/diagnostic_metrics/durationdiversity_script/diagnostic_provenance.yml": {
       "sha256": "6a97e39c00171cf6e3c0009f45b5ea6fd86f4f9afd6b1dd58f010f34b923feb0",
@@ -128,7 +128,7 @@
       "size": 9913
     },
     "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_09pattern.nc": {
-      "sha256": "6b111a4f5bd75b2a08c5747a48eb816b5d5fb178f6d8dfe5ff8a46981df160b6",
+      "sha256": "11c0d430c12f236f6faa5512d2c7239d385c9daeab44f41a00d12119d0f2663f",
       "size": 13318
     },
     "executions/recipe/work/diagnostic_metrics/metrics_script/CanESM5_tos_10lifecycle.nc": {
@@ -156,7 +156,7 @@
       "size": 6933
     },
     "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_09pattern.nc": {
-      "sha256": "33d1b69e23958cea446f4ed55ce3390921642ac5d933342fc66d6541a86a3e45",
+      "sha256": "1d186c4de523b04f31b467d857dc92908fbd64e13679d12e575df855a4b6f006",
       "size": 13318
     },
     "executions/recipe/work/diagnostic_metrics/metrics_script/TROPFLUX_tos_10lifecycle.nc": {
@@ -188,8 +188,8 @@
       "size": 271
     },
     "output.json": {
-      "sha256": "90cc64e3ac47483de632416dc195e15759e98e0eaea24a64c81526a37fc02aab",
-      "size": 17106
+      "sha256": "8f23027681f5f504333ef00386523e6e1c6cd57335b80352db1e01c930d21544",
+      "size": 17054
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",

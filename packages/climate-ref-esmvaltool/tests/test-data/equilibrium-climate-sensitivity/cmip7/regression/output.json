@@ -8,13 +8,13 @@
       "filename": "executions/recipe/work/ecs/calculate/ecs.nc",
       "long_name": "Equilibrium Climate Sensitivity (Gregory method) for multiple climate models."
     },
-    "executions/recipe/work/ecs/calculate/ecs_regression_CanESM5.nc": {
+    "executions/recipe/work/ecs/calculate/ecs_regression_ACCESS-ESM1-6.nc": {
       "description": "",
       "dimensions": {
         "statistic": "global annual mean anomaly of rtnt vs tas"
       },
-      "filename": "executions/recipe/work/ecs/calculate/ecs_regression_CanESM5.nc",
-      "long_name": "Global annual mean top of the atmosphere (TOA) net radiation flux anomaly N vs. global annual mean near-surface air temperature anomaly ΔT for 150 years (blue circles) of the abrupt 4x CO2 experiment for model CanESM5 (ensemble member r1i1p1f1). Anomalies are calculated relative to a pre-industrial control simulation of the same model. The solid black line corresponds to an ordinary linear regression between N and ΔT. On the top left, R2 corresponds to the coefficient of determination of the linear regression. The equilibrium climate sensitivity (ECS) is estimated as the x-intercept of the linear regression (interception of the solid and dashed black lines) divided by 2."
+      "filename": "executions/recipe/work/ecs/calculate/ecs_regression_ACCESS-ESM1-6.nc",
+      "long_name": "Global annual mean top of the atmosphere (TOA) net radiation flux anomaly N vs. global annual mean near-surface air temperature anomaly ΔT for 150 years (blue circles) of the abrupt 4x CO2 experiment for model ACCESS-ESM1-6 (ensemble member r1i1p1f1). Anomalies are calculated relative to a pre-industrial control simulation of the same model. The solid black line corresponds to an ordinary linear regression between N and ΔT. On the top left, R2 corresponds to the coefficient of determination of the linear regression. The equilibrium climate sensitivity (ECS) is estimated as the x-intercept of the linear regression (interception of the solid and dashed black lines) divided by 2."
     },
     "executions/recipe/work/ecs/calculate/lambda.nc": {
       "description": "",
@@ -37,13 +37,13 @@
   "index": "executions/recipe/index.html",
   "metrics": null,
   "plots": {
-    "executions/recipe/plots/ecs/calculate/CanESM5.png": {
+    "executions/recipe/plots/ecs/calculate/ACCESS-ESM1-6.png": {
       "description": "",
       "dimensions": {
         "statistic": "global annual mean anomaly of rtnt vs tas"
       },
-      "filename": "executions/recipe/plots/ecs/calculate/CanESM5.png",
-      "long_name": "Global annual mean top of the atmosphere (TOA) net radiation flux anomaly N vs. global annual mean near-surface air temperature anomaly ΔT for 150 years (blue circles) of the abrupt 4x CO2 experiment for model CanESM5 (ensemble member r1i1p1f1). Anomalies are calculated relative to a pre-industrial control simulation of the same model. The solid black line corresponds to an ordinary linear regression between N and ΔT. On the top left, R2 corresponds to the coefficient of determination of the linear regression. The equilibrium climate sensitivity (ECS) is estimated as the x-intercept of the linear regression (interception of the solid and dashed black lines) divided by 2."
+      "filename": "executions/recipe/plots/ecs/calculate/ACCESS-ESM1-6.png",
+      "long_name": "Global annual mean top of the atmosphere (TOA) net radiation flux anomaly N vs. global annual mean near-surface air temperature anomaly ΔT for 150 years (blue circles) of the abrupt 4x CO2 experiment for model ACCESS-ESM1-6 (ensemble member r1i1p1f1). Anomalies are calculated relative to a pre-industrial control simulation of the same model. The solid black line corresponds to an ordinary linear regression between N and ΔT. On the top left, R2 corresponds to the coefficient of determination of the linear regression. The equilibrium climate sensitivity (ECS) is estimated as the x-intercept of the linear regression (interception of the solid and dashed black lines) divided by 2."
     }
   },
   "provenance": {

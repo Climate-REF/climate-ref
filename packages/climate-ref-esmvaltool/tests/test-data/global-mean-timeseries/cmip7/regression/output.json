@@ -1,14 +1,14 @@
 {
   "data": {
-    "executions/recipe/work/timeseries/script1/tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_18500116T120000-20141216T120000.nc": {
+    "executions/recipe/work/timeseries/script1/tas_tavg-h2m-hxy-u_mon_glb_g115_ACCESS-ESM1-6_historical_r1i1p1f1_18500116T120000-20221216T120000.nc": {
       "description": "",
       "dimensions": {
         "region": "global",
         "statistic": "annual mean",
         "variable_id": "tas"
       },
-      "filename": "executions/recipe/work/timeseries/script1/tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_18500116T120000-20141216T120000.nc",
-      "long_name": "Annual global mean Near-Surface Air Temperature according to CanESM5."
+      "filename": "executions/recipe/work/timeseries/script1/tas_tavg-h2m-hxy-u_mon_glb_g115_ACCESS-ESM1-6_historical_r1i1p1f1_18500116T120000-20221216T120000.nc",
+      "long_name": "Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-6."
     }
   },
   "diagnostics": {},
@@ -23,15 +23,15 @@
   "index": "executions/recipe/index.html",
   "metrics": null,
   "plots": {
-    "executions/recipe/plots/timeseries/script1/png/tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_18500116T120000-20141216T120000.png": {
+    "executions/recipe/plots/timeseries/script1/png/tas_tavg-h2m-hxy-u_mon_glb_g115_ACCESS-ESM1-6_historical_r1i1p1f1_18500116T120000-20221216T120000.png": {
       "description": "",
       "dimensions": {
         "region": "global",
         "statistic": "annual mean",
         "variable_id": "tas"
       },
-      "filename": "executions/recipe/plots/timeseries/script1/png/tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_18500116T120000-20141216T120000.png",
-      "long_name": "Annual global mean Near-Surface Air Temperature according to CanESM5."
+      "filename": "executions/recipe/plots/timeseries/script1/png/tas_tavg-h2m-hxy-u_mon_glb_g115_ACCESS-ESM1-6_historical_r1i1p1f1_18500116T120000-20221216T120000.png",
+      "long_name": "Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-6."
     }
   },
   "provenance": {

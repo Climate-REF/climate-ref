@@ -613,6 +613,9 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
 
     @prefix.setter
     def prefix(self, path: Path) -> None:
+        if path != self._prefix:
+            # The cached executable belongs to the old prefix
+            self._conda_exe = None
         self._prefix = path
 
     def _launch_env(self, *, use_lockfiles: bool = True) -> dict[str, str]:

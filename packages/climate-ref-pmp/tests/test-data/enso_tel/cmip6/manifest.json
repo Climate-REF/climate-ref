@@ -5,7 +5,7 @@
     "output.json": "5db06db37cd6f1c07889d04d8eb09384ef05e62451bc68221a51843a300e73de",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 3,
+  "diagnostic_version": 4,
   "native": {
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl.nc": {
       "sha256": "626fcb934bf9f1a84eca6d6b335459966fdbc86d97c915b4b83d9ab0cc27228b",
@@ -172,15 +172,15 @@
       "size": 76897
     },
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json": {
-      "sha256": "2c4f49dbadf3ed3bbbd6d1d33e6f39e2f04ee2532bed656e3c2cf656de66ce45",
+      "sha256": "489ab4ed290f05d0c8b8ea6040318ac4df17dbd1323ee6292aefdd13bef40754",
       "size": 5736
     },
     "diagnostic.json": {
-      "sha256": "78d26971ffa9a6fe71327199ec16632171b4067bc5ac7ac678d2a8a6a6f92188",
+      "sha256": "00df7204109c6f7f9073e61fc9f2aed42cfe5dc0c9770b222bba2677a1ebdc36",
       "size": 3956
     },
     "output.json": {
-      "sha256": "f6d449ca6cbb3121d3e73f1ce75cf44ea49a0c523c16f633e7c00ea8400e03bd",
+      "sha256": "ab34568d3d613428c7b2088d25b53ce56ef2158cd608b5c5754da048b6304f09",
       "size": 13774
     },
     "series.json": {

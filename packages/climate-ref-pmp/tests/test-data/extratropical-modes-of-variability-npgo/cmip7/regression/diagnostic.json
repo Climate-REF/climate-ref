@@ -39,7 +39,7 @@
       "monthly": {}
     },
     "source_id": {
-      "ACCESS-ESM1-5": {}
+      "ACCESS-ESM1-6": {}
     },
     "statistic": {
       "bias": {},
@@ -64,7 +64,7 @@
   "RESULTS": {
     "model": {
       "cmip7": {
-        "ACCESS-ESM1-5": {
+        "ACCESS-ESM1-6": {
           "r1i1p1f1": {
             "historical": {
               "HadISST-1-1": {
@@ -77,53 +77,53 @@
                       "best_matching_model_eofs__cor": 2,
                       "best_matching_model_eofs__rms": 2,
                       "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 2,
-                      "period": "1900-2005"
+                      "period": "2000-2005"
                     },
                     "cbf": {
-                      "bias": -0.002723462,
-                      "bias_glo": -0.005107244,
-                      "cor": 0.8407827,
-                      "cor_glo": 0.6719568,
-                      "frac": 0.09979947,
-                      "frac_cbf_regrid": 0.1771993,
-                      "mean": -2.397326e-16,
-                      "mean_glo": -0.05240517,
-                      "rms": 0.1551321,
-                      "rms_glo": 0.08809065,
-                      "rmsc": 0.5643,
-                      "rmsc_glo": 0.8099916,
-                      "stdv_pc": 0.1771278,
-                      "stdv_pc_ratio_to_obs": 1.162984
+                      "bias": -0.0003899936,
+                      "bias_glo": -0.04750453,
+                      "cor": 0.8230755,
+                      "cor_glo": 0.4358253,
+                      "frac": 0.1184289,
+                      "frac_cbf_regrid": 0.1971374,
+                      "mean": -2.713695e-16,
+                      "mean_glo": -0.08919937,
+                      "rms": 0.144079,
+                      "rms_glo": 0.1484424,
+                      "rmsc": 0.5948522,
+                      "rmsc_glo": 1.062238,
+                      "stdv_pc": 0.1582586,
+                      "stdv_pc_ratio_to_obs": 1.039093
                     },
                     "eof1": {
-                      "bias": -0.01766399,
-                      "bias_glo": 0.08186481,
-                      "cor": 0.1757133,
-                      "cor_glo": 0.1580377,
-                      "frac": 0.2065715,
-                      "mean": -1.107864e-17,
-                      "mean_glo": 0.0347633,
-                      "rms": 0.4021686,
-                      "rms_glo": 0.1883846,
-                      "rmsc": 1.283968,
-                      "rmsc_glo": 1.297661,
-                      "stdv_pc": 0.3114754,
-                      "stdv_pc_ratio_to_obs": 2.045082
+                      "bias": -0.0210475,
+                      "bias_glo": 0.07651066,
+                      "cor": 0.041061,
+                      "cor_glo": 0.1259707,
+                      "frac": 0.2183759,
+                      "mean": 3.84897e-17,
+                      "mean_glo": 0.02985448,
+                      "rms": 0.3822157,
+                      "rms_glo": 0.2284577,
+                      "rmsc": 1.384875,
+                      "rmsc_glo": 1.322142,
+                      "stdv_pc": 0.276427,
+                      "stdv_pc_ratio_to_obs": 1.814961
                     },
                     "eof2": {
-                      "bias": -0.001959493,
-                      "bias_glo": -0.01503828,
-                      "cor": 0.6783562,
-                      "cor_glo": 0.5813368,
-                      "frac": 0.1055681,
-                      "mean": -2.688569e-16,
-                      "mean_glo": -0.06201285,
-                      "rms": 0.2080474,
-                      "rms_glo": 0.09838759,
-                      "rmsc": 0.8020522,
-                      "rmsc_glo": 0.9150554,
-                      "stdv_pc": 0.2226666,
-                      "stdv_pc_ratio_to_obs": 1.461982
+                      "bias": 9.322702e-05,
+                      "bias_glo": -0.06930641,
+                      "cor": 0.6392209,
+                      "cor_glo": 0.3246184,
+                      "frac": 0.1400423,
+                      "mean": -2.697706e-16,
+                      "mean_glo": -0.1091695,
+                      "rms": 0.208626,
+                      "rms_glo": 0.1854059,
+                      "rmsc": 0.8494458,
+                      "rmsc_glo": 1.162223,
+                      "stdv_pc": 0.2213644,
+                      "stdv_pc_ratio_to_obs": 1.453432
                     }
                   }
                 }

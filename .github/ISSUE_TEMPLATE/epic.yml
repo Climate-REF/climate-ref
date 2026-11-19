@@ -1,0 +1,64 @@
+name: Epic
+description: Propose a larger piece of work for the REF
+title: "Epic: "
+type: Epic
+projects: ["Climate-REF/10"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        An epic describes a larger need from the REF and who it is for.
+        See the [REF Roadmap](https://github.com/orgs/Climate-REF/projects/10) for how epics are tracked.
+  - type: textarea
+    id: who
+    attributes:
+      label: Who needs this
+      description: The people or groups who benefit.
+      placeholder: Modelling centres submitting to CMIP7.
+    validations:
+      required: true
+  - type: textarea
+    id: need
+    attributes:
+      label: What they need to be able to do
+      description: What becomes possible for them once this is done.
+      placeholder: See AFT diagnostic results for their CMIP7 submissions as soon as the data is published.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why now
+      description: The need or opportunity behind this, and any deadline.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Conditions a user could check without reading code.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      value: |
+        -
+  - type: dropdown
+    id: origin
+    attributes:
+      label: Origin
+      options:
+        - Governance panel
+        - Sponsored
+        - Community
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Links
+      description: The RFC or governance decision, related issues and any background.

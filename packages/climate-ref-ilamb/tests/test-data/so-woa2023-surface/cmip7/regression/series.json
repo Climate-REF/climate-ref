@@ -1,1 +1,93 @@
-[]
+[
+  {
+    "attributes": {
+      "long_name": "Sea Surface Salinity",
+      "standard_name": "sea_surface_salinity",
+      "units": "psu"
+    },
+    "dimensions": {
+      "experiment_id": "historical",
+      "grid_label": "g118",
+      "member_id": "r1i1p1f1",
+      "metric": "cycle",
+      "reference_source_id": "WOA2023",
+      "region": "None",
+      "source_id": "ACCESS-ESM1-6"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "value_long_name": "Sea Surface Salinity",
+    "value_units": "psu",
+    "values": [
+      34.69202,
+      34.69218,
+      34.6994,
+      34.70496,
+      34.70048,
+      34.68065,
+      34.65941,
+      34.65188,
+      34.66444,
+      34.67772,
+      34.68636,
+      34.69017
+    ]
+  },
+  {
+    "attributes": {
+      "long_name": "Objectively analyzed mean fields for sea_water_practical_salinity at standard depth levels.",
+      "standard_name": "sea_water_practical_salinity",
+      "units": "psu"
+    },
+    "dimensions": {
+      "metric": "cycle",
+      "reference_source_id": "WOA2023",
+      "region": "None"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "kind": "reference",
+    "value_long_name": "Objectively analyzed mean fields for sea_water_practical_salinity at standard depth levels.",
+    "value_units": "psu",
+    "values": [
+      34.60616,
+      34.62864,
+      34.64236,
+      34.64625,
+      34.6455,
+      34.61362,
+      34.58272,
+      34.56712,
+      34.58241,
+      34.59583,
+      34.60441,
+      34.6098
+    ]
+  }
+]

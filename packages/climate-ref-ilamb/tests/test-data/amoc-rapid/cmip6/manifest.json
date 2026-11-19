@@ -1,0 +1,37 @@
+{
+  "catalog_hash": "4f5835b13d6da322b4199f90f0eec764e26d670d",
+  "committed": {
+    "diagnostic.json": "a340894df4fc8e08243c0aed915a17bff03c879e0ac600df6bd121538bb449b9",
+    "output.json": "cc643d1dd8f795a8e3b9238e8fc4f8ba3901d7f8649c081a4845d75446b61a88",
+    "series.json": "25d5bf6593831d4894fa2758f6074f535a75eab91800a1f9d8c55e8c4f64ffe4"
+  },
+  "diagnostic_version": 5,
+  "native": {
+    "CanESM5.csv": {
+      "sha256": "0aaf110c2cb3f7c5a56127a85bd19aea330b7fe9a2f5dedc9f376d54c9b37cab",
+      "size": 476
+    },
+    "CanESM5.nc": {
+      "sha256": "a0eb2d7708e4b86382cbb007befb8659e4e69b1c7d7c95ca2f840143ac95536b",
+      "size": 47693
+    },
+    "Reference.nc": {
+      "sha256": "2d87d3062b63b25e5ff4fc4dddb42012de1ee20d2b2e212ede5968f19225497f",
+      "size": 25357
+    },
+    "diagnostic.json": {
+      "sha256": "1c980a60b8874b9a7e6f7344dba87a4fdfb307807fde8a9c89cbed9ca106c101",
+      "size": 1808
+    },
+    "output.json": {
+      "sha256": "6973f6e71c5df2bbb5abe621c16b9578064df4abd22481d5a7991b0c18802685",
+      "size": 800
+    },
+    "series.json": {
+      "sha256": "2726d188973730a3ed2f1ce4c089b5f5b3a17b9aff066165cc0cc2a74617be9b",
+      "size": 15330
+    }
+  },
+  "schema": 2,
+  "test_case_version": 1
+}

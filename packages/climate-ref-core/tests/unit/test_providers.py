@@ -369,6 +369,21 @@ class TestCondaDiagnosticProvider:
         assert result == conda_exe
         provider._install_conda.assert_not_called()
 
+    def test_prefix_change_clears_cached_conda_exe(self, tmp_path, provider):
+        provider._conda_exe = tmp_path / "conda" / "micromamba"
+
+        provider.prefix = tmp_path / "other-conda"
+
+        assert provider._conda_exe is None
+
+    def test_same_prefix_keeps_cached_conda_exe(self, tmp_path, provider):
+        conda_exe = tmp_path / "conda" / "micromamba"
+        provider._conda_exe = conda_exe
+
+        provider.prefix = tmp_path / "conda"
+
+        assert provider._conda_exe == conda_exe
+
     def test_no_module(self, provider):
         with pytest.raises(ValueError, match=r"Unable to determine the provider module.*"):
             provider.get_environment_file()

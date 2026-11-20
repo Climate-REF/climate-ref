@@ -107,6 +107,7 @@ def expected_commands() -> list[str]:
         "diagnostics",
         "executions",
         "providers",
+        "solves",
         "test-cases",
         "celery",
     ]

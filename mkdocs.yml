@@ -38,6 +38,9 @@ nav:
       - how-to-guides/diagnose-a-deployment.md
       - how-to-guides/running-diagnostics-locally.py
       - how-to-guides/adding_custom_diagnostics.md
+      - how-to-guides/adding-esmvaltool-diagnostics.md
+      - how-to-guides/adding-pmp-diagnostics.md
+      - how-to-guides/adding-ilamb-diagnostics.md
       - how-to-guides/testing-diagnostics.md
       - how-to-guides/docker_deployment.md
   - Further background:

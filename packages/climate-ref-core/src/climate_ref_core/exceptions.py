@@ -74,6 +74,10 @@ class CondaCommandError(ExecutionError):
         super().__init__(complete_msg)
 
 
+class CondaCommandTimeoutError(CondaCommandError):
+    """Exception raised when a conda command exceeds its time limit and is killed"""
+
+
 class DiagnosticError(RefException):
     """Error from diagnostic computing"""
 

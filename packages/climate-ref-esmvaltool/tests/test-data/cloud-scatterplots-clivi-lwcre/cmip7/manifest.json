@@ -1,12 +1,49 @@
 {
-  "catalog_hash": "95a11846b3a610fa35edd5a09988340a1bf668a6",
+  "catalog_hash": "6f5a011cbf983eadf5a5cad3b9bffe45e092e804",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "7b1b491e2e07e49030f936423802a6fa24e58575c8837e052517231e30899089",
+    "output.json": "4e0351c9e17eb4313b98fb35411c8082a2d45e444b169acccea348dda269a4e8",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 1,
-  "native": {},
+  "diagnostic_version": 2,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "4597373a4b887f7f2b066252dfa5956e057755ae94968a281e58e635ed34ac1f",
+      "size": 14761
+    },
+    "executions/recipe/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014.png": {
+      "sha256": "450706c8d07e87b708681317970eff00a6a0adf7b9fd9d1573648f9f9ead9c66",
+      "size": 93248
+    },
+    "executions/recipe/run/plot_joint_clivi_lwcre_model/plot/diagnostic_provenance.yml": {
+      "sha256": "55d458db61247bb1fbe81274a6efa83adc263da32b8b09e4f305f735f24aa6de",
+      "size": 2618
+    },
+    "executions/recipe/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014_clivi_histogram.nc": {
+      "sha256": "79e5f80721b293905bbc0d01d3a355ab41c8597c28d4e9d699684148f5c3afb8",
+      "size": 8875
+    },
+    "executions/recipe/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014_clivi_lwcre_histogram.nc": {
+      "sha256": "f6a9d853bdb1aca4b1bae4ef0dce685154382153fb3a093e0eda39573fb9f776",
+      "size": 13323
+    },
+    "executions/recipe/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014_lwcre_histogram.nc": {
+      "sha256": "88681b99a5573190869bbb3b6c952a53b6c65feb434d1fabb00b69dc563723ba",
+      "size": 8875
+    },
+    "output.json": {
+      "sha256": "70235ee757f500a8dce6447647fb597d8ad2c972104365ec5fed9e0726b10f2c",
+      "size": 2840
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

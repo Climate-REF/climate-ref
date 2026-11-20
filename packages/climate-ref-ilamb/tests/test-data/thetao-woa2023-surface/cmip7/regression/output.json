@@ -1,16 +1,16 @@
 {
   "data": {
-    "CanESM5.csv": {
+    "ACCESS-ESM1-6.csv": {
       "description": "Scalar and time-series data produced by ILAMB.",
       "dimensions": null,
-      "filename": "CanESM5.csv",
-      "long_name": "CanESM5.csv"
+      "filename": "ACCESS-ESM1-6.csv",
+      "long_name": "ACCESS-ESM1-6.csv"
     },
-    "CanESM5.nc": {
+    "ACCESS-ESM1-6.nc": {
       "description": "Scalar and time-series data produced by ILAMB.",
       "dimensions": null,
-      "filename": "CanESM5.nc",
-      "long_name": "CanESM5.nc"
+      "filename": "ACCESS-ESM1-6.nc",
+      "long_name": "ACCESS-ESM1-6.nc"
     },
     "Reference.nc": {
       "description": "Scalar and time-series data produced by ILAMB.",
@@ -25,10 +25,10 @@
       "description": "Page displaying scalars and plots from the ILAMB execution.",
       "dimensions": {
         "experiment_id": "historical",
-        "grid_label": "gn",
+        "grid_label": "g118",
         "member_id": "r1i1p1f1",
         "reference_source_id": "WOA2023",
-        "source_id": "CanESM5"
+        "source_id": "ACCESS-ESM1-6"
       },
       "filename": "index.html",
       "long_name": "Results page"
@@ -37,57 +37,113 @@
   "index": "index.html",
   "metrics": null,
   "plots": {
-    "CanESM5_None_bias.png": {
+    "ACCESS-ESM1-6_None_bias.png": {
       "description": "",
       "dimensions": {
         "experiment_id": "historical",
-        "grid_label": "gn",
+        "grid_label": "g118",
         "member_id": "r1i1p1f1",
         "reference_source_id": "WOA2023",
         "region": "None",
-        "source_id": "CanESM5",
+        "source_id": "ACCESS-ESM1-6",
         "statistic": "Bias"
       },
-      "filename": "CanESM5_None_bias.png",
-      "long_name": "The bias for CanESM5"
+      "filename": "ACCESS-ESM1-6_None_bias.png",
+      "long_name": "The bias for ACCESS-ESM1-6"
     },
-    "CanESM5_None_biasscore.png": {
+    "ACCESS-ESM1-6_None_biasscore.png": {
       "description": "",
       "dimensions": {
         "experiment_id": "historical",
-        "grid_label": "gn",
+        "grid_label": "g118",
         "member_id": "r1i1p1f1",
         "reference_source_id": "WOA2023",
         "region": "None",
-        "source_id": "CanESM5",
+        "source_id": "ACCESS-ESM1-6",
         "statistic": "Bias score"
       },
-      "filename": "CanESM5_None_biasscore.png",
-      "long_name": "The bias score for CanESM5"
+      "filename": "ACCESS-ESM1-6_None_biasscore.png",
+      "long_name": "The bias score for ACCESS-ESM1-6"
     },
-    "CanESM5_None_mean.png": {
+    "ACCESS-ESM1-6_None_cycle.png": {
       "description": "",
       "dimensions": {
         "experiment_id": "historical",
-        "grid_label": "gn",
+        "grid_label": "g118",
         "member_id": "r1i1p1f1",
         "reference_source_id": "WOA2023",
         "region": "None",
-        "source_id": "CanESM5",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Annual cycle"
+      },
+      "filename": "ACCESS-ESM1-6_None_cycle.png",
+      "long_name": "The annual cycle for ACCESS-ESM1-6"
+    },
+    "ACCESS-ESM1-6_None_cyclescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g118",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Annual cycle score"
+      },
+      "filename": "ACCESS-ESM1-6_None_cyclescore.png",
+      "long_name": "The annual cycle score for ACCESS-ESM1-6"
+    },
+    "ACCESS-ESM1-6_None_mean.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g118",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "source_id": "ACCESS-ESM1-6",
         "statistic": "Period Mean"
       },
-      "filename": "CanESM5_None_mean.png",
-      "long_name": "The period mean for CanESM5"
+      "filename": "ACCESS-ESM1-6_None_mean.png",
+      "long_name": "The period mean for ACCESS-ESM1-6"
+    },
+    "ACCESS-ESM1-6_None_shift.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g118",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Shift in maximum month"
+      },
+      "filename": "ACCESS-ESM1-6_None_shift.png",
+      "long_name": "The shift in maximum month for ACCESS-ESM1-6"
+    },
+    "ACCESS-ESM1-6_None_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g118",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "source_id": "ACCESS-ESM1-6",
+        "statistic": "Maximum month"
+      },
+      "filename": "ACCESS-ESM1-6_None_tmax.png",
+      "long_name": "The maxmimum month for ACCESS-ESM1-6"
     },
     "None_None_taylor.png": {
       "description": "",
       "dimensions": {
         "experiment_id": "historical",
-        "grid_label": "gn",
+        "grid_label": "g118",
         "member_id": "r1i1p1f1",
         "reference_source_id": "WOA2023",
         "region": "None",
-        "source_id": "CanESM5",
+        "source_id": "ACCESS-ESM1-6",
         "statistic": "Taylor diagram"
       },
       "filename": "None_None_taylor.png",
@@ -103,6 +159,17 @@
       },
       "filename": "Reference_None_mean.png",
       "long_name": "The period mean for the reference data"
+    },
+    "Reference_None_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Maximum month"
+      },
+      "filename": "Reference_None_tmax.png",
+      "long_name": "The maxmimum month for the reference data"
     }
   },
   "provenance": {

@@ -21,8 +21,10 @@ permissions:
   contents: read
   pull-requests: write
 
+# A fixed name rather than `github.workflow`, which resolves to the caller's name when the mint
+# workflow calls this one, putting both in the same group and deadlocking the run.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: regression-diff-report-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

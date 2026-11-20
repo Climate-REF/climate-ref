@@ -8,11 +8,11 @@
   "diagnostic_version": 6,
   "native": {
     "diagnostic.json": {
-      "sha256": "4649f0fc44a1b523f7445091d4972fe796b1e7e004a77bb40f45f676d27493d0",
+      "sha256": "bea7babc74770e38d87f37133e199d0c21039c648a18bc445ee80609dc698e0f",
       "size": 5526
     },
     "output.json": {
-      "sha256": "0e0320dbe85909eaa900a14dfde12db05f677705e9190dbb26964ee8c2c7be83",
+      "sha256": "e9497693359810e141955b37d77bb9faa73129f5a7ea0a9bb887f9efc0f43df6",
       "size": 5663
     },
     "series.json": {
@@ -40,7 +40,7 @@
       "size": 361968
     },
     "ts_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "d52452fdc5dfb43470e0ed263fae69229b16ac967a1eb433d3ffedc97295f606",
+      "sha256": "32a92b31006659b9bf8cb8ad98f7e5016181a2ba379fd895aa3fa31f389b9557",
       "size": 12565
     },
     "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {

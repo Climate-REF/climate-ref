@@ -1,142 +1,142 @@
 {
-  "catalog_hash": "5c36fb35d18197b0b59d23f8c5af96fd52aeedc0",
+  "catalog_hash": "b6c3572c1be69fe99e6038299beebb09b42778c5",
   "committed": {
-    "diagnostic.json": "09da064e46489f7654e17d7f79652a5ec499bf89e231e6f78a1992cdebdabd3c",
-    "output.json": "ad2628f89679bb43166e9467191473e9638aae23dbb2dc517a59b6f0473858f9",
+    "diagnostic.json": "7b81cc15e9b48f5f1c5e8e793b490a6171845cc7f2abfff2932db85555c9b970",
+    "output.json": "88e9c10d7a3b89404b24eb1dd15b2acd9922cff0e065603d36bc7af21df06a5a",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 3,
+  "diagnostic_version": 4,
   "native": {
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse.nc": {
-      "sha256": "832f9964b415ed1034555c3400e82257d3c05be89ca0a0bdd6f4929da73d70ee",
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_BiasSstLonRmse.nc": {
+      "sha256": "e54d15b24928accda33436a710c44f708aca0479c38b80fc8c79e8f5df6b1182",
       "size": 91740
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown01.png": {
-      "sha256": "4615829993f737316067d7e35ae211755b5f795ae4b32738f0ee1fdf9da36a7e",
-      "size": 33139
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown01.png": {
+      "sha256": "b1e1406ab8b421a0ecebdf6e9a4dee1dab908808f95fa7137e5463b049459914",
+      "size": 33697
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown02.png": {
-      "sha256": "3d51c7bcff980b4274b6eb3b3c6b05cd107262f34e2d338e8950ad6bd7a67ff7",
-      "size": 44431
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown02.png": {
+      "sha256": "e7b593a74da923186c7904896651d0ef9c6bdfb1a3639d3292cb40bad2861e33",
+      "size": 44569
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse.nc": {
-      "sha256": "b1a567c014fcbc694480cb0b5a7c04a14605be6d832847e1366cd7c3bd7587d7",
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_BiasTauxLonRmse.nc": {
+      "sha256": "3629e929016964ced5d437612f1126e4b43ebaf2d60a3e4878ae8b3b123d5c5b",
       "size": 65075
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown01.png": {
-      "sha256": "ecc3982ca21f3b5597e029edf7ff97a497d0ec51a7f6c9dd7a87b0856c2fb194",
-      "size": 36846
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown01.png": {
+      "sha256": "760465245403fb9c9a425a88a6c0ad13d700219f70f7ea119ae2991decf4e225",
+      "size": 37801
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown02.png": {
-      "sha256": "799dff7178180922c252b65a517750fbb9dfd92181f3b9545a6752ce98b4a031",
-      "size": 51030
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown02.png": {
+      "sha256": "4575ec4373c315f76f1e0b63d58a216d80d0af0c35039070f507879926e5271d",
+      "size": 51089
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl.nc": {
-      "sha256": "0e8315877687750e345106bdadc34850cf0934f36a2d95cc173731d409bb6fc7",
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoAmpl.nc": {
+      "sha256": "fc62f110cf6ab63bdb89d5c9ab5a3d2b825e0c9fd6e2772703b255da0f32a3c2",
       "size": 101496
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown01.png": {
-      "sha256": "fc0386bead25ec785ac8cd4f60e62b4aa1fe231c464b0c06791ea4064f82a709",
-      "size": 25280
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown01.png": {
+      "sha256": "754a2b10e0f2a6fc187d7718646858334a96e4ce5938c0dda576f72fb9cb8007",
+      "size": 27893
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown02.png": {
-      "sha256": "43433fbcaccf383356e1581b126429319fb49a2636289e3361cbf368969f19c0",
-      "size": 33974
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown02.png": {
+      "sha256": "dc5c59aec74dd98b8ec771ef5222772166784672e9adf0bc8f2da68a5abc973d",
+      "size": 33244
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown03.png": {
-      "sha256": "07c45facdb86292e75e8500c190d7e32580eefeb35c86b06fb415f768c1240d8",
-      "size": 51076
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown03.png": {
+      "sha256": "a9ec6ddf028f727393b78680cdf59f84eb25b6d591818503862b900582871ad5",
+      "size": 51803
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux.nc": {
-      "sha256": "4148736985c37da19cf51abb3807f83f423e7673cb733c38d3ee2ebb9b6675a6",
-      "size": 205815
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoFbSstTaux.nc": {
+      "sha256": "7465b2b482d434c5a057c6b039584af58b2cb86fb5f32d53c54a452728cb6175",
+      "size": 176916
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown01.png": {
-      "sha256": "90b21600aaaa2aa2b882f5e3596c2075192a9a6028d42481c0c764e646c8f703",
-      "size": 52870
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown01.png": {
+      "sha256": "7dbbce99d8878cb03670b4fc359d6f92f7e495d817607a4a32d4c10d90442788",
+      "size": 49033
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown02.png": {
-      "sha256": "7304a1c6a07a63078106bacf455c709888020a43b95164ea27d6ecac6f795703",
-      "size": 70207
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown02.png": {
+      "sha256": "a6347a88d2327666fca38e46c2d4735fdea4fe03f2599ddaaffe14bb45b5bae6",
+      "size": 68356
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown03.png": {
-      "sha256": "8819858cf27042059d93e430e52a79fbdf11a65463b69ca45b13b391b5ae2e95",
-      "size": 46368
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown03.png": {
+      "sha256": "fa7e4a6adbaf1d3125763dcd099b294337e0721a3fc0fe83824d9d2f582e88a9",
+      "size": 46367
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown04.png": {
-      "sha256": "a6d744fd70bc0c6be70a5659c4bace5e9cddd7c16f4bebc44aadb7cc40dd9553",
-      "size": 83019
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown04.png": {
+      "sha256": "41c26a4964ef69ffe9e4aac61f828e9ab67d4f83b636fe529f8be5c5bb58306d",
+      "size": 87203
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality.nc": {
-      "sha256": "807c92ab011f551e94e92fe0f729bb3f5222a3ad1630b11b1ed2fd58c2698376",
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSeasonality.nc": {
+      "sha256": "0700b5ed0b42d76062d2c0512c7adb466f85129e748a9510c5efdd900b6ec31f",
       "size": 233422
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown01.png": {
-      "sha256": "057e2f3142c6e9e54e9043aa2f1cf7d7adefb3d6d031ddfe2b29c70a9f34d41e",
-      "size": 28302
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown01.png": {
+      "sha256": "f30e76c14c9b46c00a8e2605f1ea91218acba24a7b2a826c7dd52291ff97464a",
+      "size": 26987
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown02.png": {
-      "sha256": "5a9a5673a9e2506ea605682bb1c4e0bf278098e0a6c4d677222a2c63fd992120",
-      "size": 35461
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown02.png": {
+      "sha256": "0528affbfb562cfb723511eb4b12018fb41a703331627a7fac1a15c034e32e86",
+      "size": 35964
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown03.png": {
-      "sha256": "c8561c3c5c988aa130a5202ce08aa4f496dec48c6c03ea7087f44e7be1690865",
-      "size": 42861
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown03.png": {
+      "sha256": "2f85cb0fb2317fcb76711c4f9d9ebb9847ed743ba92dae398166bf9a522d5451",
+      "size": 44320
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown04.png": {
-      "sha256": "d4e1fb80073e5d95a2c9b95d335757cb4cddc086ff68a892a06faa7b56ec0eab",
-      "size": 37853
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown04.png": {
+      "sha256": "765e553902b611bc563dda45d24191f5490ee671f940000f294a2de9b8113284",
+      "size": 38615
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown05.png": {
-      "sha256": "79e8dd5498f998c1800d9466ed035b617431a3e55ef45879e09b286c7ec4068a",
-      "size": 75410
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown05.png": {
+      "sha256": "ac0625bc054095b4e93822420ceeead13d64bc9af7d25d73748176aa73d1481a",
+      "size": 77910
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse.nc": {
-      "sha256": "796ced7e8eaee2ad1e9ed6da1b806e434ad86be4d0d377b132daca12433886c5",
-      "size": 290940
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstLonRmse.nc": {
+      "sha256": "b79728b42927cd28a08f4bad32854b26f40606be9d829d6f66aae3e6617ebbf8",
+      "size": 285580
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown01.png": {
-      "sha256": "41ef753a427636ced813ec5fb10442180ec796c5eb7f8c1666de641b270b816c",
-      "size": 33640
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown01.png": {
+      "sha256": "9f74fecc2bde90084a25f4c0424971c6ae8cbcad49d0415a645804471e087821",
+      "size": 33607
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown02.png": {
-      "sha256": "e5f77e6a7e3d1926efe2a5cd6c7e9e6153fc9bfd02d8df29336a450c7e080a23",
-      "size": 55181
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown02.png": {
+      "sha256": "a0eb65283f89c481b95aa7a123aa3a64329ab82e9186af344343c2f37c268d76",
+      "size": 55290
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown03.png": {
-      "sha256": "10a88b1347802285c9bc9efac96f0a6949a53cbeb3e56eb6e542c4fe7ef8eaf3",
-      "size": 37358
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown03.png": {
+      "sha256": "53bbc9c777fdc61d31e19687047ab5f84b1b6d825845ff79ae916eeb5f36c53c",
+      "size": 38474
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown04.png": {
-      "sha256": "e8c2f8b5b1cab135f0b6416a3a08a4778d1c042b38d2114fbfa9384253ab5d2e",
-      "size": 76897
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown04.png": {
+      "sha256": "297af3d649497882e2bd9247be0b2ec46ef0ffc18c58458a3660a6867a497345",
+      "size": 79021
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew.nc": {
-      "sha256": "8a8e14ea7d327d8ef2e54768e386ea2b03e4539b826be0b7802cf47129e0c32d",
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstSkew.nc": {
+      "sha256": "a0196727dc0070fff417dbbd71568ae9b55634a2f98440c47d5bf2eb3fa33dcf",
       "size": 101429
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown01.png": {
-      "sha256": "698f7342bb78d49195da24aa6ab17047a2ff1ddedbe593ce8ff4226ea05acf9b",
-      "size": 26052
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown01.png": {
+      "sha256": "915f2e676d6cc5ab2bc9c74bcfb0d1e19bf5b4b8325c311af4719b5d797e5536",
+      "size": 25512
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown02.png": {
-      "sha256": "76edf87e770f69d44bd5d728db0e94c7144b14c5e3d941eff490fd43f0b99286",
-      "size": 34295
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown02.png": {
+      "sha256": "3e9c67c5898ba330c0524a1e823c44ac9d8ea421f784c4ecd71c8a536f49e144",
+      "size": 30998
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown03.png": {
-      "sha256": "5983b141874fa7df09d0017721d6c559e4667f63be310d3ce658570c7b8d0f5f",
-      "size": 54720
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown03.png": {
+      "sha256": "28eb99f508993aeb85b4db502590a2fb686763770e69facf0af243964115f5a9",
+      "size": 57323
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json": {
-      "sha256": "2be30404b725b05dbc1aa007d205bdd46fb5773ea2f66ad7777e84f0f99f3823",
-      "size": 8672
+    "ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1_cmec.json": {
+      "sha256": "e7b92821145736f063d7a8b28f325e4a08b1da7b442e81777f1476e45645d963",
+      "size": 8673
     },
     "diagnostic.json": {
-      "sha256": "0f0e23e01d05cfad76b5655307d4f5a3ff50e6c0e426c33402cf1fb1c813401a",
-      "size": 3439
+      "sha256": "8c4b4baeb59700ff48d026e32b0c1a6fe23cea0f2997090295f9ea51cff2b6f1",
+      "size": 3454
     },
     "output.json": {
-      "sha256": "6a9584f2969bc4a69ed7d9799888b83e28f440e2fe0edf885ecddf27487a5f5d",
+      "sha256": "c68fc267079896adcfcf82fae6aa2266d80f6da5a1e362868440b2e638843bd3",
       "size": 10391
     },
     "series.json": {
@@ -145,5 +145,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 8
+  "test_case_version": 9
 }

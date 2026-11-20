@@ -8,11 +8,11 @@
   "diagnostic_version": 5,
   "native": {
     "CanESM5.csv": {
-      "sha256": "be7c90c9b65b6e3473a5aa455ca02bee20b2ad11e6cf6873b210dd75310d64f4",
-      "size": 1664
+      "sha256": "e691ac0c5ddb7453fb919a7a83077c309b760456c41f43d881fd3ced2728b12f",
+      "size": 1665
     },
     "CanESM5.nc": {
-      "sha256": "81356a552ff8894fafb456bcdb32e53fbfb1782bc65527b6ecd09851c8a422a1",
+      "sha256": "c139413677f62ceb22c92be268e5b3ead16e65e8ec5b230386e93a2efad26ed0",
       "size": 17572661
     },
     "CanESM5_global_bias.png": {
@@ -96,12 +96,12 @@
       "size": 57703
     },
     "None_global_taylor.png": {
-      "sha256": "362647a749343d2ecfddeeba90cb1cb195a98485b31a383c311a768431cac6b2",
-      "size": 101170
+      "sha256": "55f613f3050075a0e582e98e06de6f77746b9a343f76a91ab3eb622978b31011",
+      "size": 101167
     },
     "None_tropical_taylor.png": {
-      "sha256": "9b9f50cd71afba7053557374bdc7eb33439a51779424ac0b79a69dba54891df0",
-      "size": 101313
+      "sha256": "29540efee36dad66e6c59fd48ce2bcda51d61d6117232e79f241d2ba9805b7e6",
+      "size": 101311
     },
     "Reference.nc": {
       "sha256": "2b14fd871123b23dd65d9476b71039ef0d24d3bc4b661813dc913d17f725ea31",
@@ -124,12 +124,12 @@
       "size": 24935
     },
     "diagnostic.json": {
-      "sha256": "0f6d004fc0bddec424d56924465a856993a9cd6b11812d71da3ab8f9144421c7",
-      "size": 3734
+      "sha256": "f76d2f01789148397abc28a7a0c588becbf90e7c5091943ac6ae04bb2e4aa40b",
+      "size": 3735
     },
     "index.html": {
-      "sha256": "de1da3b59e73e25e58df649ccfde2bb30a8245999db64372b560820f2f12c982",
-      "size": 19544
+      "sha256": "118a32e5cde077a427faf58aea11cc471332926104a0a11e9b5b68358b356da5",
+      "size": 19546
     },
     "output.json": {
       "sha256": "cde57b3a512c7080a0ae62387ed65136a57ab1b6e23441c4c802b81f11390e0a",

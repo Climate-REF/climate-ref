@@ -10,7 +10,6 @@ from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 from climate_ref_core.esgf.cmip7 import CMIP7Request
-from climate_ref_core.esgf.cmip7_converted import ConvertedCMIP7Request
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -151,7 +150,7 @@ toz_test_spec = TestDataSpecification(
                         "region": "glb",
                     },
                     remove_ensembles=True,
-                    time_span=("1950", "2021"),
+                    time_span=("1950-01", "2021-12"),
                 ),
                 Obs4MIPsRequest(
                     slug="obs4mips",
@@ -408,24 +407,24 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    # Published CMIP7 o3 cannot be compared with obs yet:
-                    # https://github.com/ESMValGroup/ESMValCore/issues/3093
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
-                            "source_id": "GFDL-ESM4",
+                            "source_id": "UKESM1-3-LL",
                             "variable_id": "o3",
-                            "branded_variable": [
-                                "o3_tavg-p19-hxy-air",
-                            ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "branding_suffix": ["tavg-p19-hxy-air"],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1990", "2001"),
+                        time_span=("1990-01", "2001-12"),
                     ),
+                ),
+                xfail=(
+                    "ESMValCore cannot compare published CMIP7 o3 with observations yet: "
+                    "https://github.com/ESMValGroup/ESMValCore/issues/3093"
                 ),
             ),
         ),

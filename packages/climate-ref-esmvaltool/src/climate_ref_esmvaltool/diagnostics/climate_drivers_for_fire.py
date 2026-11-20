@@ -8,7 +8,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
@@ -180,30 +180,39 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    # The recipe runs CMIP7 over 2002-2021, but real CanESM5 `historical` data
-                    # ends in 2014, so extend_historical_to repeats 2014 out to 2021-12.
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["historical"],
-                            "source_id": "CanESM5",
-                            "variable_id": [
-                                "cVeg",
-                                "hurs",
-                                "pr",
-                                "sftlf",
-                                "tas",
-                                "tasmax",
-                                "treeFrac",
-                                "vegFrac",
+                            "source_id": "UKESM1-3-LL",
+                            "variable_id": ["cVeg", "hurs", "pr", "tas", "treeFrac", "vegFrac"],
+                            "branding_suffix": [
+                                "tavg-h2m-hxy-u",
+                                "tavg-u-hxy-lnd",
+                                "tavg-u-hxy-u",
+                                "tmaxavg-h2m-hxy-u",
                             ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "mon",
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1995", "2014"),
-                        extend_historical_to=(2021, 12),
+                        time_span=("2002-01", "2021-12"),
+                    ),
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
+                    CMIP7Request(
+                        slug="cmip7-fx",
+                        facets={
+                            "experiment_id": ["historical"],
+                            "source_id": "UKESM1-3-LL",
+                            "variable_id": ["sftlf"],
+                            "branding_suffix": ["ti-u-hxy-u"],
+                            "variant_label": "r1i1p1f2",
+                            "frequency": "fx",
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
                     ),
                 ),
             ),

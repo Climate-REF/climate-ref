@@ -50,3 +50,5 @@ amoc-RAPID:
       variable_id: msftmz
       grid_label: gm
       version: v20250902
+  test_cmip7:
+    xfail: No CMIP7 overturning streamfunction (msftm) is published yet

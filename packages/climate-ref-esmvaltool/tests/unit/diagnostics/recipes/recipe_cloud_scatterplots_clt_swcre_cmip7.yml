@@ -112,7 +112,7 @@ diagnostics:
         mip: atmos
         exp: historical
         preprocessor: common_grid_clt
-        additional_datasets: &id001
+        additional_datasets:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
@@ -132,7 +132,19 @@ diagnostics:
         preprocessor: common_grid_swcre
         derive: true
         force_derivation: false
-        additional_datasets: *id001
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 1996/2014
     scripts:
       plot:
         script: seaborn_jointplot_histogram.py

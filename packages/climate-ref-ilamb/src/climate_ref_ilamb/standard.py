@@ -36,7 +36,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import MetricValueKind, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
@@ -338,6 +338,40 @@ def _lookup_dreq_entries(
     return found
 
 
+def _keep_primary_branding(model_datasets: pd.DataFrame, variable_id: str, realm: str) -> pd.DataFrame:
+    """
+    Keep one branded variant of a CMIP7 variable that several CMIP6 variables map onto.
+
+    The Data Request folds some CMIP6 variables into one CMIP7 ``variable_id`` that only the
+    branding tells apart, e.g. ``Lmon.mrsos`` and ``Emon.mrsol`` both become ``mrsol``.
+    ilamb3 cannot combine those into one field, so where the diagnostic's own variable is
+    among them, only its variant is kept.
+    """
+    primary = set(_get_branded_variable((variable_id,), realm))
+    keep = pd.Series(True, index=model_datasets.index)
+    for _, group in model_datasets.groupby("variable_id"):
+        brandings = set(group["branded_variable"])
+        if len(brandings) > 1 and brandings & primary:
+            keep[group.index] = group["branded_variable"].isin(primary)
+    return model_datasets[keep]
+
+
+def _variables_replaced_by_alternates(
+    variable_id: str, alternate_vars: Sequence[str], realm: str
+) -> tuple[str, ...]:
+    """
+    Name the primary variable if ``execute`` would drop it for an alternate in CMIP7 data.
+
+    ``execute`` drops the primary variable (e.g. 3D ``so``) when an alternate (``sos``) is
+    present, by ``variable_id``. Where the Data Request folds both into one variable_id
+    (``mrsol`` for ``mrsos``), they are told apart by branding instead and both are kept.
+    """
+    alternates = set(_get_cmip7_variable_ids(tuple(alternate_vars), realm))
+    if alternates and _get_cmip7_variable_ids((variable_id,), realm)[0] not in alternates:
+        return (variable_id,)
+    return ()
+
+
 def _get_cmip7_variable_ids(variable_ids: tuple[str, ...], realm: str) -> tuple[str, ...]:
     """Translate CMIP6 variable IDs to their CMIP7 Data Request IDs."""
     translated: list[str] = []
@@ -617,6 +651,7 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
     primary_variable_ids: tuple[str, ...],
     relationship_variable_ids: tuple[str, ...],
     is_land: bool,
+    related_variable_ids: tuple[str, ...] = (),
 ) -> DataRequirement:
     """
     Build a CMIP data requirement with shared constraint logic.
@@ -634,11 +669,14 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
     group_by
         Columns to group executions by
     primary_variable_ids
-        Variables the diagnostic requires (primary + alternates + related)
+        Variables the diagnostic requires (primary + alternates + related), any one of which is enough
     relationship_variable_ids
         Variables used in relationship analyses
     is_land
         Whether this is a land diagnostic (determines supplementary variables)
+    related_variable_ids
+        Model variables the analysis variable is derived from (``related_vars``).
+        Unlike alternates these are all needed, so every one of them must be present.
 
     Returns
     -------
@@ -652,6 +690,14 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
             operator="any",
         ),
     ]
+
+    if related_variable_ids:
+        constraints.append(
+            RequireFacets(
+                "variable_id",
+                required_facets=related_variable_ids,
+            )
+        )
 
     if relationship_variable_ids:
         constraints.append(
@@ -692,6 +738,8 @@ def _build_test_data_spec(  # noqa: PLR0913
     is_land: bool,
     obs_filters: Mapping[str, tuple[str, ...]],
     obs_source: str | None = "obs4mips",
+    test_cmip7: Mapping[str, Any] | None = None,
+    unused_variable_ids: tuple[str, ...] = (),
 ) -> TestDataSpecification:
     """
     Build a TestDataSpecification for an ILAMB diagnostic.
@@ -713,6 +761,13 @@ def _build_test_data_spec(  # noqa: PLR0913
         Which source to use for obs4MIPs data ("obs4ref" or "obs4mips").
         Determines if we fetch from ESGF or use the pre-fetched obs4REF registry.
         Ignored if no obs_filters provided.
+    test_cmip7
+        Overrides for the CMIP7 test case: ``source_id`` and ``variant_label`` of the published
+        CMIP7 model to test with (default ACCESS-ESM1-6 r1i1p1f1), and ``xfail``, the reason the
+        case is expected to fail (see :attr:`TestCase.xfail`), e.g. while its variables are not
+        published as CMIP7 yet.
+    unused_variable_ids
+        Variables the diagnostic would not use when it runs, left out of the CMIP7 request.
 
     Returns
     -------
@@ -724,15 +779,6 @@ def _build_test_data_spec(  # noqa: PLR0913
     else:
         supplementary_vars = ["volcello", "areacello", "sftof"]
     test_variable_ids = tuple(sorted(set(all_variable_ids) | set(supplementary_vars)))
-
-    test_branded_names = sorted(
-        set(
-            _get_branded_variable(
-                tuple(test_variable_ids),
-                realm,
-            )
-        )
-    )
 
     obs4mips_requests: tuple[RegistryRequest | Obs4MIPsRequest, ...] = ()
     if obs_filters and obs_source is not None:
@@ -755,6 +801,29 @@ def _build_test_data_spec(  # noqa: PLR0913
             )
         else:
             raise ValueError(f"Invalid obs_source: {obs_source}")
+
+    test_cmip7 = test_cmip7 or {}
+    # volcello is only an optional supplement, and its monthly CMIP7 variant is a full 3D field.
+    cmip7_variable_ids = tuple(
+        v for v in test_variable_ids if v != "volcello" and v not in unused_variable_ids
+    )
+    cmip7_request = CMIP7Request(
+        slug="cmip7",
+        facets={
+            "experiment_id": "historical",
+            "source_id": test_cmip7.get("source_id", "ACCESS-ESM1-6"),
+            "variable_id": _get_cmip7_variable_ids(cmip7_variable_ids, realm),
+            # The fx supplements (areacella, sftlf, ...) are not in the realm's DReq tables.
+            "branding_suffix": sorted(
+                {"ti-u-hxy-u"}
+                | {name.split("_", 1)[1] for name in _get_branded_variable(cmip7_variable_ids, realm)}
+            ),
+            "variant_label": test_cmip7.get("variant_label", "r1i1p1f1"),
+            "frequency": ["fx", "mon"],
+            "region": "glb",
+        },
+        remove_ensembles=True,
+    )
 
     return TestDataSpecification(
         test_cases=(
@@ -779,20 +848,10 @@ def _build_test_data_spec(  # noqa: PLR0913
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
-                        slug="cmip7",
-                        facets={
-                            "experiment_id": "historical",
-                            "source_id": test_source_id,
-                            "variable_id": test_variable_ids,
-                            "branded_variable": test_branded_names,
-                            "frequency": ["fx", "mon"],
-                            "region": "glb",
-                        },
-                        remove_ensembles=True,
-                    ),
+                    cmip7_request,
                     *obs4mips_requests,
                 ),
+                xfail=test_cmip7.get("xfail"),
             ),
         )
     )
@@ -927,6 +986,7 @@ class ILAMBStandard(Diagnostic):
         # Allow per-diagnostic override of the test source_id
         # (not all variables are available from CanESM5)
         test_source_id = ilamb_kwargs.pop("test_source_id", "CanESM5")
+        test_cmip7 = ilamb_kwargs.pop("test_cmip7", None)
 
         diagnostic_version = ilamb_kwargs.pop("version", None)
         if diagnostic_version is not None:
@@ -961,8 +1021,13 @@ class ILAMBStandard(Diagnostic):
 
         relationship_variable_ids = tuple(ilamb_kwargs.get("relationships", {}).keys())
 
+        # Model variables the analysis variable is computed from, e.g. by an `expression` transform.
+        # Unlike `alternate_vars` (synonyms) the diagnostic needs every one of them.
+        related_variable_ids = tuple(ilamb_kwargs.get("related_vars", []))
+
         cmip7_primary_variable_ids = _get_cmip7_variable_ids(primary_variable_ids, realm)
         cmip7_relationship_variable_ids = _get_cmip7_variable_ids(relationship_variable_ids, realm)
+        cmip7_related_variable_ids = _get_cmip7_variable_ids(related_variable_ids, realm)
 
         # Create the data requirement for the dataset under test
         cmip6_requirement = _build_cmip_data_requirement(
@@ -987,6 +1052,7 @@ class ILAMBStandard(Diagnostic):
             primary_variable_ids=primary_variable_ids,
             relationship_variable_ids=relationship_variable_ids,
             is_land=is_land,
+            related_variable_ids=related_variable_ids,
         )
 
         cmip7_requirement = _build_cmip_data_requirement(
@@ -1001,6 +1067,7 @@ class ILAMBStandard(Diagnostic):
             primary_variable_ids=cmip7_primary_variable_ids,
             relationship_variable_ids=cmip7_relationship_variable_ids,
             is_land=is_land,
+            related_variable_ids=cmip7_related_variable_ids,
         )
 
         # Observational data requirement, normally ilamb3 expects the `sources` to
@@ -1059,6 +1126,10 @@ class ILAMBStandard(Diagnostic):
             is_land=is_land,
             obs_filters=filters,
             obs_source=obs_source,
+            test_cmip7=test_cmip7,
+            unused_variable_ids=_variables_replaced_by_alternates(
+                self.variable_id, ilamb_kwargs.get("alternate_vars", []), realm
+            ),
         )
 
         # Setup ILAMB data and options
@@ -1150,6 +1221,9 @@ class ILAMBStandard(Diagnostic):
             available_alternates = [v for v in alternate_vars if v in model_datasets["variable_id"].values]
             if available_alternates and self.variable_id in model_datasets["variable_id"].values:
                 model_datasets = model_datasets[model_datasets["variable_id"] != self.variable_id]
+
+        if cmip_source == SourceDatasetType.CMIP7:
+            model_datasets = _keep_primary_branding(model_datasets, self.variable_id, self.realm)
 
         # In ilamb3, this is run with all the models that we know about to
         # create different colors. For REF this will at least make the model

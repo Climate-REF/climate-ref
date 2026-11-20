@@ -354,6 +354,19 @@ class TestPersistFinalisedMetadata:
         # Should not raise and should only attempt once for the slug
         adapter._persist_finalised_metadata(db, df, df.index)
 
+    def test_rolls_back_finalised_flag_when_db_write_fails(self, config, adapter_config):
+        """A failed write leaves the rows unfinalised, so they are finalised again later."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/fake/path.nc"])
+        df["finalised"] = True
+
+        failing_db = MagicMock()
+        failing_db.session.begin.side_effect = RuntimeError("simulated DB failure")
+
+        adapter._persist_finalised_metadata(failing_db, df, df.index)
+
+        assert not df["finalised"].any()
+
     def test_na_values_do_not_overwrite_db_records(self, config, adapter_config):
         """pd.NA and np.nan values must not overwrite existing database fields.
 

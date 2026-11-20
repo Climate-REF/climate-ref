@@ -4,7 +4,7 @@
       "historical": {}
     },
     "grid_label": {
-      "gn": {}
+      "g115": {}
     },
     "json_structure": [
       "kind",
@@ -43,7 +43,7 @@
       }
     },
     "source_id": {
-      "CanESM5": {}
+      "ACCESS-ESM1-6": {}
     },
     "statistic": {
       "Bias": {
@@ -79,31 +79,31 @@
     "model": {
       "HWSD2": {
         "historical": {
-          "CanESM5": {
+          "ACCESS-ESM1-6": {
             "r1i1p1f1": {
-              "gn": {
+              "g115": {
                 "global": {
                   "Bias": {
-                    "Bias": -4.239704,
-                    "Bias Score": 0.6168244,
-                    "Period Mean": 9.432818
+                    "Bias": -8.175594,
+                    "Bias Score": 0.5942183,
+                    "Period Mean": 5.754383
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.346367,
-                    "Normalized Standard Deviation": 0.4531687,
-                    "Spatial Distribution Score": 0.3806084
+                    "Correlation": 0.2976494,
+                    "Normalized Standard Deviation": 0.2968046,
+                    "Spatial Distribution Score": 0.1931064
                   }
                 },
                 "tropical": {
                   "Bias": {
-                    "Bias": -0.6093961,
-                    "Bias Score": 0.6670013,
-                    "Period Mean": 12.80093
+                    "Bias": -7.786156,
+                    "Bias Score": 0.603071,
+                    "Period Mean": 5.584347
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.06825129,
-                    "Normalized Standard Deviation": 0.4707023,
-                    "Spatial Distribution Score": 0.317224
+                    "Correlation": 0.06646378,
+                    "Normalized Standard Deviation": 0.2078688,
+                    "Spatial Distribution Score": 0.084686
                   }
                 }
               }

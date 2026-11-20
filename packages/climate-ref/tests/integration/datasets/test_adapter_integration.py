@@ -1,15 +1,11 @@
-"""Integration tests for CMIP6/CMIP7 dataset adapters.
+"""Integration tests for the CMIP6 and CMIP7 dataset adapters on real files.
 
-Tests that exercise real file I/O, database round-trips, and finalisation logic
-for the CMIP6 and CMIP7 dataset adapters.
-
-Both the "drs" and "complete" parsers are tested to ensure they can be used interchangeably and produce
-consistent results.
+The unit tests mock the complete parser or only create empty files in a DRS tree.
+These tests run both parsers on real NetCDF files (decimated CMIP6 sample data and
+decimated published CMIP7 data) and push what they find through a real database.
 """
 
 from __future__ import annotations
-
-from unittest.mock import patch
 
 import numpy as np
 import pandas as pd
@@ -20,226 +16,107 @@ from climate_ref.datasets.cmip6 import _primary_activity
 from climate_ref.datasets.utils import sort_data_catalog
 
 
-class TestLocalDatasets:
-    """Local dataset discovery tests, parameterised over adapter types."""
+def _register(database: Database, adapter, catalog: pd.DataFrame) -> None:
+    with database.session.begin():
+        for _, dataset in catalog.groupby(adapter.slug_column):
+            adapter.register_dataset(database, dataset)
 
-    @pytest.mark.parametrize("parser", ["complete", "drs"])
-    def test_find_local_datasets_columns_and_finalised(self, parser, adapter_config, adapter_local_catalogs):
-        """find_local_datasets returns all metadata columns and correct finalised status."""
-        catalog = adapter_local_catalogs[parser]
-        adapter = adapter_config.adapter_cls()
 
-        all_required = set(adapter.dataset_specific_metadata + adapter.file_specific_metadata)
-        assert all_required.issubset(set(catalog.columns)), (
-            f"Missing columns: {all_required - set(catalog.columns)}"
-        )
+@pytest.mark.parametrize("parser", ["complete", "drs"])
+def test_find_local_datasets(parser, adapter_config, adapter_local_catalogs):
+    """Each parser finds the datasets with every metadata column and the right finalisation state."""
+    adapter = adapter_config.adapter_cls()
+    catalog = adapter_local_catalogs[parser]
+    assert not catalog.empty
 
-        if parser == "complete":
-            assert catalog["finalised"].all()
-        else:
-            assert (~catalog["finalised"]).all()
+    required = set(adapter.dataset_specific_metadata + adapter.file_specific_metadata)
+    assert required <= set(catalog.columns), f"Missing columns: {required - set(catalog.columns)}"
 
-    def test_instance_id_format(self, adapter_config, adapter_local_catalogs):
-        """instance_id has the correct prefix and part count."""
-        catalog = adapter_local_catalogs["drs"]
+    for instance_id in catalog["instance_id"]:
+        parts = instance_id.split(".")
+        assert parts[0] == adapter_config.instance_id_prefix, instance_id
+        assert len(parts) == adapter_config.instance_id_part_count, instance_id
 
-        for _, row in catalog.iterrows():
-            parts = row["instance_id"].split(".")
-            assert parts[0] == adapter_config.instance_id_prefix, (
-                f"instance_id must start with '{adapter_config.instance_id_prefix}': {row['instance_id']}"
-            )
-            assert len(parts) == adapter_config.instance_id_part_count, (
-                f"instance_id must have {adapter_config.instance_id_part_count} "
-                f"dot-separated parts: {row['instance_id']}"
-            )
-
-    def test_drs_catalog_has_all_required_columns(self, adapter_config, adapter_local_catalogs):
-        """DRS parser creates all required metadata columns (filling gaps with NA)."""
-        adapter = adapter_config.adapter_cls()
-        catalog = adapter_local_catalogs["drs"]
-
-        all_required = set(adapter.dataset_specific_metadata + adapter.file_specific_metadata)
-        assert all_required.issubset(set(catalog.columns)), (
-            f"Missing columns: {all_required - set(catalog.columns)}"
-        )
-
-    def test_complete_parser_populates_core_metadata(self, adapter_config, adapter_local_catalogs):
-        """Complete parser provides non-NA values for core metadata fields."""
-        catalog = adapter_local_catalogs["complete"]
-
+    if parser == "complete":
+        assert catalog["finalised"].all()
         for field in adapter_config.complete_parser_core_fields:
             assert catalog[field].notna().all(), f"Complete parser should populate '{field}'"
-        assert catalog["finalised"].all(), "Complete parser should mark all datasets as finalised"
-
-    def test_drs_parser_marks_unfinalised(self, adapter_config, adapter_local_catalogs):
-        """DRS parser marks all datasets as unfinalised."""
-        catalog = adapter_local_catalogs["drs"]
-        assert (~catalog["finalised"]).all(), "DRS parser should set finalised=False"
-
-    def test_drs_parser_leaves_non_drs_as_na(self, adapter_config, adapter_local_catalogs):
-        """DRS parser leaves columns_requiring_finalisation as NA."""
-        catalog = adapter_local_catalogs["drs"]
-        adapter = adapter_config.adapter_cls()
-
-        for field_name in adapter.columns_requiring_finalisation:
-            if field_name in catalog.columns:
-                assert catalog[field_name].isna().all(), (
-                    f"Non-DRS field '{field_name}' should be NA for DRS parser"
-                )
-
-    def test_drs_and_complete_share_common_datasets(self, adapter_local_catalogs):
-        """Both parsers discover a common set of datasets from the same directory."""
-        drs_ids = set(adapter_local_catalogs["drs"]["instance_id"].unique())
-        complete_ids = set(adapter_local_catalogs["complete"]["instance_id"].unique())
-        overlap = drs_ids & complete_ids
-        assert len(overlap) > 0, "Parsers should discover at least some common datasets"
-        assert len(drs_ids) > 0
-        assert len(complete_ids) > 0
-
-    def test_drs_then_complete_produces_same_core_metadata(self, adapter_config, adapter_local_catalogs):
-        """
-        DRS and complete parsers produce the same values for core DRS fields.
-
-        ``activity_id`` is compared by its primary activity alone: a file that belongs to
-        several lists them all in its attribute (``"C4MIP CDRMIP"``), while a DRS path can
-        only name the one it is published under. Comparing them through
-        :func:`_primary_activity` -- the same rule the ``instance_id`` is built with --
-        keeps the field under test, and fails if a dataset ever turns up whose DRS activity
-        is not the first the attribute names, which is the assumption that rule rests on.
-        """
-        adapter = adapter_config.adapter_cls()
-        drs_catalog = adapter_local_catalogs["drs"]
-        complete_catalog = adapter_local_catalogs["complete"]
-
-        # Only check fields present in both catalogs (e.g. CMIP6 has no mip_era)
-        candidate_fields = [*adapter.dataset_id_metadata, "version", "mip_era"]
-        drs_fields = [
-            f for f in candidate_fields if f in drs_catalog.columns and f in complete_catalog.columns
-        ]
-        common_ids = set(drs_catalog["instance_id"]) & set(complete_catalog["instance_id"])
-        assert len(common_ids) > 0, "Need at least one common dataset"
-
-        for instance_id in common_ids:
-            drs_row = drs_catalog[drs_catalog["instance_id"] == instance_id].iloc[0]
-            complete_row = complete_catalog[complete_catalog["instance_id"] == instance_id].iloc[0]
-            for field in drs_fields:
-                drs_value = _primary_activity(field, drs_row[field])
-                complete_value = _primary_activity(field, complete_row[field])
-                assert drs_value == complete_value, (
-                    f"Field '{field}' differs for {instance_id}: "
-                    f"DRS={drs_row[field]!r} vs complete={complete_row[field]!r}"
-                )
-
-    def test_validate_catalog(self, adapter_config, adapter_local_catalogs):
-        """validate_data_catalog() passes on a complete-parsed catalog."""
-        adapter = adapter_config.adapter_cls()
-        catalog = adapter_local_catalogs["complete"]
-        validated = adapter.validate_data_catalog(catalog)
-        assert len(validated) > 0
+        assert len(adapter.validate_data_catalog(catalog)) == len(catalog)
+    else:
+        assert (~catalog["finalised"]).all()
+        for field in adapter.columns_requiring_finalisation:
+            if field in catalog.columns:
+                assert catalog[field].isna().all(), f"The DRS parser should leave '{field}' NA"
 
 
-class TestRoundTripAndFinalisation:
-    """Round-trip and finalisation tests, parameterised over adapter types."""
+def test_drs_and_complete_agree(adapter_config, adapter_local_catalogs):
+    """
+    Both parsers find the same datasets and the same values for the DRS fields.
 
-    @pytest.mark.parametrize("parser", ["complete", "drs"])
-    def test_round_trip(self, parser, config, adapter_config, adapter_local_catalogs):
-        """Ingest, register, and reload a dataset - verify DataFrame equality."""
-        setattr(config, adapter_config.parser_config_attr, parser)
-        catalog = adapter_local_catalogs[parser]
+    ``activity_id`` is compared by its primary activity alone: a file that belongs to
+    several lists them all in its attribute (``"C4MIP CDRMIP"``), while a DRS path can
+    only name the one it is published under. Comparing them through
+    :func:`_primary_activity` -- the same rule the ``instance_id`` is built with --
+    keeps the field under test, and fails if a dataset ever turns up whose DRS activity
+    is not the first the attribute names, which is the assumption that rule rests on.
+    """
+    adapter = adapter_config.adapter_cls()
+    drs_catalog = adapter_local_catalogs["drs"]
+    complete_catalog = adapter_local_catalogs["complete"]
 
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls()
-            with database.session.begin():
-                for instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
-                    adapter.register_dataset(database, data_catalog_dataset)
+    assert set(drs_catalog["instance_id"]) == set(complete_catalog["instance_id"])
 
-            local_data_catalog = sort_data_catalog(
-                catalog.drop(columns=adapter_config.roundtrip_exclude_columns, errors="ignore")
-            ).reset_index(drop=True)
-
-            db_data_catalog = sort_data_catalog(
-                adapter.load_catalog(database).drop(
-                    columns=adapter_config.roundtrip_exclude_columns, errors="ignore"
-                )
-            ).reset_index(drop=True)
-
-            # Normalize null values for consistent comparison.
-            local_normalized = local_data_catalog.fillna(np.nan).infer_objects()
-            db_normalized = db_data_catalog.fillna(np.nan).infer_objects()
-
-            pd.testing.assert_frame_equal(
-                local_normalized,
-                db_normalized,
-                check_like=True,
+    # Only check fields present in both catalogs (e.g. CMIP6 has no mip_era)
+    candidate_fields = [*adapter.dataset_id_metadata, "version", "mip_era"]
+    fields = [f for f in candidate_fields if f in drs_catalog.columns and f in complete_catalog.columns]
+    for instance_id in drs_catalog["instance_id"].unique():
+        drs_row = drs_catalog[drs_catalog["instance_id"] == instance_id].iloc[0]
+        complete_row = complete_catalog[complete_catalog["instance_id"] == instance_id].iloc[0]
+        for field in fields:
+            drs_value = _primary_activity(field, drs_row[field])
+            assert drs_value == _primary_activity(field, complete_row[field]), (
+                f"Field '{field}' differs for {instance_id}: "
+                f"DRS={drs_row[field]!r} vs complete={complete_row[field]!r}"
             )
 
-    @pytest.mark.parametrize("parser", ["complete", "drs"])
-    def test_derived_columns_survive_round_trip(self, parser, config, adapter_config, adapter_local_catalogs):
-        """Every column an adapter declares in ``derived_metadata`` is present after a DB load."""
-        setattr(config, adapter_config.parser_config_attr, parser)
-        catalog = adapter_local_catalogs[parser]
 
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls()
-            with database.session.begin():
-                for _instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
-                    adapter.register_dataset(database, data_catalog_dataset)
+@pytest.mark.parametrize("parser", ["complete", "drs"])
+def test_round_trip(parser, config, adapter_config, adapter_local_catalogs):
+    """Registering and reloading a catalog gives the same frame, including the derived columns."""
+    setattr(config, adapter_config.parser_config_attr, parser)
+    catalog = adapter_local_catalogs[parser]
 
-            db_catalog = adapter.load_catalog(database)
+    with Database.from_config(config, run_migrations=True) as database:
+        adapter = adapter_config.adapter_cls()
+        _register(database, adapter, catalog)
+        loaded = adapter.load_catalog(database)
 
-            for column in adapter.derived_metadata:
-                assert column in db_catalog.columns, (
-                    f"Derived column '{column}' missing from DB-loaded catalog: {sorted(db_catalog.columns)}"
-                )
+    for column in adapter.derived_metadata:
+        assert column in loaded.columns, f"Derived column '{column}' missing: {sorted(loaded.columns)}"
 
-    def test_finalise_datasets(self, config, adapter_config, adapter_data_dir):
-        """DRS ingest -> register -> finalise -> verify metadata populated."""
-        setattr(config, adapter_config.parser_config_attr, "drs")
+    def normalise(df: pd.DataFrame) -> pd.DataFrame:
+        df = df.drop(columns=adapter_config.roundtrip_exclude_columns, errors="ignore")
+        # Normalise null values for a consistent comparison
+        return sort_data_catalog(df).reset_index(drop=True).fillna(np.nan).infer_objects()
 
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            drs_catalog = adapter.find_local_datasets(adapter_data_dir)
-            assert (~drs_catalog["finalised"]).all(), "DRS parser should produce unfinalised datasets"
+    pd.testing.assert_frame_equal(normalise(catalog), normalise(loaded), check_like=True)
 
-            with database.session.begin():
-                for _instance_id, data_catalog_dataset in drs_catalog.groupby(adapter.slug_column):
-                    adapter.register_dataset(database, data_catalog_dataset)
 
-            db_catalog = adapter.load_catalog(database)
-            assert not db_catalog["finalised"].any(), "DB catalog should have unfinalised datasets"
+def test_finalise_datasets(config, adapter_config, adapter_local_catalogs):
+    """Datasets ingested with the DRS parser are finalised from their files."""
+    setattr(config, adapter_config.parser_config_attr, "drs")
 
-            target_instance = db_catalog["instance_id"].iloc[0]
-            subset = db_catalog[db_catalog["instance_id"] == target_instance].copy()
+    with Database.from_config(config, run_migrations=True) as database:
+        adapter = adapter_config.adapter_cls(config=config)
+        _register(database, adapter, adapter_local_catalogs["drs"])
 
-            result = adapter.finalise_datasets(database, subset)
+        db_catalog = adapter.load_catalog(database)
+        assert not db_catalog["finalised"].any()
 
-            assert result["finalised"].all(), "Finalised datasets should have finalised=True"
-            assert result["source_id"].notna().all()
-            assert result["experiment_id"].notna().all()
+        target = db_catalog["instance_id"].iloc[0]
+        result = adapter.finalise_datasets(database, db_catalog[db_catalog["instance_id"] == target].copy())
 
-    def test_handles_db_exception_gracefully(self, config, adapter_config, adapter_data_dir):
-        """Database exceptions during persist are caught and DataFrame rolled back."""
-        setattr(config, adapter_config.parser_config_attr, "drs")
-
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            drs_catalog = adapter.find_local_datasets(adapter_data_dir)
-
-            with database.session.begin():
-                for _, group in drs_catalog.groupby(adapter.slug_column):
-                    adapter.register_dataset(database, group)
-
-            db_catalog = adapter.load_catalog(database)
-            target = db_catalog["instance_id"].iloc[0]
-            subset = db_catalog[db_catalog["instance_id"] == target].copy()
-            subset["finalised"] = True
-
-            def exploding_begin():
-                raise RuntimeError("simulated DB failure")
-
-            with patch.object(database.session, "begin", side_effect=exploding_begin):
-                adapter._persist_finalised_metadata(database, subset, subset.index)
-
-            assert not subset["finalised"].any(), (
-                "DataFrame should be rolled back to finalised=False when DB persist fails"
-            )
+        assert result["finalised"].all()
+        expected = adapter_local_catalogs["complete"].set_index("path")
+        for field in adapter_config.complete_parser_core_fields:
+            assert (result[field].to_numpy() == expected.loc[result["path"], field].to_numpy()).all(), field

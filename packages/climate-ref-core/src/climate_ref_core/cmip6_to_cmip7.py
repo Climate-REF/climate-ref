@@ -13,7 +13,9 @@ The variable_id and table_id attributes are used to map the CMIP6 variable to it
 and to determine the appropriate branding suffix and realm for the CMIP7 format.
 Grid information is not converted so the grid_labels may not be valid for CMIP7.
 
-This is a temporary work around until we have better CMIP7 coverage.
+The Data Request lookups (:func:`get_dreq_entry`) are used with published CMIP7 data too.
+The attribute conversion only builds the CMIP7 catalog that the solver regression tests
+run against (``scripts/generate_cmip7_catalog.py``).
 """
 
 from __future__ import annotations
@@ -27,38 +29,6 @@ from importlib import resources
 from typing import Any
 
 import attrs
-import cftime
-import numpy as np
-import pandas as pd
-import xarray as xr
-from loguru import logger
-
-
-def suppress_bounds_coordinates(ds: xr.Dataset) -> xr.Dataset:
-    """
-    Prevent xarray from adding spurious ``coordinates`` attributes to bounds variables.
-
-    When a dataset contains scalar coordinates (e.g. ``height``),
-    xarray's CF encoder adds a ``coordinates`` attribute to *every* variable,
-    including bounds variables like ``time_bnds``.
-    Call this on a dataset before :meth:`xarray.Dataset.to_netcdf`.
-
-    Parameters
-    ----------
-    ds
-        The dataset about to be written.  Modified in place.
-
-    Returns
-    -------
-    xr.Dataset
-        The same dataset, for chaining.
-    """
-    for name in ds:
-        if str(name).endswith("_bnds"):
-            # Setting encoding["coordinates"] to None tells xarray's CF encoder
-            # to skip auto-adding a coordinates attribute for this variable.
-            ds[name].encoding["coordinates"] = None
-    return ds
 
 
 @attrs.frozen
@@ -239,39 +209,6 @@ def get_cmip7_compound_name(table_id: str, variable_id: str) -> str:
     return entry.cmip7_compound_name
 
 
-def get_frequency_from_table(table_id: str) -> str:  # noqa: PLR0911
-    """
-    Extract frequency from CMIP6 table_id.
-
-    Parameters
-    ----------
-    table_id
-        CMIP6 table identifier (e.g., "Amon", "Oday", "3hr")
-
-    Returns
-    -------
-    str
-        Frequency string (e.g., "mon", "day", "3hr")
-    """
-    # Check common patterns
-    if "mon" in table_id.lower():
-        return "mon"
-    elif "day" in table_id.lower():
-        return "day"
-    elif "yr" in table_id.lower():
-        return "yr"
-    elif "hr" in table_id.lower():
-        # Extract hour value
-        match = re.search(r"(\d+)hr", table_id.lower())
-        if match:
-            return f"{match.group(1)}hr"
-        return "1hr"
-    elif table_id.lower().startswith("fx") or table_id.lower().endswith("fx"):
-        return "fx"
-
-    return "mon"  # Default
-
-
 def get_realm(table_id: str, variable_id: str) -> str:
     """
     Get the CMIP7 realm for a CMIP6 variable.
@@ -401,10 +338,7 @@ def make_tracking_id(file_id: str) -> str:
     return f"hdl:21.14107/{uuid.uuid5(uuid.NAMESPACE_URL, f'hdl:21.14107/{file_id}')}"
 
 
-def convert_cmip6_to_cmip7_attrs(
-    cmip6_attrs: dict[str, Any],
-    file_id: str | None = None,
-) -> dict[str, Any]:
+def convert_cmip6_to_cmip7_attrs(cmip6_attrs: dict[str, Any]) -> dict[str, Any]:
     """
     Convert CMIP6 global attributes to CMIP7 format.
 
@@ -414,9 +348,6 @@ def convert_cmip6_to_cmip7_attrs(
     ----------
     cmip6_attrs
         Dictionary of CMIP6 global attributes. Must contain ``table_id``.
-    file_id
-        What identifies the file being written, used to derive its ``tracking_id`` (see
-        :func:`make_tracking_id`).
 
     Returns
     -------
@@ -494,7 +425,7 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["cmip6_compound_name"] = dreq_entry.cmip6_compound_name
 
     # Add tracking_id with CMIP7 handle prefix
-    attrs["tracking_id"] = make_tracking_id(file_id) if file_id else f"hdl:21.14107/{uuid.uuid4()}"
+    attrs["tracking_id"] = f"hdl:21.14107/{uuid.uuid4()}"
 
     # Add creation_date in ISO format
     attrs["creation_date"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -507,226 +438,6 @@ def convert_cmip6_to_cmip7_attrs(
         attrs.pop(attr, None)
 
     return attrs
-
-
-_MONTHS_PER_YEAR = 12
-
-
-def _month_index(t: Any) -> int:
-    """Return the absolute month index (``year * 12 + month - 1``) of a time value."""
-    if isinstance(t, cftime.datetime):
-        return t.year * _MONTHS_PER_YEAR + t.month - 1
-    ts = pd.Timestamp(t)
-    return ts.year * _MONTHS_PER_YEAR + ts.month - 1
-
-
-def months_to_extend(last: Any, end_year: int, end_month: int) -> int:
-    """
-    Return how many months short of ``end_year``-``end_month`` a series ending at ``last`` falls.
-
-    Zero or less means the series already reaches that month.
-    """
-    return end_year * _MONTHS_PER_YEAR + (end_month - 1) - _month_index(last)
-
-
-def repeat_final_year_to(ds: xr.Dataset, end_year: int, end_month: int = 12) -> xr.Dataset:
-    """
-    Extend a monthly series to ``end_year``-``end_month`` by repeating its final year.
-
-    The real timesteps keep their real dates and values.
-    Any missing years are tiled from the last year.
-    This gives CMIP7 ``historical`` coverage for years the CMIP6 source never ran (e.g. 2015-2021)
-    without moving the years that did.
-
-    Only monthly data with a ``cftime`` time axis is supported.
-    Datasets without a ``time`` coordinate (fixed-frequency, e.g. ``sftlf``) are returned unchanged.
-
-    Parameters
-    ----------
-    ds
-        Dataset with a monthly ``cftime`` ``time`` coordinate. Modified out of place.
-    end_year
-        Target calendar year of the final timestep.
-    end_month
-        Target calendar month of the final timestep (1-12, default December).
-
-    Returns
-    -------
-    xr.Dataset
-        A dataset whose time axis runs to the requested end.
-
-    Raises
-    ------
-    TypeError
-        If the time axis is not ``cftime``.
-    ValueError
-        If ``end_month`` is outside 1-12, the series does not end in December,
-        or its final calendar year is incomplete.
-    """
-    if not 1 <= end_month <= _MONTHS_PER_YEAR:
-        raise ValueError(f"end_month must be in 1..12, got {end_month}")
-
-    if "time" not in ds.coords or len(ds["time"]) == 0:
-        return ds
-
-    time_values = ds["time"].values
-    last = time_values[-1]
-    if not isinstance(last, cftime.datetime):
-        raise TypeError(
-            "repeat_final_year_to requires a cftime time axis. "
-            f"Got {type(last).__name__}. Decode with use_cftime=True."
-        )
-
-    months_to_add = months_to_extend(last, end_year, end_month)
-    if months_to_add <= 0:
-        return ds
-
-    if last.month != _MONTHS_PER_YEAR:
-        raise ValueError(f"The series must end in December to repeat whole years, ends {last}")
-
-    bounds_name = ds["time"].attrs.get("bounds")
-    if bounds_name and bounds_name in ds.variables:
-        # The repeated blocks below carry their restamped bounds as a NumPy array of cftime
-        # objects. If the source bounds arrived lazily -- a file opened with ``chunks=`` gets
-        # Dask-backed ones -- the concat at the end mixes the two, and Dask refuses to chunk
-        # the NumPy side because it cannot size object dtype. The array is one row per
-        # timestep, so materialise it here rather than make every caller open the file a
-        # particular way. Assigned to a shallow copy, leaving the caller's dataset lazy.
-        ds = ds.copy()
-        ds[bounds_name] = ds[bounds_name].compute()
-
-    def _restamp(t: cftime.datetime, shift: int) -> cftime.datetime:
-        year = t.year + shift
-        try:
-            return t.replace(year=year)  # type: ignore[attr-defined,no-any-return]
-        except ValueError:
-            # A leap day has no counterpart in a common year, so take the day before.
-            return t.replace(year=year, day=t.day - 1)  # type: ignore[attr-defined,no-any-return]
-
-    def _relabel(block: xr.Dataset, shift: int) -> xr.Dataset:
-        relabelled = block.copy()
-        if bounds_name and bounds_name in relabelled:
-            bnds = [[_restamp(b, shift) for b in row] for row in block[bounds_name].values]
-            # Assign as (dims, data) so the new bounds are not aligned against the old time axis.
-            relabelled[bounds_name] = (block[bounds_name].dims, np.array(bnds))
-        return relabelled.assign_coords(time=[_restamp(t, shift) for t in block["time"].values])
-
-    final_year = ds.sel(time=str(last.year))
-    if len(final_year["time"]) != _MONTHS_PER_YEAR:
-        raise ValueError(f"A full final year is needed to repeat, got {len(final_year['time'])} months")
-
-    repeats = [_relabel(final_year, year - last.year) for year in range(last.year + 1, end_year + 1)]
-
-    extended = xr.concat([ds, *repeats], dim="time", data_vars="minimal", coords="minimal")
-    extended["time"].attrs = dict(ds["time"].attrs)
-    extended["time"].encoding = dict(ds["time"].encoding)
-
-    # The repeats are whole years, so drop anything past the requested month.
-    extended = extended.sel(time=slice(None, f"{end_year:04d}-{end_month:02d}"))
-
-    logger.debug(
-        f"Repeated {last.year} for {months_to_add} months so the series ends {end_year:04d}-{end_month:02d}"
-    )
-    return extended
-
-
-def convert_cmip6_dataset(
-    ds: xr.Dataset,
-    inplace: bool = False,
-    extend_historical_to: tuple[int, int] | None = None,
-    file_id: str | None = None,
-) -> xr.Dataset:
-    """
-    Convert a CMIP6 xarray Dataset to CMIP7 format in-memory.
-
-    This uses the cmip6 compound name (table_id.variable_id) to look up the appropriate CMIP7 branding suffix
-    and realm from the Data Request mappings.
-    It then updates the global attributes according to the CMIP7 Global Attributes.
-
-    This doesn't modify the values or coordinates,
-    but it does add a "cmip6_compound_name" attribute for reference.
-    This may not be a fully valid CMIP7 dataset due to the grid names.
-
-    Parameters
-    ----------
-    ds
-        The CMIP6 xarray Dataset to convert
-    inplace
-        If True, modify the dataset in place; otherwise return a copy
-    extend_historical_to
-        Opt-in ``(end_year, end_month)``. When set, the series is padded out to that month
-        via :func:`repeat_final_year_to`, fabricating CMIP7 coverage for years without real
-        data. Defaults to ``None`` (time axis untouched), so existing conversions are
-        byte-identical.
-    file_id
-        What identifies the file being written, so that converting it again gives it the
-        same ``tracking_id``. See :func:`convert_cmip6_to_cmip7_attrs`.
-
-    Returns
-    -------
-    xr.Dataset
-        The converted CMIP7-style dataset
-    """
-    if not inplace:
-        ds = ds.copy(deep=False)
-
-    if extend_historical_to is not None:
-        end_year, end_month = extend_historical_to
-        ds = repeat_final_year_to(ds, end_year=end_year, end_month=end_month)
-
-    # Determine the primary variable (skip coordinates/bounds)
-    data_vars = [str(v) for v in ds.data_vars if not str(v).endswith("_bnds") and v not in ds.coords]
-
-    variable_id = ds.attrs.get("variable_id")
-    if variable_id is None and data_vars:
-        variable_id = data_vars[0]
-    if variable_id is None:  # pragma: no cover
-        raise ValueError("Cannot determine variable_id for branding.")
-
-    table_id = ds.attrs["table_id"]
-
-    # Use the CMIP7 variable name
-    dreq_entry = get_dreq_entry(table_id, variable_id)
-    ds = ds.rename({variable_id: dreq_entry.variable_id})
-
-    # Convert global attributes
-    ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs, file_id=file_id)
-
-    return ds
-
-
-def format_cmip7_time_range(ds: xr.Dataset, frequency: str) -> str | None:
-    """
-    Format a CMIP7 time range string from a dataset's time coordinate.
-
-    Per the MIP-DRS7 spec, monthly data uses ``YYYYMM-YYYYMM`` format.
-    Fixed-frequency (``"fx"``) data has no time range.
-
-    Parameters
-    ----------
-    ds
-        xarray Dataset with a ``"time"`` coordinate
-    frequency
-        Frequency string (e.g., ``"mon"``, ``"fx"``)
-
-    Returns
-    -------
-    str or None
-        Formatted time range string, or ``None`` for fixed-frequency data
-        or datasets without a time coordinate.
-    """
-    if frequency == "fx" or "time" not in ds or len(ds["time"]) == 0:
-        return None
-
-    start = ds["time"].values[0]
-    end = ds["time"].values[-1]
-
-    def _strftime(t: Any) -> str:
-        if isinstance(t, cftime.datetime):
-            return str(t.strftime("%Y%m"))
-        return str(pd.Timestamp(t).strftime("%Y%m"))
-
-    return f"{_strftime(start)}-{_strftime(end)}"
 
 
 def create_cmip7_filename(

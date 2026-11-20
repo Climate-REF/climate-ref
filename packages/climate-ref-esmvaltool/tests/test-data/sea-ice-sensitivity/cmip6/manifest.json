@@ -8,7 +8,7 @@
   "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
-      "sha256": "30288d3bf81a36a2b9d0c49aaef6f685ed130ca0811f5df97a6a95a9cad99d7f",
+      "sha256": "2119b8fe5751c25caa4b82e3bc34f6ef42ea15a3cf1cda5b0730cf3d8542848d",
       "size": 2317
     },
     "executions/recipe/index.html": {
@@ -40,16 +40,16 @@
       "size": 1560
     },
     "executions/recipe/work/antarctic/sea_ice_sensitivity_script/data_values.csv": {
-      "sha256": "53453bea10b5247dd5e47c46c1b966a0e2802ee5ad25db76543641f4a03af77c",
-      "size": 716
+      "sha256": "f717d22563f878c90c3c5afb203ce30930761db09f1ca046de74fb1314f28e65",
+      "size": 715
     },
     "executions/recipe/work/arctic/sea_ice_sensitivity_script/data_values.csv": {
       "sha256": "2beee01f0310e8cfd93570e09e2fb36adafeb89456d4ac926c1fc2a448c83d28",
       "size": 719
     },
     "output.json": {
-      "sha256": "c6f41e586979162b667cb4b3bffa263652ac6bae0dc625fed9a4c35a9800c271",
-      "size": 2929
+      "sha256": "6cd2da1ebac9a5b1c37e4f18b41dbf377c0cf989510ed5e9f2323de19776459b",
+      "size": 2877
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",

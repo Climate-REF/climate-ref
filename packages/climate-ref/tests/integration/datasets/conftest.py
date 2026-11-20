@@ -4,13 +4,11 @@ from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 
 
 @pytest.fixture
-def adapter_data_dir(adapter_config, sample_data_dir, cmip7_converted_file):
+def adapter_data_dir(adapter_config, sample_data_dir, cmip7_data_dir):
     """Data directory appropriate for each adapter."""
     if adapter_config.adapter_cls is CMIP6DatasetAdapter:
         return sample_data_dir / "CMIP6"
-
-    # Note we are only using a single dataset at the moment
-    return cmip7_converted_file.parent
+    return cmip7_data_dir
 
 
 @pytest.fixture

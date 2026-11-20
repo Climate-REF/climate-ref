@@ -8,7 +8,7 @@
   "diagnostic_version": 1,
   "native": {
     "annual_mean_global_mean_timeseries.nc": {
-      "sha256": "acd6202a8fd46d5e1a8d5bef1650b20ab1a93452193aba56a0d05a173cacc62b",
+      "sha256": "c18c81cb50a6bbf78602332ad64a679ada355a12671b81d95099a7aee2452b10",
       "size": 32253
     },
     "diagnostic.json": {

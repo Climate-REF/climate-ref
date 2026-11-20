@@ -13,7 +13,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
@@ -150,13 +150,13 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                 source_type="obs4REF",
                                 facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
                             ),
-                            ConvertedCMIP7Request(
+                            CMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",
                                 facets={
-                                    "source_id": "ACCESS-ESM1-5",
+                                    "source_id": "ACCESS-ESM1-6",
                                     "experiment_id": "historical",
                                     "variable_id": "ts",
-                                    "branded_variable": "ts_tavg-u-hxy-u",
+                                    "branding_suffix": "tavg-u-hxy-u",
                                     "variant_label": "r1i1p1f1",
                                     "frequency": "mon",
                                     "region": "glb",
@@ -204,13 +204,13 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                 slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
                                 facets={"source_id": "20CR-V2", "variable_id": "psl"},
                             ),
-                            ConvertedCMIP7Request(
+                            CMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",
                                 facets={
-                                    "source_id": "ACCESS-ESM1-5",
+                                    "source_id": "ACCESS-ESM1-6",
                                     "experiment_id": "historical",
                                     "variable_id": "psl",
-                                    "branded_variable": "psl_tavg-u-hxy-u",
+                                    "branding_suffix": "tavg-u-hxy-u",
                                     "variant_label": "r1i1p1f1",
                                     "frequency": "mon",
                                     "region": "glb",

@@ -1,0 +1,399 @@
+{
+  "data": {
+    "CanESM6-0-MR.csv": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "CanESM6-0-MR.csv",
+      "long_name": "CanESM6-0-MR.csv"
+    },
+    "CanESM6-0-MR.nc": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "CanESM6-0-MR.nc",
+      "long_name": "CanESM6-0-MR.nc"
+    },
+    "Reference.nc": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "Reference.nc",
+      "long_name": "Reference.nc"
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "index.html": {
+      "description": "Page displaying scalars and plots from the ILAMB execution.",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "source_id": "CanESM6-0-MR"
+      },
+      "filename": "index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "index.html",
+  "metrics": null,
+  "plots": {
+    "CanESM6-0-MR_global_bias.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Bias"
+      },
+      "filename": "CanESM6-0-MR_global_bias.png",
+      "long_name": "The bias for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_biasscore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Bias score"
+      },
+      "filename": "CanESM6-0-MR_global_biasscore.png",
+      "long_name": "The bias score for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_cycle.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Annual cycle"
+      },
+      "filename": "CanESM6-0-MR_global_cycle.png",
+      "long_name": "The annual cycle for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_cyclescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Annual cycle score"
+      },
+      "filename": "CanESM6-0-MR_global_cyclescore.png",
+      "long_name": "The annual cycle score for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_mean.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Period Mean"
+      },
+      "filename": "CanESM6-0-MR_global_mean.png",
+      "long_name": "The period mean for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_rmse.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "RMSE"
+      },
+      "filename": "CanESM6-0-MR_global_rmse.png",
+      "long_name": "The RMSE for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_rmsescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "RMSE score"
+      },
+      "filename": "CanESM6-0-MR_global_rmsescore.png",
+      "long_name": "The RMSE score for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_shift.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Shift in maximum month"
+      },
+      "filename": "CanESM6-0-MR_global_shift.png",
+      "long_name": "The shift in maximum month for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Maximum month"
+      },
+      "filename": "CanESM6-0-MR_global_tmax.png",
+      "long_name": "The maxmimum month for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_global_trace.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Regional mean"
+      },
+      "filename": "CanESM6-0-MR_global_trace.png",
+      "long_name": "The regional mean for CanESM6-0-MR over the Global - Land region."
+    },
+    "CanESM6-0-MR_tropical_bias.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Bias"
+      },
+      "filename": "CanESM6-0-MR_tropical_bias.png",
+      "long_name": "The bias for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_biasscore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Bias score"
+      },
+      "filename": "CanESM6-0-MR_tropical_biasscore.png",
+      "long_name": "The bias score for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_cycle.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Annual cycle"
+      },
+      "filename": "CanESM6-0-MR_tropical_cycle.png",
+      "long_name": "The annual cycle for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_cyclescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Annual cycle score"
+      },
+      "filename": "CanESM6-0-MR_tropical_cyclescore.png",
+      "long_name": "The annual cycle score for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_mean.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Period Mean"
+      },
+      "filename": "CanESM6-0-MR_tropical_mean.png",
+      "long_name": "The period mean for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_rmse.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "RMSE"
+      },
+      "filename": "CanESM6-0-MR_tropical_rmse.png",
+      "long_name": "The RMSE for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_rmsescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "RMSE score"
+      },
+      "filename": "CanESM6-0-MR_tropical_rmsescore.png",
+      "long_name": "The RMSE score for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_shift.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Shift in maximum month"
+      },
+      "filename": "CanESM6-0-MR_tropical_shift.png",
+      "long_name": "The shift in maximum month for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Maximum month"
+      },
+      "filename": "CanESM6-0-MR_tropical_tmax.png",
+      "long_name": "The maxmimum month for CanESM6-0-MR over the Tropical climates region."
+    },
+    "CanESM6-0-MR_tropical_trace.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Regional mean"
+      },
+      "filename": "CanESM6-0-MR_tropical_trace.png",
+      "long_name": "The regional mean for CanESM6-0-MR over the Tropical climates region."
+    },
+    "None_global_taylor.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Taylor diagram"
+      },
+      "filename": "None_global_taylor.png",
+      "long_name": "The Taylor diagram over the Global - Land region."
+    },
+    "None_tropical_taylor.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "g150",
+        "member_id": "r6i1p1f1",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "source_id": "CanESM6-0-MR",
+        "statistic": "Taylor diagram"
+      },
+      "filename": "None_tropical_taylor.png",
+      "long_name": "The Taylor diagram over the Tropical climates region."
+    },
+    "Reference_global_mean.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "statistic": "Period Mean"
+      },
+      "filename": "Reference_global_mean.png",
+      "long_name": "The period mean for the reference data over the Global - Land region."
+    },
+    "Reference_global_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WangMao",
+        "region": "global",
+        "statistic": "Maximum month"
+      },
+      "filename": "Reference_global_tmax.png",
+      "long_name": "The maxmimum month for the reference data over the Global - Land region."
+    },
+    "Reference_tropical_mean.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "statistic": "Period Mean"
+      },
+      "filename": "Reference_tropical_mean.png",
+      "long_name": "The period mean for the reference data over the Tropical climates region."
+    },
+    "Reference_tropical_tmax.png": {
+      "description": "",
+      "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WangMao",
+        "region": "tropical",
+        "statistic": "Maximum month"
+      },
+      "filename": "Reference_tropical_tmax.png",
+      "long_name": "The maxmimum month for the reference data over the Tropical climates region."
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

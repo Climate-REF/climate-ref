@@ -14,6 +14,7 @@ from climate_ref_core.testing import (
     TestDataSpecification,
     _get_provider_test_data_dir,
     catalog_changed_since_regression,
+    collect_test_case_params,
     get_catalog_hash,
     load_catalog_datasets,
     load_datasets_from_yaml,
@@ -939,3 +940,23 @@ class TestTestCasePathsFromDiagnostic:
         with patch.dict("sys.modules", {"test_provider": mock_module}):
             result = _get_provider_test_data_dir(mock_diag)
             assert result is None
+
+
+class TestCollectTestCaseParams:
+    def test_marks_expected_failures_as_strict_xfail(self):
+        diagnostic = MagicMock(slug="diag")
+        diagnostic.test_data_spec = TestDataSpecification(
+            test_cases=(
+                TestCase(name="cmip6", description="works"),
+                TestCase(name="cmip7", description="no data yet", xfail="no CMIP7 data yet"),
+            )
+        )
+        provider = MagicMock()
+        provider.diagnostics.return_value = [diagnostic]
+
+        params = {param.id: param for param in collect_test_case_params(provider)}
+
+        assert not params["diag/cmip6"].marks
+        (mark,) = params["diag/cmip7"].marks
+        assert mark.name == "xfail"
+        assert mark.kwargs == {"reason": "no CMIP7 data yet", "strict": True}

@@ -7,7 +7,6 @@ from typing import Any
 import cftime
 import pandas as pd
 import pytest
-import xarray as xr
 from climate_ref_example import provider as example_provider
 from pytest_regressions.data_regression import RegressionYamlDumper
 from yaml.representer import SafeRepresenter
@@ -23,12 +22,6 @@ from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, Obs4REFDataset
 from climate_ref.models.metric_value import MetricValue
 from climate_ref.provider_registry import _register_provider
 from climate_ref.solve_helpers import solve_to_results
-from climate_ref_core.cmip6_to_cmip7 import (
-    convert_cmip6_dataset,
-    create_cmip7_filename,
-    create_cmip7_path,
-    format_cmip7_time_range,
-)
 from climate_ref_core.pycmec import BUNDLED_AFT_CV
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 
@@ -182,47 +175,15 @@ def esgf_example_solve_results(esgf_data_catalog) -> list[dict[str, Any]]:
     return solve_to_results(esgf_data_catalog, providers=[example_provider])
 
 
-@pytest.fixture
-def cmip7_converted_file(sample_data_dir, tmp_path) -> Path:
+@pytest.fixture(scope="session")
+def cmip7_data_dir(test_data_dir: Path) -> Path:
     """
-    Convert a CMIP6 file to CMIP7 format and save it.
+    Decimated published CMIP7 files in their DRS directories.
 
-    Uses the cmip6_to_cmip7 converter from climate_ref_core.
-    Returns the path to the converted file.
+    They keep the full headers of the published files,
+    see ``scripts/decimate-cmip7-test-data.py``.
     """
-    # Find a CMIP6 file from sample data
-    cmip6_dir = sample_data_dir / "CMIP6"
-    if not cmip6_dir.exists():
-        pytest.skip("CMIP6 sample data not available")
-
-    # Find the first .nc file
-    nc_files = list(cmip6_dir.rglob("**/tas_*.nc"))
-    if not nc_files:
-        pytest.skip("No CMIP6 netCDF files found in sample data")
-
-    cmip6_file = nc_files[0]
-
-    # Open and convert to CMIP7
-    # TODO: Have a higher-level utility function that handles the full conversion and saving
-    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    with xr.open_dataset(cmip6_file, decode_times=time_coder) as ds:
-        ds_cmip7 = convert_cmip6_dataset(ds)
-
-        # Create filename
-        time_range = format_cmip7_time_range(ds_cmip7, ds_cmip7.attrs["frequency"])
-        cmip7_filename = create_cmip7_filename(ds_cmip7.attrs, time_range=time_range)
-
-        cmip7_drs_path = create_cmip7_path(ds_cmip7.attrs)
-
-        # Save to a simple output directory (not full DRS structure for easier testing)
-        output_dir = tmp_path / cmip7_drs_path
-        output_dir.mkdir(parents=True, exist_ok=True)
-        output_file = output_dir / cmip7_filename
-
-        # Save the converted file
-        ds_cmip7.to_netcdf(output_file)
-
-    return output_file
+    return test_data_dir / "cmip7"
 
 
 @dataclasses.dataclass(frozen=True)

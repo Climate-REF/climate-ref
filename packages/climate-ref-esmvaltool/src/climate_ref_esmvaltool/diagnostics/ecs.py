@@ -12,7 +12,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -152,18 +152,16 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="cmip7",
                         facets={
                             "experiment_id": ["abrupt-4xCO2", "piControl"],
-                            "source_id": "CanESM5",
+                            "source_id": "ACCESS-ESM1-6",
                             "variable_id": ["areacella", "rlut", "rsdt", "rsut", "tas"],
-                            "branded_variable": [
-                                "areacella_ti-u-hxy-u",
-                                "rlut_tavg-u-hxy-u",
-                                "rsdt_tavg-u-hxy-u",
-                                "rsut_tavg-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
+                            "branding_suffix": [
+                                "tavg-h2m-hxy-u",
+                                "tavg-u-hxy-u",
+                                "ti-u-hxy-u",
                             ],
                             "variant_label": "r1i1p1f1",
                             "frequency": ["fx", "mon"],

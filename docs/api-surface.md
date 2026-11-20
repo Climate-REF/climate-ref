@@ -175,7 +175,6 @@ Import these from their submodules, eg. `from climate_ref_core.pycmec.metric imp
 | `ESGFRequest`           | Class (attrs) | ESGF data request specification            |
 | `CMIP6Request`          | Class (attrs) | CMIP6-specific ESGF request                |
 | `CMIP7Request`          | Class (attrs) | CMIP7-specific ESGF request                |
-| `ConvertedCMIP7Request` | Class         | CMIP7 data converted from CMIP6, for tests |
 | `Obs4MIPsRequest`       | Class (attrs) | obs4MIPs-specific ESGF request             |
 | `ESGFFetcher`           | Class         | Fetch data from ESGF                       |
 | `RegistryRequest`       | Class         | Request for files from a dataset registry  |

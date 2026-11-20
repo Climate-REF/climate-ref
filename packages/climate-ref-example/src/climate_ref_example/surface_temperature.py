@@ -12,7 +12,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.metric_values import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
@@ -419,7 +419,7 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
             ),
             TestCase(
                 name="cmip7",
-                description="CMIP7 historical tos from ACCESS-ESM1-5 compared against HadISST-1-1",
+                description="CMIP7 historical tos from ACCESS-ESM1-6 compared against HadISST-1-1",
                 requests=(
                     RegistryRequest(
                         slug="surface-temperature-obs-cmip7",
@@ -427,25 +427,29 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                         source_type="obs4REF",
                         facets={"source_id": _REFERENCE_SOURCE_ID, "variable_id": _REFERENCE_VARIABLE},
                     ),
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="surface-temperature-tos-cmip7",
                         facets={
-                            "source_id": "ACCESS-ESM1-5",
+                            "source_id": "ACCESS-ESM1-6",
                             "experiment_id": "historical",
                             "variable_id": _MODEL_VARIABLE,
+                            "branding_suffix": "tavg-u-hxy-sea",
                             "variant_label": "r1i1p1f1",
-                            "table_id": "Omon",
+                            "frequency": "mon",
+                            "region": "glb",
                         },
                         time_span=("2000-01", "2014-12"),
                     ),
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="surface-temperature-areacello-cmip7",
                         facets={
-                            "source_id": "ACCESS-ESM1-5",
+                            "source_id": "ACCESS-ESM1-6",
                             "experiment_id": "historical",
                             "variable_id": _AREA_VARIABLE,
+                            "branding_suffix": "ti-u-hxy-u",
                             "variant_label": "r1i1p1f1",
-                            "table_id": "Ofx",
+                            "frequency": "fx",
+                            "region": "glb",
                         },
                     ),
                 ),

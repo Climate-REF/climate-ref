@@ -86,7 +86,7 @@ def mock_diagnostic():
 @pytest.fixture
 def mock_test_case():
     """Create a mock test case."""
-    tc = MagicMock()
+    tc = MagicMock(xfail=None)
     tc.name = "default"
     return tc
 
@@ -338,7 +338,7 @@ class TestFetchTestDataCommand:
 
     def test_fetch_with_unknown_test_case_filter_fails(self, invoke_cli, mocker):
         """Test fetch command with a test-case typo fails instead of silently selecting nothing."""
-        mock_tc = MagicMock(description="test", requests=[])
+        mock_tc = MagicMock(xfail=None, description="test", requests=[])
         mock_tc.name = "default"
         mock_spec = MagicMock(test_cases=[mock_tc])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -361,7 +361,7 @@ class TestFetchTestDataCommand:
     def test_fetch_with_test_case_filter(self, invoke_cli, mocker):
         """Test fetch command with test case filter in dry run."""
         mock_request = MagicMock(slug="test-request", source_type="CMIP6")
-        mock_test_case = MagicMock(description="test", requests=[mock_request])
+        mock_test_case = MagicMock(xfail=None, description="test", requests=[mock_request])
         mock_test_case.name = "specific-case"
         mock_spec = MagicMock(test_cases=[mock_test_case])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -398,9 +398,9 @@ class TestFetchTestDataCommand:
         source types (seen with ilamb amoc-RAPID in CI),
         which previously aborted the loop and left later diagnostics without sidecars.
         """
-        tc_bad = MagicMock(name="bad", description="bad", requests=[MagicMock()])
+        tc_bad = MagicMock(xfail=None, name="bad", description="bad", requests=[MagicMock()])
         tc_bad.name = "bad"
-        tc_good = MagicMock(name="good", description="good", requests=[MagicMock()])
+        tc_good = MagicMock(xfail=None, name="good", description="good", requests=[MagicMock()])
         tc_good.name = "good"
         mock_spec = MagicMock(test_cases=[tc_bad, tc_good])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -427,9 +427,9 @@ class TestFetchTestDataCommand:
 
     def test_fetch_strict_fails_after_processing_all_cases(self, invoke_cli, mocker):
         """--strict reports failure only after attempting the remaining cases."""
-        tc_bad = MagicMock(description="bad", requests=[MagicMock()])
+        tc_bad = MagicMock(xfail=None, description="bad", requests=[MagicMock()])
         tc_bad.name = "bad"
-        tc_good = MagicMock(description="good", requests=[MagicMock()])
+        tc_good = MagicMock(xfail=None, description="good", requests=[MagicMock()])
         tc_good.name = "good"
         mock_diag = MagicMock(
             slug="test-diag",
@@ -456,9 +456,95 @@ class TestFetchTestDataCommand:
         assert fetch_mock.call_count == 2
         assert "example/test-diag/bad" in result.stderr
 
+    def test_fetch_strict_tolerates_missing_data_of_an_expected_failure(self, invoke_cli, mocker):
+        """A case marked xfail because its data is not published yet does not fail the fetch."""
+        tc = MagicMock(xfail="no CMIP7 data yet", description="test", requests=[MagicMock()])
+        tc.name = "cmip7"
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog",
+            side_effect=DatasetResolutionError("ESGF search returned no results"),
+        )
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", return_value=None)
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"])
+
+        assert "as expected (no CMIP7 data yet)" in result.stderr
+
+    def test_fetch_strict_tolerates_unsolvable_data_of_an_expected_failure(self, invoke_cli, mocker):
+        """Data found for only some variables cannot be solved, which an xfail case also expects."""
+        tc = MagicMock(xfail="no CMIP7 msftm yet", description="test", requests=[MagicMock()])
+        tc.name = "cmip7"
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog",
+            side_effect=InvalidDiagnosticException(mock_diag, "No data catalog matches"),
+        )
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", return_value=None)
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"])
+
+        assert "as expected (no CMIP7 msftm yet)" in result.stderr
+
+    def _expected_failure(self, mocker, *, requests):
+        tc = MagicMock(xfail="no CMIP7 data yet", description="test", requests=requests)
+        tc.name = "cmip7"
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=MagicMock(providers=[mock_provider]),
+        )
+
+    def test_fetch_strict_still_validates_the_catalog_of_an_expected_failure(
+        self, invoke_cli, mocker, tmp_path
+    ):
+        """Only missing data is expected; a catalog that was written must still be usable."""
+        self._expected_failure(mocker, requests=[MagicMock()])
+        paths = MagicMock(catalog=tmp_path / "catalog.yaml", catalog_paths=tmp_path / "paths.yaml")
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog", return_value=(MagicMock(), True)
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery.validate_catalog_paths",
+            side_effect=DatasetResolutionError("catalog points at missing files"),
+        )
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"], expected_exit_code=1)
+
+        assert "catalog points at missing files" in result.stderr
+
+    def test_fetch_strict_accepts_an_expected_failure_without_requests_or_catalog(
+        self, invoke_cli, mocker, tmp_path
+    ):
+        self._expected_failure(mocker, requests=None)
+        paths = MagicMock(catalog=tmp_path / "missing.yaml", catalog_paths=tmp_path / "paths.yaml")
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", return_value=paths)
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"])
+
+        assert "No catalog for cmip7, as expected (no CMIP7 data yet)" in result.stderr
+
     def test_fetch_strict_rejects_changed_catalog(self, invoke_cli, mocker, tmp_path):
         """A catalog changed in one CI job cannot be consumed by a fresh checkout."""
-        tc = MagicMock(description="test", requests=[MagicMock()])
+        tc = MagicMock(xfail=None, description="test", requests=[MagicMock()])
         tc.name = "default"
         mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
         mock_diag.provider = MagicMock(slug="example")
@@ -492,7 +578,7 @@ class TestFetchTestDataCommand:
 
     def test_fetch_strict_force_accepts_unchanged_catalog(self, invoke_cli, mocker, tmp_path):
         """--force rewriting identical catalog content is not metadata drift."""
-        tc = MagicMock(description="test", requests=[MagicMock()])
+        tc = MagicMock(xfail=None, description="test", requests=[MagicMock()])
         tc.name = "default"
         mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
         mock_diag.provider = MagicMock(slug="example")
@@ -559,10 +645,9 @@ class TestFetchTestDataCommand:
 
     def test_catalog_content_reports_a_tracking_id_change(self, tmp_path):
         """
-        A handle that moves is real drift, because it is no longer minted at random.
+        A handle that moves is real drift.
 
-        It is derived from the file being written, so a rebuilt conversion reproduces it;
-        a different handle means a different file stands behind the same catalog entry.
+        A different handle means a different file stands behind the same catalog entry.
         """
         catalog = tmp_path / "catalog.yaml"
         catalog.write_text("cmip7:\n  datasets:\n    - tracking_id: old\n      variable_id: tas\n")
@@ -622,7 +707,7 @@ class TestFetchTestDataCommand:
         assert "example/test-diag/bad" in result.stderr
 
     def test_fetch_strict_fails_for_requestless_case_without_catalog(self, invoke_cli, mocker):
-        tc = MagicMock(description="test", requests=None)
+        tc = MagicMock(xfail=None, description="test", requests=None)
         tc.name = "default"
         mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
         mock_diag.provider = MagicMock(slug="example")
@@ -643,7 +728,7 @@ class TestFetchTestDataCommand:
 
     def test_fetch_strict_only_missing_validates_skipped_catalog(self, invoke_cli, mocker, tmp_path):
         """Strict mode checks cached sidecars before --only-missing skips ESGF work."""
-        tc = MagicMock(description="test", requests=[MagicMock()])
+        tc = MagicMock(xfail=None, description="test", requests=[MagicMock()])
         tc.name = "default"
         mock_diag = MagicMock(slug="test-diag", test_data_spec=MagicMock(test_cases=[tc]))
         mock_diag.provider = MagicMock(slug="example")
@@ -674,7 +759,7 @@ class TestFetchTestDataCommand:
 
     def test_fetch_existing_catalog_explains_refresh(self, invoke_cli, mocker, tmp_path):
         """Existing catalogs are refreshed by default, with a pointer to --only-missing."""
-        mock_tc = MagicMock(description="test", requests=[MagicMock()])
+        mock_tc = MagicMock(xfail=None, description="test", requests=[MagicMock()])
         mock_tc.name = "default"
         mock_spec = MagicMock(test_cases=[mock_tc])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -709,7 +794,7 @@ class TestFetchTestDataCommand:
 
     def test_fetch_only_missing_skips_existing_catalog(self, invoke_cli, mocker, tmp_path):
         """--only-missing avoids ESGF work when a catalog already exists."""
-        mock_tc = MagicMock(description="test", requests=[MagicMock()])
+        mock_tc = MagicMock(xfail=None, description="test", requests=[MagicMock()])
         mock_tc.name = "default"
         mock_spec = MagicMock(test_cases=[mock_tc])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -778,7 +863,7 @@ class TestListCasesCommand:
 
     def test_list_compact_default_hides_descriptions(self, invoke_cli, mocker):
         """The default list view stays scannable by omitting descriptions."""
-        mock_tc = MagicMock(description="long description", requests=[])
+        mock_tc = MagicMock(xfail=None, description="long description", requests=[])
         mock_tc.name = "default"
         mock_spec = MagicMock(test_cases=[mock_tc])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -802,9 +887,9 @@ class TestListCasesCommand:
         """The list summary reports missing catalog and regression counts."""
         from climate_ref_core.testing import TestCasePaths
 
-        tc_catalog_only = MagicMock(description="catalog", requests=[])
+        tc_catalog_only = MagicMock(xfail=None, description="catalog", requests=[])
         tc_catalog_only.name = "catalog-only"
-        tc_regression_only = MagicMock(description="regression", requests=[])
+        tc_regression_only = MagicMock(xfail=None, description="regression", requests=[])
         tc_regression_only.name = "regression-only"
         mock_spec = MagicMock(test_cases=[tc_catalog_only, tc_regression_only])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -911,7 +996,7 @@ class TestRunTestCaseCommand:
 
     def test_run_nonexistent_test_case(self, invoke_cli, mocker):
         """Test running a non-existent test case fails instead of silently selecting nothing."""
-        mock_tc = MagicMock(name="default", description="test")
+        mock_tc = MagicMock(xfail=None, name="default", description="test")
         mock_spec = MagicMock()
         mock_spec.test_cases = [mock_tc]
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -941,7 +1026,7 @@ class TestRunTestCaseCommand:
 
     def test_run_no_test_case_dir(self, invoke_cli, mocker):
         """Test run command when test case directory can't be resolved fails the test case."""
-        mock_tc = MagicMock()
+        mock_tc = MagicMock(xfail=None)
         mock_tc.name = "default"
         mock_tc.description = "test"
         mock_spec = MagicMock()
@@ -985,7 +1070,7 @@ class TestRunTestCaseCommand:
 
     def test_run_with_fetch_flag_raises_error(self, invoke_cli, mocker):
         """Test run command with --fetch flag handles DatasetResolutionError."""
-        mock_tc = MagicMock()
+        mock_tc = MagicMock(xfail=None)
         mock_tc.name = "default"
         mock_tc.description = "test"
         mock_spec = MagicMock()
@@ -1095,7 +1180,7 @@ class TestRunTestCaseCommand:
 
     def test_run_with_force_regen(self, invoke_cli, mocker, tmp_path):
         """Test run command with force_regen regenerates the committed bundle and manifest."""
-        mock_tc = MagicMock()
+        mock_tc = MagicMock(xfail=None)
         mock_tc.name = "default"
         mock_tc.description = "test"
         mock_spec = MagicMock()
@@ -1205,7 +1290,7 @@ class TestRunTestCaseCommand:
 
     def test_run_with_only_missing_skips_existing(self, invoke_cli, mocker, tmp_path):
         """Test run command with --only-missing skips test cases with existing regression data."""
-        mock_tc = MagicMock()
+        mock_tc = MagicMock(xfail=None)
         mock_tc.name = "default"
         mock_tc.description = "test"
         mock_spec = MagicMock()
@@ -1242,7 +1327,7 @@ class TestRunTestCaseCommand:
 
     def test_run_with_if_changed_skips_unchanged(self, invoke_cli, mocker, tmp_path):
         """Test run command with --if-changed skips test cases with unchanged catalogs."""
-        mock_tc = MagicMock()
+        mock_tc = MagicMock(xfail=None)
         mock_tc.name = "default"
         mock_tc.description = "test"
         mock_spec = MagicMock()
@@ -1616,7 +1701,7 @@ class TestListCasesCommandEdgeCases:
         mock_request = MagicMock(slug="req1", source_type="CMIP6")
 
         # Use a real object for the test case to avoid MagicMock rendering issues
-        mock_tc = MagicMock()
+        mock_tc = MagicMock(xfail=None)
         mock_tc.name = "default"
         mock_tc.description = "A test case"
         mock_tc.requests = [mock_request]
@@ -1652,9 +1737,9 @@ class TestIterTestCases:
     """Tests for the _iter_test_cases helper."""
 
     def _registry(self):
-        mock_tc_a = MagicMock()
+        mock_tc_a = MagicMock(xfail=None)
         mock_tc_a.name = "default"
-        mock_tc_b = MagicMock()
+        mock_tc_b = MagicMock(xfail=None)
         mock_tc_b.name = "short"
         spec = MagicMock()
         spec.test_cases = [mock_tc_a, mock_tc_b]
@@ -1683,7 +1768,7 @@ class TestIterTestCases:
 
 def _make_case_mocks():
     """Build a (registry, diag, tc) trio with realistic slugs for the native verbs."""
-    tc = MagicMock()
+    tc = MagicMock(xfail=None)
     tc.name = "default"
     tc.description = "test"
     spec = MagicMock()
@@ -2751,6 +2836,7 @@ class TestCIGateCommand:
         native=None,
         diagnostic_version=1,
         code_diagnostic_version=1,
+        xfail=None,
     ):
         """
         Wire a single example test case for the gate.
@@ -2788,7 +2874,7 @@ class TestCIGateCommand:
         )
         from climate_ref_core.testing import TestCasePaths
 
-        mock_tc = MagicMock()
+        mock_tc = MagicMock(xfail=xfail)
         mock_tc.name = "default"
         mock_spec = MagicMock(test_cases=[mock_tc])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
@@ -2982,6 +3068,19 @@ class TestCIGateCommand:
         result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
         assert result.exit_code == 1
         assert "fail" in result.output
+
+    def test_expected_failure_skips_even_without_its_baseline(self, invoke_cli, mocker, tmp_path):
+        # A case marked xfail has no baseline to verify, including one just removed.
+        repo, _, _ = self._setup(mocker, tmp_path, current_version=None, xfail="no data yet")
+        self._set_base(repo, 1, {"output.json": "a" * 64})
+
+        result = invoke_cli(["test-cases", "ci-gate", "--json"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output[result.output.index("[") :])
+        assert payload == [
+            {"case": "example/test-diag/default", "action": "skip", "reason": "expected to fail: no data yet"}
+        ]
 
     def test_never_managed_skips(self, invoke_cli, mocker, tmp_path):
         # No current manifest and none on the base -> never managed -> SKIP.

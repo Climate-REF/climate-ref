@@ -23,6 +23,7 @@ from ilamb3.dataset import coarsen_dataset, convert
 from ilamb3.run import find_related_variables, setup_transforms
 from ilamb3.transform.amoc import msftmz_to_rapid
 
+from climate_ref.solver import solve_executions
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 
@@ -467,6 +468,61 @@ class TestCmip7VariableRequirements:
         assert cmip7_requirement.constraints[0].required_facets == ("amoc", "msftm")
 
 
+class TestKeepPrimaryBranding:
+    """CMIP7 folds Lmon.mrsos and Emon.mrsol into one ``mrsol`` that only the branding tells apart."""
+
+    def _datasets(self, *branded_variables: str) -> pd.DataFrame:
+        return pd.DataFrame(
+            {
+                "variable_id": [name.split("_", 1)[0] for name in branded_variables],
+                "branded_variable": list(branded_variables),
+            }
+        )
+
+    def test_keeps_the_diagnostic_variable_variant(self):
+        datasets = self._datasets("mrsol_tavg-d10cm-hxy-lnd", "mrsol_tavg-sl-hxy-lnd", "areacella_ti-u-hxy-u")
+
+        kept = standard._keep_primary_branding(datasets, "mrsol", "land")
+
+        assert kept["branded_variable"].tolist() == ["mrsol_tavg-sl-hxy-lnd", "areacella_ti-u-hxy-u"]
+
+    def test_leaves_a_single_variant_alone(self):
+        datasets = self._datasets("mrsol_tavg-d10cm-hxy-lnd", "areacella_ti-u-hxy-u")
+
+        kept = standard._keep_primary_branding(datasets, "mrsol", "land")
+
+        assert kept.equals(datasets)
+
+
+class TestCmip7TestCase:
+    def _request(self, slug: str):
+        diagnostic = next(diagnostic for diagnostic in provider.diagnostics() if diagnostic.slug == slug)
+        return diagnostic.test_data_spec.get_case("cmip7").requests[0]
+
+    def test_uses_published_cmip7_data(self):
+        request = self._request("mrsos-wangmao")
+
+        assert type(request).__name__ == "CMIP7Request"
+        assert request.facets["source_id"] == "CanESM6-0-MR"
+        assert request.facets["variable_id"] == ("areacella", "mrsol", "sftlf")
+        assert request.facets["branding_suffix"] == [
+            "tavg-d10cm-hxy-lnd",
+            "tavg-sl-hxy-lnd",
+            "ti-u-hxy-u",
+        ]
+
+    def test_is_expected_to_fail_where_no_data_is_published(self):
+        diagnostic = next(d for d in provider.diagnostics() if d.slug == "amoc-rapid")
+        case = diagnostic.test_data_spec.get_case("cmip7")
+
+        assert type(case.requests[0]).__name__ == "CMIP7Request"
+        assert "msftm" in case.xfail
+
+    def test_leaves_out_a_3d_primary_replaced_by_its_surface_alternate(self):
+        """execute() runs so-woa2023-surface on sos, so the full 3D so is not downloaded."""
+        assert self._request("so-woa2023-surface").facets["variable_id"] == ("areacello", "sftof", "sos")
+
+
 class TestRealmMaskDecoupling:
     """
     Proves mask-loading is independent of realm, not just "is land".
@@ -636,3 +692,91 @@ class TestObs4MIPsSourceRewrite:
             "/data/obs.v10_0.nc",
             "/data/obs.v10_1.nc",
         ]
+
+
+class TestEmpComputesEMinusPForTheModel:
+    """
+    emp-gleamgpcp2.3 compares E - P, which the model has to be given both inputs for.
+
+    The model side used to fall back on ``evspsbl`` as an alternate name for ``emp``,
+    so the model was scored on evaporation alone against the reference's E - P.
+    """
+
+    @pytest.fixture
+    def diagnostic(self):
+        return next(d for d in provider.diagnostics() if d.slug == "emp-gleamgpcp2.3")
+
+    @staticmethod
+    def _dataset(**values: float) -> xr.Dataset:
+        time = pd.date_range("2001-01-01", periods=2, freq="MS")
+        ds = xr.Dataset({name: ("time", np.full(len(time), value)) for name, value in values.items()})
+        ds = ds.assign_coords(time=time)
+        for name in values:
+            ds[name].attrs["units"] = "kg m-2 s-1"
+        return ds
+
+    @pytest.mark.parametrize("cmip_era", [0, 1], ids=["cmip6", "cmip7"])
+    def test_requires_evaporation_and_precipitation(self, diagnostic, cmip_era):
+        constraints = diagnostic.data_requirements[cmip_era][0].constraints
+
+        all_of = [c for c in constraints if getattr(c, "operator", None) == "all"]
+
+        assert [c.required_facets for c in all_of] == [("evspsbl", "pr")]
+
+    def test_model_without_precipitation_is_not_selected(self, diagnostic):
+        rows = [
+            [
+                variable_id,
+                source_id,
+                "historical",
+                "r1i1p1f1",
+                "mon",
+                "gn",
+                table_id,
+                "v20191115",
+                f"{source_id}/{variable_id}.nc",
+            ]
+            for source_id, variables in (
+                ("ACCESS-ESM1-5", ("evspsbl", "pr")),
+                ("CanESM5", ("evspsbl",)),
+            )
+            for variable_id, table_id in (
+                *((variable_id, "Amon") for variable_id in variables),
+                ("areacella", "fx"),
+                ("sftlf", "fx"),
+            )
+        ]
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                rows,
+                columns=(
+                    "variable_id",
+                    "source_id",
+                    "experiment_id",
+                    "member_id",
+                    "frequency",
+                    "grid_label",
+                    "table_id",
+                    "version",
+                    "path",
+                ),
+            ),
+        }
+
+        executions = list(solve_executions(data_catalog, diagnostic, provider=provider))
+
+        assert [dict(e.datasets[SourceDatasetType.CMIP6].selector)["source_id"] for e in executions] == [
+            "ACCESS-ESM1-5"
+        ]
+
+    def test_reference_and_model_both_get_e_minus_p(self, diagnostic):
+        transforms = setup_transforms(diagnostic.ilamb_kwargs)
+
+        reference = self._dataset(et=3.0, pr=5.0)
+        model = self._dataset(evspsbl=2.0, pr=7.0)
+        for transform in transforms:
+            reference = transform(reference)
+            model = transform(model)
+
+        np.testing.assert_allclose(reference["emp"].values, -2.0)
+        np.testing.assert_allclose(model["emp"].values, -5.0)

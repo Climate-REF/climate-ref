@@ -20,24 +20,24 @@
       "size": 144947
     },
     "executions/recipe/run/lat_time_mapplot/plot/diagnostic_provenance.yml": {
-      "sha256": "f0e73f1d0f96c89b968fa82106f722c940de324f6ffe50305889f135a896a5d2",
+      "sha256": "acd868f5ce3b8f544e1bd96473fbf16dcafafe04736e7e64041cb7bfe4889ee9",
       "size": 2037
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
-      "sha256": "6f187cb5d1413ffd6ed9f85c0483adee9d31ad73b239ecb8fa7b85f664f66c0d",
-      "size": 62491
+      "sha256": "9b5d95c183f349e856acedf422dd68edeaf8121098908f0aca25de97b83a7014",
+      "size": 62599
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
-      "sha256": "035e497798828512831338e87ba5f1d51e65101e43985c1c2a00b5f0daf4cd7f",
-      "size": 62491
+      "sha256": "822b326cd2389aebc6d9a2b62358a8f8ab4eaaa325723aaf88ce29ae2e24f472",
+      "size": 62452
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
-      "sha256": "28219a78f20f04854e12fff8e17215c0dc1b8d838820ce8dd2c1a3668331a52a",
-      "size": 61089
+      "sha256": "c4122dca37dede23d4bf8051e3a18fb631e5ddb7867d050110ed413fa7073d99",
+      "size": 61051
     },
     "output.json": {
-      "sha256": "126f74e9f4525fc3006ed075ee4c9d997e9b882a75fb61ad9c4c7bf41b1792b3",
-      "size": 2107
+      "sha256": "1f9d60b588ecc52f4997a73e48ebf90b94341bf4ea31c148e4ea6527268940d9",
+      "size": 2055
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",

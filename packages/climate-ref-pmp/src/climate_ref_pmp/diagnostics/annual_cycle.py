@@ -11,7 +11,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.metric_values import SeriesMetricValue
 from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
@@ -509,20 +509,20 @@ class AnnualCycle(CommandLineDiagnostic):
             ),
             TestCase(
                 name="cmip7-ts",
-                description="CMIP7 test case with converted historical ts from ACCESS-ESM1-5",
+                description="CMIP7 test case with historical ts from ACCESS-ESM1-6",
                 requests=(
                     RegistryRequest(
                         slug="annual-cycle-era5-ts-cmip7",
                         registry_name="pmp-climatology",
                         facets={"variable_id": "ts", "source_id": "ERA-5"},
                     ),
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="annual-cycle-cmip7-ts",
                         facets={
-                            "source_id": "ACCESS-ESM1-5",
+                            "source_id": "ACCESS-ESM1-6",
                             "experiment_id": "historical",
                             "variable_id": "ts",
-                            "branded_variable": "ts_tavg-u-hxy-u",
+                            "branding_suffix": "tavg-u-hxy-u",
                             "variant_label": "r1i1p1f1",
                             "frequency": "mon",
                             "region": "glb",

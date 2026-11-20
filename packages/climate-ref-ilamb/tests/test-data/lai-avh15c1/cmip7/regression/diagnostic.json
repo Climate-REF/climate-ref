@@ -4,7 +4,7 @@
       "historical": {}
     },
     "grid_label": {
-      "gn": {}
+      "g115": {}
     },
     "json_structure": [
       "kind",
@@ -45,7 +45,7 @@
       }
     },
     "source_id": {
-      "CanESM5": {}
+      "ACCESS-ESM1-6": {}
     },
     "statistic": {
       "Bias": {
@@ -97,47 +97,47 @@
     "model": {
       "AVH15C1": {
         "historical": {
-          "CanESM5": {
+          "ACCESS-ESM1-6": {
             "r1i1p1f1": {
-              "gn": {
+              "g115": {
                 "global": {
                   "Annual Cycle": {
-                    "Phase Shift": 1.015234,
-                    "Seasonal Cycle Score": 0.6344882
+                    "Phase Shift": 0.5128079,
+                    "Seasonal Cycle Score": 0.7083342
                   },
                   "Bias": {
-                    "Bias": 0.2125416,
-                    "Bias Score": 0.3030195,
-                    "Period Mean": 1.344196
+                    "Bias": 0.05643813,
+                    "Bias Score": 0.3216812,
+                    "Period Mean": 1.212879
                   },
                   "RMSE": {
-                    "RMSE": 1.045743,
-                    "RMSE Score": 0.2813051
+                    "RMSE": 0.8720055,
+                    "RMSE Score": 0.3182607
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.6956835,
-                    "Normalized Standard Deviation": 1.193163,
-                    "Spatial Distribution Score": 0.8219377
+                    "Correlation": 0.7692159,
+                    "Normalized Standard Deviation": 0.9378285,
+                    "Spatial Distribution Score": 0.8809732
                   }
                 },
                 "tropical": {
                   "Annual Cycle": {
-                    "Phase Shift": 1.343885,
-                    "Seasonal Cycle Score": 0.5131881
+                    "Phase Shift": 0.6465357,
+                    "Seasonal Cycle Score": 0.6953791
                   },
                   "Bias": {
-                    "Bias": 0.2513639,
-                    "Bias Score": 0.2145376,
-                    "Period Mean": 3.302099
+                    "Bias": -0.4250592,
+                    "Bias Score": 0.2794627,
+                    "Period Mean": 2.664121
                   },
                   "RMSE": {
-                    "RMSE": 1.844866,
-                    "RMSE Score": 0.2079388
+                    "RMSE": 1.282734,
+                    "RMSE Score": 0.2903773
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.3959815,
-                    "Normalized Standard Deviation": 1.04005,
-                    "Spatial Distribution Score": 0.6969155
+                    "Correlation": 0.7055721,
+                    "Normalized Standard Deviation": 0.7265468,
+                    "Spatial Distribution Score": 0.771355
                   }
                 }
               }

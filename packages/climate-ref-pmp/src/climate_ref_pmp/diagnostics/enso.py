@@ -3,9 +3,10 @@ import os
 from collections.abc import Collection, Iterable
 from typing import Any
 
+import pandas as pd
 from loguru import logger
 
-from climate_ref_core.constraints import AddSupplementaryDataset
+from climate_ref_core.constraints import AddSupplementaryDataset, SelectSingleGrid
 from climate_ref_core.datasets import DatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import (
     CommandLineDiagnostic,
@@ -13,7 +14,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request, RegistryRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
     PMP_RECONSTRUCTION_INPUTS,
@@ -36,6 +37,16 @@ _BRANDED_VARIABLE_NAMES: dict[str, str] = {
 }
 
 
+def _grid_label(datasets: DatasetCollection | pd.DataFrame) -> str:
+    """
+    Name the grids of the model inputs, for labelling the metrics computed from them.
+
+    CMIP7 inputs can come from several grids (e.g. ACCESS-ESM1-6 tauu on g109 and ts on g115),
+    so the label lists all of them, sorted, rather than whichever came first.
+    """
+    return ",".join(sorted(datasets["grid_label"].unique()))
+
+
 class ENSO(CommandLineDiagnostic):
     """
     Calculate the ENSO performance metrics for a dataset
@@ -43,7 +54,7 @@ class ENSO(CommandLineDiagnostic):
 
     reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
-    version = 3
+    version = 4
 
     facets = (
         "kind",
@@ -149,40 +160,38 @@ class ENSO(CommandLineDiagnostic):
                                 "variable_id": self.model_variables,
                             },
                         ),
-                        ConvertedCMIP7Request(
+                        CMIP7Request(
                             slug=f"enso-{self.slug}-cmip7",
                             facets={
-                                "source_id": "ACCESS-ESM1-5",
+                                "source_id": "ACCESS-ESM1-6",
                                 "experiment_id": "historical",
                                 "variable_id": self.model_variables,
-                                "branded_variable": tuple(
-                                    _BRANDED_VARIABLE_NAMES[v] for v in self.model_variables
-                                ),
+                                "branding_suffix": "tavg-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "mon",
                                 "region": "glb",
                             },
                             time_span=("2000-01", "2014-12"),
                         ),
-                        ConvertedCMIP7Request(
+                        CMIP7Request(
                             slug=f"enso-{self.slug}-areacella-cmip7",
                             facets={
-                                "source_id": "ACCESS-ESM1-5",
+                                "source_id": "ACCESS-ESM1-6",
                                 "experiment_id": "historical",
                                 "variable_id": "areacella",
-                                "branded_variable": "areacella_ti-u-hxy-u",
+                                "branding_suffix": "ti-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "fx",
                                 "region": "glb",
                             },
                         ),
-                        ConvertedCMIP7Request(
+                        CMIP7Request(
                             slug=f"enso-{self.slug}-sftlf-cmip7",
                             facets={
-                                "source_id": "ACCESS-ESM1-5",
+                                "source_id": "ACCESS-ESM1-6",
                                 "experiment_id": "historical",
                                 "variable_id": "sftlf",
-                                "branded_variable": "sftlf_ti-u-hxy-u",
+                                "branding_suffix": "ti-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "fx",
                                 "region": "glb",
@@ -238,8 +247,11 @@ class ENSO(CommandLineDiagnostic):
         cmip7_requirement = DataRequirement(
             source_type=SourceDatasetType.CMIP7,
             filters=tuple(cmip7_filters),
-            group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+            # CMIP7 puts variables on different grid labels (e.g. ACCESS-ESM1-6 tauu on g109,
+            # ts on g115), so they are grouped across grids, one grid per variable.
+            group_by=("source_id", "experiment_id", "variant_label"),
             constraints=(
+                SelectSingleGrid(group_by=("source_id", "experiment_id", "variant_label", "variable_id")),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP7),
             ),
@@ -404,7 +416,7 @@ class ENSO(CommandLineDiagnostic):
                 "mip_id": model_source_type.value,
                 "source_id": source_id,
                 "member_id": member_id,
-                "grid_label": input_datasets["grid_label"].unique()[0],
+                "grid_label": _grid_label(input_datasets),
                 "experiment_id": experiment_id,
             }
         )

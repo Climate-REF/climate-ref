@@ -32,7 +32,7 @@
       "size": 143209
     },
     "executions/recipe/run/siarea_min/allplots/diagnostic_provenance.yml": {
-      "sha256": "8c046a6001c96b1033a9d6f594dcb6d3a1f31d19eb6c391bceb709e17e995b22",
+      "sha256": "3c4d71fbcaf803ad2a1ab29f6638359095ab7787a5a3d7cce8cb39c0517d737c",
       "size": 1698
     },
     "executions/recipe/run/siarea_seas/allplots/diagnostic_provenance.yml": {
@@ -40,24 +40,24 @@
       "size": 1678
     },
     "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "sha256": "bb6a5e7d726c0539e74bd788e8c3368f84cf7ee09b4dd3231f1575f8964067da",
+      "sha256": "36b998d0c5b86f972a22aa9f237892bd3fc37c56c3beb174172e582209042eec",
       "size": 9522
     },
     "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "sha256": "c2e7f6895c20e2a7747704467bde56aedca08820ea1fc793f133d65dff128ebe",
+      "sha256": "834fb9331a39cbd48f28160622b3990a7dda75174b1bb95482250fbcebcf374d",
       "size": 9714
     },
     "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "sha256": "90929d0b5759de610abf288a5360c62ea7f322dc1c8b99949e12cbbfbdbd5d12",
+      "sha256": "6c192829841064ef457de5d42abf5603d02a02120d1a127fab36d84321ea14cf",
       "size": 8752
     },
     "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "sha256": "516325455afa888f9975632ebcbeeb8ff4135e7e88611a4c5b1649a4f86130eb",
+      "sha256": "97881d4c9fa392b0aca58cb1ab58e0809ab67c08648af538fe1a04f7e1e10475",
       "size": 8752
     },
     "output.json": {
-      "sha256": "451bcae9a54d7d358a750ef4910d33b1d6b68666596e863ecb897dc15ffd45d8",
-      "size": 5266
+      "sha256": "17224703a3a03bc75e5b2b8f2c8958f1968a4025293821352b4270e047c497a6",
+      "size": 5214
     },
     "series.json": {
       "sha256": "b4e958645e2b5802a9ed2e6ebb6b872ef802846657b312bd78d63d780a725f59",

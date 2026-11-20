@@ -32,32 +32,32 @@
       "size": 144555
     },
     "executions/recipe/run/siarea_min/allplots/diagnostic_provenance.yml": {
-      "sha256": "45612005f1ed87353079faf3396a1f9e5392293e85a3287f0c16835fc865f10b",
+      "sha256": "5918df47791c30ef023d21d372b4b2fa948e7d4916dd31e187f0a0b224f46cb2",
       "size": 1780
     },
     "executions/recipe/run/siarea_seas/allplots/diagnostic_provenance.yml": {
-      "sha256": "2e5941af61db10d3c335a103e55b21fa8e4ca27fdf82fdb2c6110cd319bd2adb",
+      "sha256": "edd622669431c90a30f3b37f4080c747ad566e29af0d0878601ec3420a23603f",
       "size": 1760
     },
     "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_ambiguous_ensemble.nc": {
-      "sha256": "37636d7bf040531764e046fecaf1ab4950a8fe70525aa31074982204dc73b84f",
+      "sha256": "ee6ee4acab1fe67e65c8a475928bf622b72839d1442fed34828a5bda01b24023",
       "size": 9529
     },
     "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_ambiguous_ensemble.nc": {
-      "sha256": "8aabf22b0adde4222d7b4fa6baacd4260a55c1dd611fabf6ac93f30100092167",
+      "sha256": "74b0596c6ce99019ce90a4346411f8daeb272ebe9fce3d9475050c63c085453b",
       "size": 10201
     },
     "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_ambiguous_ensemble.nc": {
-      "sha256": "7656bfb33f235453cfbcf1de8d0cc2f5a0724463c7f1bea141d5410d3bee0edd",
+      "sha256": "ddc8c4108a4ca596791de7cd297a31af46bfd1f196eeee94212902c5782858fa",
       "size": 8759
     },
     "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_ambiguous_ensemble.nc": {
-      "sha256": "d0d5bffd9d744d90d8e7415ab083ecebde8b284c3f287b2abb2e1d03dfab58a2",
+      "sha256": "3ca81b59f8a4f34a9687c574ff656fb4a50cde2f55564db4e2c8293a02bff036",
       "size": 8759
     },
     "output.json": {
-      "sha256": "40a4251da9a00624a660887c8897ca5ab81278330195e3d80a3c0f8658d39836",
-      "size": 5474
+      "sha256": "39b48712e8c8c15815e4ff14cf5f532394c3db321dae6e6efd1733ed9331466d",
+      "size": 5422
     },
     "series.json": {
       "sha256": "9d29f65f6e475b86fc29cd5b31c7e46ac5f3428f1b4d412b044957e7a9b108b2",

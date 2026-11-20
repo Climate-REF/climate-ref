@@ -1,0 +1,623 @@
+{
+  "data": {
+    "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.nc",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_C-North-America.nc",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_Mediterranean.nc",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.nc",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_C-North-America.nc",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Mediterranean.nc",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_C-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Mediterranean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_C-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Mediterranean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.nc",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_C-North-America.nc",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_Mediterranean.nc",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.nc",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_C-North-America.nc",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Mediterranean.nc",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_Arctic-Ocean.nc",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_C-North-America.nc",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_Mediterranean.nc",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Arctic-Ocean.nc",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_C-North-America.nc",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Mediterranean.nc",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_Arctic-Ocean.nc",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_C-North-America.nc",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_Mediterranean.nc",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Arctic-Ocean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Arctic-Ocean.nc",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_C-North-America.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_C-North-America.nc",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Mediterranean.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Mediterranean.nc",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "executions/recipe/index.html": {
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null,
+      "filename": "executions/recipe/index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "executions/recipe/index.html",
+  "metrics": null,
+  "plots": {
+    "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.png",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_C-North-America.png",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_Mediterranean.png",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.png",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_C-North-America.png",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "ua"
+      },
+      "filename": "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Mediterranean.png",
+      "long_name": "Time series of Eastward Wind for various datasets."
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_C-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Mediterranean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_C-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Mediterranean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets."
+    },
+    "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.png",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_C-North-America.png",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_Mediterranean.png",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.png",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_C-North-America.png",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Mediterranean.png",
+      "long_name": "Time series of Precipitation for various datasets."
+    },
+    "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_Arctic-Ocean.png",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_C-North-America.png",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_Mediterranean.png",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Arctic-Ocean.png",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_C-North-America.png",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "psl"
+      },
+      "filename": "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Mediterranean.png",
+      "long_name": "Time series of Sea Level Pressure for various datasets."
+    },
+    "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_Arctic-Ocean.png",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_C-North-America.png",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_Mediterranean.png",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Arctic-Ocean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "statistic": "mean anomaly",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Arctic-Ocean.png",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_C-North-America.png": {
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "statistic": "mean anomaly",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_C-North-America.png",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    },
+    "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Mediterranean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "statistic": "mean anomaly",
+        "variable_id": "hus"
+      },
+      "filename": "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Mediterranean.png",
+      "long_name": "Time series of Specific Humidity for various datasets."
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "executions/recipe/run/main_log_debug.txt",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

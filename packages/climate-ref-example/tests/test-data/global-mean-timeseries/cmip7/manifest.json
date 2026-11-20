@@ -1,18 +1,18 @@
 {
-  "catalog_hash": "b839261041ed5a821ef1655304ff905a7b58cfa3",
+  "catalog_hash": "dbd4781e2fb58e61678515d491f4c93cb0a70562",
   "committed": {
-    "diagnostic.json": "416ba3296808c380370fb8fd11c4c77d0898ca5ee2c19614b0574457d7a42ff9",
+    "diagnostic.json": "3da33e45b30428d364679a5f328788f04b6891491a539920464cc0942f11efa5",
     "output.json": "e937c8b787585d0c2f4025eb93a4effe8f4065ba4575285655d5be6cffa5db55",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "diagnostic_version": 1,
   "native": {
     "annual_mean_global_mean_timeseries.nc": {
-      "sha256": "68f789157617604344470133d5749a94805934abb8624caa96d80866e28196b9",
-      "size": 31184
+      "sha256": "7045df2db8b09360c7b4f39af08620b289fc27a7861fad493b62dda1c1bd3530",
+      "size": 25103
     },
     "diagnostic.json": {
-      "sha256": "5bb5817e3c59a02859dd3cd2d94f3b00e026a25a70e0f22b1e7fc5234ce636f7",
+      "sha256": "2752183593144d77404e9ca1f7d696acfd5c05905b75410348996b2526d39d7b",
       "size": 968
     },
     "output.json": {
@@ -25,5 +25,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

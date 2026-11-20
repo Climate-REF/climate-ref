@@ -11,12 +11,16 @@ def pdo_example_dir() -> Path:
 
 
 @pytest.fixture
-def provider(tmp_path):
+def provider(tmp_path, monkeypatch):
+    # The provider is a module-level singleton shared with later tests in the same session,
+    # so its state is restored afterwards rather than left pointing at the mock executable
     provider = climate_ref_pmp.provider
-    provider.prefix = tmp_path / "conda"
-    provider.prefix.mkdir()
-    provider._conda_exe = provider.prefix / "mock_micromamba"
-    provider._conda_exe.touch()
+    prefix = tmp_path / "conda"
+    prefix.mkdir()
+    conda_exe = prefix / "mock_micromamba"
+    conda_exe.touch()
+    monkeypatch.setattr(provider, "_prefix", prefix)
+    monkeypatch.setattr(provider, "_conda_exe", conda_exe)
     provider.env_path.mkdir()
 
     return provider

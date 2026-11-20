@@ -1,16 +1,16 @@
 {
   "data": {
-    "CanESM5.csv": {
+    "ACCESS-ESM1-6.csv": {
       "description": "Scalar and time-series data produced by ILAMB.",
       "dimensions": null,
-      "filename": "CanESM5.csv",
-      "long_name": "CanESM5.csv"
+      "filename": "ACCESS-ESM1-6.csv",
+      "long_name": "ACCESS-ESM1-6.csv"
     },
-    "CanESM5.nc": {
+    "ACCESS-ESM1-6.nc": {
       "description": "Scalar and time-series data produced by ILAMB.",
       "dimensions": null,
-      "filename": "CanESM5.nc",
-      "long_name": "CanESM5.nc"
+      "filename": "ACCESS-ESM1-6.nc",
+      "long_name": "ACCESS-ESM1-6.nc"
     },
     "Reference.nc": {
       "description": "Scalar and time-series data produced by ILAMB.",
@@ -25,10 +25,10 @@
       "description": "Page displaying scalars and plots from the ILAMB execution.",
       "dimensions": {
         "experiment_id": "historical",
-        "grid_label": "gn",
+        "grid_label": "g115",
         "member_id": "r1i1p1f1",
         "reference_source_id": "Hoffman",
-        "source_id": "CanESM5"
+        "source_id": "ACCESS-ESM1-6"
       },
       "filename": "index.html",
       "long_name": "Results page"
@@ -37,20 +37,20 @@
   "index": "index.html",
   "metrics": null,
   "plots": {
-    "CanESM5_None_nbp.png": {
+    "ACCESS-ESM1-6_None_nbp.png": {
       "description": "",
       "dimensions": {
         "region": "None"
       },
-      "filename": "CanESM5_None_nbp.png",
+      "filename": "ACCESS-ESM1-6_None_nbp.png",
       "long_name": ""
     },
-    "nan_None_accumulation.png": {
+    "None_None_accumulation.png": {
       "description": "",
       "dimensions": {
         "region": "None"
       },
-      "filename": "nan_None_accumulation.png",
+      "filename": "None_None_accumulation.png",
       "long_name": ""
     }
   },

@@ -4,7 +4,7 @@
       "historical": {}
     },
     "grid_label": {
-      "gn": {}
+      "g115": {}
     },
     "json_structure": [
       "kind",
@@ -47,7 +47,7 @@
       }
     },
     "source_id": {
-      "CanESM5": {}
+      "ACCESS-ESM1-6": {}
     },
     "statistic": {
       "Bias": {
@@ -107,59 +107,59 @@
     "model": {
       "WECANN": {
         "historical": {
-          "CanESM5": {
+          "ACCESS-ESM1-6": {
             "r1i1p1f1": {
-              "gn": {
+              "g115": {
                 "global": {
                   "Annual Cycle": {
-                    "Phase Shift": 0.8358033,
-                    "Seasonal Cycle Score": 0.6934359
+                    "Phase Shift": 0.2489774,
+                    "Seasonal Cycle Score": 0.7770339
                   },
                   "Bias": {
-                    "Bias": 8.232903e-09,
-                    "Bias Score": 0.4755053,
-                    "Period Mean": 3.246113e-08
+                    "Bias": 2.75586e-09,
+                    "Bias Score": 0.4863822,
+                    "Period Mean": 2.718574e-08
                   },
                   "RMSE": {
-                    "RMSE": 2.220021e-08,
-                    "RMSE Score": 0.3553452
+                    "RMSE": 1.853209e-08,
+                    "RMSE Score": 0.437484
                   },
                   "Relationship pr": {
-                    "Relationship Score pr": 0.3673186
+                    "Relationship Score pr": 0.4693207
                   },
                   "Relationship tas": {
-                    "Relationship Score tas": 0.5505568
+                    "Relationship Score tas": 0.7421755
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.8716184,
-                    "Normalized Standard Deviation": 1.466728,
-                    "Spatial Distribution Score": 0.810904
+                    "Correlation": 0.8919705,
+                    "Normalized Standard Deviation": 1.420256,
+                    "Spatial Distribution Score": 0.8384754
                   }
                 },
                 "tropical": {
                   "Annual Cycle": {
-                    "Phase Shift": 1.119412,
-                    "Seasonal Cycle Score": 0.5635153
+                    "Phase Shift": 0.8313826,
+                    "Seasonal Cycle Score": 0.7132507
                   },
                   "Bias": {
-                    "Bias": 1.794196e-08,
-                    "Bias Score": 0.3451125,
-                    "Period Mean": 7.665891e-08
+                    "Bias": 1.425563e-08,
+                    "Bias Score": 0.376623,
+                    "Period Mean": 7.344278e-08
                   },
                   "RMSE": {
-                    "RMSE": 3.507459e-08,
-                    "RMSE Score": 0.290748
+                    "RMSE": 3.34631e-08,
+                    "RMSE Score": 0.3546521
                   },
                   "Relationship pr": {
-                    "Relationship Score pr": 0.3671416
+                    "Relationship Score pr": 0.6055612
                   },
                   "Relationship tas": {
-                    "Relationship Score tas": 0.5204406
+                    "Relationship Score tas": 0.5324306
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.312455,
-                    "Normalized Standard Deviation": 1.532967,
-                    "Spatial Distribution Score": 0.5496594
+                    "Correlation": 0.6650566,
+                    "Normalized Standard Deviation": 2.091399,
+                    "Spatial Distribution Score": 0.5043658
                   }
                 }
               }

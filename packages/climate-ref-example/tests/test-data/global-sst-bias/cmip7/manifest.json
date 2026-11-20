@@ -1,37 +1,37 @@
 {
-  "catalog_hash": "31219e91a3b914cea8447ddba8706b2b2ab3397b",
+  "catalog_hash": "a91e49efd354d7bbf1a2b931106b173db3bed47b",
   "committed": {
-    "diagnostic.json": "f970bdf3a6f5b945d5c3ea796a597066e370b8ba7317928a907015d276b9a165",
+    "diagnostic.json": "994006cd6b904352f93e7b65832e960e72a90c03f066d5e9253635e4dcc5ec29",
     "output.json": "3fe2b84a2d7c0b7c5332657ccd49b6dfdbb6634d8d48902e883da35cd74ad9d4",
-    "series.json": "87768b13ba73e19f63ba9af89972b12bb381b0658bb010b66834c9a5a2c500b9"
+    "series.json": "4ad0b4d88e6d34fdc1b2d32b6cee6d4da9db59982f77c83ff865d46cb21de1b1"
   },
   "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
-      "sha256": "1ac53a6676c65d7efef9d7d5c36744ee7021778c9278af4e641f3e22c24e64d3",
-      "size": 942
+      "sha256": "c77e7bc84078f756bfc3eb245554b81b026918bda5be48404f959da40b021b04",
+      "size": 944
     },
     "global_mean_surface_temperature.nc": {
-      "sha256": "45084400f91903c6a4a84aa09a63cf24a814c24aa05b195fd88ee18c2d737d4e",
-      "size": 22171
+      "sha256": "1c8e26d8207f9d45f6329d11894333073e4cd7dbe31c37f4be9a198b97b11e4a",
+      "size": 13927
     },
     "output.json": {
       "sha256": "7e2ba5fae787a6c1ee6b61365f8010ec2d940e9c70f7bb4000dc5de8b3c21fcc",
       "size": 1127
     },
     "series.json": {
-      "sha256": "22587d0877dcb65b400c8c96d3034dc4b64a82c954f578f4f1b7dcabaa57e48b",
-      "size": 17493
+      "sha256": "11e4b696e2f45d6f9fffa8cc1193397c92c19ed093db5e6810472f5648ba77a7",
+      "size": 3357
     },
     "surface_temperature_bias.png": {
-      "sha256": "60fdb66903652535446b1e40d4b27e48bb4cb1aa565a126c9e70a43f59135887",
-      "size": 55354
+      "sha256": "c908d6b9a863bfbd934aa90a8f7e4465b704994cbf1303f0faea508d04fa4c09",
+      "size": 42960
     },
     "surface_temperature_timeseries.png": {
-      "sha256": "83b9edfdc44496570d58809087a1262994a0f0c950e1929b651e02dd022b55ad",
-      "size": 67450
+      "sha256": "46b6fbddb7ba58d6b4e713be73b04193c4a327446311aa9734bf0c403758c8be",
+      "size": 59032
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

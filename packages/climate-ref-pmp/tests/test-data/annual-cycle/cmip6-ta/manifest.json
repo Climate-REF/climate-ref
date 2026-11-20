@@ -8,11 +8,11 @@
   "diagnostic_version": 6,
   "native": {
     "diagnostic.json": {
-      "sha256": "418d73972a31169eb544945a04707a9f4c97b0ca391e6fcab39b640a06a62c5a",
+      "sha256": "a06eb1e0c82021a547017ce07d836710f8536a1f24c37ceba747c009542d2499",
       "size": 8981
     },
     "output.json": {
-      "sha256": "eba23540949b00d2da3e869b117ccf9a9dbfa8d013eafad8cfec1b57c6a55f3b",
+      "sha256": "6eda0e48a5f03a9e0addeb6275ac6925de8a4b89dcd2a17b236007e7a1437a4c",
       "size": 8242
     },
     "series.json": {
@@ -40,7 +40,7 @@
       "size": 358386
     },
     "ta-200_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "2b71a621897accdeeab394d6b5cb8f5bab2f74af6da2a0533cc8e598d983f549",
+      "sha256": "a0969e6407e01cfe61d13bb4fb8f61f2f8217b6b21b48d15695c0be6363ce0d2",
       "size": 12612
     },
     "ta-200_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
@@ -72,7 +72,7 @@
       "size": 354835
     },
     "ta-850_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "f2459adcb7ce40c4bb03416792abf8cdf0023459304cee8dc29b54dece431524",
+      "sha256": "d39ae17b9252361d7099fa9ad279ac9eef4ae9f000d8434fe919f95ef4b9b99b",
       "size": 12599
     },
     "ta-850_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {

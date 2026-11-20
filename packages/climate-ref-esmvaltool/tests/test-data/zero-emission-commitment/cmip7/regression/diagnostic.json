@@ -1,0 +1,40 @@
+{
+  "DIMENSIONS": {
+    "grid_label": {
+      "g120": {}
+    },
+    "json_structure": [
+      "grid_label",
+      "source_id",
+      "variant_label",
+      "region",
+      "metric"
+    ],
+    "metric": {
+      "zec": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "CanESM5-1": {}
+    },
+    "variant_label": {
+      "r1i1p2f1": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "g120": {
+      "CanESM5-1": {
+        "r1i1p2f1": {
+          "global": {
+            "zec": -0.1231159
+          }
+        }
+      }
+    }
+  }
+}

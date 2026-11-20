@@ -1,12 +1,2369 @@
 {
-  "catalog_hash": "ea67fe0eef24fbd1fdad84837e37f1ca1cd73cc9",
+  "catalog_hash": "ea5e49df8d1aab24ab1fdc24305130ee600b215f",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "a7e4a9a636d325b6d24d36bf6f86acffa1c2702b374133616d3a1747eecf71cf",
-    "series.json": "4f0ca647ac6c73368c22eedbd057b1aa2c960eadb958a2c60516f9e5d315b429"
+    "output.json": "a47c002fdce45b2c0028f03d469476a277f0d3d39ef9bcb0f6760374500fb2ab",
+    "series.json": "da2c3c991dbabb18b45c3712b888ea4317047499e1417fc808136578ee4695a7"
   },
-  "diagnostic_version": 2,
-  "native": {},
+  "diagnostic_version": 3,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "eb30f96677a4dc8a555cbf7b68ac23352440f804e2fc2864b46a3a093d24228d",
+      "size": 660339
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arabian-Peninsula.png": {
+      "sha256": "f4d759b05c297a49676052ef72c8b48b1a5a5d03bf6291aabcd7569765f197fd",
+      "size": 101412
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arabian-Sea.png": {
+      "sha256": "41bae89fd42d6ba83b1e8720191daf21a595a3c3f4e834f18771bb0b1a03150e",
+      "size": 95141
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arctic-Ocean.png": {
+      "sha256": "75799e4d4d8ea3c3423c6aad989a8b70555f68c8e0e2532a4b9af6137dded731",
+      "size": 115910
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Bay-of-Bengal.png": {
+      "sha256": "0a338bf61d05ac926cbe89a0698e59a5b96aa7f753f174864afda6a1d84ee29f",
+      "size": 101276
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_C-Australia.png": {
+      "sha256": "ad90a16624199b13fdeebbb842b42141c405fa023ae16e9f85f86b2025542147",
+      "size": 102983
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_C-North-America.png": {
+      "sha256": "abf7ede26f1fe470743d7fa48619c446e62ad13ea62217c5e410c534c751bd32",
+      "size": 100135
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Caribbean.png": {
+      "sha256": "35e2c45398775b25766d18758dec503d91f958da9fc897c0ddd5ec8e16de50b1",
+      "size": 111273
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Central-Africa.png": {
+      "sha256": "27afb7b2377548c8afcb1dc04eae11793079594ca8bf2f39426c377b2f6fc7a6",
+      "size": 114368
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Antarctica.png": {
+      "sha256": "4a82a7044236cadd6bad454eba60f20e93791dc74e6bf07aa9599c355521e3f8",
+      "size": 100415
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Asia.png": {
+      "sha256": "2bff3128a260ed99f49c510ad963115dd3e0a84ed6ee809e2833d8d70ca71139",
+      "size": 102388
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Australia.png": {
+      "sha256": "42ccf91737b7432ee4211a9255045309d5195b5944280d98f2efeb19a3bbb4c0",
+      "size": 106255
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-C-Asia.png": {
+      "sha256": "f9af68ef263c3a7b8bab69ee22b7a95c08b8c19413c8274db109ecf872f14e20",
+      "size": 108361
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Europe.png": {
+      "sha256": "329bd6afcd5a3f7c575cb20721d66bf4bcdffa6c72785065ff1628da4a6e1fa7",
+      "size": 102758
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-North-America.png": {
+      "sha256": "0aca7c4a5a5f3ce9b740ffda32dd464fc496222300d1ba6b7aa1371663502de8",
+      "size": 102672
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Siberia.png": {
+      "sha256": "0c98006460decd5d50a05af84d977f823e319d6dac7607a869e869784d783fd3",
+      "size": 106974
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Southern-Africa.png": {
+      "sha256": "01a195ad504b64b2c6cc087424b7601b687ee6fe66292623d9617fa192bc12e3",
+      "size": 103793
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Atlantic-Ocean.png": {
+      "sha256": "27a485018f608f9e047193bca5a276e48afae61f60462b8e38ea0c878f8c4b60",
+      "size": 108599
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Indic-Ocean.png": {
+      "sha256": "39c1f1db3fc5852a2ee9ae8111f2f3c61e49f0e525ba262223daec34a2709182",
+      "size": 114972
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Pacific-Ocean.png": {
+      "sha256": "01b6c6db21a33e73df9b66f0a14052135f873d4cef490119c9cd3bbdccb53530",
+      "size": 104936
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Greenland-Iceland.png": {
+      "sha256": "41e9494cea05df0ef556cba6a76c784c7b04027db297feaca3a667b700410646",
+      "size": 108213
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Madagascar.png": {
+      "sha256": "09ee2782384d752eedd14e9ddeb921bdcb4a9413b61363b5822ca44811293b17",
+      "size": 103935
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Mediterranean.png": {
+      "sha256": "f77c25479e6e20c71720f352227ac30fea963c5108f5f744997db1ceb1e3ac0e",
+      "size": 105476
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Atlantic-Ocean.png": {
+      "sha256": "73f23891b658d0589f4378c24072f9489cbfbde3e1edb4cb8c2cb7d7f0bb36d1",
+      "size": 113841
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Australia.png": {
+      "sha256": "b9dbcd77b20f9c6629fae9643ceca073d654e20b1bb1afdbab99ee0a4c2db512",
+      "size": 102848
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Central-America.png": {
+      "sha256": "acb1ed92049865a514000d957a62f8374258ecdc68952f7b5a91ddd1590c22da",
+      "size": 107097
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-E-North-America.png": {
+      "sha256": "4a5a17b4f554d31ed5fc2202b1d8829a5c5804b3a56f4509b4596ad5d2186a70",
+      "size": 101722
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-E-South-America.png": {
+      "sha256": "3a47fe3ce13b3486c4ea9068d8554e4b14b485e748c4767acc94b7d274ea7087",
+      "size": 109884
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Eastern-Africa.png": {
+      "sha256": "159dc011befdda1593f92e8f382835d8f920944c90803f818befdc2db0865161",
+      "size": 112749
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Europe.png": {
+      "sha256": "b66dba274a4f97f555084de56ea693a42ee4b9291f65f449da6adf8264671581",
+      "size": 104003
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Pacific-Ocean.png": {
+      "sha256": "93d4eba6d3f9f510884632a0bb8f61f7be707894d72466c4c4e2dda2e1d4bafd",
+      "size": 101145
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-South-America.png": {
+      "sha256": "f1a9fe6ef76b1bf348d2558d8bcf59f5184dba7133cbd18ea28dee0195def14f",
+      "size": 104256
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-W-North-America.png": {
+      "sha256": "b21473a292a7fe4d0de6b0665dfb1c9283016a024eeac1cc77f67103130340d4",
+      "size": 105233
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-W-South-America.png": {
+      "sha256": "deee625c8552ace20fed60d3af56d29449aa6291fde2fb3a795cdbf4238ea68a",
+      "size": 101990
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_New-Zealand.png": {
+      "sha256": "cc8536dd736dcb4f2ffe33b8d699d0d173155f3c1e779f2418ef1603a90ec8a6",
+      "size": 103857
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Russian-Arctic.png": {
+      "sha256": "a2d5190b25d898fa83bdaf3f28b0aeab2a2a00e4fd527c92b8d2ec2594850fa9",
+      "size": 109563
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Russian-Far-East.png": {
+      "sha256": "918911fbdbdfbc0fb2dd7bde65b725b7aa542fe1a84eeed4598402bbd620c815",
+      "size": 116729
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Asia.png": {
+      "sha256": "5071a45617edc9467ee47437d3952f14ffe6eef59c913a129051f00a47d7a076",
+      "size": 98742
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Atlantic-Ocean.png": {
+      "sha256": "bf9d0e84cbe0ac3269f922ceb678c577631a2aab6c684d1371f627becf8a7f84",
+      "size": 115019
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Australia.png": {
+      "sha256": "df9481e52a96063a8d088a7113b17a01038556e7e1a76f33a22cd5de1397bbaf",
+      "size": 115081
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Central-America.png": {
+      "sha256": "bec01442fed098a421222f08018537da7cf019172caec621d336bcff07d5628f",
+      "size": 107328
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-E-Asia.png": {
+      "sha256": "0696c58b5fe521bf567a15dd042072bcfbe613b7d3e0614b26c52a45d96f8d44",
+      "size": 98212
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-E-South-America.png": {
+      "sha256": "115128e306efa897cf0b6adbca073a273a6209be22b3d5a5e917c670b9743030",
+      "size": 115806
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Eastern-Africa.png": {
+      "sha256": "7d79490b63ad5361781f80783750ec6c5bc86c1a647a6968ebb847f52f369b0c",
+      "size": 98475
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Indic-Ocean.png": {
+      "sha256": "04201dd70367d84650da9d58c60d6114ed1f42bc68945012cc3bea8dcf4491cb",
+      "size": 111536
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Pacific-Ocean.png": {
+      "sha256": "5f0ad0b6c09853d93154a974a163acd663c968118cce12e7c14013236be08ff3",
+      "size": 109774
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-South-America.png": {
+      "sha256": "a7b366a16e3138062a0f9527c533c8ce43684c3b2a38423de37b38c86c01cfff",
+      "size": 117964
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-W-South-America.png": {
+      "sha256": "8464a10f4bd5ebe947caaea90bc35456b3478fd75797428f2e0a97dabeb85312",
+      "size": 110366
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Sahara.png": {
+      "sha256": "35b1a448d743b6a95e076c00df14e1d6017625565731c91857e0cdb455fbb335",
+      "size": 99715
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_South-American-Monsoon.png": {
+      "sha256": "73e5df0774e0a741498853f047487ca2553735f938a518e57cf01e5e01e9ff2f",
+      "size": 105000
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Southern-Ocean.png": {
+      "sha256": "b77e20a047848dc4cfbf6b67f9cb96302246be4c6e041daffd6e374f3501b36e",
+      "size": 113802
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Tibetan-Plateau.png": {
+      "sha256": "fbbdad0664ae6c27b6c0110a3946de225c55c4bd9c7baff8955d730221424638",
+      "size": 104477
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Antarctica.png": {
+      "sha256": "5ec3479f7e7536676ec028382deba6090b023d612eb09116920dff4d0c38afb9",
+      "size": 101358
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-C-Asia.png": {
+      "sha256": "3a6f51ee823ca9e0c7d3ff6de99b87e4fd146b7dd6b022f9bc7a0debb43d8bb8",
+      "size": 99125
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-North-America.png": {
+      "sha256": "9e58ca4741c3926cb448a112ed6c093ab939865556585c9009e3ec89eab8b2aa",
+      "size": 109101
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Siberia.png": {
+      "sha256": "319f49b2a070597bd3180f56d1b75a5a9427f9bde12aa3505b4836670e917916",
+      "size": 112991
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Southern-Africa.png": {
+      "sha256": "d9e8b527793ef03a6d16f173b58bed751f8e3fffbc95db0df5162fb1cc80ffff",
+      "size": 104370
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_West-Central-Europe.png": {
+      "sha256": "b779fc1c601038ad2f789af644870b0d98091587482b23cb18dc6825b792f757",
+      "size": 112917
+    },
+    "executions/recipe/plots/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Western-Africa.png": {
+      "sha256": "67cce724610f5add6087092607871c95bcb82c820740572018e1bdb9120ed87f",
+      "size": 101495
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Peninsula.png": {
+      "sha256": "c084aa8b936e23d347ffd534b14b47fbd248717d5ed7078261be9231e0f1c4ad",
+      "size": 126939
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Sea.png": {
+      "sha256": "e0cae8af4dc077e58a0cd93c7ed8aa93d6bfa000aaaaa5065c7ace169235662f",
+      "size": 127057
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Arctic-Ocean.png": {
+      "sha256": "86f661d3b5830adf2bc983d870915bb899c178221d367a241c6edef3d4847be4",
+      "size": 111174
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Bay-of-Bengal.png": {
+      "sha256": "638ea16717f4bd77ab8d8e2c8a59dcacaac56065b83114974c7b55674f4a8d8c",
+      "size": 124548
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_C-Australia.png": {
+      "sha256": "65072918890d9cc1c706f3da53d114386172be5177d135e6613dc73bf47187aa",
+      "size": 125413
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_C-North-America.png": {
+      "sha256": "b2d404b9c9d71aa5356b58137bdf16b7bfeb8910b83390d494883c17d34734c4",
+      "size": 115198
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Caribbean.png": {
+      "sha256": "3215552fe3094af9570122d2683cdab3943fc9445b162407dfbd95beb0b82a06",
+      "size": 116478
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Central-Africa.png": {
+      "sha256": "7ce108d7278773bd9577b4f3fb17c3a145b9b804d9e1769c7166cfafbbc55e66",
+      "size": 131267
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Antarctica.png": {
+      "sha256": "d501da5a9489e383d778690c7cacb9ccd9d15c7acf43dfa79a762da0a198451c",
+      "size": 110692
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Asia.png": {
+      "sha256": "f8421b55276c131ef9cacb9ef24b6234c1ccfc60e4540808519c994c69e82205",
+      "size": 126235
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Australia.png": {
+      "sha256": "f854072b949229646e89114e384b4a3cb8c56d0e33275d827f3bc805d8e2b1b5",
+      "size": 112766
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-C-Asia.png": {
+      "sha256": "4084a0af790c50849438b07d274645dd7558aed90419e67f2a6d321e4d2a8c80",
+      "size": 120004
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Europe.png": {
+      "sha256": "50f39962a672a94138f2b95b4c9a593c10e292afa2e3c9d4b72b42642d4db3f7",
+      "size": 116885
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-North-America.png": {
+      "sha256": "7c8428a59ffe9272c9659c694ab56c3a8ddde0785a3903390e0324ea6a00ff6f",
+      "size": 123399
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Siberia.png": {
+      "sha256": "90e2c91065520060b33891f7dde1ded514de8da0d3a4c273f1b3222f9010b877",
+      "size": 108903
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Southern-Africa.png": {
+      "sha256": "ecb242d2b5d91225b3d859a1569d19337d01aba92b2a298bb686ce61d60524bb",
+      "size": 120434
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Atlantic-Ocean.png": {
+      "sha256": "e42760083f2715f349c778634db1712f33865fec7aa6444835843b2c701597e7",
+      "size": 121452
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Indic-Ocean.png": {
+      "sha256": "9a9aceb0c3024c49f49b84e3af0dc5bf7e43c481da72d039e235318fd6349fd9",
+      "size": 133920
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Pacific-Ocean.png": {
+      "sha256": "0e9c61841e9880b8a1ec069d588f41643baf51a8b9b23d3d2026b8be33628ef1",
+      "size": 128198
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Greenland-Iceland.png": {
+      "sha256": "d77c35727c2cf205151cec954eb45d9de056ca2ae1ccb589cf6f9ddc66726f39",
+      "size": 110782
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Madagascar.png": {
+      "sha256": "03b7fe7148ae629d5925c8fcecdc7a4e304a56fd8d817bcf1c015c3593b2c8ff",
+      "size": 111936
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Mediterranean.png": {
+      "sha256": "0d545171671525933aab5caceadcd16fccedd11f0e58de0c7c632f9ad4fb5d97",
+      "size": 122107
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Atlantic-Ocean.png": {
+      "sha256": "aabea357b257525a80c9bd35021740629eefcaf090f229ca0a5b96d254ff3217",
+      "size": 112992
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Australia.png": {
+      "sha256": "c4dfeb4d1c4b607593d265827d42a8e83272d5d7dfbd2d9e73ee940750bb5a2c",
+      "size": 113824
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Central-America.png": {
+      "sha256": "11562f0140ab07768a77831415e644150298cf6aade45e73405bb1b799162cb2",
+      "size": 116398
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-North-America.png": {
+      "sha256": "de2e6b8b86e48fcdd30344c2c00a54c589a136c8b537b034ed441700adb86bc5",
+      "size": 115365
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-South-America.png": {
+      "sha256": "d036a15cd2867fd9840a99cbe485e3a72adbb321599c4e7c35750ac778d3ba12",
+      "size": 121444
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Eastern-Africa.png": {
+      "sha256": "b5597908e3724e68d630b381cb122cc6f29c91a3bfaa3e940dd3b52f3a0c3b68",
+      "size": 106067
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Europe.png": {
+      "sha256": "b544b9c824bd5a0c18b24836f07e118e8149aefb23df065d4c7b07c169e0c173",
+      "size": 117763
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Pacific-Ocean.png": {
+      "sha256": "e6f4f4f6524009a91efe0dcc5ea60a8c01e96ae864b4e25c808224597ae38406",
+      "size": 112046
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-South-America.png": {
+      "sha256": "3a1466ea38dcde91e40045c5a684afd3490c44c4f48f76904345c64bea765c78",
+      "size": 119490
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-North-America.png": {
+      "sha256": "c75c16709bd20594a831b70a64066205c2abeff27c2c040492071947d839da3b",
+      "size": 117772
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-South-America.png": {
+      "sha256": "8b9e7f82b08653a3dde0611c4a4cf0fa43ff5e8e45db9ef33d6b1b4def9ca0a1",
+      "size": 115091
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_New-Zealand.png": {
+      "sha256": "f19c29e0ff8cd67590af54a95c378504c4be9eddfe11d8f3596a4ebf9e1e3487",
+      "size": 116834
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Arctic.png": {
+      "sha256": "35cd4431bbccbec7ea9d66adba112876d267f214f940dbf788bf7bb193362c58",
+      "size": 119759
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Far-East.png": {
+      "sha256": "522ba74b7a71999bdc1cfc1d69d08ea50784e4d3a869a604f2ba023ee679d370",
+      "size": 112671
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Asia.png": {
+      "sha256": "43835ff756cec7f63cffaf99c317a78f0226765e5eb5b1d7437932af378394ed",
+      "size": 119182
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Atlantic-Ocean.png": {
+      "sha256": "c2606e340492b090e33548eba6a35cde553316aa254d2bbebfdc6155f7c13a8d",
+      "size": 109860
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Australia.png": {
+      "sha256": "6bf36fa4800c17068ee3486c16e7a30409922cdf036ced1437334f1b0cc82c89",
+      "size": 122029
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Central-America.png": {
+      "sha256": "a950104fdf67f761efaf85e896d6a4df70467d12f0d5c0f02ffa95fe61abe637",
+      "size": 114391
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-Asia.png": {
+      "sha256": "3f6f23511d8db6c0c3259405e5bf9373ca2fdef6d353b40ff1bccb10276e3fdf",
+      "size": 125401
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-South-America.png": {
+      "sha256": "8fcb5623056ec54a7b17f54461b98cd2b8cf250e4b104ea4ebd1ce4eba0ec8eb",
+      "size": 117832
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Eastern-Africa.png": {
+      "sha256": "ea07f419ec1eed834a1ebf0bb519c9079f91dfa9b7f03724b56720374c828e22",
+      "size": 117133
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Indic-Ocean.png": {
+      "sha256": "af8d184cc02bb96aade984eb1b58760052ea14cbd0411e259aa06d1ad9137d68",
+      "size": 104781
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Pacific-Ocean.png": {
+      "sha256": "07eb2ba0397f4c1c4786aa2fc597d930fe960ff4993edab6abd33abb5a7bbe7e",
+      "size": 107808
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-South-America.png": {
+      "sha256": "2864e929bb4ce031796d0eaa34e57e4c641e094efd7a6fbf35b759adf3784d84",
+      "size": 119588
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-W-South-America.png": {
+      "sha256": "050eb1c477c26c2538d7d9038924dd91fc1e26169235c8d3d60d3be55225bf70",
+      "size": 118236
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Sahara.png": {
+      "sha256": "b9f3456dc8643614d871b2bb94b6b022aacb3e581611b377e16cecfc06ebd972",
+      "size": 120336
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_South-American-Monsoon.png": {
+      "sha256": "71b00cbc9b4d99bdf7a2f1f40f50072d9d40e56828b2c5707ea47324f1c144fd",
+      "size": 114703
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Southern-Ocean.png": {
+      "sha256": "22e90d9d5771aa0128dea445cc4f94ad6ee9ab470beba922d6283c909b3574be",
+      "size": 117250
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Tibetan-Plateau.png": {
+      "sha256": "522fb27518b92b0e7c46bcd6afc1b5177e709d78eb90fdd9713e5662070a3d95",
+      "size": 126717
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-Antarctica.png": {
+      "sha256": "6f0a769d3ecae19c8c859fb4631d0072c4af512719ebeec3ad067cc86a2b6616",
+      "size": 112392
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-C-Asia.png": {
+      "sha256": "f5b1a48f344e78f8f467df5ea084cf526c039c80f9a61d04617044772a3162cb",
+      "size": 113058
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-North-America.png": {
+      "sha256": "849932b0d4e304740be339a91944d912512f1421dea6badef7db6c9f5c817efe",
+      "size": 113475
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-Siberia.png": {
+      "sha256": "d295d2511469cc2a10f02e3678e289a3e2243a796ef552c816fa98d735e37a7f",
+      "size": 123364
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-Southern-Africa.png": {
+      "sha256": "42dcf87d1d43144be7b3b29b8c64f202a8132417a567204b467136a6858eccf0",
+      "size": 118239
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_West-Central-Europe.png": {
+      "sha256": "52e1c47b40c854f0042e8ac1166fb0d2e648362b99c71a55dff37e95dd23f105",
+      "size": 111952
+    },
+    "executions/recipe/plots/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Western-Africa.png": {
+      "sha256": "20850dd79f1ba5696dceeab64741127387068189351db8e53d18b8bab4f77939",
+      "size": 114857
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Peninsula.png": {
+      "sha256": "4a9922e0ab74182cd1df9371ad7be7593534f97d628b75ae02bbbe0ba8c04ec9",
+      "size": 121995
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Sea.png": {
+      "sha256": "4e076f610bff19338e27960f023184d0be0b45af20d1436bdfcb66b91f814607",
+      "size": 104403
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Arctic-Ocean.png": {
+      "sha256": "9dbe0e6448e154da3fbe53d46577001e5c5d5b0002db63f742ad46a022dc678b",
+      "size": 112093
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Bay-of-Bengal.png": {
+      "sha256": "694b3344ee58c639c42e15f70f7db619e9e0e8ed34e2dd28e543ecb928e8f3e8",
+      "size": 100010
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_C-Australia.png": {
+      "sha256": "54d9a7a12afd13bb3aaee6c9e372393a9db0161ca11b529aaa50d43cd155816f",
+      "size": 97823
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_C-North-America.png": {
+      "sha256": "782e974c020f9cfc8c068a248fe129a28f079f995e0fc338d966c27a6d77499b",
+      "size": 112124
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Caribbean.png": {
+      "sha256": "ba2f505b8a5f036c2061cf60aa4a939b8aede6c7b2677842a3ce511d3c0451a1",
+      "size": 112727
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Central-Africa.png": {
+      "sha256": "326dad06c285d620c53663f4a8ee530e1acccfd8ce3f33ff29de0ae1ffeef309",
+      "size": 106057
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Antarctica.png": {
+      "sha256": "ec13009aa92208eede6c1b929a39912b6691fc78f263ff190b1e3b1080104c05",
+      "size": 103221
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Asia.png": {
+      "sha256": "292858898e151556f3f60d8bd19af6a8d1ba9fd683bedaadc6718c22e810006c",
+      "size": 97015
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Australia.png": {
+      "sha256": "c8a0a740e82952cc8a405ac40d925bdd10046a1c32332e58b42e56058138f4b6",
+      "size": 107610
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-C-Asia.png": {
+      "sha256": "dd65365c40cea633794728ce267494aead0bf7ea5c183f47445e4ca9bb9ba6ba",
+      "size": 114599
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Europe.png": {
+      "sha256": "96f017a969337fc8b950d681fd330cefc6c1ef33898e222d5e180008c68faa1d",
+      "size": 103848
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-North-America.png": {
+      "sha256": "28d7bbc80a979e868756654edda224b5d5ead61f40814a0848bfa115b6646e30",
+      "size": 112164
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Siberia.png": {
+      "sha256": "97915143a7e4797691a86e664e91d3cc765ccff67b5235c1803e956a29fbed60",
+      "size": 112226
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Southern-Africa.png": {
+      "sha256": "06d2e4008573cb819468b7adb3c13f78408f6b8d4e1ec7c0cff9e98788d6e840",
+      "size": 113736
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Atlantic-Ocean.png": {
+      "sha256": "08b89fa436f703924ae96509b2df194558a43b35e14768f29c49f9d8bf062938",
+      "size": 131234
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Indic-Ocean.png": {
+      "sha256": "9eb5ebd0b8c6306101dcf0b8fa08e227e87a3655f102836cccd34c38c1dab753",
+      "size": 136464
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Pacific-Ocean.png": {
+      "sha256": "1847db0cd58dc984f024d6d13bb1b5a43833a2d2e9851d1ed8e706b8f97ae730",
+      "size": 110799
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Greenland-Iceland.png": {
+      "sha256": "c105bf576824a6a2d1f368467ae27b4e8e784528da177a52f16b3a0b15301af4",
+      "size": 112527
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Madagascar.png": {
+      "sha256": "50d5b1ae4911646e0228a006d72f24d5d44f69b31899299f0fcf927621e0dd6c",
+      "size": 112962
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Mediterranean.png": {
+      "sha256": "3260561e4ca2ee1e2b7c174ab176014138f8ac6dcf444d57f6fb34f9f08b027c",
+      "size": 104857
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Atlantic-Ocean.png": {
+      "sha256": "c215f94ef4c7c1dbbf2935da555f41f2c70bf47b733a31d630f5bdc8949007cb",
+      "size": 108482
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Australia.png": {
+      "sha256": "92e5dde1a4946440b6ac764004baac85282607d6f202f0cb74ae9ee1dee7c75d",
+      "size": 93504
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Central-America.png": {
+      "sha256": "7d82164e58b1eec52c8abe94a4b0a2365191eb34a14002500113821826ef1b07",
+      "size": 96547
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-North-America.png": {
+      "sha256": "f8ecf2cb5b506ecea06da48788ff31af6243f044a7b34f4b3a1697af95da34d4",
+      "size": 115071
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-South-America.png": {
+      "sha256": "5c38a40182e9bd4747a5e51edd3231b5518e86b06e17bef7bf1c8cfdf42187be",
+      "size": 101311
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Eastern-Africa.png": {
+      "sha256": "329fce31b6d989bd0daebe9d1b873c36ab03e38dc6d7e8168b854d3e00394929",
+      "size": 99043
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Europe.png": {
+      "sha256": "c4ea42a32fd3a6b64ae4c683547b8d2b80552065d97c9bf40fa36b9a57a427dc",
+      "size": 112518
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Pacific-Ocean.png": {
+      "sha256": "a139f954e69c7dc2d335a33878f9268401b6dd52a84b42ea08012ef518c0d177",
+      "size": 109674
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-South-America.png": {
+      "sha256": "fc2612d92f346d53d4d1199e921010fb7d83d4d4cbe8c8062d020effa4c73f95",
+      "size": 126442
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-North-America.png": {
+      "sha256": "4c98a008e0c1492c2b360dd67410a1aa0325731013efa9f99577601e7dc2c65d",
+      "size": 113111
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-South-America.png": {
+      "sha256": "b35a093d02d4274a32fe0ed7e2d6da11518924ed41de2391beaef8e8a2562796",
+      "size": 126704
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_New-Zealand.png": {
+      "sha256": "ddf4b26cb65f4fb2a75c4e907b2999f40edea8c23471f0635276f4891dbd6519",
+      "size": 111685
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Arctic.png": {
+      "sha256": "e0de258cbec5e7a05203c4d95a49220e32d7398b0c1a1e155d744265c6623a30",
+      "size": 115002
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Far-East.png": {
+      "sha256": "d069884ef59299ebbaf9c258003c79af33320fda6f48eb936465803a2bb44025",
+      "size": 105366
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Asia.png": {
+      "sha256": "54a6b2c1d43ff0fde2e9a194c98f0bd72faab59e0f2373cd8497aa3eeb606a44",
+      "size": 98428
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Atlantic-Ocean.png": {
+      "sha256": "bcf5ed70c5c5fee490ef963f3cd881bd695739e855a16783437c31dd4edeec7d",
+      "size": 113615
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Australia.png": {
+      "sha256": "0085ba6bc25b873f9597c5c9d14ead46f33746508213e4a9f98950999887b62f",
+      "size": 112928
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Central-America.png": {
+      "sha256": "cc417d1c54f9bf566f1617cec2548d3e0bc46490e5cec705d22af08444729b28",
+      "size": 117534
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-Asia.png": {
+      "sha256": "47219ea3226d456b92d5c0d12e1f3fe72b402352ffb9c5ee763438e56c676a04",
+      "size": 125420
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-South-America.png": {
+      "sha256": "5a1361fa17777bfcec45038dfcb8801880dc0e2a7fa3a90cd71b1e3aaff4b8f8",
+      "size": 105415
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Eastern-Africa.png": {
+      "sha256": "6fb94d8a866d30a1ebf4aa8f61077da2a353fdae29e511b78bd7d24a5c34021e",
+      "size": 105063
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Indic-Ocean.png": {
+      "sha256": "983bc243e941096fa97af0be3d7d85e799cb3e63c78339d082a1cbbb01b75216",
+      "size": 108479
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Pacific-Ocean.png": {
+      "sha256": "becc8173b2a662e45e1a32c79c6566d16b3d622bb3fde6246f8e1f8e1d3eacd6",
+      "size": 112364
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-South-America.png": {
+      "sha256": "ec98d6115f01e0e4c4bb291e456cc1b4f1a4b8a0b0eeac0bfa94c8ab6304cbee",
+      "size": 108228
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-W-South-America.png": {
+      "sha256": "56debde4e7e5fd0a245812277e37c922081b086a858d8f92eeb07fcc652a5007",
+      "size": 110420
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Sahara.png": {
+      "sha256": "b716c05f1f23b676b1263a043d5cc8ec544048788b9b00012eb75690200d1378",
+      "size": 102547
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_South-American-Monsoon.png": {
+      "sha256": "47b2b68b9a5f6375d7c24a85252bbed2c398a9caf5cb7cfede2fa9346f1b57e2",
+      "size": 134199
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Southern-Ocean.png": {
+      "sha256": "ff562ff5b127057acb2ede4d33338a0f78ee93a3ac2e55b6bea61f96a4acc528",
+      "size": 112836
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Tibetan-Plateau.png": {
+      "sha256": "b24703e8895a295695e6e24251374dc7168c790df569cdb075a3f447359dc56e",
+      "size": 103564
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-Antarctica.png": {
+      "sha256": "6b3177208024a6b32b3f361eca3342e6a76479973802af246ae25cd33dcde666",
+      "size": 110324
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-C-Asia.png": {
+      "sha256": "d813064835aab989b7701ccc40905fc7c8270af99ba1c88f4ed6b008d102f3d8",
+      "size": 120867
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-North-America.png": {
+      "sha256": "91897b5ba0c8d704e2487b4f2a1b46d67de957df590df89b45034756597d0381",
+      "size": 106979
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-Siberia.png": {
+      "sha256": "2f32d9e2a79fbca6d61081f7a5f51815c3ea300072778f0f24966cb1487f4d43",
+      "size": 116460
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-Southern-Africa.png": {
+      "sha256": "d4264fd985a088fa0cd724303d1843ed2490c826d1f6a9038505fafe4f2b29cc",
+      "size": 109928
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_West-Central-Europe.png": {
+      "sha256": "5b69af50b00510a05cc5f7e9b4b405edf3de02c84e09151dd840570f354a3d54",
+      "size": 117450
+    },
+    "executions/recipe/plots/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Western-Africa.png": {
+      "sha256": "18ce7682b73455d155a2ca33e72cb577c5aad667bd060c24a626cd7474650b19",
+      "size": 103865
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Peninsula.png": {
+      "sha256": "24bf1e4d740a4fe708aaa6e4692b54d1a791ef0bdb5cc17f818a4d8192c73a27",
+      "size": 128959
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Sea.png": {
+      "sha256": "cd54ba70d93587c2355910f3dec878f0dc3d84e7d1daae8f958e5c9bec22e134",
+      "size": 120868
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Arctic-Ocean.png": {
+      "sha256": "c2156d7ad3bcd2054c0bcb8554bbcab1e6a6d959e2720fea046b263cf7d50557",
+      "size": 135722
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Bay-of-Bengal.png": {
+      "sha256": "f9eb7933a0c2aa68e0b5133392fe4694f99bd6b4df60af332d319f91f54240b2",
+      "size": 124900
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_C-Australia.png": {
+      "sha256": "c90ca3886020ea6ea0f330614347d8d75a8203dcb24f66ca61e4fc551a4120f5",
+      "size": 127688
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_C-North-America.png": {
+      "sha256": "fc608a39e6aa5b5dc4f790a57cba920e655d5b0371916fc6f936c243d325cc7b",
+      "size": 115645
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Caribbean.png": {
+      "sha256": "199187c388bc3a9d4b1b9cfa047a09564c99fdceed6efafe4c3223f49c4b3fda",
+      "size": 123276
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Central-Africa.png": {
+      "sha256": "3908e9d5b05918080efead4fd9af60e83bdf889158974b571d3a27f1aee0bf66",
+      "size": 135036
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Antarctica.png": {
+      "sha256": "b8da078fef9d4adaf484121a2b84d6be13030dbf4ba2bd21b6293d6b0a168bae",
+      "size": 132370
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Asia.png": {
+      "sha256": "f76d8776d86ef9196829bd5383aef4575364cd041399f694053e2882f6cc8cc8",
+      "size": 124776
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Australia.png": {
+      "sha256": "6864651bef0f46518927c827a005ee1752639426eb56d7f42ac4370b9133934d",
+      "size": 111700
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-C-Asia.png": {
+      "sha256": "af8c42153d061c2cd4041afc219a1f328ccc8e360936cb2ce725ce351ca0f3a4",
+      "size": 119251
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Europe.png": {
+      "sha256": "73716694cc8c0608ec027c012bd3ce6d88533f10c20b49115836b456c619445a",
+      "size": 122017
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-North-America.png": {
+      "sha256": "e6e1ef6a510f8b8a4e9869c14791c777f99d03e575531a2735a989f9c993f76d",
+      "size": 124314
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Siberia.png": {
+      "sha256": "6f2ec8fae07c994dc5d06afe2dcd8b4d88c1249cee1a8d3fb9f71616db2ab36b",
+      "size": 118937
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Southern-Africa.png": {
+      "sha256": "e458f1df12b6953ca0c1679cb241bacab7a6bd23d3fd4fe2f54697c7682c653c",
+      "size": 119571
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Atlantic-Ocean.png": {
+      "sha256": "f1383703b7900306f9e3448e93df9283329c215b7723ae02e3b4057b668dc691",
+      "size": 133210
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Indic-Ocean.png": {
+      "sha256": "00e98bc1b6dcdebf3add022cae59fd1ba35493b8ceaaa551baac0c963b48fddc",
+      "size": 118531
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Pacific-Ocean.png": {
+      "sha256": "2811d8d9ea6d0f6fded3c2d4ee35a1b5fe405734cdb7b7918102efd5a13cfb47",
+      "size": 113464
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Greenland-Iceland.png": {
+      "sha256": "cd2a5da1e08493b3a0ab24944210b4fb8f1a554f24f793470470f700cc9b8d3f",
+      "size": 120746
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Madagascar.png": {
+      "sha256": "743af4616f52b72a00e25e4406aa9b70e46d023df9b25e00f30d7602ee5f836b",
+      "size": 118034
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Mediterranean.png": {
+      "sha256": "3698776cb9f5b8da151609a213cb323ac4aae6dc841156dc8e5f796edadd6750",
+      "size": 117211
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Atlantic-Ocean.png": {
+      "sha256": "99100ca6f62973c470f3b8e97b70c4d2442357e7a40c8fa8a74af051893e6d77",
+      "size": 119926
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Australia.png": {
+      "sha256": "1e354efe62ed1fa502ac0e0e5f7a0f05f0f647f72a5bec0555470e15d6cbaaf2",
+      "size": 111068
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Central-America.png": {
+      "sha256": "f96cd4657af356fc173b87a495cc68eaaa029b3e91947656ba95db52f02d039a",
+      "size": 119425
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-North-America.png": {
+      "sha256": "7b692721f7c92e13814bbb8c59650354e4468fd4019b0114c05df16db73c8045",
+      "size": 121716
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-South-America.png": {
+      "sha256": "b6c6ffc83b2834dabcf963184543c0fc29ccc5108a2e788a3649595df3363c2e",
+      "size": 118030
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Eastern-Africa.png": {
+      "sha256": "da68c2620484c34d62990d91d87986605d17201383fdd19b6b41b014b2088aa1",
+      "size": 126623
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Europe.png": {
+      "sha256": "7a32dfa3a9bc3a3d4a5ff76a3628e4a06c09654a9e474c0df4f9e631e716b365",
+      "size": 120124
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Pacific-Ocean.png": {
+      "sha256": "e42a7313c627a3887da446f1b679c026a61c23d3c9166870a49494d40ca4e3ce",
+      "size": 116386
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-South-America.png": {
+      "sha256": "76428770495156ee1bdda08c2f0694a839ed905ce4b31096dd98c62742c64a43",
+      "size": 120778
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-North-America.png": {
+      "sha256": "7a7e76f19d6f32d5ed8927e46dbc753eada6cc20556680a2cfde0797e56ebbbc",
+      "size": 125802
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-South-America.png": {
+      "sha256": "042f269a84f874954d2b3aadcfe299b7e905598ab49ec9ff8f912270591580e0",
+      "size": 128099
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_New-Zealand.png": {
+      "sha256": "f1bff54f36e343144e932b23374d1910d24d5cda6172d237b7661a0b1fe7a6d9",
+      "size": 119365
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Arctic.png": {
+      "sha256": "8d8cda32f05c1e20296212b96b13a9b842d2c29dca787df8d960efbba634dc97",
+      "size": 116952
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Far-East.png": {
+      "sha256": "55357e2d19ddefd748c2da0c8969f598f52c17c25d284d6209ccc69f7eccc683",
+      "size": 117228
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Asia.png": {
+      "sha256": "920dd759a63fe6957ad895fd7f0f594890133e9fa495d24719f151a561e1cae2",
+      "size": 127500
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Atlantic-Ocean.png": {
+      "sha256": "f51215be48e0d701b6c6900844b5b1bbee176b8ff571608789b7fc7593d47f00",
+      "size": 115589
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Australia.png": {
+      "sha256": "13a8833340b5786dbf3b373dc5c11ec5be0bc368a87da53ee47d206a1b6dd83d",
+      "size": 126950
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Central-America.png": {
+      "sha256": "a65c57f6b5a759197168344075351e388e704bcf3e20baa1d0fb58e7977cf74c",
+      "size": 124896
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-Asia.png": {
+      "sha256": "5d893f1fc95066b7f137d03a18e282a2567bd34151361e0fed1a74a86dfb6092",
+      "size": 140033
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-South-America.png": {
+      "sha256": "0fbf016fe0797b4658b4a19d1359f8187c87ea20d646e0fd363b5b9dcce6c5ed",
+      "size": 113588
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Eastern-Africa.png": {
+      "sha256": "17c0f5441c856b19e2bfef0b96bdb9e629424490b7edbe4cef58a7a27ae6d295",
+      "size": 118990
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Indic-Ocean.png": {
+      "sha256": "3af79e55985d4c0ae167d7c51ef3f5084111799ae32e55cc3a937f7ff43a90b8",
+      "size": 124484
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Pacific-Ocean.png": {
+      "sha256": "feb393939acc7ab3f864f2be80ebffd1703af155d0324b0294af66f73a92c683",
+      "size": 125078
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-South-America.png": {
+      "sha256": "51916c3e584773baffcc7ea1e01f5d562ce538d2254926394475b2c1e4fdc703",
+      "size": 138691
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-W-South-America.png": {
+      "sha256": "1da9c09a494ee9561727f5f118d2569b73637c689fa8f1eb1082b1b60afba797",
+      "size": 114905
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Sahara.png": {
+      "sha256": "d5230757cce9a94fc09a363c879e13dc8dc81de01c5e482db487183c3d2aea30",
+      "size": 121309
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_South-American-Monsoon.png": {
+      "sha256": "7d8d549939334f317aabc535cbbaecef2436042db7d5b90156a9b7ae97036259",
+      "size": 128878
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Southern-Ocean.png": {
+      "sha256": "649ace8e7f9d20eb045473877aa2882de22cecb013cf617d9cf4c5513b6549f4",
+      "size": 140202
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Tibetan-Plateau.png": {
+      "sha256": "1c57c9709c135f066ac3899ee74ca069622f410294e7fc03f84a11067b055ea3",
+      "size": 118456
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-Antarctica.png": {
+      "sha256": "f96a24443cf02dcbe7ad6f0111fd59330db787d5d8166a7649094882cf6d8679",
+      "size": 122916
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-C-Asia.png": {
+      "sha256": "e885bb1dfd6bb2e9381fbd10d2a9f2e72f8d62c504f30e3724ff89217a46c9ce",
+      "size": 115736
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-North-America.png": {
+      "sha256": "410e139632e8e0574aceffad154ed4641807d3903612109c243e0146d0da26de",
+      "size": 116833
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-Siberia.png": {
+      "sha256": "fafc6e15b6d1f2d48f04b439649411b971637df7286d2d7d6accd9ee66540a8c",
+      "size": 114665
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-Southern-Africa.png": {
+      "sha256": "8036a1e67ee51ba79e67ac78fd13fd705935540d9070e70217f784d1e5b94f26",
+      "size": 124092
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_West-Central-Europe.png": {
+      "sha256": "fd49f258df1ece0e57e7291f40c984e76efb8b26c6f96384e8e2cc67a7d2a001",
+      "size": 126205
+    },
+    "executions/recipe/plots/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Western-Africa.png": {
+      "sha256": "c6d01c93d769204bf3b58f7f4be17b0b3a91e0c2cfce8c273b34520a4f444143",
+      "size": 115234
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arabian-Peninsula.png": {
+      "sha256": "24a57a56fedde6b1f7718492f3dca7db8d4a9144be516805759008d8d35b23d9",
+      "size": 103624
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arabian-Sea.png": {
+      "sha256": "c6f4fa45839cf951719d096e9fc23ab1978b0b0b756366b1a3b1ba9b9e72119a",
+      "size": 110344
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arctic-Ocean.png": {
+      "sha256": "7851b797bea69302140133f7b287b6f236b61a8708491614dea0db6de61a53a5",
+      "size": 108721
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Bay-of-Bengal.png": {
+      "sha256": "741b1c8866f446ada4daeae25d55aed52eb41fb98e7a26b200bb5a3314fc9b66",
+      "size": 96602
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_C-Australia.png": {
+      "sha256": "78b18e60fbdae2a8e4c7242850e8660d181b273b0e9bb91ee58b5012a31979e3",
+      "size": 100193
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_C-North-America.png": {
+      "sha256": "a6ac2517a480b41b36b5a152be4db5a1566e00b3d94106258a818a00c3481fe3",
+      "size": 115579
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Caribbean.png": {
+      "sha256": "5ca49c0c70af5fcba04f34c8a244bca1d3f40c98fa7a51a6f761f81d369f8f04",
+      "size": 104010
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Central-Africa.png": {
+      "sha256": "f36174e20a7998b09036c4b74095bfcf414e303df98350ef9e71ea526746a1d2",
+      "size": 123470
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Antarctica.png": {
+      "sha256": "889b7c95a19367af1dad245aa1545cea7aabe81558c56509ae1d20ef88767d2b",
+      "size": 104764
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Asia.png": {
+      "sha256": "8ed4980c3573d65c6aceaf7bcc161ad9b7ea6bb5157668f03ce05c0cea8dff13",
+      "size": 97272
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Australia.png": {
+      "sha256": "22fdfd186cadba3f213eca5ba63bc571fd9b842b9cdeb8fb239d417300d8e1bf",
+      "size": 97988
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-C-Asia.png": {
+      "sha256": "d9c4359c54880ed7cc255ba638ccf69c4a0ddf4840e376009cbe6df5e2167431",
+      "size": 105693
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Europe.png": {
+      "sha256": "8d2f2618295c73dbbe5773fd70f85bcd26f2291f6b2a368118e4dc15fc6c63f6",
+      "size": 101202
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-North-America.png": {
+      "sha256": "381ef5041c39e6e559a5c88016f808be2d94d974c0a1da42f1de6331c157ec82",
+      "size": 101867
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Siberia.png": {
+      "sha256": "c281fcdd528d4a1a618a1352c3c8f640807595e2c0be883201382b5d4d5ddf37",
+      "size": 106573
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Southern-Africa.png": {
+      "sha256": "284ea09f188ed9202d9b278a8929a99da14a3093fa2a51fe7acb41d22fc11ff5",
+      "size": 97248
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Atlantic-Ocean.png": {
+      "sha256": "16548b0fcb70e83ca03ee69603c87bb2a3c5452868e39ddc71cc9a644d75848c",
+      "size": 110583
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Indic-Ocean.png": {
+      "sha256": "25b9795e09e3d3d95555052b323dead38ed20a9dca93b7363a180baa4ba0b448",
+      "size": 120443
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Pacific-Ocean.png": {
+      "sha256": "f93717484b7a0019172e9e65967e654e35b42d2696ced3cadb3da2b842724d0a",
+      "size": 103208
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Greenland-Iceland.png": {
+      "sha256": "e68ab5ae34f3780043bf829a09fbd09c7e89f743e0becb8b2ed93ffd116d2439",
+      "size": 100666
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Madagascar.png": {
+      "sha256": "4016a04e1a7bd9ce449a0be39c5254701352132be5f01ff00461af47615f6e27",
+      "size": 95845
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Mediterranean.png": {
+      "sha256": "717ce8f4914ff5fd14da37e545dc04594a53d196557f74e01913cf56e52db948",
+      "size": 111876
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Atlantic-Ocean.png": {
+      "sha256": "632845008b66c09dba541221c788e446b79815a1bec62301050b7792e4db040f",
+      "size": 107227
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Australia.png": {
+      "sha256": "3df558ae3cb2db26138c85d491fc9d1b4b062c2430c5e2bd126e36db0aae01c3",
+      "size": 93903
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Central-America.png": {
+      "sha256": "55b4576326687f91ede2d7e823517a755a9ee2bd15587623490992e4df173263",
+      "size": 105747
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-E-North-America.png": {
+      "sha256": "190ceef1593c2c45ec87d148c7f9df7b4d1ddfffb1f7b2ff4081031b718f8d55",
+      "size": 101791
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-E-South-America.png": {
+      "sha256": "15e31f86c63f1256ded7f14c1cdd934da1a6bdbe0310ad4f817a3336cb2c1fa1",
+      "size": 104255
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Eastern-Africa.png": {
+      "sha256": "811e7f2050bb3198bcd0415f4a159e68b9c431ffec438e265ada51678cdfb034",
+      "size": 106082
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Europe.png": {
+      "sha256": "be9a17c7df1b523239c914d0d69237c907a072089bda8f76d80dd1d1185a52b4",
+      "size": 104089
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Pacific-Ocean.png": {
+      "sha256": "41df23442717b17287dae63df080d5f89ab0ef9e1e7d3d6edb62fe5523a64fed",
+      "size": 104470
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-South-America.png": {
+      "sha256": "8b99a3ec7ca7261f807c281cc9f1642e25c083d5df6446e2455ff8532ab0a6b9",
+      "size": 105554
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-W-North-America.png": {
+      "sha256": "3fd2a33c7cc9a973b310cbddfd46f89dcb3f4ce6365b4010b457fb516ec3ef35",
+      "size": 102403
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-W-South-America.png": {
+      "sha256": "a7eabbc60173b98d89a0dcf4f2a1c72cb8be30db031f48f575da186152fd0f7c",
+      "size": 109463
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_New-Zealand.png": {
+      "sha256": "c6b2d20baec8755a7a1b62466fa94fb59ded2a46206f3fe7f792c5d1997f1d94",
+      "size": 104247
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Russian-Arctic.png": {
+      "sha256": "a2e6cdb886c528b62d3cb928b40e86519c68bef3c5e432aef4cb18e9de60c4fe",
+      "size": 100595
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Russian-Far-East.png": {
+      "sha256": "9f42b677638f2f0dcf0dbd35d8e5d94ad997c80bf91ac0664bb928702e866c18",
+      "size": 108587
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Asia.png": {
+      "sha256": "cf72a033d31fd22fea14abf0d6107db93691b77aa028df7bfd5c817cd561bc47",
+      "size": 104539
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Atlantic-Ocean.png": {
+      "sha256": "4c1321d9862fc3a7c44e83f7e476166fb71b3945a5f65722226c23cddf88639c",
+      "size": 106014
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Australia.png": {
+      "sha256": "df4a04f8302b91e8be346e2e4b3e87a4c8cca9e3192fa2c9c0b5632d300c192b",
+      "size": 102805
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Central-America.png": {
+      "sha256": "86d0ff09b840f2f79a555a1ed4f9a69a3e2cd7b0684fde08fe7abc13cd22e4a8",
+      "size": 112175
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-E-Asia.png": {
+      "sha256": "e0f57f5cd2d36495c868c661c6049cb4ff604a17ef7e727758abddff98071259",
+      "size": 113754
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-E-South-America.png": {
+      "sha256": "94682a45097dac510860b8714cda362a90530808a41dc814204d32954a0792b4",
+      "size": 104601
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Eastern-Africa.png": {
+      "sha256": "f7a5f57232c70fb50f469924d078e5e118ff4fb320484d08aa81aefb8bfe6682",
+      "size": 106800
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Indic-Ocean.png": {
+      "sha256": "b2d737585911eacc451f9b6c9a1373a723c2b0d23a2290d25b9e98440f041fcb",
+      "size": 100720
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Pacific-Ocean.png": {
+      "sha256": "a66ca64138f7498f68e67775e0ff1e48b34e703be73c3eba94b25c12031a4cb5",
+      "size": 103471
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-South-America.png": {
+      "sha256": "2db143022b4d9d221cadec92dc58a9f9dcb4251fba4ddfa28ec559b3f719859d",
+      "size": 108273
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-W-South-America.png": {
+      "sha256": "94c40e6b87b02bc39fa959e7bb330f459aadbb58a41ef6050330e2ebf7794c35",
+      "size": 110339
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Sahara.png": {
+      "sha256": "670f483ebf9ac86bb41d8a439ea72dd18a67eccae5dcb8d4ccb028044d4f8ba9",
+      "size": 110147
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_South-American-Monsoon.png": {
+      "sha256": "676db90cd88e23e4d0b2dda8610eec73c333e92d5f659b2df1bb7b333d991749",
+      "size": 104371
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Southern-Ocean.png": {
+      "sha256": "ba0b7751fe5176b59b972f94218ecf6d63bee7996cba4f8a04a355323119b7ed",
+      "size": 109206
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Tibetan-Plateau.png": {
+      "sha256": "c759be7760a1c773378f892af3aff42c5e1f9b45da4b0df5acc038b7bdc75d04",
+      "size": 104876
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Antarctica.png": {
+      "sha256": "e1b7bc16c1c5be592f1cf1bee8a2eca573711eba53fd0d68905dca164ecadc23",
+      "size": 100559
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-C-Asia.png": {
+      "sha256": "ccc24f8c936f4212b39fdad2f82e6d34fbdf856233456fd6e059f048c0935b97",
+      "size": 112817
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-North-America.png": {
+      "sha256": "7e715b7fd5af5a868b14075aae98aa38dcabd5c732d0b4640d1b701868bf23bb",
+      "size": 108745
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Siberia.png": {
+      "sha256": "bf6350e17a56ca8e3e1bb787e25008a9e679e3c410466e363a628815593ac071",
+      "size": 107171
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Southern-Africa.png": {
+      "sha256": "b04a5ba3c4019cdc4040af125e13662d4ff2d55d82df4a58b4f59a21791ecbf3",
+      "size": 108506
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_West-Central-Europe.png": {
+      "sha256": "0a933cddc1eaefd5ad2858f69c7c4fb7662683f7632d160f8ee99e8b86199714",
+      "size": 112408
+    },
+    "executions/recipe/plots/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Western-Africa.png": {
+      "sha256": "4f2517896d2341a1f108abb51c5eda5d3c45bde3abfa3491a5f9c1b6379efbee",
+      "size": 107453
+    },
+    "executions/recipe/run/eastward_wind_annual_cycle/figures/diagnostic_provenance.yml": {
+      "sha256": "e3a49f555073dc0d8dd603f7d4dc7f1b5fc19261c5eaab9031cada57f60fa54b",
+      "size": 35720
+    },
+    "executions/recipe/run/near-surface_air_temperature_annual_cycle/figures/diagnostic_provenance.yml": {
+      "sha256": "638fc7af32788dd324542a41cc765f3e59604869b771bdab3adec9e939b69c76",
+      "size": 39490
+    },
+    "executions/recipe/run/precipitation_annual_cycle/figures/diagnostic_provenance.yml": {
+      "sha256": "4f405ba5753f0838485050a5a3336b1f5498371c2f36133590970e776389dda5",
+      "size": 34792
+    },
+    "executions/recipe/run/sea_level_pressure_annual_cycle/figures/diagnostic_provenance.yml": {
+      "sha256": "30eec9b33f1b3653e5aeee142d154006f2a152afc508afe52d7399a9430b0f3b",
+      "size": 36474
+    },
+    "executions/recipe/run/specific_humidity_annual_cycle/figures/diagnostic_provenance.yml": {
+      "sha256": "9a085252ec7c8448fd5e793374e1a678faba77cdb19815ee1b25b6692bfa1e62",
+      "size": 36996
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arabian-Peninsula.nc": {
+      "sha256": "b34d00c96bb6e8902ada18e2b8bafd4947381f4a321d50a770aa0e85c5cf63db",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arabian-Sea.nc": {
+      "sha256": "a9471d6a4349e7d7c25a9491f64201aa238c3032ce30fe1f375ed0bf2d828e45",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arctic-Ocean.nc": {
+      "sha256": "0311977b02c483f838a0092ea52809745f0a316ef1b2597f932e38d60ba36f0e",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Bay-of-Bengal.nc": {
+      "sha256": "69fe1faa11f4a80d47d4e0b4da840cc629910855d8bf12686bad304df280648f",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_C-Australia.nc": {
+      "sha256": "e5dd34bf56facfc13c49bff88c16a0c37d8810ec54995e13a16e2b902a9c7207",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_C-North-America.nc": {
+      "sha256": "1fbe5bb2ca0425d5157358a48bf427d8ec5868967fe6def92f1fa477e43584af",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Caribbean.nc": {
+      "sha256": "db2fa6db11256762133a3149897bf910279c39b66e3cb460cae7669360e1d62f",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Central-Africa.nc": {
+      "sha256": "fe08188604563e0e6167edea73a813a9a9fbead44c512921db4ebb15e2d126e5",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Antarctica.nc": {
+      "sha256": "21ca28a6e1877b1213d371f631d8ad74beac2192e3e4bc3ce4c3c2d03591b7bf",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Asia.nc": {
+      "sha256": "96924371c12fad298813c50475de8f080ae4791d466fd58090710590ae61ba31",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Australia.nc": {
+      "sha256": "12ce1f5c9f2e96910015dbcc5831f98c471a283bdc0fd47b221c84eb60ebdd17",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-C-Asia.nc": {
+      "sha256": "e2e84dd3811efd188c00b19b52f106f7f620d9c456a8fda72554c4bb5a194092",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Europe.nc": {
+      "sha256": "18250c3d78303a4fa1edcb152cbbf49dd280abb48248f8f0205348e988284e29",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-North-America.nc": {
+      "sha256": "48cc0a98df0a273436c68012566c14da64ea40bdb6789eda8df3990701761eba",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Siberia.nc": {
+      "sha256": "2aadac56bf60ee76290411ed75a562f9d306276077240f465b75adfe389f63c3",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Southern-Africa.nc": {
+      "sha256": "e80ccd0abb435f5154592fea6aea88a2b2d16ee92dcae30bcb729ca475cb4517",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Atlantic-Ocean.nc": {
+      "sha256": "03ee467a73abe31af156a3a83e5acfa09c7f07a1c919af95b78334825aeec982",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Indic-Ocean.nc": {
+      "sha256": "efca1d6c29ad6e23fb2c6c276f800c97b39f203037f8722f9f038d20ff505ceb",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Pacific-Ocean.nc": {
+      "sha256": "17845c37577ed495182c7fac03977813e5dcf7d43a4f13b46d9734cb35d7fc9c",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Greenland-Iceland.nc": {
+      "sha256": "a83be4f8c8aafbe302d5e3f9dcd4969babf200d943f49c04af10187a23775a19",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Madagascar.nc": {
+      "sha256": "afb25c1e10a3f542f746b5444297d01a46b4856fb0d573bf15bd75ffea09c373",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Mediterranean.nc": {
+      "sha256": "8020615062d61521779e215a2889bd27dea0b190c21c8cd5e30c375d18b901ad",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Atlantic-Ocean.nc": {
+      "sha256": "7043fe20d221d45d6b81822062f9bbe49db22123281a26b90bb04516cf111deb",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Australia.nc": {
+      "sha256": "09ca94a7c787dd275e2d88add09192d25745316e23709c8d0adebd75386f37e0",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Central-America.nc": {
+      "sha256": "444e94118fa8e5f81f5e0d82bc8c700854edb23156c18be768e154be0f7b2e36",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-E-North-America.nc": {
+      "sha256": "875c61ac535d798653846fa3a47f67e909f00e521f18b706531e7aaa9e280a43",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-E-South-America.nc": {
+      "sha256": "3c90a7f14e80662add2f509f79d25cc168ddae79d3548e12c4e6e7c2d202a26c",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Eastern-Africa.nc": {
+      "sha256": "dce43a26d0ff1dc9a3d0daad432231263b3ec41041d834973508ca1311356851",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Europe.nc": {
+      "sha256": "10120025f115216b2f954900d4551a5a918a3227cacdb5e8b1ba94ba5ee1341c",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Pacific-Ocean.nc": {
+      "sha256": "ca55e2b4cf7c1e8acb1d15587e46ea575dfcfdba42f4e331244b3046fc9127cc",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-South-America.nc": {
+      "sha256": "b0142cee20c09ac572ace2686deae59e51059517f0be9895e7ffe00bc7413a54",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-W-North-America.nc": {
+      "sha256": "c44fc8b5584487ab09ec0ed61617fb986661ececa18e3268a01229ed92c4fbd7",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-W-South-America.nc": {
+      "sha256": "97b1d3f3aeeea7d273b390c33febfae1cf0024e928274a2d66f69545f387a7b8",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_New-Zealand.nc": {
+      "sha256": "4e3d989093f6ad206eb11641ef494e3dcea67894f795aa48b6117741c05afcdd",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Russian-Arctic.nc": {
+      "sha256": "5ed949bcc636644547a5d9e3a64527671fc6b96c8e47a91285e5e331e7bf8694",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Russian-Far-East.nc": {
+      "sha256": "3893d76d7df93e4ebf5abea74c696512947becb20fd6584b1253d19f83211381",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Asia.nc": {
+      "sha256": "73acf53e7ca4024418976166fbb16b764a03e602ace5676c507aae8398fbbe50",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Atlantic-Ocean.nc": {
+      "sha256": "0114715a20c46bb3b370a8fbc5eeffd936b56d221c4be1fd9ceb9571104ee5c4",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Australia.nc": {
+      "sha256": "b18189ac89dbad451ab1ad5a177a0398580713a225caf9983a6590bd812ff8e7",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Central-America.nc": {
+      "sha256": "37baa0ac4cbc0b7de6dc73a7d4834fc83f931e7f1a5e3bef44fcdf2d7c33f8ea",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-E-Asia.nc": {
+      "sha256": "cd6a585df7f666707bf27b153188a583e6b906c46b269ba8b1d1c837d7afcfaf",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-E-South-America.nc": {
+      "sha256": "7343ffa154760cbe2da85a6fc51772514300dbd28e82b7d9328094a587e9e390",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Eastern-Africa.nc": {
+      "sha256": "e62719e82573a3f3380d5cc77eb0a32a59c575c4ee138bf0e84868d97f4c4192",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Indic-Ocean.nc": {
+      "sha256": "32f56c47404de4673addf001378025b9f6b1ecf9cd0c5e4e0d1a5054555e775a",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Pacific-Ocean.nc": {
+      "sha256": "29756d09626d3b35187c595b2d249f7ad1a3a6bd2445c1922c0bc68d59428b26",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-South-America.nc": {
+      "sha256": "03c6464e6b648e37038f188ae22f1130d2fedda638d652d80e59294f5a48e23f",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-W-South-America.nc": {
+      "sha256": "289e4746c4b2dddd069209e36c4cc80247b182880fa4ebf1a3044871d49ed3d7",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Sahara.nc": {
+      "sha256": "b24ee6c75153e6c3dc5977b42c306f39d5b3651c9108c3d78bb3417a9b26813a",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_South-American-Monsoon.nc": {
+      "sha256": "7c72b46695db8db0854065baaa3de49425cc8c9bdcd2a5f4b6f7838edaad8b2b",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Southern-Ocean.nc": {
+      "sha256": "b0d7a6f001144a9cf7ee1c3347fddb202a8b66f25c3b89cbe15d182f93fe29d4",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Tibetan-Plateau.nc": {
+      "sha256": "8f2850dd5dee85ac4a64de957d6f3eeda1378f447400c9de1fbaed8b594e3318",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Antarctica.nc": {
+      "sha256": "d8ad2976118a35ae4bfd86c0347dcc53390ed7bbc95e58a67a3de6bcf2ed5fbb",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-C-Asia.nc": {
+      "sha256": "10d7b5c249b04a3065b4285f4c46c2d26f065f4a652367b2e07762ed67f7bbb9",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-North-America.nc": {
+      "sha256": "2a72bdb5a6874bd24df6ba860fd45b22a52528b57637a96641500b784858c6ad",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Siberia.nc": {
+      "sha256": "ddb3d73e84fc00b19d3c4298a9e000082f513954d0e59ba9edf76b31a5551231",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Southern-Africa.nc": {
+      "sha256": "6e81ec68f8c8cf635d292c8c81f030728dbcec51a0d27461a17f3ab79153e13b",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_West-Central-Europe.nc": {
+      "sha256": "ab6e96384371fc1d95164b0c9bbf168fab569907b523f7e038bea7e30e7859fc",
+      "size": 8585
+    },
+    "executions/recipe/work/eastward_wind_annual_cycle/figures/annual_cycle_ua_200_ACCESS-ESM1-6_r1i1p1f1_g110_Western-Africa.nc": {
+      "sha256": "5a4dc9a1ce0f3de55d23e469eb707e1aa996ecd79b492572707e619334a5e489",
+      "size": 8585
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Peninsula.nc": {
+      "sha256": "e23f0c4dc42acf464ee4ff20c8c429b04190b382c0bbea43b10351a1ee644b1a",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Sea.nc": {
+      "sha256": "95eea680b64ad661269803e80ee23b2998acc06c33da11ea5739e4ca47ec3a97",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Arctic-Ocean.nc": {
+      "sha256": "c11eb7f6340c77933c9257c3259d6fe2ae7fb16e4dd6656a238502501a525b00",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Bay-of-Bengal.nc": {
+      "sha256": "0133e5058ec87126e4f47abacada990c682bfed37b7f1f63d279083a49a96508",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_C-Australia.nc": {
+      "sha256": "42e6883cb675acc9927b118f339ed90a405e6a0efb4cf3972d2418f1f3a91105",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_C-North-America.nc": {
+      "sha256": "c1f58d5414d08eb65d0e2ada674555f72ed74e699791b9e3ecf790696744c5cc",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Caribbean.nc": {
+      "sha256": "3693815a7b8837f8d96c7ff095f9599d18f52fa5fac71a208a11fbc73a9314c5",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Central-Africa.nc": {
+      "sha256": "75ad7dbcf0e7a95bb8d3ad4a94571cc6e79561de38da27f0cc943f1419757f58",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Antarctica.nc": {
+      "sha256": "d6a50db901c90e58868e2de931432be004b2037ad1aac37aa59ec8cb6bdb09c0",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Asia.nc": {
+      "sha256": "47f86e37f171f1dd835386143603883b0623a8f4cb1d59891925ec581413cd1a",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Australia.nc": {
+      "sha256": "5c8613ec0a433a8f42a1bf7bdd11ed38ee0ccbf1d2dc3b371137fb9fcf2f6a93",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-C-Asia.nc": {
+      "sha256": "14caa205477b783d7d1eecc3090731f608db52a1dda1922efa7c213a65b19ca0",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Europe.nc": {
+      "sha256": "0892abd6c3c1f426f85f437bff45da3d933c3b8cee86d6ce58c50b6af57ee3dd",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-North-America.nc": {
+      "sha256": "9a802baddb26bdfe22f4ea61189eaa58e7fee733cb505544deb16d36680bd684",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Siberia.nc": {
+      "sha256": "5d306aa4d5525c6e3f18202345e769a6a3eb8165e531dd1a436900025d2d28be",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_E-Southern-Africa.nc": {
+      "sha256": "9da0c0dab4bf7f3334961cbe990118a3f452668e57dfc1590671d84bafa24575",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Atlantic-Ocean.nc": {
+      "sha256": "6f43f3cd2f073d57ab557c17fb738186bcc26048f78fc644d31a93eef3d01e4a",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Indic-Ocean.nc": {
+      "sha256": "24b582ed82aff5f458b939ec351c91e3ae5694401a8ddcff83054f96f61be8a9",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Pacific-Ocean.nc": {
+      "sha256": "26e0f584047954983001194aae513a53c99cf1a1da7512c1e86ab6199bef475b",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Greenland-Iceland.nc": {
+      "sha256": "d189ab01ac8045a41c66249c7ab616533599be8c75404f3f99e17d25b5d8de1f",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Madagascar.nc": {
+      "sha256": "bf9e3821eaa9c06a893910e82cd855d78842f79787a1b94a7d79f44d6983ae62",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Mediterranean.nc": {
+      "sha256": "db79d8a7417ace5a7942846214f7427546e23631e7442784b0bc56de8b34cd65",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Atlantic-Ocean.nc": {
+      "sha256": "d7ebafb60f68b22aaa7c9b5231566e23f0e5b155217278790d1bea634d93c3d4",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Australia.nc": {
+      "sha256": "370466aaf1caff446a1bc226360b98a28118b6de9e1a5affecf176713d13ca64",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Central-America.nc": {
+      "sha256": "41101638ddf5013cd54f29e2050fff761fafa623c806e1e8e3f78212e5dee5cb",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-North-America.nc": {
+      "sha256": "fda73de3920f3279cae2c3ce29bf04710e4f7c26fd14a6ffa449be71c1f5dfcf",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-South-America.nc": {
+      "sha256": "aa6e53cd7603478a14ee4b42cf7b6618e62899991df28afee60e44e5a43b5043",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Eastern-Africa.nc": {
+      "sha256": "8ae5cc650104a390049d5df43740d7b83fe89d5c037cf517e60f968f6e5170ad",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Europe.nc": {
+      "sha256": "dda5e030e5a5d9461c9d5e2f58671a992a21775c71e7beaff3841becb42229ee",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-Pacific-Ocean.nc": {
+      "sha256": "f65d21d35e47be9c194a7e1e4808132c240432570b86bdaa3df0da28ad31a1bb",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-South-America.nc": {
+      "sha256": "a0e77e737ac80f2e36a41b720304d5052cd7072eb14e9d5e141f0a017b8fbbb0",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-North-America.nc": {
+      "sha256": "4edb62d613478402a7dcebc0af068b7ec11f7e172ce81f50fa5c2f9f22639259",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-South-America.nc": {
+      "sha256": "dceaf898fc9c7b1b7994908addf233e2eeeb21e172354baec9c568765d562991",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_New-Zealand.nc": {
+      "sha256": "ea31895fb7b1f585daa52da15ca4ddb5690f70358430d202bc376d6969ca0c85",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Arctic.nc": {
+      "sha256": "14d55b71c5571b3a13a0e3cae1ee46d1b89a65ad72b648059e52c32ad35af3a7",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Far-East.nc": {
+      "sha256": "de345d5a622a102e0641f4d694a0c05a2497c4f95d0059dddba68677f632511e",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Asia.nc": {
+      "sha256": "0067d52f3ba141498903a0547a13815f7943dcdb26320ca2d5f25b756e241fd8",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Atlantic-Ocean.nc": {
+      "sha256": "d20ac8a2c4719fa55100c7eff609bc2e15740a7d9375ad520f712a9d67895885",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Australia.nc": {
+      "sha256": "fdf989161b80aee6dc33747eec924a7a36acb65801309c38b8ce33e88128213f",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Central-America.nc": {
+      "sha256": "d5e00e5b482c926424ca6264fd8b034a17f8e534c5746d3be1197e55d914591f",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-Asia.nc": {
+      "sha256": "0315347bd8f85088dd1d84715dcb977c79f80a7d87d9f6b1f2e6205348eff6f9",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-South-America.nc": {
+      "sha256": "1d2101ea876b00cbf252fb9592971e6b210a3cee538268286542d75864350a20",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Eastern-Africa.nc": {
+      "sha256": "3ef6dc2e8f3707782d80a00e7f72ce9471e17a26d8db5f2277258df7cfc18ef5",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Indic-Ocean.nc": {
+      "sha256": "53bb9420662209d496f22f9e9c146c06354400cb59721f39272d79289c296bc4",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-Pacific-Ocean.nc": {
+      "sha256": "49f7fb815180e056d5b0e6e21c30097e6cf09f6571dd67ff6b9addbaad35ca89",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-South-America.nc": {
+      "sha256": "451dc114768b4ecc64f36ab80b6f9b9fdbd39eca19f51071e3902d2dda592049",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_S-W-South-America.nc": {
+      "sha256": "934b8a7265aaea0876c5a94be7e8414521c118f596987640197e5d53027b4d33",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Sahara.nc": {
+      "sha256": "9367eaf20b0baa824de931c488fecbcb0742d341c39f5390987b9c4309078984",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_South-American-Monsoon.nc": {
+      "sha256": "d82449923fc220c674d433b075decfeee4dd5b4cf38a3d0dec66f7203de30918",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Southern-Ocean.nc": {
+      "sha256": "0b183e05459314a184b72b662d7147375ec69c31cdc19e25f832b2018ab222fe",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Tibetan-Plateau.nc": {
+      "sha256": "5b2a33761c0a614b96919504e371d45d2d6e989898a27dec78ba9a07b70908f5",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-Antarctica.nc": {
+      "sha256": "e3c035b3ecd4c7263e149491cfd36c633fadb7a160f6833f503fb54c787c64b2",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-C-Asia.nc": {
+      "sha256": "dc715c59a2a5a807a935e64da311efe96aec9f1a14a57b6890df795ea992b411",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-North-America.nc": {
+      "sha256": "b9f1d77a3c9160b6a6ee256590df3e38dba26316e4464193f9cd1e7835d554de",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-Siberia.nc": {
+      "sha256": "509d85227d48dcc39f11df058d92f4eaff4e690f8c86fab3c94bd9cf82f7c970",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_W-Southern-Africa.nc": {
+      "sha256": "244ef3c4c2035543cc3284bff89c97768600995c546a6fe6d6f63e81cb47d7ef",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_West-Central-Europe.nc": {
+      "sha256": "796383d84df31e201574f917b4228d12ceeb58646238e79a07e07eb17ec39bad",
+      "size": 8601
+    },
+    "executions/recipe/work/near-surface_air_temperature_annual_cycle/figures/annual_cycle_tas_ACCESS-ESM1-6_r1i1p1f1_g115_Western-Africa.nc": {
+      "sha256": "8a553eac303f98b26989806be9de59464188c8fdd4c181f601fdb1f71c6e4317",
+      "size": 8601
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Peninsula.nc": {
+      "sha256": "ab9acee6da0df71c4dfaa45b558d6f6da9d2bb281103e942561163a04fe8dafa",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Sea.nc": {
+      "sha256": "809a252eb1efa69da281bf07d88543bf1e28026f99f281d37e8f35467f5a0773",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Arctic-Ocean.nc": {
+      "sha256": "773d5c8ed47164610748743f903509d4d52a41ec0bc6176de419a2fba8de967c",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Bay-of-Bengal.nc": {
+      "sha256": "b5ee03cd08e5adc30cebc9da5636a8013be24d1be497b0775b95822d3b76447d",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_C-Australia.nc": {
+      "sha256": "8391570293cbb8935f732ccf3b72d3693d2230ce002d8183cbc67b0265654cdf",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_C-North-America.nc": {
+      "sha256": "2e9df30c6304a93492bf88accfc649c4503def191d4157891017e9a7075fd698",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Caribbean.nc": {
+      "sha256": "accaa83af3532fa60e3650e9ca7c3ef8363adbe1808f6f91163a4c175ffef85c",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Central-Africa.nc": {
+      "sha256": "f38c3afbc90d0f929d58f84135238fc031a86b68ab804ee421525e7dbedba07b",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Antarctica.nc": {
+      "sha256": "453f55b80428e49f935a18240919a32dd5e9391d995d6c98d7d21e7ac789c335",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Asia.nc": {
+      "sha256": "ea607fad7b95075f968ff5045bf3d8d5cba9a1a29281202dc5e59359edfc4306",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Australia.nc": {
+      "sha256": "11cdc3a639a3f9ac5bd731c98494ad8e1df91d0f9557ef6922008c6130bfd98e",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-C-Asia.nc": {
+      "sha256": "0fa431a9f8bdc7ddf45d74f67e1c6130075508428cc88f11d5a882cb68ef5031",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Europe.nc": {
+      "sha256": "7111101d93a21f1ea50e5f71daa1afd646132957334885e9b8d0e35e355c91ca",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-North-America.nc": {
+      "sha256": "3e987b3d005fd5a8b1072824c356d4b825f687f31fc2e829195a3d06b3ae4a89",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Siberia.nc": {
+      "sha256": "74f9a47944e17fed1fd666dcaabd6ca0f1b6e45d8a8a9d6687734e9c9c4ed859",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_E-Southern-Africa.nc": {
+      "sha256": "17f007d988bbfcc52448f8e257571992f0f034af1e03f01e13f691b9e0ff87a4",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Atlantic-Ocean.nc": {
+      "sha256": "20bbfda6226a21e3559211aec5945c396d29c46b3887e0dbc2b0fb73e0577c51",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Indic-Ocean.nc": {
+      "sha256": "4b4451a3640830d5528c89391aa7027c6444ff3f329d37f2a5edbc204df4972a",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Pacific-Ocean.nc": {
+      "sha256": "31d19f9bfad7b5568376dc1aaa45562a3045a24a937aae7f47a56686f54967d1",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Greenland-Iceland.nc": {
+      "sha256": "9694e4ed2208e601d8b8dbd3318cee54c68a3b1603795666220b5dd1a21d0c5e",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Madagascar.nc": {
+      "sha256": "7778dae519a36d294f05911f9e52802879bef4b62a54fe2e2693a7581f670e1f",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Mediterranean.nc": {
+      "sha256": "cda0244f07241479ac465907af0b5180fe1144911147e07fda9f58dea2cf021d",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Atlantic-Ocean.nc": {
+      "sha256": "d38d64f3895dcc72067bdec188c5e87ef4afee269d9edeed3a5142d0b75f0b0a",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Australia.nc": {
+      "sha256": "3da481fcc8da6f0cf010d91df64b75a912cd68b960ab90ad9ef91fa890aa5b6d",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Central-America.nc": {
+      "sha256": "aa744f63e5982bc15dae5f5a63399fe39bca17dbfdf63fd676453b490ed304bf",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-North-America.nc": {
+      "sha256": "3ae411931753ee0f0baed61224057c026c80e5947098e91e26b4d797666e6700",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-South-America.nc": {
+      "sha256": "66618c74faa3e813cc79743f0e6fbe736b48d86254903ee9ab1cb136c4bb9722",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Eastern-Africa.nc": {
+      "sha256": "d2da549f4c8cce69b06ff01e04f520e86e09b5c377b43ac4f83ca9106494826d",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Europe.nc": {
+      "sha256": "885d8f556d2a20137cbc3943498b4f0b5c1422f3ae2a8d434f228f4593d6a30c",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-Pacific-Ocean.nc": {
+      "sha256": "6c05b90fc3e481a9914ccbf7fe7e2de293256e641aa431207894175ef90380f9",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-South-America.nc": {
+      "sha256": "49dc8f1e0141c892b08f1df096670abff47196a6d4901fb188754d96b98e1dd8",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-North-America.nc": {
+      "sha256": "6f4203156cf2d489147a2ec9c8dc69ddabb37c89d6ce9ec245969c18ab68125a",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-South-America.nc": {
+      "sha256": "cc5407a2366ca48fa420bcf4d034f9babe0347dabc93ef580575959948afbc20",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_New-Zealand.nc": {
+      "sha256": "9215c7d4164a724d8806ba158b9ecd12048148ce9397966cd5ff1c930c594ef5",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Arctic.nc": {
+      "sha256": "64e55a600f2e5a498c4651bf3726de50e2a95e06ef96cfc9d7b270da760529c5",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Far-East.nc": {
+      "sha256": "2b1a9a70cd11bb892aa88d3a32d4a795adea6353a72817cb2cc9ecc398203ee4",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Asia.nc": {
+      "sha256": "2a682255260beaca202d8931fc811890cdf23cd2157e2b158cffc2aeafca69e2",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Atlantic-Ocean.nc": {
+      "sha256": "8f6477f8c8e876ba567e4ab91c212a13c99980e6a850a89b7fd452d9b7ab5b2c",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Australia.nc": {
+      "sha256": "1ac093e9b41c56449dc0f18226dfe35fb120599e34d1e6c638eaf92cd8034479",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Central-America.nc": {
+      "sha256": "76ea71b0bb000670d637723a53ff59d2d9c2a00edc489abc52d589be9b73ee4f",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-Asia.nc": {
+      "sha256": "f713aba3e3cc5e4a31c3b740951c403114d10e7e38e2b2f482a65b7707dd0ff7",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-South-America.nc": {
+      "sha256": "c6b8bf984a6e97deb73d8c1555990bc568159bd28032c8f3cb8973b8468fc862",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Eastern-Africa.nc": {
+      "sha256": "d0fca1f522e9ed6e9e3886f71e29dc59dfee17b3b84ff10e2b7f23576c0cbfc9",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Indic-Ocean.nc": {
+      "sha256": "51cc616ac735978672aa25e555f751fef27c255529376b37f3589147aca7233a",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-Pacific-Ocean.nc": {
+      "sha256": "1bc7e62b18ab12391d17bfe3d673f90a6fe86d76678aa25f07df989410643e9c",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-South-America.nc": {
+      "sha256": "71522d9b3e35fe5e4aed722eaf5cc9792320919699b5f49fa63e4edde78eb7da",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_S-W-South-America.nc": {
+      "sha256": "962a8c826fbc168dab31268302f24fb199bd4b68384825fe420e7a3e6acd02af",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Sahara.nc": {
+      "sha256": "51dc42831dd49e85c4a4da9f4fb56c8836e6ae33ae3772bafabca23cb3e1f09a",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_South-American-Monsoon.nc": {
+      "sha256": "ac5f671cc011d5f94d7ea9b3e3c8cd94971cced37c4098b4b1fd857033dd8fb2",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Southern-Ocean.nc": {
+      "sha256": "136ad960bc8c92d019045cbe7b9142f8d46051f56079849dcb9261943fda951a",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Tibetan-Plateau.nc": {
+      "sha256": "ec22597360f3229b0b0d6e6072214ef8ce469e18bd6f574730757376c210e42f",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-Antarctica.nc": {
+      "sha256": "d0cfd2b34f43c2b0ea9f2d1122e43ec273dfb7970a375d5b211f62614c14ddfd",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-C-Asia.nc": {
+      "sha256": "2aeb7c971e9e01597187bcda992ea3d73e111e6c117f61da4e445e258d48df37",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-North-America.nc": {
+      "sha256": "1b5d398311da925f3311328602d7e48d2807b09e663e31bd9f68688ede03a03b",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-Siberia.nc": {
+      "sha256": "838a03a72f1406cfa4d78fac599c1fe43ac854cd2cf0bb3e3b8a9ecf0c5acc34",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_W-Southern-Africa.nc": {
+      "sha256": "9ead05785612a61df370ea433235e85521204e01d10dc74378f51ba8f786bf26",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_West-Central-Europe.nc": {
+      "sha256": "310c1b575cbab5572418f584f895e4a9b72d9be3d6d28f1e81f6141313464d63",
+      "size": 8585
+    },
+    "executions/recipe/work/precipitation_annual_cycle/figures/annual_cycle_pr_ACCESS-ESM1-6_r1i1p1f1_g115_Western-Africa.nc": {
+      "sha256": "9909465c7dc0665d77bc06e03f268a1201ede9a808743b95f9781df43a56a7a3",
+      "size": 8585
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Peninsula.nc": {
+      "sha256": "08b9da236b33bb94870f326b2512329d720c9e1144907f21a3740e4c997c8155",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Arabian-Sea.nc": {
+      "sha256": "05640d7cb456a97c2a4aff0596865864f7e034bb5f9357f34bdcb37b80c116b2",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Arctic-Ocean.nc": {
+      "sha256": "a79df072517bb3f82f12f5f1b819922a589e47140a7f6d5179a22704d5d0ca6e",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Bay-of-Bengal.nc": {
+      "sha256": "0288383157bf81057bc30859c571e2f1fc2d23aa80664496a22a9f3f6f385a86",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_C-Australia.nc": {
+      "sha256": "c31fdb320e75e05852a591d3b1a90cf95ac5f4606fdd44cbbce60d38fa83aa44",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_C-North-America.nc": {
+      "sha256": "fb8fcf869884be96ac83585acdbc2cb51bcbabe209ad5477da38586120487900",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Caribbean.nc": {
+      "sha256": "2ca496b23bf6f9ffdc3d1d70f9a22889428e590b6335722f8ce0a09e1841476a",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Central-Africa.nc": {
+      "sha256": "3901e190fa47847c6dcc8ec8553597cebf9ce19e18f02c183cca7b60a38c99e4",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Antarctica.nc": {
+      "sha256": "1452ae6ff654b41b52014cf1dafd7e2e8ed6d0d8fd8d918a776250c3a3d808a4",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Asia.nc": {
+      "sha256": "d7f95f93feffdb5b326571cdc677281ef7242d6566808d93e6e6281ecb2e5b55",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Australia.nc": {
+      "sha256": "65afe936174dec2e1c268548004184c03cc2038237f8d5013ff1a0f053dc5aba",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-C-Asia.nc": {
+      "sha256": "b45d7e420272ee4720bcc23ab7edeb8ea8dacaefff99ccf79cf66f8e9386d31f",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Europe.nc": {
+      "sha256": "b9a6c5a1fdd015a60563ec9afc2016972c2b60e22cfb0a6a4981c729bb3d4ee0",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-North-America.nc": {
+      "sha256": "ff30a4a4937e87d18782501b4d1d21229283f4833b4d66f98b9b64564fd84587",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Siberia.nc": {
+      "sha256": "7c1fb93c12ea5063883deba40fd8b7798bac0f601d4cd1a3d3acb7a6259dd32b",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_E-Southern-Africa.nc": {
+      "sha256": "ace4a1fd497ad82fb5997be6c3e22a5d7f3cc13472fe6698500acc9c1932db6c",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Atlantic-Ocean.nc": {
+      "sha256": "7bcdc7d8dbdaffe8a2cc4486a892a0442ac496107a03b629d383a105005d2c40",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Indic-Ocean.nc": {
+      "sha256": "3a86c065e72ecce1ce133d64a0617749cc0bef6cc5eb8529c2680c54057fd486",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Equatorial-Pacific-Ocean.nc": {
+      "sha256": "b4545709a9f5a64b25ec84ba00f549d2b8bfb02f91002cff4a5accae2a98c1d0",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Greenland-Iceland.nc": {
+      "sha256": "a94dd74e7125a69a015f967597af42ee80af7c8c8b5196dda778fd7d7254fc1d",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Madagascar.nc": {
+      "sha256": "ba9adb9cd71eabcc11875c4b7307a0c047671f91f43f611a5d78de046b34b818",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Mediterranean.nc": {
+      "sha256": "e609aaf7e94e319e535552da855905eed279bd5464d82f7995362a619d9c88be",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Atlantic-Ocean.nc": {
+      "sha256": "89eeb76a75550854a308ac6e5a086df20ecb08926e458c6828d1b184136307c8",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Australia.nc": {
+      "sha256": "4a3b6038a209d2279b947d6b78608af7729341f895761dd8d464099710549179",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Central-America.nc": {
+      "sha256": "2dd21d61a1c171b6bc195671f02967c1554156b2683c2fd20f5e089764ecd271",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-North-America.nc": {
+      "sha256": "171e21bf3f506d5e6c9d138b927ecdf08c3cb53cbba3c4e489b10e4e28928621",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-E-South-America.nc": {
+      "sha256": "559ac402b9be75dd51e848a4a1cb99d50d7d294def627993a4762fa878c3761b",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Eastern-Africa.nc": {
+      "sha256": "4c3b7fdd3ba8f74863aa2dbd2f757d12d50a1e653646c8bbabbb0d91eaf0a2fa",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Europe.nc": {
+      "sha256": "d76099837f18379636e0dcc313d9dd697fac6f91de3947db25309033acad097c",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-Pacific-Ocean.nc": {
+      "sha256": "713900a2dda799f7db4fc5fed39c4f4ae8a8601f7df346f615221541bc1aa45a",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-South-America.nc": {
+      "sha256": "ab6b86267eda8b8e48a0fcb2cdf935f9c43788c3d31bb9a56d5b09fd8916ba83",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-North-America.nc": {
+      "sha256": "8efa615b7d0581a34ba7667584a977495bac0712cc9a2a7ff449c6862f0cdcc2",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_N-W-South-America.nc": {
+      "sha256": "fc5d8b8de73c86439eb08004f9709beb3f1ec78f3cfe43e847b5f27f72db9bfb",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_New-Zealand.nc": {
+      "sha256": "3c3bba36ad69af5a2e96da4c205a40480828a4a8911df4c986b6cdb6383e5bf7",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Arctic.nc": {
+      "sha256": "7049c3bf004d1949b96ce6562a566ff7e37a6eab6707f63ce3b5e90062e0314a",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Russian-Far-East.nc": {
+      "sha256": "61ad0adc4717aa1d9b55499448b3e81854beabc42ccb914fa742bab42fb4066f",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Asia.nc": {
+      "sha256": "bd8bd3c0bffe03e91df0854469729fedde648e05522503d138fea566a76aab29",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Atlantic-Ocean.nc": {
+      "sha256": "55428e83d058c3545ef74daad5b0fc11d72e24dfda6bbbf7d4b75df3b95f90c4",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Australia.nc": {
+      "sha256": "58dbcb81d1b02a9f7f662c065fc55748debff5517abd94110e204ffc216bfb8c",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Central-America.nc": {
+      "sha256": "c7e2124b5160205e27f7b4ace808cf135b4aa58a5b6d34b0cedb41c14519b629",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-Asia.nc": {
+      "sha256": "d37eb4ce21e9e7537768ba211bf632cc2f8f7c41a7688e62a1e89a329a5463b2",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-E-South-America.nc": {
+      "sha256": "f616115d737516e97cd2f0f9fa5c77f2fb6cf9afce77403308cb0bd72d6903cc",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Eastern-Africa.nc": {
+      "sha256": "954d8623a391d325aa28942697f4d3475341a7b6e8a822138f4bcae65ad5cb04",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Indic-Ocean.nc": {
+      "sha256": "c7d402d579382f56a0f0a113b696463324dffa93a017ef13d50b23b597f2801c",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-Pacific-Ocean.nc": {
+      "sha256": "782a83a3ce45c3a2c3cd4debd5c50a9e9297f8afd948f42f9a30e9cb16d1d16d",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-South-America.nc": {
+      "sha256": "e7f0db486a7ef4e68ed562a5a7b605b3ac3def0eccdad5644cc2455442387706",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_S-W-South-America.nc": {
+      "sha256": "4783f0cf711b88f2166644bb3f16b4293f3468bee3d9ee0a4c397a6d0aa4d3a3",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Sahara.nc": {
+      "sha256": "af3fc6a3c57e33986efd315a5c39d0e00d2e07eb1f61a1f4a84b8f0face3d193",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_South-American-Monsoon.nc": {
+      "sha256": "7f33b4e6f09d4dd27cd1b9751c35409c917c4f232c23138e289407e8a1f81cbc",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Southern-Ocean.nc": {
+      "sha256": "7838d27ba0c62045abca06c8c13ed066c3590a5b61c2d7a31ce7d7815337a120",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Tibetan-Plateau.nc": {
+      "sha256": "a4ccca2e3a496b3e191a4365e9a97c5188f796a389801a97d76a928b3f2a8760",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-Antarctica.nc": {
+      "sha256": "41951f2827fdbee4e2f357f0ba3474e1f30b1a3a30214e9433a4fcc32906eb5c",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-C-Asia.nc": {
+      "sha256": "ebe59a4b62c90a757b090633fd63ba288d8508a763d5e932ce393aebb7563878",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-North-America.nc": {
+      "sha256": "d67ea1ce9f1ef056e0355bdd2794e7f28ccddb1a0c059578221b1b371ccb6768",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-Siberia.nc": {
+      "sha256": "d9e051b798d5eafa8ccc0279a2ae7a9c9ad98880d9e8ef557d7c1e3e5750a01a",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_W-Southern-Africa.nc": {
+      "sha256": "73ad5826d12b5f95b677fd61cde1ee86f346595a0812abc43f37c417a87884e8",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_West-Central-Europe.nc": {
+      "sha256": "1918c478fead31badf4f97f8281f289554ef55675943092ffc0dc99a23f94ec4",
+      "size": 8591
+    },
+    "executions/recipe/work/sea_level_pressure_annual_cycle/figures/annual_cycle_psl_ACCESS-ESM1-6_r1i1p1f1_g115_Western-Africa.nc": {
+      "sha256": "52614090d068633383c277e631b29657322cd56b0b372e95c5e1ec524bf68a7c",
+      "size": 8591
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arabian-Peninsula.nc": {
+      "sha256": "11243a4e7c0394ef9a45c4d6115e06e76127910581f7dad042c6502aebbbabb3",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arabian-Sea.nc": {
+      "sha256": "c74df0c478f6386f2ebbc97cca167e03afaf6bcc68d087de9c71f5752b1abfae",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Arctic-Ocean.nc": {
+      "sha256": "18a7096b02343b2ed0535a97f6c99ea2f716497e6d516c9bf5af764b0f62bf1d",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Bay-of-Bengal.nc": {
+      "sha256": "46805cb6736264c1b0ce692ed762d38c2b1725998343d1dfb3062fe977c014ed",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_C-Australia.nc": {
+      "sha256": "721284277bfc5ec3e53b3d60c4aec519c80010d70f36185573ca17b2c61770e8",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_C-North-America.nc": {
+      "sha256": "94d51e7f1a3a1b487c076afc524e19cbf8a9ed8b3861dfdf3ae722c85bb31b9a",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Caribbean.nc": {
+      "sha256": "bf43d42eb17b637b3289b11cfa6720fd6182b6a4c8990ebf5f945be6b25be65f",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Central-Africa.nc": {
+      "sha256": "3bdb47ee5d5e8367c904bae677aae67ce2d816c6d4bac5ebe07ad90cf1355a98",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Antarctica.nc": {
+      "sha256": "fa5f19f1677503e8c604b72d5f59ecacea73314a15aaa866e729c1b506d63dfd",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Asia.nc": {
+      "sha256": "709a0bab234a5632cabc0b04c7b4d9c83c69526a04ccde2595a8ae6b577146b8",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Australia.nc": {
+      "sha256": "33a9242efe28373282a5bde111cc77e51892a6a75c07cb5e5eff20f44ddbc35b",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-C-Asia.nc": {
+      "sha256": "0ec627cb0f31daf8e78074f54c6ef61e5c47a5ae9b57daf6cd9c659cef9f0f9c",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Europe.nc": {
+      "sha256": "29eca24f27d0f5f9c0e28c85cc10de9fe7d998996c82e7ba1921628941069f49",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-North-America.nc": {
+      "sha256": "ce2a5cf6076a7af6228fda61b6cca8ab1cdf616ec114015a2086004de61d3852",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Siberia.nc": {
+      "sha256": "35de5a0e04721f348b4cb74800d343d422772c50b7e00281e06c0da7ed57ec0f",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_E-Southern-Africa.nc": {
+      "sha256": "f45c0c3b8b962870bb08fec1fd59b54a2f030ca4213fea0af1f539815f6599db",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Atlantic-Ocean.nc": {
+      "sha256": "520e5437a5c019cabedfe1eb345b532c7ead02aff2553873ead4bb7d3c0c3a32",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Indic-Ocean.nc": {
+      "sha256": "307b6bdbc9f2b32e24ae6385440a34e50f4381e3d69ed38799c270da7833f889",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Equatorial-Pacific-Ocean.nc": {
+      "sha256": "486243c1468b5746547b9c943b9bffd5fd75bd0068b4d74b2dca999bb0158282",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Greenland-Iceland.nc": {
+      "sha256": "c97777846a51ff34d055f558ccc0dbf329cf572825614f0275672d04254210cf",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Madagascar.nc": {
+      "sha256": "7197e6e1c70fcdc78e0a1d8ac58094b8ea4ddb39b7aca0b02c132a4a0dc25459",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Mediterranean.nc": {
+      "sha256": "49e7e7f58c2542847574c9fdaf4c87e85f094317cd42bff97c5be0e06a070af4",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Atlantic-Ocean.nc": {
+      "sha256": "5b55b0dafc35d11dfd76a896a27833c714d45f748c19c391eb9398d723998a47",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Australia.nc": {
+      "sha256": "a44907a94f11d4ea0b1515f7a5041a476fd0918b5db84bb2abd44a6b3ecbc598",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Central-America.nc": {
+      "sha256": "77090069d7dfcaef5f1f60e4b8fc988752cb5c9e95b441f18db0eb5f5c73c93b",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-E-North-America.nc": {
+      "sha256": "ddaa88cc889bf2b1e0cb8bedb7110b6f056ef22cca8ed115506cfeb2527aec7d",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-E-South-America.nc": {
+      "sha256": "cc316a892376f0712d12d64c4aac88ab97b3ee45d3f1670f7903ad6ff95f9d7a",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Eastern-Africa.nc": {
+      "sha256": "f26cd8475a8a5789d5b3da71868d9eda9178c8e51d97f1613080b446e14949d1",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Europe.nc": {
+      "sha256": "82c2154509921ae275035c45ab8eaa5aa2f6842f327700049dc3a9aae7d47fac",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-Pacific-Ocean.nc": {
+      "sha256": "19d3038078115f4744cf5c8077102bcd818792ee42038312226e9f34d3b382e6",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-South-America.nc": {
+      "sha256": "e6e7cdf369b7336a251b0604143fd00b62d282e44365939385aafee956ea1591",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-W-North-America.nc": {
+      "sha256": "00c5a68c063e4644ac5d51efb4a7ff3092131d38f28ed9f87fc8a454257eb201",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_N-W-South-America.nc": {
+      "sha256": "4219bbaf0872c60a9895ebfb618e56b58479be560db6efd2d0f05ee69f44cb7c",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_New-Zealand.nc": {
+      "sha256": "8750b405b90e11a551d851f456500a2b5f7f5d0458049166791a89025cb79ac1",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Russian-Arctic.nc": {
+      "sha256": "cb2c86284bbec3a339807033fe39c85299d8ed966239cd4213645526d17f9a13",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Russian-Far-East.nc": {
+      "sha256": "5d9c86b89d0d6e08d85f3b8551787335a5c68c00a95a959058fa1417d99518de",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Asia.nc": {
+      "sha256": "ba1bdb321a7d365c31966c9760e7029fd3b1bb7f43baa3f98f2f8295d8bac70e",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Atlantic-Ocean.nc": {
+      "sha256": "2a12210c13fff25d13cf0330ab956d99e6475062bba38cfd0090b07ada4518bc",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Australia.nc": {
+      "sha256": "6b799b9a9ccbf77cf2af5afa7033d73890651804891a5432c1d3edcb8813fcc7",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Central-America.nc": {
+      "sha256": "dc281db5e17814d36d43f0cdcad1c95ae00f78bd58a7c440fea258d907a7daef",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-E-Asia.nc": {
+      "sha256": "0894965301f0330151d0c5bcd86e2d63ba134d40246f2bf73205639c34c038af",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-E-South-America.nc": {
+      "sha256": "e941a7f747392eeda1f5d9c720c8a1c60d08e30c96620bf483b8ed53f1b63f91",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Eastern-Africa.nc": {
+      "sha256": "3e5304f0559c24064d82b7bd2495bbc19561d5d9e18b43b096a515923ef6a31f",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Indic-Ocean.nc": {
+      "sha256": "d626eb55f0d4f3c121ab3679e27651a89542c3b317bc7f9a93c4e3c5faf36ca0",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-Pacific-Ocean.nc": {
+      "sha256": "0a532f3abbe9476fe55bfff65e4fb1676b3be9492537ed9ee80ae328bc3f96d5",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-South-America.nc": {
+      "sha256": "1b4b3af68afbe2214e97a9ec31c5aa223c192e59c70861e3fae33f91c417c05a",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_S-W-South-America.nc": {
+      "sha256": "a21e1c4efd7822d4f707421b3b446a8ea0a71361ab51a7cf9fcb1e9391592305",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Sahara.nc": {
+      "sha256": "2179bcfe35ec257525406586996c40b6c089908f68182d0cc7a8bd5f332e007c",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_South-American-Monsoon.nc": {
+      "sha256": "36abed9b5505783a784b5115f5b3cf13352162d8e8f9e43665b1ab6a0b0dd239",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Southern-Ocean.nc": {
+      "sha256": "0412bbd1601601370c51572d09eb3d92ee1f57bbe918239f12e632e9ddb80492",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Tibetan-Plateau.nc": {
+      "sha256": "4349d41d02a3bce6d95be1d6672f4c95347e907086507bd9e75b235de0fb92df",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Antarctica.nc": {
+      "sha256": "a2c76c6f6ffd626b437a0b1d26bfac067525b094c5d416e230c487c082dae84b",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-C-Asia.nc": {
+      "sha256": "0b2a0082454c28108bfb80486bdca5c2e53f8865660e25c6b09deaa548285180",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-North-America.nc": {
+      "sha256": "993b5c217d2726991bb8869476d5aa1aef2397df67f536b2868e30a09c10ba0d",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Siberia.nc": {
+      "sha256": "17a946707bb2812f4d08c0464727768ef4bcf30700dc8e9944147669106b5caf",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_W-Southern-Africa.nc": {
+      "sha256": "1e969f5a065aa46a0f6d430320a7b5298d21f88e8139a564171f72dce949e233",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_West-Central-Europe.nc": {
+      "sha256": "c4b5e824c27c246de77db32818f9bbc1aa75611b35b392a50e7a02f68d8cbe1b",
+      "size": 8590
+    },
+    "executions/recipe/work/specific_humidity_annual_cycle/figures/annual_cycle_hus_200_ACCESS-ESM1-6_r1i1p1f1_g110_Western-Africa.nc": {
+      "sha256": "e7af72de59c5749c0f345202278953916c1bcf03e6a5f2ccde1c7ba86bf79b58",
+      "size": 8590
+    },
+    "output.json": {
+      "sha256": "4b76c3b7f1884265bdd87297774fc83ed91e1f3235fb478b14d8f0b6cc131964",
+      "size": 302216
+    },
+    "series.json": {
+      "sha256": "54d90e75f1a34ff8329c98b3095cf112c45208ddf6efc8b707c26a1bd3c5b76e",
+      "size": 301907
+    }
+  },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

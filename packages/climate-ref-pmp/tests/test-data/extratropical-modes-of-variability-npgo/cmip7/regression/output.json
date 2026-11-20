@@ -1,21 +1,21 @@
 {
   "data": {
-    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005.nc": {
       "description": "Data produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "filename": "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005.nc",
       "long_name": "Output data"
     },
-    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005.nc": {
       "description": "Data produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005.nc",
       "long_name": "Output data"
     },
-    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
       "description": "Data produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc",
+      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
       "long_name": "Output data"
     },
     "NPGO_ts_EOF2_monthly_obs_1900-2005.nc": {
@@ -36,52 +36,52 @@
       "filename": "EG_Spec_North_test_NPGO_monthly_HadISST-1-1_1900-2005.png",
       "long_name": "Plot"
     },
-    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "filename": "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005.png",
       "long_name": "Plot"
     },
-    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "filename": "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
       "long_name": "Plot"
     },
-    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005.png",
       "long_name": "Plot"
     },
-    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png",
+      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_cbf.png",
       "long_name": "Plot"
     },
-    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png",
+      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
       "long_name": "Plot"
     },
-    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png",
+      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png",
       "long_name": "Plot"
     },
-    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_eof2_compare_obs.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png",
+      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_eof2_compare_obs.png",
       "long_name": "Plot"
     },
-    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "filename": "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-6_historical_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
       "long_name": "Plot"
     },
     "NPGO_ts_EOF2_monthly_obs_1900-2005.png": {

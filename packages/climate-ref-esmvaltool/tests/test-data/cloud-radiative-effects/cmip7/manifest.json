@@ -1,9 +1,9 @@
 {
-  "catalog_hash": "5d05f2a126e7bf78659b396273a1627075d7c4ab",
+  "catalog_hash": "82b0d597a502ef9f6125f82fe4048663223bc3c0",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "2b875526ef6a849072a93bf0ce36aa67fbd667b0489260f82ccaeb1c6d4d3c12",
-    "series.json": "463e4c60dde5c2f73aabe0c1b3fc2876e44e9cdfa9990e6b3bc3ef06cca3d299"
+    "output.json": "ed07de9e1dbc61f8c218dc1259f2323aa689214609b59dc2cf55f0e5b7c64fe5",
+    "series.json": "b02681d327c23137ee39d9e8f5fe12318f0831aaaf5f5dd350901d483747060a"
   },
   "diagnostic_version": 4,
   "native": {
@@ -12,74 +12,74 @@
       "size": 128
     },
     "executions/recipe/index.html": {
-      "sha256": "6143c716e14beb7af00b11114889ff0e041a53e86c0720291be8a0b07ab1c0cc",
-      "size": 22125
+      "sha256": "8c83d4835ec0d4895e808b0363dc731731ea7ad08ae1f1c9358f3e83b96000e7",
+      "size": 22341
     },
-    "executions/recipe/plots/plot_maps/plot/map_lwcre_CanESM5_atmos.png": {
-      "sha256": "219995af6b5cdd889b7d6677bbd47dc2c4f37ad99d76c6bcc94ff29a1cd92d10",
-      "size": 527230
+    "executions/recipe/plots/plot_maps/plot/map_lwcre_ACCESS-ESM1-6_atmos.png": {
+      "sha256": "9288a637eee83a3d471350b44ee3a7bb983194cce7f91dbcfbec3242095d8b0d",
+      "size": 506840
     },
-    "executions/recipe/plots/plot_maps/plot/map_swcre_CanESM5_atmos.png": {
-      "sha256": "aab2c0a409042d5aadc177a36689e9a8016c0b844176b5345fbb24a2c6f902d6",
-      "size": 578771
+    "executions/recipe/plots/plot_maps/plot/map_swcre_ACCESS-ESM1-6_atmos.png": {
+      "sha256": "759fa424b30403ca7a0c4016cc6bbeb974a59d1d38726d727b950f1dcdce7458",
+      "size": 578118
     },
     "executions/recipe/plots/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_ambiguous_mip.png": {
-      "sha256": "cb8040e05150cbe0f96633b8c28b721153759558c8a98ea220aa5d03834c431a",
-      "size": 161421
+      "sha256": "288fb5e6396cdd7aafe51a68dfa5b366168a4e12ac43c3dcb486d76f3da68c0a",
+      "size": 171540
     },
     "executions/recipe/plots/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_ambiguous_mip.png": {
-      "sha256": "df3c3e80453a5cc549b80c68df0e3635ac3b3a1e30abeb98cd9805ee90fd7527",
-      "size": 173904
+      "sha256": "8e535ff1858311d3840e1139408aa97b42020743c1c05b739846052b5584c65c",
+      "size": 175636
     },
     "executions/recipe/run/plot_maps/plot/diagnostic_provenance.yml": {
-      "sha256": "3f306181473dc803768623cad0d5277ce81bcc99b5bc13998cc78aa13dce3c91",
-      "size": 3682
+      "sha256": "9a0356e463e974868300e9fdfb945e44ffbaa3f316a64c1bbb365c7cd90abc8c",
+      "size": 3778
     },
     "executions/recipe/run/plot_profiles/plot/diagnostic_provenance.yml": {
-      "sha256": "78ec756d03d4c998f59ceaf7ad22f17b8f2a83bf810a6aedcb74316afe8f12c1",
-      "size": 1422
+      "sha256": "9c3907e90db517fd74e05564d47566adab14868556009bb25c6309094c8e8f36",
+      "size": 1438
     },
-    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_bottom.nc": {
-      "sha256": "59294cabc7c15249f24700adf53028c99cca3554444980e4252aed5728db7a52",
-      "size": 299088
+    "executions/recipe/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-6_atmos_bottom.nc": {
+      "sha256": "612658ddb21b44601489cc406cfecc560600311927a7d9834b9cdfaa826a3cfa",
+      "size": 299898
     },
-    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_top_left.nc": {
-      "sha256": "dab5abd1cfcfe9ab0e52ea6a2994b36bb81a03df14af8590d247bffb3ef87b48",
-      "size": 296682
+    "executions/recipe/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-6_atmos_top_left.nc": {
+      "sha256": "d379282de81d84b29774910960c2b6e48b02ed647dd52c13fd1ebc154e4be859",
+      "size": 297703
     },
-    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_top_right.nc": {
-      "sha256": "117f5ed8f8ca84da36ffec29370aeb718df226b012c6a883c05530eb91193eb4",
-      "size": 293886
+    "executions/recipe/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-6_atmos_top_right.nc": {
+      "sha256": "8fea0d940046090b9a7f328b0106cdb7dc9912443329f21c87294a7803fce3ea",
+      "size": 295362
     },
-    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_bottom.nc": {
-      "sha256": "dbbf05203d5dcf4fb1e3bd94a92d8a1d6a7d0c3e44c6c149e90a313884d331a9",
-      "size": 299278
+    "executions/recipe/work/plot_maps/plot/map_swcre_ACCESS-ESM1-6_atmos_bottom.nc": {
+      "sha256": "7c47c6488596cd65b0095eaea1aaebaf5e6ddaca92431fca56ac334bd4dec150",
+      "size": 299898
     },
-    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_top_left.nc": {
-      "sha256": "2b961f4c1a7827696f69360c1da94191cf25b23a0db82ba46dd3456b05925fae",
-      "size": 296966
+    "executions/recipe/work/plot_maps/plot/map_swcre_ACCESS-ESM1-6_atmos_top_left.nc": {
+      "sha256": "d8ad07c1eadbf2890faf4ac0cc95217175dc046ba7466da10ae3da682cf64693",
+      "size": 297703
     },
-    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_top_right.nc": {
-      "sha256": "9ca3a8fae17fe7dcb32ac75f88a930870f5c4ab7c2f64f9490e6902c53960c46",
-      "size": 293886
+    "executions/recipe/work/plot_maps/plot/map_swcre_ACCESS-ESM1-6_atmos_top_right.nc": {
+      "sha256": "0c6900d9e0b4c12c5afd329edecb4fd3017ddfc2b57efc62b00a7cfb951d5ded",
+      "size": 295362
     },
     "executions/recipe/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_ambiguous_mip.nc": {
-      "sha256": "c5dfbaa2b3ab78faa508d62cc7196105762e533033ef9d11bf9064c6d7aeb242",
-      "size": 12999
+      "sha256": "96fe87a41caf12f31d2e32da035ea60c9a52abde7e373ba607bc37b8c516b2db",
+      "size": 12752
     },
     "executions/recipe/work/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_ambiguous_mip.nc": {
-      "sha256": "3310dd910c3a39fe911275f2916342c2cc8ef00ebceaa5dde56d1c0157d66443",
-      "size": 13001
+      "sha256": "a093e1613fd7f43f05e0d10ca1ee28f87d13d1d1e18c7ceb96ec15a97a04dfcc",
+      "size": 12753
     },
     "output.json": {
-      "sha256": "64e93ece3b9dc2b2bc8127681fd4c8a292cc3df8602f7ef5c9e208da6f5bb558",
-      "size": 5532
+      "sha256": "628a38d86bf1c06f96098468c518e656bc00df5937ac122d2bd0b02313438e1a",
+      "size": 5576
     },
     "series.json": {
-      "sha256": "00fd1ba06075d828010721baaa0730f81c5ecf4f9fc4faf8d6f6385281bcc75e",
-      "size": 28125
+      "sha256": "f2dd21d25d601b838938e14e2eb15f5fe98bda31bc66a19c9a4dce5c7221d555",
+      "size": 30271
     }
   },
   "schema": 2,
-  "test_case_version": 5
+  "test_case_version": 6
 }

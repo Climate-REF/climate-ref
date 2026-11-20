@@ -1,0 +1,33 @@
+{
+  "data": {
+    "CanESM5.csv": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "CanESM5.csv",
+      "long_name": "CanESM5.csv"
+    },
+    "CanESM5.nc": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "CanESM5.nc",
+      "long_name": "CanESM5.nc"
+    },
+    "Reference.nc": {
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null,
+      "filename": "Reference.nc",
+      "long_name": "Reference.nc"
+    }
+  },
+  "diagnostics": {},
+  "html": {},
+  "index": "index.html",
+  "metrics": null,
+  "plots": {},
+  "provenance": {
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

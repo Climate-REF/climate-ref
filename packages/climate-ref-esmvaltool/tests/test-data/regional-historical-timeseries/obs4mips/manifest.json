@@ -1,0 +1,309 @@
+{
+  "catalog_hash": "ede85a9bd29a5cf78527e47bb65af9621f462f0d",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "bf4f26b45476c6f3c771d69439c0a3faf573d208d49def8c0145dd7bddccc2ec",
+    "series.json": "9d11febc9d2c1159b2c4e49428099881db314bac71445e63eacd283390a00590"
+  },
+  "diagnostic_version": 3,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "0e5c8abde7470fd597671e8c7230831bc4afba0118e738aa4a64e7cccb24fd2f",
+      "size": 78474
+    },
+    "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.png": {
+      "sha256": "08e2c015c3edb65c56ef138fae414e5f54e9becbaaef6b38f9283f8d7dd51d27",
+      "size": 195058
+    },
+    "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_C-North-America.png": {
+      "sha256": "0954c20313ee3ee106b4e06799b4204f3cb25c95c60cdf6ec4ecf641b8b241e4",
+      "size": 212807
+    },
+    "executions/recipe/plots/eastward_wind/figures/timeseries_ua_200_ERA-5_Mediterranean.png": {
+      "sha256": "75ac14647e2b3e95def6303609fd8294c45e5796bbec275d1587c2297239972d",
+      "size": 194536
+    },
+    "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.png": {
+      "sha256": "6cdce90c365871ea80c0f3bf22a127f57e07b2681080baf7e06d81c963407e9d",
+      "size": 183202
+    },
+    "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_C-North-America.png": {
+      "sha256": "2e0515cacef4b5434abf22249453323ae3f10061489557647e681504d4e8198c",
+      "size": 188788
+    },
+    "executions/recipe/plots/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Mediterranean.png": {
+      "sha256": "f8614d89bf25033da02353aed2cd5e4560da2254976b3f7621660fc1aa526c9b",
+      "size": 173249
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.png": {
+      "sha256": "bf5b85d5f16e23f87d4b7e43d5458ec71dd09679a6fd43894b71947e7f2d3cba",
+      "size": 232496
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_C-North-America.png": {
+      "sha256": "c46f891c7f021829bbcce8640524fe8b609c67e27de13ac0093a57fe5e7bc48d",
+      "size": 230302
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Mediterranean.png": {
+      "sha256": "bad476050036a71357dd7b5b999efd1cb4e7b35995a22d94dd3283d336449286",
+      "size": 241342
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.png": {
+      "sha256": "cb46e4fe0054e4b8e8097dff5ecddf960672bf3fd697004b9000f473a00e5fc1",
+      "size": 172220
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_C-North-America.png": {
+      "sha256": "87e5315abbda11b7f93df38837f7c0d93afd26501dd7987a89cf6e0614b8a444",
+      "size": 163327
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Mediterranean.png": {
+      "sha256": "46dc10dcd07a3a685bef965bbe33c5d5a2e76fb853d56b33813671fd3a4df462",
+      "size": 176002
+    },
+    "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.png": {
+      "sha256": "0b626a8eec18987af763aa59953c82e551e65d77ae682127d8257cd6cbf6c27e",
+      "size": 208281
+    },
+    "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_C-North-America.png": {
+      "sha256": "ca6839f97d11ecefa627db8059394c6e9c3894182136e7e6d412870a6c777b68",
+      "size": 200211
+    },
+    "executions/recipe/plots/precipitation/figures/timeseries_pr_GPCP-V2-3_Mediterranean.png": {
+      "sha256": "f855cbb2276e9978bafd5e77620d51c82e26f40bd007ec53f7c58c1d6518e972",
+      "size": 218391
+    },
+    "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.png": {
+      "sha256": "eee7341763d5d0a215b91d1ebc7e2a8db160ca4177fb61d50996dd545736bf89",
+      "size": 172619
+    },
+    "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_C-North-America.png": {
+      "sha256": "66d4a700574138c4cdf29d47c890d5ff043de404741dedf28de0fb81baa85195",
+      "size": 175507
+    },
+    "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Mediterranean.png": {
+      "sha256": "2317627193b0cf79a95cb0899fe5ca6ad88ee466a74175972ca0c651b9516ccd",
+      "size": 180371
+    },
+    "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_Arctic-Ocean.png": {
+      "sha256": "5b69abf410bb345797b9a7029687faeeca843ac5a884439616306d5f3c670fea",
+      "size": 199520
+    },
+    "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_C-North-America.png": {
+      "sha256": "ccc3a53d8b22ae55e4f8890fe2e93fc3ab11b91e01818f2eb9393c48a3a5eb4f",
+      "size": 221057
+    },
+    "executions/recipe/plots/sea_level_pressure/figures/timeseries_psl_ERA-5_Mediterranean.png": {
+      "sha256": "c345accc62afd4733193dea481ba5469a23234a1d49ec1dec1688e8f8d0b0233",
+      "size": 206343
+    },
+    "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Arctic-Ocean.png": {
+      "sha256": "da74cf9c52b8aaea5c87f7c568c801c384de8224924448334bad65f87ecb7f62",
+      "size": 181666
+    },
+    "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_C-North-America.png": {
+      "sha256": "a0350be9fd56c6a18daa4bc9259275228ba3ac44e4f3c3b7886c155b3a672213",
+      "size": 169424
+    },
+    "executions/recipe/plots/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Mediterranean.png": {
+      "sha256": "c18e18c330f531dfc4861d58cc10f3ba1fd5fe7fb48f778e1e085084fb729200",
+      "size": 180707
+    },
+    "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_Arctic-Ocean.png": {
+      "sha256": "ed923d7528282ef5fe8ff18f6a3821587ee2944f19f05ff1aa47e6b2f0893f4d",
+      "size": 183346
+    },
+    "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_C-North-America.png": {
+      "sha256": "d91f107fd77e6b5d42009b9f96b6cc6a055747a11597018d7fc40fc5929216f2",
+      "size": 224586
+    },
+    "executions/recipe/plots/specific_humidity/figures/timeseries_hus_200_ERA5_Mediterranean.png": {
+      "sha256": "c78b2173f0def11d0b4ffabb9513e7534ffd0498c59d66b131e96c7d2fa554ef",
+      "size": 209018
+    },
+    "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Arctic-Ocean.png": {
+      "sha256": "19c4a07712674af4858310f881a4c1660bf797b87480ff72bf9c0cf56a2afc44",
+      "size": 158990
+    },
+    "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_C-North-America.png": {
+      "sha256": "61c143e28b751d3dd629e213bd9e48a6c79abbd74524aa44d0ae5d9b409f8e46",
+      "size": 171918
+    },
+    "executions/recipe/plots/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Mediterranean.png": {
+      "sha256": "f7ae47c675ebdf330e9c25a331ea042fe2d81ee0c11e895c309c5ac55ddf5652",
+      "size": 162457
+    },
+    "executions/recipe/run/eastward_wind/figures/diagnostic_provenance.yml": {
+      "sha256": "cee644e403e65ba1c6d376c34ea41140a63153d51ad00f4061ce8164306de8fa",
+      "size": 1433
+    },
+    "executions/recipe/run/eastward_wind_anomalies/figures/diagnostic_provenance.yml": {
+      "sha256": "b42872017e7cc75a23fcfb1853386bd510933e0cc5810b30393fdb870a033c41",
+      "size": 1523
+    },
+    "executions/recipe/run/near-surface_air_temperature/figures/diagnostic_provenance.yml": {
+      "sha256": "321bae0a1a99cb693a5e72feaaa114609e719e7ef4fd1acdab87b9c85d73dff8",
+      "size": 1733
+    },
+    "executions/recipe/run/near-surface_air_temperature_anomalies/figures/diagnostic_provenance.yml": {
+      "sha256": "f71d6862693c47f71ef0b07d43f2f2f0f112be9ff023af40ecbef1b573345a3f",
+      "size": 1823
+    },
+    "executions/recipe/run/precipitation/figures/diagnostic_provenance.yml": {
+      "sha256": "8282922cbcaf550e03993d9e6b6e8228e9d43578308216dd0ca5663bbf8b2562",
+      "size": 1433
+    },
+    "executions/recipe/run/precipitation_anomalies/figures/diagnostic_provenance.yml": {
+      "sha256": "f7ddc8904b4c8e023650bd1f4d9d7ff24b4f84fa75ba8f1b7d915b52ff6496ca",
+      "size": 1523
+    },
+    "executions/recipe/run/sea_level_pressure/figures/diagnostic_provenance.yml": {
+      "sha256": "a61b3573538b43d6acb85ea4531dea1186e51950481ed96e7621a5840b7ef020",
+      "size": 1484
+    },
+    "executions/recipe/run/sea_level_pressure_anomalies/figures/diagnostic_provenance.yml": {
+      "sha256": "6e7ccb6fb3290845f5556103fc5964771dc69a13c6100c73191ae455b0d07b23",
+      "size": 1574
+    },
+    "executions/recipe/run/specific_humidity/figures/diagnostic_provenance.yml": {
+      "sha256": "45018b3025842d3e12e655ffe6a46aaff98e7f80d9bd233dceb60bf00f363fe1",
+      "size": 1541
+    },
+    "executions/recipe/run/specific_humidity_anomalies/figures/diagnostic_provenance.yml": {
+      "sha256": "1cdce66e6171b9d2cf2fab02d97836e859257e79e6b6a98d83fc4a9a911670d2",
+      "size": 1631
+    },
+    "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.nc": {
+      "sha256": "e9c233d9b36d7281998ef4d9487921d246a70e6832b4250181017474d789f8af",
+      "size": 24762
+    },
+    "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_C-North-America.nc": {
+      "sha256": "d5accc7d70debe1cdf9597bc44c96e867e98fb54febd149a14c4f5fda327f5b9",
+      "size": 24762
+    },
+    "executions/recipe/work/eastward_wind/figures/timeseries_ua_200_ERA-5_Mediterranean.nc": {
+      "sha256": "30a425440844908e6a3a6f022390c5574103f540a8b1415f9d1cb4921c204dca",
+      "size": 24762
+    },
+    "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Arctic-Ocean.nc": {
+      "sha256": "30e964182515d7d684707f40fac1b4dd506e06b04804d6b3053bfb868c763058",
+      "size": 24762
+    },
+    "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_C-North-America.nc": {
+      "sha256": "7d2efc27f750fece7c560432cc7d0ec5e60a0e7e3c38a2e8fb9acaecedb1f1d3",
+      "size": 24762
+    },
+    "executions/recipe/work/eastward_wind_anomalies/figures/timeseries_ua_200_ERA-5_Mediterranean.nc": {
+      "sha256": "68d106a6b5794e4b974b5ebc4ad57af7ab1a054d2023424d360204a912bd1afa",
+      "size": 24762
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.nc": {
+      "sha256": "2d3827340701eb19fed03352b2d9ec49cbfdf86a15d7ab73dbef1b94e97c9237",
+      "size": 24718
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_C-North-America.nc": {
+      "sha256": "8f5661e061a17669592f2ffb7028d17872fdc5b70bb51c3270df754311a65ca0",
+      "size": 24718
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_HadCRUT5_Mediterranean.nc": {
+      "sha256": "2b7ba670af0da678150e509e6f38cba18baebf28e07127b74474f27c56c89ab2",
+      "size": 24718
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Arctic-Ocean.nc": {
+      "sha256": "0596409b5b7013a52251c04b5a7dfdcf4d74963901205461eb89a3c27bd5aefc",
+      "size": 24760
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_C-North-America.nc": {
+      "sha256": "44568b573e539181eed8beb3d8c4e6f9aea16f6836eb23a18d60b22656bbd53f",
+      "size": 24801
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_HadCRUT5_Mediterranean.nc": {
+      "sha256": "0c12812f0c6fbb31b40fdc4308ffdc802525bd7bb220d9b8c1e7669c370e9548",
+      "size": 24760
+    },
+    "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.nc": {
+      "sha256": "49fb3adc588cba1dba766f0c6d55f601a22abb3e2240d1e3d02edfb58f96abb0",
+      "size": 24762
+    },
+    "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_C-North-America.nc": {
+      "sha256": "2fd7ac51304a45ebfbee904b6cd58ca3bd10547b91a95c72f95150f11e428d7f",
+      "size": 24762
+    },
+    "executions/recipe/work/precipitation/figures/timeseries_pr_GPCP-V2-3_Mediterranean.nc": {
+      "sha256": "2233f33dbf8e95026223e4edaae7854e94e9cd1fb9d1fbd51f33e1611896358e",
+      "size": 24762
+    },
+    "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Arctic-Ocean.nc": {
+      "sha256": "90c0f1f2bd2a7e00fadb48640d3c1088fb8838d3d1f34ef4ab7fcc899603bccd",
+      "size": 24762
+    },
+    "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_C-North-America.nc": {
+      "sha256": "b38c528842c6c4d2c0153ac7d72cd8e71d544e308783777e7f0da0684f3844b3",
+      "size": 24762
+    },
+    "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_GPCP-V2-3_Mediterranean.nc": {
+      "sha256": "e912e165898b697cf583f2c65f567b6059fcce88243207432e86788e2728690d",
+      "size": 24762
+    },
+    "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_Arctic-Ocean.nc": {
+      "sha256": "a202484ae8d085de5e571de7a2715df0b41f0517ffd5ccb7a46ec302785bc765",
+      "size": 24770
+    },
+    "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_C-North-America.nc": {
+      "sha256": "6682e2dd5cb410ebdf9170766169d3911c2f0726c33f5526d1aea54b5de50864",
+      "size": 24770
+    },
+    "executions/recipe/work/sea_level_pressure/figures/timeseries_psl_ERA-5_Mediterranean.nc": {
+      "sha256": "0e788babb42787f773b78bbe8f5147f03fc2d3c7465a162bac7ff33dbd53a206",
+      "size": 24770
+    },
+    "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Arctic-Ocean.nc": {
+      "sha256": "9ba54d64cb24d8b263d7d7674438cb9503c2df96785e28589e4b0e9c5e6161a3",
+      "size": 24770
+    },
+    "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_C-North-America.nc": {
+      "sha256": "388130efc73727dc395bf0f5698420c01f6bc7da39506e874b81d7bfedc17eeb",
+      "size": 24770
+    },
+    "executions/recipe/work/sea_level_pressure_anomalies/figures/timeseries_psl_ERA-5_Mediterranean.nc": {
+      "sha256": "c45ff6868f3a90bf6d6b953a46a36ca2cbd1a469d6b02350ee9d0611c684ff44",
+      "size": 24770
+    },
+    "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_Arctic-Ocean.nc": {
+      "sha256": "98a13c744de68f7f16b5be5914f44b3a256dd38f87a91a5fc0bd6053406462d9",
+      "size": 24769
+    },
+    "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_C-North-America.nc": {
+      "sha256": "81d64b52976fbc7b3176691dc5bf320a33d53c36904c5125e003bce31f652c5b",
+      "size": 24769
+    },
+    "executions/recipe/work/specific_humidity/figures/timeseries_hus_200_ERA5_Mediterranean.nc": {
+      "sha256": "4625c19348af7126659cfdb365c1c126e6b6d9f560c4320db5efc97dc0dab26c",
+      "size": 24769
+    },
+    "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Arctic-Ocean.nc": {
+      "sha256": "68de38e84675075a1ebaed3198b24f2924575caef677d63010dc28578a2344e3",
+      "size": 24769
+    },
+    "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_C-North-America.nc": {
+      "sha256": "36e5eba81176395667809386fb3ac1c01d8f47fb0278c8d13d03b5d060494d1a",
+      "size": 24769
+    },
+    "executions/recipe/work/specific_humidity_anomalies/figures/timeseries_hus_200_ERA5_Mediterranean.nc": {
+      "sha256": "d07c8aa58927e51e13781f45d4cf75852e1c36fb0edc76f8cbaae00adbe511da",
+      "size": 24769
+    },
+    "output.json": {
+      "sha256": "7925cde9ad4d7b40eeb58ae52abed5752c4537ddeaeeb7e78ee06cedf37f1ae5",
+      "size": 28092
+    },
+    "series.json": {
+      "sha256": "0c2f3d11ed77fa75b1f9a56435285b5384e14016bd620cf289eb5f65cafa1aab",
+      "size": 708500
+    }
+  },
+  "schema": 2,
+  "test_case_version": 1
+}

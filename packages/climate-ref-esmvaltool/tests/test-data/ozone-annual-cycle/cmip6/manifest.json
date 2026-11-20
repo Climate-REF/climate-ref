@@ -24,20 +24,20 @@
       "size": 1979
     },
     "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
-      "sha256": "d3b78c69536775c4659f8ab55139f9a934acf302041f2acb6d979f0e76fa971f",
-      "size": 27743
+      "sha256": "00acc8a4d5e9d585a4263fc9ebd918b7422365756c70402e59ecee0460787420",
+      "size": 28036
     },
     "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
-      "sha256": "0ce0511891ec7dc68c1eaec8c8becb8664a2575097bb4492266a79ed7fb7556b",
+      "sha256": "9796ca37b595478b838583066a5400fd52066a06dd6feec58a6476e8dce8d707",
       "size": 27705
     },
     "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
-      "sha256": "b47cf418f205b7a92a067965b8435cacfa388a9966fae5cd6f567ce4fff48be1",
-      "size": 24032
+      "sha256": "477ddb430d18e70450061d194f3124fa5eab6209ad7186f0412a2c5b24796ace",
+      "size": 24551
     },
     "output.json": {
-      "sha256": "1a25bbce94af301cc8243d77eeae19bfa1813e136f4cf58c179254f0a047a88a",
-      "size": 2136
+      "sha256": "1d404f23bb2814a5964d073f537961c021f4d3813cf2502f62f69e82a5949578",
+      "size": 2084
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",

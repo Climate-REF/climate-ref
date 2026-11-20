@@ -1,62 +1,62 @@
 {
   "data": {
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {
       "description": "Monthly means of the model",
       "dimensions": {
         "experiment_id": "historical",
         "member_id": "r1i1p1f1",
-        "source_id": "ACCESS-ESM1-5",
+        "source_id": "ACCESS-ESM1-6",
         "variable_id": "ts"
       },
-      "filename": "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc",
+      "filename": "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc",
       "long_name": "Model annual cycle climatology"
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc": {
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc": {
       "description": "DJF mean of the model",
       "dimensions": {
         "experiment_id": "historical",
         "member_id": "r1i1p1f1",
         "season": "djf",
-        "source_id": "ACCESS-ESM1-5",
+        "source_id": "ACCESS-ESM1-6",
         "variable_id": "ts"
       },
-      "filename": "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc",
+      "filename": "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc",
       "long_name": "Model DJF climatology"
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc": {
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc": {
       "description": "JJA mean of the model",
       "dimensions": {
         "experiment_id": "historical",
         "member_id": "r1i1p1f1",
         "season": "jja",
-        "source_id": "ACCESS-ESM1-5",
+        "source_id": "ACCESS-ESM1-6",
         "variable_id": "ts"
       },
-      "filename": "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc",
+      "filename": "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc",
       "long_name": "Model JJA climatology"
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc": {
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc": {
       "description": "MAM mean of the model",
       "dimensions": {
         "experiment_id": "historical",
         "member_id": "r1i1p1f1",
         "season": "mam",
-        "source_id": "ACCESS-ESM1-5",
+        "source_id": "ACCESS-ESM1-6",
         "variable_id": "ts"
       },
-      "filename": "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc",
+      "filename": "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc",
       "long_name": "Model MAM climatology"
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc": {
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc": {
       "description": "SON mean of the model",
       "dimensions": {
         "experiment_id": "historical",
         "member_id": "r1i1p1f1",
         "season": "son",
-        "source_id": "ACCESS-ESM1-5",
+        "source_id": "ACCESS-ESM1-6",
         "variable_id": "ts"
       },
-      "filename": "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc",
+      "filename": "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc",
       "long_name": "Model SON climatology"
     }
   },
@@ -65,50 +65,50 @@
   "index": "index.html",
   "metrics": null,
   "plots": {
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
       "description": "Annual mean and seasonal means of the model",
       "dimensions": {
         "experiment_id": "historical",
         "member_id": "r1i1p1f1",
-        "source_id": "ACCESS-ESM1-5",
+        "source_id": "ACCESS-ESM1-6",
         "variable_id": "ts"
       },
-      "filename": "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png",
+      "filename": "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.AC.v6.png",
       "long_name": "Model climatology"
     },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
+    "ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png",
+      "filename": "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png",
       "long_name": "Plot"
     },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png": {
+    "ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png",
+      "filename": "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png",
       "long_name": "Plot"
     },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
+    "ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png",
+      "filename": "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png",
       "long_name": "Plot"
     },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
+    "ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png",
+      "filename": "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png",
       "long_name": "Plot"
     },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png": {
+    "ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png",
+      "filename": "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png",
       "long_name": "Plot"
     }
   },
   "provenance": {
-    "commandLine": "<SOFTWARE_ROOT_DIR>/conda/pmp-d25d4548648d56a5359800b35eb549fabb00d37a/bin/mean_climate_driver.py -p <SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc --metrics_output_path <OUTPUT_DIR> --cmec",
+    "commandLine": "<SOFTWARE_ROOT_DIR>/conda/pmp-d25d4548648d56a5359800b35eb549fabb00d37a/bin/mean_climate_driver.py -p <SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-6 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc --metrics_output_path <OUTPUT_DIR> --cmec",
     "conda": {
       "Platform": "<CONDA_PLATFORM>"
     },

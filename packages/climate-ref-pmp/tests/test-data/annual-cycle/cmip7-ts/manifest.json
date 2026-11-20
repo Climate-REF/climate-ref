@@ -1,73 +1,73 @@
 {
-  "catalog_hash": "b6d375fb6ad0d5029f2c414aac7a1896d391b357",
+  "catalog_hash": "850b8c718cab42d8b6297090b4a82076cb7627c1",
   "committed": {
-    "diagnostic.json": "a4b9fadaf1972dd5c17357c2ef231de39ebaf3153e639b7086c6eb909a03e8e6",
-    "output.json": "adc6cc19a41a889df95940c162af1c3d291faf13c28fbef68db1a1eef3996842",
-    "series.json": "2edce74f5c48db953c84246a9f3ba632bb34795cb18d05717da53578177d2b5e"
+    "diagnostic.json": "344552f1d59096d837617e672b1fedeeef1a165d961106a9e18dddf6f0fe23e6",
+    "output.json": "408b7ddeead1df9a0ee10f40a2ac5e96f22b81d60faee80b0f2e4eb3253619ce",
+    "series.json": "c2f4f119a0c6f4fc9479fc1cde2fd831b0f0b84dc4a26de6c98771524c1548a0"
   },
   "diagnostic_version": 6,
   "native": {
     "diagnostic.json": {
-      "sha256": "e5d62f79bd817d3b0ff1d7427cd106ee212767ae0dd3071b162a71c82db329be",
-      "size": 5526
+      "sha256": "a7cbf049262598ca6935748d2f2ef57d58d13262b4edbb1cc0ef6d7b06695e75",
+      "size": 5528
     },
     "output.json": {
-      "sha256": "c1b70943e0db1c30f71bad2d2ffb0f440833f6f1d8702988f736483e0cfffc73",
+      "sha256": "ad4f910a3f18708068b5d1ec1cd91a13950b562ad6ae08d86a25290ca8d0d03d",
       "size": 5663
     },
     "series.json": {
-      "sha256": "0bd3c081bb1dbeed7bc82e7c207480af43b8eba58aacbcbfa61acab28fdd5b3d",
-      "size": 5876
+      "sha256": "d3325c43b0e2eea3361f70b4a9315dc289c5b500d1ce898756323d38ad21d119",
+      "size": 5878
     },
-    "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
-      "sha256": "c21105f61d0fd4d04a4539e903a385d3410b22b0bcc9fd8ebaa0fa89acd917ce",
-      "size": 358521
+    "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
+      "sha256": "a38c7aaa129907cbc3a7dd71d0f39df9ef6e8680e097160d08d967e2a6bea0a0",
+      "size": 357779
     },
-    "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png": {
-      "sha256": "6ae0013acd8fe3fb55bfa20578729930534937ef4b183a4a1f377a248ff8c10b",
-      "size": 366457
+    "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png": {
+      "sha256": "240f8e82e74507230d4c1923f0435197c7348930682aa15e41edf0ec0ea0e073",
+      "size": 367547
     },
-    "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
-      "sha256": "f8521954716acdff6199f33f374109afdfe3e94ecea990d1b6752b2d071b8e10",
-      "size": 360717
+    "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
+      "sha256": "136f06bfad8fe29677846c120d6be744a63a54a844552cee3f7518abe89c9988",
+      "size": 361357
     },
-    "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
-      "sha256": "ef8d3d07a7d37fa8710e20823d85dee86d2759fccef1e96d48e9a44935c2b8a9",
-      "size": 360288
+    "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
+      "sha256": "3504b7ed2f20409da961ed95bad9a8847106660272f8c5bf62aa974da0491d53",
+      "size": 361539
     },
-    "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png": {
-      "sha256": "a4bd50146c43ddb1b9e028020ce42b181e0c25f3f9fce1f5e64c26c7c0db0fda",
-      "size": 361968
+    "ts/ts_ACCESS-ESM1-6_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png": {
+      "sha256": "71b7b8adbb7c7faccb964bbabd4850fb35df7e341b4528bdd5261f665f22dd20",
+      "size": 362293
     },
     "ts_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "41fbd28ed51e94a5f3962049caee0e09baae106652c3bf9cb3c9c948b8fac5bd",
-      "size": 12565
+      "sha256": "158a3a38c95a29143e8fca5b0896465392b5501a7418d0c2d9608636d742e2c6",
+      "size": 12567
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {
-      "sha256": "477d1f1c379b48923c8a757ecf055d5bc2841b2506c4cf449ddeeac1830219bf",
-      "size": 2716669
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {
+      "sha256": "7ea50cf17e255a309482d1187d4a72d77c924a5cbf24406ec7bc8480df1acbd1",
+      "size": 2709700
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
-      "sha256": "3f1995bedfe1a1f0ac81b139cdf0366dc1512b101b040c4619744d60e607096e",
-      "size": 488490
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.AC.v6.png": {
+      "sha256": "80420eee6515ecb5b34614024768e38754806aff5f9db892045fba4bdfea70ad",
+      "size": 489038
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc": {
-      "sha256": "dbfe6c8ea175b9bab4963585d6c7ea23624ba1d07e762bdd88bba1a0e9981ced",
-      "size": 256412
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.DJF.v6.nc": {
+      "sha256": "ca432e86b6720ca6019de22e950c8533b363e06db4fe3cdf246575102dc137de",
+      "size": 257444
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc": {
-      "sha256": "5ddca7bff254948e5b13448654108ebbd097814a312c2684983822e7ef23cc95",
-      "size": 256412
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.JJA.v6.nc": {
+      "sha256": "5d480c7b8aa63040c047b3f89b7c96fe5a16b9545c6ddb280fb450132436f97e",
+      "size": 257444
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc": {
-      "sha256": "531ded264868a06cb5833a2a8d7a82a8c51c68ed7f65c366675cdc2f354e1270",
-      "size": 256412
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.MAM.v6.nc": {
+      "sha256": "0336c46df1b70bd3f2ab94c2cc1159f7e1c6503b78df094f9634f4e95cb8bbcb",
+      "size": 257444
     },
-    "ts_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc": {
-      "sha256": "073191fff7acc5aa6fe26b6c6d714cfc857bc413afcc1ff838dcdc6892481431",
-      "size": 256412
+    "ts_ACCESS-ESM1-6_historical_r1i1p1f1_clims.198101-200512.SON.v6.nc": {
+      "sha256": "af0f362b2ba1fcc762a1e3c6b3244737c4bc4bc88a4c07e9adb5e339a07ede7b",
+      "size": 257444
     }
   },
   "schema": 2,
-  "test_case_version": 10
+  "test_case_version": 11
 }

@@ -14,8 +14,8 @@ and to determine the appropriate branding suffix and realm for the CMIP7 format.
 Grid information is not converted so the grid_labels may not be valid for CMIP7.
 
 The Data Request lookups (:func:`get_dreq_entry`) are used with published CMIP7 data too.
-The conversion itself only builds test fixtures and the CMIP7 catalog that the solver
-regression tests run against (``scripts/generate_cmip7_catalog.py``).
+The attribute conversion only builds the CMIP7 catalog that the solver regression tests
+run against (``scripts/generate_cmip7_catalog.py``).
 """
 
 from __future__ import annotations
@@ -29,9 +29,6 @@ from importlib import resources
 from typing import Any
 
 import attrs
-import cftime
-import pandas as pd
-import xarray as xr
 
 
 @attrs.frozen
@@ -441,88 +438,6 @@ def convert_cmip6_to_cmip7_attrs(cmip6_attrs: dict[str, Any]) -> dict[str, Any]:
         attrs.pop(attr, None)
 
     return attrs
-
-
-def convert_cmip6_dataset(ds: xr.Dataset, inplace: bool = False) -> xr.Dataset:
-    """
-    Convert a CMIP6 xarray Dataset to CMIP7 format in-memory.
-
-    This uses the cmip6 compound name (table_id.variable_id) to look up the appropriate CMIP7 branding suffix
-    and realm from the Data Request mappings.
-    It then updates the global attributes according to the CMIP7 Global Attributes.
-
-    This doesn't modify the values or coordinates,
-    but it does add a "cmip6_compound_name" attribute for reference.
-    This may not be a fully valid CMIP7 dataset due to the grid names.
-
-    Parameters
-    ----------
-    ds
-        The CMIP6 xarray Dataset to convert
-    inplace
-        If True, modify the dataset in place; otherwise return a copy
-
-    Returns
-    -------
-    xr.Dataset
-        The converted CMIP7-style dataset
-    """
-    if not inplace:
-        ds = ds.copy(deep=False)
-
-    # Determine the primary variable (skip coordinates/bounds)
-    data_vars = [str(v) for v in ds.data_vars if not str(v).endswith("_bnds") and v not in ds.coords]
-
-    variable_id = ds.attrs.get("variable_id")
-    if variable_id is None and data_vars:
-        variable_id = data_vars[0]
-    if variable_id is None:  # pragma: no cover
-        raise ValueError("Cannot determine variable_id for branding.")
-
-    table_id = ds.attrs["table_id"]
-
-    # Use the CMIP7 variable name
-    dreq_entry = get_dreq_entry(table_id, variable_id)
-    ds = ds.rename({variable_id: dreq_entry.variable_id})
-
-    # Convert global attributes
-    ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs)
-
-    return ds
-
-
-def format_cmip7_time_range(ds: xr.Dataset, frequency: str) -> str | None:
-    """
-    Format a CMIP7 time range string from a dataset's time coordinate.
-
-    Per the MIP-DRS7 spec, monthly data uses ``YYYYMM-YYYYMM`` format.
-    Fixed-frequency (``"fx"``) data has no time range.
-
-    Parameters
-    ----------
-    ds
-        xarray Dataset with a ``"time"`` coordinate
-    frequency
-        Frequency string (e.g., ``"mon"``, ``"fx"``)
-
-    Returns
-    -------
-    str or None
-        Formatted time range string, or ``None`` for fixed-frequency data
-        or datasets without a time coordinate.
-    """
-    if frequency == "fx" or "time" not in ds or len(ds["time"]) == 0:
-        return None
-
-    start = ds["time"].values[0]
-    end = ds["time"].values[-1]
-
-    def _strftime(t: Any) -> str:
-        if isinstance(t, cftime.datetime):
-            return str(t.strftime("%Y%m"))
-        return str(pd.Timestamp(t).strftime("%Y%m"))
-
-    return f"{_strftime(start)}-{_strftime(end)}"
 
 
 def create_cmip7_filename(

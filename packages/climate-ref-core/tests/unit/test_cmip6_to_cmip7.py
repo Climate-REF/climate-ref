@@ -1,21 +1,17 @@
 """Tests for CMIP6 to CMIP7 format conversion."""
 
 import attrs
-import cftime
 import numpy as np
 import pytest
-import xarray as xr
 
 from climate_ref_core.cmip6_to_cmip7 import (
     CMIP6_ONLY_ATTRIBUTES,
     BrandingSuffix,
     DReqVariableMapping,
-    convert_cmip6_dataset,
     convert_cmip6_to_cmip7_attrs,
     convert_variant_index,
     create_cmip7_filename,
     create_cmip7_path,
-    format_cmip7_time_range,
     get_branding_suffix,
     get_cmip7_compound_name,
     get_dreq_entry,
@@ -622,126 +618,6 @@ class TestConvertCmip6ToCmip7Attrs:
             convert_cmip6_to_cmip7_attrs({"variable_id": "tas"})
 
 
-class TestConvertCmip6Dataset:
-    @pytest.fixture
-    def sample_cmip6_dataset(self) -> xr.Dataset:
-        """Create a minimal CMIP6-style dataset for testing."""
-        time = np.arange(12)
-        lat = np.linspace(-90, 90, 5)
-        lon = np.linspace(0, 360, 10)
-        rng = np.random.default_rng(42)
-
-        data = rng.random((len(time), len(lat), len(lon)))
-
-        ds = xr.Dataset(
-            {"tas": (["time", "lat", "lon"], data)},
-            coords={
-                "time": time,
-                "lat": lat,
-                "lon": lon,
-            },
-            attrs={
-                "variable_id": "tas",
-                "table_id": "Amon",
-                "source_id": "ACCESS-ESM1-5",
-                "experiment_id": "historical",
-                "variant_label": "r1i1p1f1",
-                "institution_id": "CSIRO",
-                "grid_label": "gn",
-                "Conventions": "CF-1.6",
-            },
-        )
-        return ds
-
-    def test_converts_global_attributes(self, sample_cmip6_dataset: xr.Dataset):
-        ds_cmip7 = convert_cmip6_dataset(sample_cmip6_dataset)
-
-        assert ds_cmip7.attrs["mip_era"] == "CMIP7"
-        assert ds_cmip7.attrs["region"] == "glb"
-        assert ds_cmip7.attrs["branding_suffix"] == "tavg-h2m-hxy-u"
-        assert ds_cmip7.attrs["branded_variable"] == "tas_tavg-h2m-hxy-u"
-        assert ds_cmip7.attrs["Conventions"] == "CF-1.12"
-
-    def test_preserves_variable_name(self, sample_cmip6_dataset: xr.Dataset):
-        ds_cmip7 = convert_cmip6_dataset(sample_cmip6_dataset)
-
-        assert "tas" in ds_cmip7.data_vars
-        assert "tas_tavg-h2m-hxy-u" not in ds_cmip7.data_vars
-
-    def test_does_not_modify_original_by_default(self, sample_cmip6_dataset: xr.Dataset):
-        original_mip_era = sample_cmip6_dataset.attrs.get("mip_era")
-        convert_cmip6_dataset(sample_cmip6_dataset)
-
-        assert sample_cmip6_dataset.attrs.get("mip_era") == original_mip_era
-
-    def test_uses_dreq_for_branding(self):
-        """Verify dataset conversion uses DReq lookup."""
-        rng = np.random.default_rng(42)
-        ds = xr.Dataset(
-            {"hus": (["time", "plev", "lat", "lon"], rng.random((3, 2, 3, 4)))},
-            attrs={
-                "variable_id": "hus",
-                "table_id": "Amon",
-                "source_id": "TestModel",
-                "experiment_id": "historical",
-                "variant_label": "r1i1p1f1",
-            },
-        )
-        ds_cmip7 = convert_cmip6_dataset(ds)
-        # DReq says Amon.hus -> p19, not al
-        assert ds_cmip7.attrs["vertical_label"] == "p19"
-        assert ds_cmip7.attrs["branding_suffix"] == "tavg-p19-hxy-u"
-
-    def test_preserves_non_default_indexes_from_ds_attrs(self):
-        """Dataset with non-1 indexes must preserve them through conversion."""
-        rng = np.random.default_rng(42)
-        ds = xr.Dataset(
-            {"tas": (["time", "lat", "lon"], rng.random((3, 3, 4)))},
-            coords={"time": np.arange(3), "lat": np.linspace(-90, 90, 3), "lon": np.linspace(0, 360, 4)},
-            attrs={
-                "variable_id": "tas",
-                "table_id": "Amon",
-                "source_id": "UKESM1-0-LL",
-                "experiment_id": "historical",
-                "variant_label": "r6i1p1f2",
-                "realization_index": 6,
-                "initialization_index": 1,
-                "physics_index": 1,
-                "forcing_index": 2,
-                "institution_id": "MOHC",
-                "grid_label": "gn",
-                "Conventions": "CF-1.7 CMIP-6.2",
-            },
-        )
-        ds_cmip7 = convert_cmip6_dataset(ds)
-
-        assert ds_cmip7.attrs["realization_index"] == "r6"
-        assert ds_cmip7.attrs["forcing_index"] == "f2"
-        assert ds_cmip7.attrs["variant_label"] == "r6i1p1f2"
-
-    def test_variant_label_only_no_individual_indexes_in_ds(self):
-        """Dataset with only variant_label (no individual indexes) must still get correct variant."""
-        rng = np.random.default_rng(42)
-        ds = xr.Dataset(
-            {"tas": (["time", "lat", "lon"], rng.random((3, 3, 4)))},
-            coords={"time": np.arange(3), "lat": np.linspace(-90, 90, 3), "lon": np.linspace(0, 360, 4)},
-            attrs={
-                "variable_id": "tas",
-                "table_id": "Amon",
-                "source_id": "ACCESS-ESM1-5",
-                "experiment_id": "ssp126",
-                "variant_label": "r1i1p1f2",
-                "institution_id": "CSIRO",
-                "grid_label": "gn",
-                "Conventions": "CF-1.7 CMIP-6.2",
-            },
-        )
-        ds_cmip7 = convert_cmip6_dataset(ds)
-
-        assert ds_cmip7.attrs["forcing_index"] == "f2"
-        assert ds_cmip7.attrs["variant_label"] == "r1i1p1f2"
-
-
 class TestCreateCmip7Filename:
     """Test CMIP7 filename generation per MIP-DRS7 spec."""
 
@@ -884,52 +760,6 @@ class TestCreateCmip7Path:
         path = create_cmip7_path(attrs)
 
         assert path.endswith("/v20240101")
-
-
-class TestFormatCmip7TimeRange:
-    """Test time range formatting per MIP-DRS7 spec."""
-
-    def test_monthly_frequency(self):
-        """Monthly data uses YYYYMM-YYYYMM format."""
-        time = [cftime.DatetimeNoLeap(1990, 1, 16), cftime.DatetimeNoLeap(1999, 12, 16)]
-        ds = xr.Dataset({"tas": ("time", [1.0, 2.0])}, coords={"time": time})
-
-        result = format_cmip7_time_range(ds, "mon")
-        assert result == "199001-199912"
-
-    def test_fx_frequency_returns_none(self):
-        """Fixed-frequency data has no time range."""
-        ds = xr.Dataset({"areacella": (["lat", "lon"], np.zeros((3, 4)))})
-        result = format_cmip7_time_range(ds, "fx")
-        assert result is None
-
-    def test_no_time_coordinate_returns_none(self):
-        """Datasets without a time coordinate return None."""
-        ds = xr.Dataset({"sftlf": (["lat", "lon"], np.zeros((3, 4)))})
-        result = format_cmip7_time_range(ds, "mon")
-        assert result is None
-
-    def test_empty_time_coordinate_returns_none(self):
-        """Datasets with an empty time coordinate return None."""
-        ds = xr.Dataset({"tas": ("time", [])}, coords={"time": []})
-        result = format_cmip7_time_range(ds, "mon")
-        assert result is None
-
-    def test_numpy_datetime64(self):
-        """Works with numpy datetime64 time coordinates."""
-        time = np.array(["1950-01-15", "1950-12-15"], dtype="datetime64[ns]")
-        ds = xr.Dataset({"tas": ("time", [1.0, 2.0])}, coords={"time": time})
-
-        result = format_cmip7_time_range(ds, "mon")
-        assert result == "195001-195012"
-
-    def test_single_timestep(self):
-        """Single timestep produces start == end."""
-        time = [cftime.DatetimeNoLeap(2000, 6, 15)]
-        ds = xr.Dataset({"tas": ("time", [1.0])}, coords={"time": time})
-
-        result = format_cmip7_time_range(ds, "mon")
-        assert result == "200006-200006"
 
 
 class TestMakeTrackingId:

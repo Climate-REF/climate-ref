@@ -2,42 +2,42 @@
   "catalog_hash": "ce252895bcb1709d96836db025dec523b6bc44af",
   "committed": {
     "diagnostic.json": "e332bb0da723372ef7c57e18125dc98a369c5457b9532a1823bc3111b4ac2ee0",
-    "output.json": "ed9728bd6cac906244cc2a72dad3d726156dbc0454b81b87b00b55de6952fd18",
+    "output.json": "1aa22d46e5057653346937d5ebf2a2567fbbac42881847e50615b99f75d34c90",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "diagnostic_version": 3,
   "native": {
     "CanESM5.csv": {
-      "sha256": "937dbc3618311dd5091f04611d9a43406e84da6ea0e8f85510ce47c3215f360f",
-      "size": 349
+      "sha256": "aac8a4a00775f2565d1d877a42db0916eab34fe8eb716f2971695d383873ef9a",
+      "size": 348
     },
     "CanESM5.nc": {
-      "sha256": "d00197a5dabb7859d2de8249c9cfc5f46254c00e509899ac21308c405a52e12e",
-      "size": 10591812
+      "sha256": "a5eda287803f1d127d6d33525ec025eb7c045e1046ad4f88f2f68faa82eec8f9",
+      "size": 5323660
     },
     "CanESM5_None_nbp.png": {
-      "sha256": "bd2446c29b190c5bf6e983e472c1a5d18c970d37d7d2b9cfab3ced38a6d3244e",
-      "size": 42378
+      "sha256": "9a24700a6a8d77350f148d1b4e10d1f0befdb367cbfbcf8c628f9f812af9a717",
+      "size": 42221
+    },
+    "None_None_accumulation.png": {
+      "sha256": "733a2b9deb63c457858a1c7f5ce14478e2bae4ec181792d5d639d6b8c7883073",
+      "size": 50208
     },
     "Reference.nc": {
-      "sha256": "c28b93ac8e79a1c568e8c937e97e76148c491cbb8e24fefe9bf1f6bd61b913d8",
-      "size": 24853
+      "sha256": "b083cd62de3d9e7a6adef9b13abf16315f42cc9062dafc9ce52d05e9742eabcd",
+      "size": 24984
     },
     "diagnostic.json": {
-      "sha256": "5ac45ea582b171fdcda1f16afe61e086cb118338b620770e16b5b7e4d2110699",
-      "size": 1627
+      "sha256": "3ec41b9cbea390475cf0735c5088629e9efe325311fe24a0800b13028dbfd347",
+      "size": 1628
     },
     "index.html": {
-      "sha256": "81c09412fc2aa3eec2cfc3a422b949ca242830af9b6f1a624db55925eaf4d4a5",
-      "size": 13481
-    },
-    "nan_None_accumulation.png": {
-      "sha256": "603d1c045a0350e44c692f11dff62a9ec5a2913045b0f2e4ec4733934741d1a4",
-      "size": 50604
+      "sha256": "da7fe27d1fa32429850beedc65fca5191d8b38898ca945991873571f375b0a9f",
+      "size": 13480
     },
     "output.json": {
-      "sha256": "c9b572c25ee1b1df3d992cf9b54fa4886522c73b321da58eafc69486e134e0af",
-      "size": 1559
+      "sha256": "7199b5b2bb95032bb5eb09005030a66e106ce3cc4151fc4afc48a44af5076a44",
+      "size": 1561
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -45,5 +45,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

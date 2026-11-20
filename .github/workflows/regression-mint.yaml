@@ -124,7 +124,7 @@ jobs:
               args+=(--from-replay)
             else
               # Strict, so a catalog that comes out different from the committed one stops the mint
-              # instead of being committed (e.g. one rebuilt from a stale conversion cache).
+              # instead of being committed (e.g. one resolved from a stale local cache).
               # The failed fetch has already written that catalog, so undo what it wrote before moving on.
               catalogs=':(glob)packages/**/test-data/**/catalog.yaml'
               changed_before=$(git ls-files --modified --others --exclude-standard -- "${catalogs}" | sort)

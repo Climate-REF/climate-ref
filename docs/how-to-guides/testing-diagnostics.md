@@ -179,37 +179,6 @@ CMIP7 data is only in the ESGF STAC indices (`discovery.east.esgf.io` and `disco
 Recent intake-esgf releases enable them by default.
 An older `~/.config/intake-esgf/conf.yaml` may not list them, and a warning is shown.
 
-#### ConvertedCMIP7Request
-
-Not every model and variable has CMIP7 data on ESGF yet,
-so `ConvertedCMIP7Request` fabricates it from CMIP6.
-It maps CMIP7 facets to CMIP6 ones (eg. `variant_label` -> `member_id`),
-fetches the CMIP6 files and converts them on the fly.
-It will be removed once every test case can use published data.
-
-```python
-from climate_ref_core.esgf import ConvertedCMIP7Request
-
-ConvertedCMIP7Request(
-    slug="cmip7-tas",
-    facets={
-        "source_id": "ACCESS-ESM1-5",
-        "experiment_id": "historical",
-        "variable_id": "tas",
-        "variant_label": "r1i1p1f1",   # CMIP7 name, mapped to member_id internally
-        "table_id": "Amon",
-    },
-)
-```
-
-Converted files are cached in `cmip7-converted/` under `$REF_DATASET_CACHE_DIR`,
-or under the user cache directory at `climate_ref/cmip7-converted/` when that is unset.
-Clear it by hand if a conversion produces stale output.
-
-To move a test case to published data, swap its `ConvertedCMIP7Request` for a `CMIP7Request`.
-ESGF does not know the converted datasets in the existing catalog,
-so run `ref test-cases fetch --regen` to resolve the new request, then re-mint the baselines.
-
 ### Dataset Resolution
 
 A `TestCase` resolves its datasets via one of two mechanisms:
@@ -348,12 +317,12 @@ Provider test jobs set `REF_TEST_CASES_STRICT=true` so missing catalogs or commi
 baselines fail instead of becoming silent skips. Explicit `REF_TEST_CASES_SKIP`
 diagnostic exclusions still apply. Local test runs retain the default skip behaviour.
 
-The CMIP7 test cases for `transient-climate-response-emissions` and
-`zero-emission-commitment` have been removed from their test specifications.
-The current fetcher converts CMIP6 data and cannot supply the required `esm-flat10`
-and `esm-flat10-zec` experiments. CMIP6 cases and the diagnostics' CMIP7 support
-remain enabled. Restore the CMIP7 cases when valid experiment inputs and reviewed
-baselines are available. Do not relabel CMIP6 experiments to stand in for them.
+A test case whose data is not published yet is still defined, and marked with `TestCase(xfail="reason")`.
+For example, the CMIP7 case of `transient-climate-response-emissions` waits for `fco2antt` from `esm-flat10`.
+`ref test-cases fetch --strict` tolerates its data not being found,
+`mint`, `run`, `replay` and the CI gate skip it, and its regression test is a strict `xfail`.
+Once a fetch writes a catalog for it, or its regression test passes unexpectedly, remove the mark and mint a baseline.
+Do not relabel CMIP6 experiments to stand in for missing CMIP7 ones.
 
 #### Data Caching
 
@@ -366,8 +335,6 @@ to download datasets from ESGF if they cannot be found locally.
 
 The fetch command saves a catalog YAML file that records the paths to these files,
 so subsequent test runs can locate the data without re-scanning directories.
-
-Cached CMIP7 conversions are checked before reuse, and any invalid file is rebuilt.
 
 /// Note | Using shared ESGF data (HPC/shared drives)
 

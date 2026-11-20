@@ -140,7 +140,7 @@ def _check_pinned_datasets_found(
     Check that every pinned dataset made it into the catalog.
 
     A dataset can go missing for more than one reason -- it may no longer be published,
-    but it may equally have failed to download or, for CMIP7, to convert. Those failures
+    but it may equally have failed to download. Those failures
     are reported where they happen, so the error raised here points at them rather than
     naming a cause it cannot know.
 

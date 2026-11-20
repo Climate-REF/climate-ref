@@ -645,10 +645,9 @@ class TestFetchTestDataCommand:
 
     def test_catalog_content_reports_a_tracking_id_change(self, tmp_path):
         """
-        A handle that moves is real drift, because it is no longer minted at random.
+        A handle that moves is real drift.
 
-        It is derived from the file being written, so a rebuilt conversion reproduces it;
-        a different handle means a different file stands behind the same catalog entry.
+        A different handle means a different file stands behind the same catalog entry.
         """
         catalog = tmp_path / "catalog.yaml"
         catalog.write_text("cmip7:\n  datasets:\n    - tracking_id: old\n      variable_id: tas\n")

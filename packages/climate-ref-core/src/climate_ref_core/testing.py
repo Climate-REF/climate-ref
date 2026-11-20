@@ -409,7 +409,7 @@ def load_catalog_datasets(path: Path) -> dict[str, tuple[dict[str, Any], ...]]:
     These are the exact datasets a test case's regression baseline was built from, so a
     request can be pinned to them and fetch that data again instead of re-resolving the
     facets it declares (see
-    :meth:`~climate_ref_core.esgf.PinnableRequest.pin_to_datasets`).
+    :meth:`~climate_ref_core.esgf.ESGFRequest.pin_to_datasets`).
 
     Parameters
     ----------

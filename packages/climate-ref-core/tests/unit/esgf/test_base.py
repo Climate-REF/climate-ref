@@ -4,9 +4,9 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
-from intake_esgf.exceptions import NoSearchResults
+from intake_esgf.exceptions import DatasetLoadError, NoSearchResults
 
-from climate_ref_core.esgf import CMIP6Request, ESGFRequest, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, ESGFRequest, Obs4MIPsRequest, base
 from climate_ref_core.esgf.base import _deduplicate_datasets
 from climate_ref_core.exceptions import DatasetResolutionError
 
@@ -365,3 +365,55 @@ class TestIntakeESGFMixin:
         call_kwargs = mock_cat.search.call_args.kwargs
         assert call_kwargs["variable_id"] == ["sftlf", "areacella"]
         assert isinstance(call_kwargs["variable_id"], list)
+
+
+class TestIncompleteDownloads:
+    """intake-esgf drops a file that failed to download as long as the rest of its dataset arrived."""
+
+    _INFOS = (
+        {"key": "ds1", "path": "CMIP7/tas/tas_200001-200912.nc"},
+        {"key": "ds1", "path": "CMIP7/tas/tas_201001-201912.nc"},
+    )
+
+    def _catalog(self, *path_dicts):
+        mock_cat = MagicMock()
+        mock_cat.df = pd.DataFrame({"key": ["ds1"], "source_id": ["ACCESS-ESM1-6"]})
+        mock_cat._get_file_info.return_value = list(self._INFOS)
+        mock_cat.to_path_dict.side_effect = list(path_dicts)
+        return mock_cat
+
+    def _fetch(self, mock_cat):
+        request = CMIP6Request(slug="test", facets={"variable_id": "tas"})
+        with (
+            patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat),
+            patch("climate_ref_core.esgf.base.time.sleep") as mock_sleep,
+        ):
+            return request.fetch_datasets(), mock_sleep
+
+    def test_retries_until_every_file_is_there(self):
+        partial = {"ds1": ["/cache/tas_200001-200912.nc"]}
+        complete = {"ds1": ["/cache/tas_200001-200912.nc", "/cache/tas_201001-201912.nc"]}
+        mock_cat = self._catalog(partial, complete)
+
+        result, mock_sleep = self._fetch(mock_cat)
+
+        assert mock_cat.to_path_dict.call_count == 2
+        mock_sleep.assert_called_once()
+        assert result["files"].iloc[0] == complete["ds1"]
+
+    def test_raises_when_files_stay_missing(self):
+        partial = {"ds1": ["/cache/tas_200001-200912.nc"]}
+        mock_cat = self._catalog(partial, partial, partial)
+
+        with pytest.raises(DatasetResolutionError, match=r"tas_201001-201912\.nc"):
+            self._fetch(mock_cat)
+
+        assert mock_cat.to_path_dict.call_count == base.DOWNLOAD_ATTEMPTS
+
+    def test_retries_a_dataset_that_failed_entirely(self):
+        complete = {"ds1": ["/cache/tas_200001-200912.nc", "/cache/tas_201001-201912.nc"]}
+        mock_cat = self._catalog(DatasetLoadError(["ds1"]), complete)
+
+        result, _ = self._fetch(mock_cat)
+
+        assert result["files"].iloc[0] == complete["ds1"]

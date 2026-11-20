@@ -6,12 +6,14 @@ using the intake-esgf package.
 """
 
 import copy
+import time
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any, ClassVar, Protocol, Self, cast, runtime_checkable
 
 import pandas as pd
 from intake_esgf import ESGFCatalog
-from intake_esgf.exceptions import NoSearchResults
+from intake_esgf.exceptions import DatasetLoadError, NoSearchResults
 from loguru import logger
 
 from climate_ref_core.exceptions import DatasetResolutionError
@@ -145,6 +147,82 @@ def _deduplicate_datasets(datasets: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
     )
     return result
+
+
+DOWNLOAD_ATTEMPTS = 3
+"""How often the files of a request are downloaded before the missing ones count as failed."""
+
+DOWNLOAD_RETRY_DELAY = 10.0
+"""Seconds to wait before retrying, multiplied by the number of attempts so far."""
+
+
+def _expected_files(cat: ESGFCatalog) -> dict[str, set[str]]:
+    """
+    Name the files of each dataset in the catalog, after its time filter.
+
+    intake-esgf only reports a dataset as missed if none of its files downloaded,
+    so the file names are needed to notice a dataset that is missing some of them.
+    """
+    expected: dict[str, set[str]] = {}
+    for info in cat._get_file_info(quiet=True):
+        expected.setdefault(info["key"], set()).add(Path(info["path"]).name)
+    return expected
+
+
+def _missing_files(
+    expected: Mapping[str, set[str]], path_dict: Mapping[str, Sequence[str | Path]]
+) -> dict[str, list[str]]:
+    """Name the expected files of each dataset that are not among the downloaded paths."""
+    missing: dict[str, list[str]] = {}
+    for key, names in expected.items():
+        lost = names - {Path(path).name for path in path_dict.get(key, [])}
+        if lost:
+            missing[key] = sorted(lost)
+    return missing
+
+
+def _download_all(cat: ESGFCatalog, slug: str) -> dict[str, list[str | Path]]:
+    """
+    Download every file of the catalog, retrying the ones that failed.
+
+    Parameters
+    ----------
+    cat
+        The catalog after the search.
+    slug
+        Slug of the request, for the log messages.
+
+    Raises
+    ------
+    DatasetResolutionError
+        If files are still missing after :data:`DOWNLOAD_ATTEMPTS` attempts.
+
+    Returns
+    -------
+    :
+        The local paths of the files of each dataset.
+    """
+    expected = _expected_files(cat)
+    problem = ""
+    for attempt in range(1, DOWNLOAD_ATTEMPTS + 1):
+        try:
+            # Files downloaded by an earlier attempt are read from the local cache
+            path_dict: dict[str, list[str | Path]] = cat.to_path_dict(
+                prefer_streaming=False, minimal_keys=False, quiet=True
+            )
+        except DatasetLoadError as error:
+            path_dict, problem = {}, f"datasets could not be downloaded: {error}"
+        else:
+            missing = _missing_files(expected, path_dict)
+            if not missing:
+                return path_dict
+            problem = "files could not be downloaded: " + ", ".join(
+                name for names in missing.values() for name in names
+            )
+        if attempt < DOWNLOAD_ATTEMPTS:
+            logger.warning(f"Some {problem} (request {slug}, attempt {attempt}); retrying")
+            time.sleep(DOWNLOAD_RETRY_DELAY * attempt)
+    raise DatasetResolutionError(f"After {DOWNLOAD_ATTEMPTS} attempts for request {slug}, some {problem}")
 
 
 class IntakeESGFMixin:
@@ -284,7 +362,7 @@ class IntakeESGFMixin:
             if self.pinned_instance_ids:
                 cat.df = self._select_pinned(cat.df)
 
-            path_dict = cat.to_path_dict(prefer_streaming=False, minimal_keys=False, quiet=True)
+            path_dict = _download_all(cat, self.slug)
             merged_df = cat.df.merge(pd.Series(path_dict, name="files"), left_on="key", right_index=True)
             if self.pinned_instance_ids and len(merged_df) < len(cat.df):
                 missing = sorted(set(cat.df["key"]) - set(path_dict))

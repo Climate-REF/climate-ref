@@ -136,29 +136,35 @@ def select_datasets(
         The selected items, which also include the ensemble members the selected datasets
         name as their parents
     """
-    candidates = [
-        item
-        for item in items
-        if (
-            item["properties"].get("cmip7:variable_branded_name"),
-            item["properties"].get("cmip7:frequency"),
-            item["properties"].get("cmip7:region"),
-        )
-        in wanted
-        and not item["properties"].get("retracted", False)
-    ]
+    candidates = [item for item in items if _is_wanted(item["properties"], wanted)]
+    selected = _with_parents(candidates, _lowest_variants(candidates, max_variants))
+    return [item for item in candidates if _key(item["properties"]) in selected]
 
+
+def _is_wanted(properties: dict[str, Any], wanted: set[tuple[str, str, str]]) -> bool:
+    variable = (
+        properties.get("cmip7:variable_branded_name"),
+        properties.get("cmip7:frequency"),
+        properties.get("cmip7:region"),
+    )
+    return variable in wanted and not properties.get("retracted", False)
+
+
+def _lowest_variants(candidates: list[dict[str, Any]], max_variants: int) -> set[DatasetKey]:
+    """Keep the lowest ``max_variants`` ensemble members of each model and experiment."""
     variants: dict[tuple[str, str], set[str]] = defaultdict(set)
     for item in candidates:
         source_id, experiment_id, variant_label = _key(item["properties"])
         variants[(source_id, experiment_id)].add(variant_label)
-    selected: set[DatasetKey] = {
+    return {
         (source_id, experiment_id, variant_label)
         for (source_id, experiment_id), labels in variants.items()
         for variant_label in sorted(labels, key=_variant_order)[:max_variants]
     }
 
-    # Add parents until every selected member's parent is selected as well
+
+def _with_parents(candidates: list[dict[str, Any]], selected: set[DatasetKey]) -> set[DatasetKey]:
+    """Add the parents of the selected members until every parent is selected as well."""
     available = {_key(item["properties"]) for item in candidates}
     while True:
         parents = {
@@ -168,10 +174,8 @@ def select_datasets(
         }
         added = (parents & available) - selected
         if not added:
-            break
-        selected |= added
-
-    return [item for item in candidates if _key(item["properties"]) in selected]
+            return selected
+        selected = selected | added
 
 
 def data_files(item: dict[str, Any]) -> list[tuple[str, str]]:
@@ -334,6 +338,30 @@ def build_catalog(rows: Iterable[dict[str, Any]]) -> pd.DataFrame:
     return catalog[columns].sort_values(["instance_id", "path"]).reset_index(drop=True)
 
 
+def _search_any_index(variable_ids: set[str]) -> list[dict[str, Any]]:
+    """Search the first CMIP7 index that answers."""
+    for index in STAC_INDICES:
+        try:
+            return search_index(index, variable_ids)
+        except Exception as exc:
+            logger.warning(f"Searching {index} failed: {exc}")
+    return []
+
+
+def complete_datasets(
+    files_by_dataset: dict[str, list[tuple[str, str]]], rows: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Return the rows of the datasets whose every file was read, so no dataset is incomplete."""
+    complete: list[dict[str, Any]] = []
+    for dataset, dataset_files in files_by_dataset.items():
+        dataset_rows = [rows.get(f"{{data_dir}}/{path}") for path, _ in dataset_files]
+        if not dataset_files or any(row is None for row in dataset_rows):
+            logger.warning(f"Leaving out {dataset}: not every file could be read")
+            continue
+        complete.extend(row for row in dataset_rows if row is not None)
+    return complete
+
+
 app = typer.Typer()
 
 
@@ -354,13 +382,7 @@ def main(
     wanted = {(entry.branded_variable, entry.frequency, entry.region) for entry in mappings}
     variable_ids = {entry.variable_id for entry in mappings}
 
-    items: list[dict[str, Any]] = []
-    for index in STAC_INDICES:
-        try:
-            items = search_index(index, variable_ids)
-            break
-        except Exception as exc:
-            logger.warning(f"Searching {index} failed: {exc}")
+    items = _search_any_index(variable_ids)
     if not items:
         raise typer.Exit(1)
 
@@ -371,15 +393,7 @@ def main(
 
     rows = read_headers(files, cache, workers=workers, per_host=per_host)
 
-    complete: list[dict[str, Any]] = []
-    for dataset, dataset_files in files_by_dataset.items():
-        dataset_rows = [rows.get(f"{{data_dir}}/{path}") for path, _ in dataset_files]
-        if not dataset_files or any(row is None for row in dataset_rows):
-            logger.warning(f"Leaving out {dataset}: not every file could be read")
-            continue
-        complete.extend(row for row in dataset_rows if row is not None)
-
-    catalog = build_catalog(complete)
+    catalog = build_catalog(complete_datasets(files_by_dataset, rows))
     write_catalog_parquet(catalog, output_path)
     logger.info(f"Wrote {len(catalog)} files of {catalog['instance_id'].nunique()} datasets to {output_path}")
 

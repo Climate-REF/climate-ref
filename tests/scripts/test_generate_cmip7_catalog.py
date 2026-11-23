@@ -138,3 +138,14 @@ def test_read_header_matches_the_complete_parser(script):
     with netCDF4.Dataset(file) as ds:
         expected = parse_cmip7_dataset(ds, f"{{data_dir}}/{path}")
     assert row == {key: script._plain(value) for key, value in expected.items()}
+
+
+def test_complete_datasets_leaves_out_partly_read_datasets(script):
+    """A dataset with a file that could not be read would make the catalog claim a gap that is not there."""
+    files_by_dataset = {
+        "complete": [("a/1.nc", "https://node/a/1.nc"), ("a/2.nc", "https://node/a/2.nc")],
+        "partial": [("b/1.nc", "https://node/b/1.nc"), ("b/2.nc", "https://node/b/2.nc")],
+    }
+    rows = {f"{{data_dir}}/{path}": {"path": path} for path in ("a/1.nc", "a/2.nc", "b/1.nc")}
+
+    assert script.complete_datasets(files_by_dataset, rows) == [{"path": "a/1.nc"}, {"path": "a/2.nc"}]

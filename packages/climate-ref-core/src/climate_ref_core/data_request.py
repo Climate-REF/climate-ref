@@ -23,11 +23,13 @@ import attrs
 @attrs.frozen
 class DReqVariableMapping:
     """
-    A single CMIP6-to-CMIP7 variable mapping from the Data Request.
+    A variable of the Data Request under its CMIP6 and its CMIP7 name.
 
     Each instance represents one row in the DReq Variables JSON file,
     capturing the CMIP6 compound name, its CMIP7 equivalent,
     and its branding and realm.
+    It maps names only, for code that names variables in CMIP6 terms
+    (such as ILAMB's configurations) and needs to find their CMIP7 counterparts.
     """
 
     table_id: str

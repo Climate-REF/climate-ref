@@ -294,6 +294,22 @@ filename = "sqlite://climate_ref.db"
         with pytest.raises(ValueError, match="Error loading configuration"):
             config.refresh()
 
+    def test_execution_timeout_defaults_to_no_limit(self, config):
+        assert config.executor.execution_timeout is None
+
+    @pytest.mark.parametrize("value, expected", [("90", 90.0), ("1.5", 1.5), ("", None)])
+    def test_execution_timeout_from_env(self, monkeypatch, config, value, expected):
+        monkeypatch.setenv("REF_EXECUTOR_EXECUTION_TIMEOUT", value)
+
+        assert config.refresh().executor.execution_timeout == expected
+
+    @pytest.mark.parametrize("value", ["0", "-5", "soon"])
+    def test_execution_timeout_rejects_nonsense(self, monkeypatch, config, value):
+        monkeypatch.setenv("REF_EXECUTOR_EXECUTION_TIMEOUT", value)
+
+        with pytest.raises(ValueError, match="Error loading configuration"):
+            config.refresh()
+
     def test_measure_resources_rejects_a_non_string(self):
         # A TOML value such as ``measure_resources = 1`` reaches the converter as an int
         with pytest.raises(ValueError, match="Cannot interpret 1"):

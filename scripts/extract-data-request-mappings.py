@@ -54,7 +54,7 @@ from collections import Counter, defaultdict
 
 import typer
 
-from climate_ref_core.cmip6_to_cmip7 import DReqVariableMapping
+from climate_ref_core.data_request import DReqVariableMapping
 
 app = typer.Typer(help="Extract CMIP6-to-CMIP7 variable mappings from the CMIP7 Data Request.")
 

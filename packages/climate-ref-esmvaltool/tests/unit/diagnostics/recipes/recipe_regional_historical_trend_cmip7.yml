@@ -308,6 +308,90 @@ preprocessors:
     convert_units:
       units: year-1
 diagnostics:
+  tas_trends:
+    variables:
+      tas:
+        preprocessor: trend_tas
+        mip: atmos
+        timerange: 1980/2009
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g115
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+    scripts:
+      plot:
+        script: seaborn_diag.py
+        seaborn_func: barplot
+        reset_index: true
+        write_netcdf: true
+        seaborn_kwargs:
+          x: shape_id
+          y: tas
+          hue: dataset
+        add_aux_coords: true
+        facets_as_columns:
+        - dataset
+        legend_title: Data
+        plot_object_methods:
+          set_xlabel: region
+          set_ylabel: tas trend [K/yr]
+        seaborn_settings:
+          style: ticks
+          rc:
+            figure.figsize:
+            - 28
+            - 6
+        suptitle: Trend in Near-Surface Air Temperature
+  pr_trends:
+    variables:
+      pr:
+        preprocessor: trend_pr
+        mip: atmos
+        timerange: 1980/2009
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g115
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+    scripts:
+      plot:
+        script: seaborn_diag.py
+        seaborn_func: barplot
+        reset_index: true
+        write_netcdf: true
+        seaborn_kwargs:
+          x: shape_id
+          y: pr
+          hue: dataset
+        add_aux_coords: true
+        facets_as_columns:
+        - dataset
+        legend_title: Data
+        plot_object_methods:
+          set_xlabel: region
+          set_ylabel: pr trend [mm kg m-3 day-1 yr-1]
+        seaborn_settings:
+          style: ticks
+          rc:
+            figure.figsize:
+            - 28
+            - 6
+        suptitle: Trend in Precipitation
   psl_trends:
     variables:
       psl:
@@ -318,12 +402,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r10i1p1f1
-          exp: historical
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g115
+          institute: ACCESS-Consortium
           mip: atmos
           region: glb
     scripts:
@@ -350,3 +434,85 @@ diagnostics:
             - 28
             - 6
         suptitle: Trend in Sea Level Pressure
+  ua200_trends:
+    variables:
+      ua:
+        preprocessor: trend_ua200
+        mip: atmos
+        timerange: 1980/2009
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-p19-hxy-air
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g110
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+    scripts:
+      plot:
+        script: seaborn_diag.py
+        seaborn_func: barplot
+        reset_index: true
+        write_netcdf: true
+        seaborn_kwargs:
+          x: shape_id
+          y: ua
+          hue: dataset
+        add_aux_coords: true
+        facets_as_columns:
+        - dataset
+        plot_object_methods:
+          set_xlabel: region
+          set_ylabel: ua trend [m s-1 yr-1]
+        seaborn_settings:
+          style: ticks
+          rc:
+            figure.figsize:
+            - 28
+            - 6
+        suptitle: Trend in Zonal Wind at 200 hPa
+  hus200_trends:
+    variables:
+      hus:
+        preprocessor: trend_hus200
+        mip: atmos
+        timerange: 1980/2009
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-p19-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g110
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+    scripts:
+      plot:
+        script: seaborn_diag.py
+        seaborn_func: barplot
+        reset_index: true
+        write_netcdf: true
+        seaborn_kwargs:
+          x: shape_id
+          y: hus
+          hue: dataset
+        add_aux_coords: true
+        facets_as_columns:
+        - dataset
+        plot_object_methods:
+          set_xlabel: region
+          set_ylabel: hus trend [yr-1]
+        seaborn_settings:
+          style: ticks
+          rc:
+            figure.figsize:
+            - 28
+            - 6
+        suptitle: Trend in Specific Humidity at 200 hPa

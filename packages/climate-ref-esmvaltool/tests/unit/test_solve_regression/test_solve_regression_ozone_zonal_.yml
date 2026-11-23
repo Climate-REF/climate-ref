@@ -1,1 +1,15 @@
-{}
+cmip7_esm-hist_g105_CNRM-ESM2-1e_r6i1p1f1:
+  cmip7:
+  - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1e.esm-hist.r6i1p1f1.glb.mon.o3.tavg-p19-hxy-air.g105.v20261016
+cmip7_esm-hist_g110_UKESM1-3-LL_r1i1p1f1:
+  cmip7:
+  - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r1i1p1f1.glb.mon.o3.tavg-p19-hxy-air.g110.v20260814
+cmip7_esm-hist_g110_UKESM1-3-LL_r2i1p1f1:
+  cmip7:
+  - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r2i1p1f1.glb.mon.o3.tavg-p19-hxy-air.g110.v20261003
+cmip7_historical_g110_UKESM1-3-LL_r1i1p1f2:
+  cmip7:
+  - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r1i1p1f2.glb.mon.o3.tavg-p19-hxy-air.g110.v20261004
+cmip7_historical_g110_UKESM1-3-LL_r2i1p1f2:
+  cmip7:
+  - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r2i1p1f2.glb.mon.o3.tavg-p19-hxy-air.g110.v20261020

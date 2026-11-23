@@ -1,179 +1,337 @@
-"""
-Generate a CMIP7 parquet catalog from the existing CMIP6 parquet catalog.
+r"""
+Generate the CMIP7 parquet catalog from CMIP7 data published on ESGF.
 
-Translates all attributes using the DReq variable mappings (cmip6_to_cmip7 module)
-without requiring actual netCDF files on disk.
+ESGF's STAC index lists the datasets and their files.
+Each file's header is then read over HTTP with a few small range requests
+instead of a download of the whole file,
+and parsed by the same function the complete CMIP7 parser uses.
+So the rows are what ``ref datasets ingest`` with the complete parser would give for the same files.
+
+Selected are the latest versions of the datasets whose branded variable is in the bundled
+Data Request mapping (which covers every CMIP7 requirement of the providers),
+of at most ``--max-variants`` ensemble members per model and experiment (the lowest ones),
+plus the members that the selected datasets name as their parents.
+
+Header reads are appended to ``--cache`` as they complete, so an interrupted run resumes where it stopped.
+Files that cannot be read leave their whole dataset out of the catalog, so no dataset is incomplete.
 
 Usage::
 
-    uv run python scripts/generate_cmip7_catalog.py \
-        --input tests/test-data/esgf-catalog/cmip6_catalog.parquet \
-        --output tests/test-data/esgf-catalog/cmip7_catalog.parquet
+    uv run --with h5netcdf --with h5py --with aiohttp python scripts/generate_cmip7_catalog.py
 """
 
-from pathlib import Path
+from __future__ import annotations
 
+import json
+import multiprocessing
+import re
+import signal
+import time
+from collections import Counter, defaultdict, deque
+from collections.abc import Iterable
+from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlparse
+
+import numpy as np
 import pandas as pd
+import requests
 import typer
 from loguru import logger
 
 from climate_ref.datasets import CMIP7DatasetAdapter
-from climate_ref_core.cmip6_to_cmip7 import (
-    convert_cmip6_to_cmip7_attrs,
-    create_cmip7_filename,
-    create_cmip7_path,
-    make_tracking_id,
-)
+from climate_ref.datasets.cmip7_parsers import parse_cmip7_dataset
+from climate_ref.solve_helpers import write_catalog_parquet
+from climate_ref_core.data_request import dreq_entries
 
-# CMIP7 columns expected by the CMIP7DatasetAdapter
-# branded_variable is a derived column added by find_local_datasets, not in dataset_specific_metadata
-CMIP7_COLUMNS = [
-    *CMIP7DatasetAdapter.dataset_specific_metadata,
-    "branded_variable",
-    *CMIP7DatasetAdapter.file_specific_metadata,
-]
+STAC_INDICES = ("discovery.east.esgf.io", "discovery.west.esgf.io")
+PAGE_SIZE = 200
+READ_BLOCK_SIZE = 2**16
+"""Bytes fetched per range request; small blocks are fastest as distant data nodes are slow to send."""
+
+DatasetKey = tuple[str, str, str]
+"""(source_id, experiment_id, variant_label)"""
 
 
-def _convert_row(row: pd.Series) -> dict | None:
+def _retry(func: Any, attempts: int = 4, delay: float = 5.0) -> Any:
+    for attempt in range(1, attempts + 1):
+        try:
+            return func()
+        except Exception as exc:
+            if attempt == attempts:
+                raise
+            logger.debug(f"Attempt {attempt} failed ({exc}), retrying")
+            time.sleep(delay * attempt)
+
+
+def search_index(index: str, variable_ids: Iterable[str]) -> list[dict[str, Any]]:
+    """Return the STAC items of the latest CMIP7 datasets of the given variables."""
+    session = requests.Session()
+    body: dict[str, Any] = {
+        "collections": ["CMIP7"],
+        "limit": PAGE_SIZE,
+        "filter-lang": "cql2-json",
+        "filter": {
+            "op": "and",
+            "args": [
+                {"op": "in", "args": [{"property": "cmip7:variable_id"}, sorted(variable_ids)]},
+                {"op": "=", "args": [{"property": "latest"}, True]},
+            ],
+        },
+    }
+
+    def post(payload: dict[str, Any]) -> dict[str, Any]:
+        response = session.post(f"https://{index}/search", json=payload, timeout=120)
+        response.raise_for_status()
+        return response.json()  # type: ignore[no-any-return]
+
+    page = _retry(lambda: post(body))
+    logger.info(f"{index} matches {page.get('numberMatched')} datasets")
+    items: list[dict[str, Any]] = []
+    while True:
+        items.extend(page["features"])
+        next_links = [link for link in page.get("links", []) if link.get("rel") == "next"]
+        if not next_links:
+            return items
+        link = next_links[0]
+        if link.get("method", "GET") == "POST":
+            page = _retry(lambda link=link: post(link["body"]))
+        else:
+            page = _retry(lambda link=link: session.get(link["href"], timeout=120).json())
+
+
+def _variant_order(variant_label: str) -> tuple[int, ...]:
+    return tuple(int(number) for number in re.findall(r"\d+", variant_label))
+
+
+def _key(properties: dict[str, Any], prefix: str = "") -> DatasetKey:
+    return (
+        properties.get(f"cmip7:{prefix}source_id", ""),
+        properties.get(f"cmip7:{prefix}experiment_id", ""),
+        properties.get(f"cmip7:{prefix}variant_label", ""),
+    )
+
+
+def select_datasets(
+    items: list[dict[str, Any]],
+    wanted: set[tuple[str, str, str]],
+    max_variants: int,
+) -> list[dict[str, Any]]:
     """
-    Convert a single CMIP6 catalog row to CMIP7 attributes.
-
-    Uses :func:`convert_cmip6_to_cmip7_attrs` for attribute translation,
-    then builds the CMIP7 path, filename, and instance_id.
-
-    Returns None if the variable compound has no DReq mapping.
-    """
-    cmip6_attrs = row.to_dict()
-
-    try:
-        attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
-    except KeyError:
-        return None
-
-    # Carry over file-level and catalog metadata not handled by convert_cmip6_to_cmip7_attrs
-    attrs["start_time"] = row.get("start_time")
-    attrs["end_time"] = row.get("end_time")
-    attrs["finalised"] = row.get("finalised", True)
-    attrs["time_range"] = row.get("time_range")
-
-    # Build CMIP7 DRS path and filename
-    cmip7_dir = create_cmip7_path(attrs, version=attrs.get("version", "v1"))
-    cmip7_filename = create_cmip7_filename(attrs, time_range=attrs.get("time_range"))
-    attrs["path"] = f"{{data_dir}}/{cmip7_dir}/{cmip7_filename}"
-
-    # Build instance_id in CMIP7 DRS format
-    instance_parts = [*CMIP7DatasetAdapter.dataset_id_metadata, "version"]
-    attrs["instance_id"] = "CMIP7." + ".".join(str(attrs[p]) for p in instance_parts)
-    attrs["tracking_id"] = make_tracking_id(f"{attrs['instance_id']}/{cmip7_filename}")
-
-    return attrs
-
-
-# The canonical last monthly timestep of a full CMIP6/CMIP7 ``historical`` run.
-FULL_HISTORICAL_END = "2014-12-16"
-
-
-def _extend_historical_end(
-    cmip7_catalog: pd.DataFrame,
-    end_time: str,
-    only_from: str = FULL_HISTORICAL_END,
-) -> int:
-    """
-    Relabel full-length CMIP7 ``historical`` runs so their coverage reaches ``end_time``.
-
-    This only adjusts the ``historical`` experiment.
-    There are other experiments that may have changed,
-    but our focus is the ``historical``.
-
-    Fixed-frequency rows (``fx``, e.g. ``sftlf``) carry a null ``end_time`` and are untouched.
-    Only ``end_time`` is changed,
-    so ``start_time``, ``instance_id``, ``path`` and every other column are preserved.
+    Select the datasets the catalog holds.
 
     Parameters
     ----------
-    cmip7_catalog
-        The CMIP7 catalog to modify in place.
-    end_time
-        Target ``end_time`` string (``YYYY-MM-DD HH:MM:SS``).
-    only_from
-        Only rows whose ``end_time`` falls on this date (``YYYY-MM-DD``) are extended.
-
-    Returns
-    -------
-    int
-        Number of rows whose ``end_time`` was extended.
-    """
-    is_historical = cmip7_catalog["experiment_id"] == "historical"
-    # Check date only to avoid calendar differences
-    is_full_run = cmip7_catalog["end_time"].str.startswith(only_from, na=False)
-    mask = is_historical & is_full_run
-
-    cmip7_catalog.loc[mask, "end_time"] = end_time
-    return int(mask.sum())
-
-
-def generate_cmip7_catalog(
-    cmip6_catalog: pd.DataFrame,
-    extend_historical_end: str | None = None,
-) -> pd.DataFrame:
-    """
-    Convert a CMIP6 catalog DataFrame to CMIP7 format.
-
-    Parameters
-    ----------
-    cmip6_catalog
-        DataFrame from cmip6_catalog.parquet
-    extend_historical_end
-        If set, extend the ``end_time`` of every *full-length* CMIP7 ``historical``
-        run (those ending at 2014-12) up to this timestamp (``YYYY-MM-DD HH:MM:SS``).
-        Opt-in; when ``None`` the catalog copies the CMIP6 time bounds verbatim. See
-        :func:`_extend_historical_end` for why only full runs are lifted.
+    items
+        STAC items of the candidate datasets
+    wanted
+        The ``(branded_variable, frequency, region)`` combinations to keep
+    max_variants
+        How many ensemble members to keep per model and experiment, lowest first
 
     Returns
     -------
     :
-        DataFrame with CMIP7 columns and translated attributes
+        The selected items, which also include the ensemble members the selected datasets
+        name as their parents
     """
-    converted_rows: list[dict] = []
-    skipped_compounds: set[str] = set()
-
-    for _, row in cmip6_catalog.iterrows():
-        result = _convert_row(row)
-        if result is None:
-            compound = f"{row['table_id']}.{row['variable_id']}"
-            skipped_compounds.add(compound)
-            continue
-        converted_rows.append(result)
-
-    if skipped_compounds:
-        logger.warning(
-            f"Skipped {len(skipped_compounds)} compounds with no DReq mapping: {sorted(skipped_compounds)}"
+    candidates = [
+        item
+        for item in items
+        if (
+            item["properties"].get("cmip7:variable_branded_name"),
+            item["properties"].get("cmip7:frequency"),
+            item["properties"].get("cmip7:region"),
         )
+        in wanted
+        and not item["properties"].get("retracted", False)
+    ]
 
-    if not converted_rows:
-        logger.error("No rows were converted")
-        return pd.DataFrame(columns=CMIP7_COLUMNS)
+    variants: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for item in candidates:
+        source_id, experiment_id, variant_label = _key(item["properties"])
+        variants[(source_id, experiment_id)].add(variant_label)
+    selected: set[DatasetKey] = {
+        (source_id, experiment_id, variant_label)
+        for (source_id, experiment_id), labels in variants.items()
+        for variant_label in sorted(labels, key=_variant_order)[:max_variants]
+    }
 
-    cmip7_df = pd.DataFrame(converted_rows)
+    # Add parents until every selected member's parent is selected as well
+    available = {_key(item["properties"]) for item in candidates}
+    while True:
+        parents = {
+            _key(item["properties"], prefix="parent_")
+            for item in candidates
+            if _key(item["properties"]) in selected
+        }
+        added = (parents & available) - selected
+        if not added:
+            break
+        selected |= added
 
-    # Ensure all expected columns are present
-    for col in CMIP7_COLUMNS:
-        if col not in cmip7_df.columns:
-            cmip7_df[col] = pd.NA
+    return [item for item in candidates if _key(item["properties"]) in selected]
 
-    # Reorder columns to match expected layout
-    cmip7_df = cmip7_df[CMIP7_COLUMNS]
 
-    if extend_historical_end is not None:
-        extended = _extend_historical_end(cmip7_df, extend_historical_end)
-        logger.info(f"Extended {extended} historical rows to end_time {extend_historical_end!r}")
+def data_files(item: dict[str, Any]) -> list[tuple[str, str]]:
+    """
+    List the files of a dataset that can be read over HTTP.
 
-    logger.info(f"Converted {len(cmip7_df)} rows ({len(cmip6_catalog) - len(cmip7_df)} skipped)")
-    logger.info(f"Unique instance_ids: {cmip7_df['instance_id'].nunique()}")
-    logger.info(f"Unique variables: {sorted(cmip7_df['variable_id'].unique())}")
-    logger.info(f"Unique branded_variables: {sorted(cmip7_df['branded_variable'].unique())}")
+    Returns
+    -------
+    :
+        ``(path, url)`` pairs, where ``path`` is the file's path in the DRS from ``MIP-DRS7`` onwards
+    """
+    files = []
+    for asset in item["assets"].values():
+        url = asset.get("href", "")
+        # Globus links point at a web app, not at the file
+        is_file = url.startswith(("https://", "http://")) and urlparse(url).path.endswith(".nc")
+        if "data" not in asset.get("roles", []) or not is_file:
+            continue
+        path = asset.get("file:local_path") or url[url.index("MIP-DRS7/") :]
+        files.append((path, url))
+    return sorted(files)
 
-    return cmip7_df
+
+def _plain(value: Any) -> Any:
+    """Turn the numpy and bytes values a header read returns into JSON-serialisable ones."""
+    if isinstance(value, bytes):
+        return value.decode()
+    if isinstance(value, np.generic):
+        return _plain(value.item())
+    if isinstance(value, np.ndarray):
+        return [_plain(v) for v in value.tolist()]
+    return value
+
+
+def read_header(url: str, path: str) -> dict[str, Any]:
+    """Parse a remote file's metadata the way the complete parser parses a local one."""
+    import aiohttp  # noqa: PLC0415
+    import fsspec  # noqa: PLC0415
+    import h5netcdf.legacyapi  # noqa: PLC0415
+
+    # Without a read timeout, a data node that stops sending leaves the read waiting forever
+    timeout = aiohttp.ClientTimeout(total=300, sock_connect=30, sock_read=60)
+    with fsspec.open(
+        url, block_size=READ_BLOCK_SIZE, cache_type="blockcache", client_kwargs={"timeout": timeout}
+    ) as remote:
+        with h5netcdf.legacyapi.Dataset(remote, "r") as ds:
+            row = parse_cmip7_dataset(ds, f"{{data_dir}}/{path}")
+    return {key: _plain(value) for key, value in row.items()}
+
+
+def _load_cache(cache: Path) -> dict[str, dict[str, Any]]:
+    rows: dict[str, dict[str, Any]] = {}
+    if cache.exists():
+        for line in cache.read_text().splitlines():
+            if line.strip():
+                record = json.loads(line)
+                rows[record["path"]] = record
+    return rows
+
+
+READ_TIMEOUT = 300
+"""Seconds one header read may take; a data node can send a response too slowly for aiohttp to time it out."""
+
+
+def _read_with_timeout(url: str, path: str) -> dict[str, Any]:
+    def give_up(signum: int, frame: Any) -> None:
+        raise TimeoutError(f"Reading the header took longer than {READ_TIMEOUT} s")
+
+    # Each read runs in the main thread of its own worker process, so an alarm can interrupt it
+    previous = signal.signal(signal.SIGALRM, give_up)
+    signal.alarm(READ_TIMEOUT)
+    try:
+        return read_header(url, path)
+    finally:
+        signal.alarm(0)
+        signal.signal(signal.SIGALRM, previous)
+
+
+def _read_with_retries(url: str, path: str) -> dict[str, Any]:
+    return _retry(lambda: _read_with_timeout(url, path), attempts=3)  # type: ignore[no-any-return]
+
+
+def read_headers(
+    files: list[tuple[str, str]],
+    cache: Path,
+    workers: int,
+    per_host: int,
+) -> dict[str, dict[str, Any]]:
+    """
+    Read the headers of the given files, reusing and extending ``cache``.
+
+    The reads run in separate processes: h5py holds a global lock while it reads,
+    so threads would wait for each other's network round trips.
+
+    Returns
+    -------
+    :
+        The parsed rows, keyed by path. Files that could not be read are left out.
+    """
+    rows = _load_cache(cache)
+    todo = [(path, url) for path, url in files if f"{{data_dir}}/{path}" not in rows]
+    logger.info(f"{len(files) - len(todo)} headers cached, {len(todo)} to read")
+
+    queues: dict[str, deque[tuple[str, str]]] = defaultdict(deque)
+    for path, url in todo:
+        queues[urlparse(url).netloc].append((path, url))
+    in_flight: Counter[str] = Counter()
+    pending: dict[Future[dict[str, Any]], tuple[str, str]] = {}
+
+    failed = done = 0
+    context = multiprocessing.get_context("fork")
+    with cache.open("a") as out, ProcessPoolExecutor(max_workers=workers, mp_context=context) as pool:
+
+        def fill() -> None:
+            # Take from every data node in turn, so a slow one does not hold up the others
+            progressed = True
+            while progressed and len(pending) < workers:
+                progressed = False
+                for host, queue in queues.items():
+                    if queue and in_flight[host] < per_host and len(pending) < workers:
+                        path, url = queue.popleft()
+                        pending[pool.submit(_read_with_retries, url, path)] = (host, url)
+                        in_flight[host] += 1
+                        progressed = True
+
+        fill()
+        while pending:
+            finished, _ = wait(pending, return_when=FIRST_COMPLETED)
+            for future in finished:
+                host, url = pending.pop(future)
+                in_flight[host] -= 1
+                done += 1
+                try:
+                    row = future.result()
+                except Exception as exc:
+                    failed += 1
+                    logger.warning(f"Could not read {url}: {exc}")
+                    continue
+                rows[row["path"]] = row
+                out.write(json.dumps(row) + "\n")
+                out.flush()
+                if done % 500 == 0:
+                    logger.info(f"Read {done}/{len(todo)} headers ({failed} failed)")
+            fill()
+
+    if failed:
+        logger.warning(f"{failed} headers could not be read; rerun to retry them")
+    return rows
+
+
+def build_catalog(rows: Iterable[dict[str, Any]]) -> pd.DataFrame:
+    """Turn parsed rows into the catalog the CMIP7 adapter would build from the same files."""
+    adapter = CMIP7DatasetAdapter()
+    catalog = adapter._enrich_parsed_catalog(pd.DataFrame(list(rows)))
+    columns = [
+        *adapter.dataset_specific_metadata,
+        "branded_variable",
+        *adapter.file_specific_metadata,
+    ]
+    return catalog[columns].sort_values(["instance_id", "path"]).reset_index(drop=True)
 
 
 app = typer.Typer()
@@ -181,44 +339,49 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    input_path: Path = typer.Option(
-        Path("tests/test-data/esgf-catalog/cmip6_catalog.parquet"),
-        "--input",
-        exists=True,
-        readable=True,
-        help="Path to the CMIP6 parquet catalog",
-    ),
     output_path: Path = typer.Option(
-        Path("tests/test-data/esgf-catalog/cmip7_catalog.parquet"),
-        "--output",
-        help="Path for the output CMIP7 parquet catalog",
+        Path("tests/test-data/esgf-catalog/cmip7_catalog.parquet"), "--output", help="The catalog to write"
     ),
-    extend_historical_end_year: int | None = typer.Option(
-        None,
-        "--extend-historical-end-year",
-        "-E",
-        help=(
-            "Opt-in: extend every full-length CMIP7 `historical` row (those already "
-            "ending 2014-12) so its coverage reaches December of this year (e.g. 2021 "
-            "for the fire diagnostic). Shorter historical runs are left untouched. "
-            "Only `end_time` is changed; fixed-frequency (fx) rows are left untouched. "
-            "Omit to copy the CMIP6 time bounds verbatim."
-        ),
+    cache: Path = typer.Option(
+        Path("cmip7-catalog-headers.jsonl"), help="Where header reads are kept between runs"
     ),
+    max_variants: int = typer.Option(2, help="Ensemble members to keep per model and experiment"),
+    workers: int = typer.Option(32, help="Headers read at the same time, each in its own process"),
+    per_host: int = typer.Option(12, help="Headers read at the same time from one data node"),
 ) -> None:
-    """Generate a CMIP7 parquet catalog from an existing CMIP6 parquet catalog."""
-    logger.info(f"Reading CMIP6 catalog from {input_path}")
-    cmip6_df = pd.read_parquet(input_path)
-    logger.info(f"Read {len(cmip6_df)} rows with {cmip6_df['instance_id'].nunique()} datasets")
+    """Generate the CMIP7 parquet catalog from CMIP7 data published on ESGF."""
+    mappings = dreq_entries()
+    wanted = {(entry.branded_variable, entry.frequency, entry.region) for entry in mappings}
+    variable_ids = {entry.variable_id for entry in mappings}
 
-    extend_historical_end = (
-        f"{extend_historical_end_year}-12-16 12:00:00" if extend_historical_end_year is not None else None
-    )
-    cmip7_df = generate_cmip7_catalog(cmip6_df, extend_historical_end=extend_historical_end)
+    items: list[dict[str, Any]] = []
+    for index in STAC_INDICES:
+        try:
+            items = search_index(index, variable_ids)
+            break
+        except Exception as exc:
+            logger.warning(f"Searching {index} failed: {exc}")
+    if not items:
+        raise typer.Exit(1)
 
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    cmip7_df.to_parquet(output_path, index=False)
-    logger.info(f"Wrote {len(cmip7_df)} rows to {output_path}")
+    selected = select_datasets(items, wanted, max_variants)
+    files_by_dataset = {item["id"]: data_files(item) for item in selected}
+    files = [file for dataset_files in files_by_dataset.values() for file in dataset_files]
+    logger.info(f"Selected {len(selected)} datasets with {len(files)} files")
+
+    rows = read_headers(files, cache, workers=workers, per_host=per_host)
+
+    complete: list[dict[str, Any]] = []
+    for dataset, dataset_files in files_by_dataset.items():
+        dataset_rows = [rows.get(f"{{data_dir}}/{path}") for path, _ in dataset_files]
+        if not dataset_files or any(row is None for row in dataset_rows):
+            logger.warning(f"Leaving out {dataset}: not every file could be read")
+            continue
+        complete.extend(row for row in dataset_rows if row is not None)
+
+    catalog = build_catalog(complete)
+    write_catalog_parquet(catalog, output_path)
+    logger.info(f"Wrote {len(catalog)} files of {catalog['instance_id'].nunique()} datasets to {output_path}")
 
 
 if __name__ == "__main__":

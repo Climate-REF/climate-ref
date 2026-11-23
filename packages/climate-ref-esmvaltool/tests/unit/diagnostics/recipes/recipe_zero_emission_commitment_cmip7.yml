@@ -37,33 +37,38 @@ diagnostics:
         preprocessor: anomaly_base
         additional_datasets:
         - project: CMIP7
-          activity: CMIP
+          activity: C4MIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r1i1p1f1
-          exp: 1pctCO2
+          dataset: CanESM5-1
+          ensemble: r1i1p2f1
+          exp: esm-flat10
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g120
+          institute: CCCma
           mip: atmos
           region: glb
-          timerange: 0158/0177
+          timerange: 1940/1959
       tas:
         preprocessor: spatial_mean
         additional_datasets:
         - project: CMIP7
-          activity: C4MIP CDRMIP
+          activity: C4MIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r1i1p1f1
-          exp: esm-1pct-brch-1000PgC
+          dataset: CanESM5-1
+          ensemble: r1i1p2f1
+          exp: esm-flat10-zec
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g120
+          institute: CCCma
           mip: atmos
           region: glb
-          timerange: 0168/0267
+          timerange: 1950/2049
     scripts:
       zec:
         script: climate_metrics/zec.py
         zec_year: 50
+        experiments:
+          reference:
+          - esm-flat10
+          simulation:
+          - esm-flat10-zec

@@ -22,3 +22,9 @@ cmip6_gn_r1i1p1f2_UKESM1-0-LL:
   cmip6:
   - CMIP6.C4MIP CDRMIP.MOHC.UKESM1-0-LL.esm-1pct-brch-1000PgC.r1i1p1f2.Amon.tas.gn.v20200210
   - CMIP6.CMIP.MOHC.UKESM1-0-LL.1pctCO2.r1i1p1f2.Amon.tas.gn.v20190406
+cmip7_g120_CanESM5-1_r1i1p2f1:
+  cmip7:
+  - CMIP7.C4MIP.CCCma.CanESM5-1.esm-flat10-zec.r1i1p2f1.glb.fx.areacella.ti-u-hxy-u.g120.v20190429
+  - CMIP7.C4MIP.CCCma.CanESM5-1.esm-flat10-zec.r1i1p2f1.glb.mon.tas.tavg-h2m-hxy-u.g120.v20190429
+  - CMIP7.C4MIP.CCCma.CanESM5-1.esm-flat10.r1i1p2f1.glb.fx.areacella.ti-u-hxy-u.g120.v20190429
+  - CMIP7.C4MIP.CCCma.CanESM5-1.esm-flat10.r1i1p2f1.glb.mon.tas.tavg-h2m-hxy-u.g120.v20190429

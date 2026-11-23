@@ -116,12 +116,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: ACCESS-ESM1-6
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g115
+          institute: ACCESS-Consortium
           mip: atmos
           region: glb
           timerange: 1996/2014
@@ -136,12 +136,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: ACCESS-ESM1-6
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g115
+          institute: ACCESS-Consortium
           mip: atmos
           region: glb
           timerange: 1996/2014
@@ -163,5 +163,5 @@ diagnostics:
           style: ticks
           rc:
             axes.titlepad: 15.0
-        suptitle: CMIP7 ACCESS-ESM1-5 r1i1p1f1 gn 1996/2014
-        plot_filename: jointplot_clivi_lwcre_CMIP7_ACCESS-ESM1-5_r1i1p1f1_gn_1996-2014
+        suptitle: CMIP7 ACCESS-ESM1-6 r1i1p1f1 g115 1996/2014
+        plot_filename: jointplot_clivi_lwcre_CMIP7_ACCESS-ESM1-6_r1i1p1f1_g115_1996-2014

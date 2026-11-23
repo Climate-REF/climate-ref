@@ -89,12 +89,12 @@ datasets:
 - project: CMIP7
   activity: CMIP
   branding_suffix: tavg-u-hxy-u
-  dataset: GFDL-ESM4
+  dataset: UKESM1-3-LL
   ensemble: r1i1p1f1
-  exp: historical
+  exp: esm-hist
   frequency: mon
-  grid: gr1
-  institute: NOAA-GFDL
+  grid: g110
+  institute: UKNCSP
   mip: aerosol
   region: glb
 timerange_for_toz_monthly_data:

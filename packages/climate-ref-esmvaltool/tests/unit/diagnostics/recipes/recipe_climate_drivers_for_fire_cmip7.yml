@@ -41,12 +41,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g114
+          institute: EC-Earth-Consortium
           mip: atmos
           region: glb
       tasmax:
@@ -59,12 +59,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tmaxavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g114
+          institute: EC-Earth-Consortium
           mip: atmos
           region: glb
       treeFrac:
@@ -77,12 +77,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g114
+          institute: EC-Earth-Consortium
           mip: land
           region: glb
       vegFrac:
@@ -95,12 +95,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g114
+          institute: EC-Earth-Consortium
           mip: land
           region: glb
       cVeg:
@@ -113,12 +113,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-lnd
-          dataset: ACCESS-ESM1-5
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g114
+          institute: EC-Earth-Consortium
           mip: land
           region: glb
       tas:
@@ -131,12 +131,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g114
+          institute: EC-Earth-Consortium
           mip: atmos
           region: glb
       hurs:
@@ -149,12 +149,12 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g114
+          institute: EC-Earth-Consortium
           mip: atmos
           region: glb
     scripts:

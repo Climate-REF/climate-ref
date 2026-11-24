@@ -131,8 +131,9 @@ jobs:
       matrix:
         provider: [example, esmvaltool, ilamb, pmp]
         include:
-          # PMP has 21 slow cases at roughly 5 minutes each, so 60 minutes is not enough.
           - provider: pmp
+            timeout: 120
+          - provider: esmvaltool
             timeout: 120
     name: test-cases (${{ matrix.provider }})
     defaults:

@@ -1,7 +1,7 @@
 [
   {
     "attributes": {
-      "long_name": "Total Water Content of Soil Layer",
+      "long_name": "Moisture in Upper Portion of Soil Column",
       "standard_name": "mass_content_of_water_in_soil_layer",
       "units": "dimensionless"
     },
@@ -29,7 +29,7 @@
       12
     ],
     "index_name": "month",
-    "value_long_name": "Total Water Content of Soil Layer",
+    "value_long_name": "Moisture in Upper Portion of Soil Column",
     "value_units": "dimensionless",
     "values": [
       0.2569456,
@@ -48,7 +48,7 @@
   },
   {
     "attributes": {
-      "long_name": "Total Water Content of Soil Layer",
+      "long_name": "Moisture in Upper Portion of Soil Column",
       "standard_name": "mass_content_of_water_in_soil_layer",
       "units": "dimensionless"
     },
@@ -76,7 +76,7 @@
       12
     ],
     "index_name": "month",
-    "value_long_name": "Total Water Content of Soil Layer",
+    "value_long_name": "Moisture in Upper Portion of Soil Column",
     "value_units": "dimensionless",
     "values": [
       0.223831,
@@ -96,7 +96,7 @@
   {
     "attributes": {
       "calendar": "noleap",
-      "long_name": "Total Water Content of Soil Layer",
+      "long_name": "Moisture in Upper Portion of Soil Column",
       "standard_name": "mass_content_of_water_in_soil_layer",
       "units": "dimensionless"
     },
@@ -677,7 +677,7 @@
       "2016-12-16T12:00:00"
     ],
     "index_name": "time",
-    "value_long_name": "Total Water Content of Soil Layer",
+    "value_long_name": "Moisture in Upper Portion of Soil Column",
     "value_units": "dimensionless",
     "values": [
       0.2710747,
@@ -1249,7 +1249,7 @@
   {
     "attributes": {
       "calendar": "noleap",
-      "long_name": "Total Water Content of Soil Layer",
+      "long_name": "Moisture in Upper Portion of Soil Column",
       "standard_name": "mass_content_of_water_in_soil_layer",
       "units": "dimensionless"
     },
@@ -1830,7 +1830,7 @@
       "2016-12-16T12:00:00"
     ],
     "index_name": "time",
-    "value_long_name": "Total Water Content of Soil Layer",
+    "value_long_name": "Moisture in Upper Portion of Soil Column",
     "value_units": "dimensionless",
     "values": [
       0.2419383,

@@ -15,6 +15,7 @@ import hashlib
 import importlib.metadata
 import importlib.resources
 import os
+import shutil
 import stat
 import subprocess
 from abc import abstractmethod
@@ -736,16 +737,45 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 suffix.update(bytes(pkg, encoding="utf-8"))
         return self.prefix / f"{self.slug}-{suffix.hexdigest()}"
 
+    @staticmethod
+    def _incomplete_marker(env_path: Path) -> Path:
+        """
+        Marker file that exists while the environment at `env_path` is being created.
+
+        It sits next to the environment rather than inside it,
+        so it is written before `conda create` and survives an interrupted creation.
+        """
+        return Path(f"{env_path}.incomplete")
+
+    def env_is_installed(self) -> bool:
+        """
+        Whether the conda environment exists and its creation completed.
+
+        An environment whose creation was interrupted (e.g. a cancelled CI job or a failed pip install)
+        still has its incomplete marker and is not considered installed.
+        """
+        env_path = self.env_path
+        return env_path.exists() and not self._incomplete_marker(env_path).exists()
+
     def create_env(self) -> None:
         """
         Create a conda environment.
+
+        An environment left incomplete by an interrupted creation is removed and created again.
         """
-        logger.debug(f"Attempting to create environment at {self.env_path}")
-        if self.env_path.exists():
-            logger.info(f"Environment at {self.env_path} already exists, skipping.")
+        env_path = self.env_path
+        marker = self._incomplete_marker(env_path)
+        logger.debug(f"Attempting to create environment at {env_path}")
+        if marker.exists():
+            logger.warning(f"Environment at {env_path} was not created completely, recreating it.")
+            shutil.rmtree(env_path, ignore_errors=True)
+        elif env_path.exists():
+            logger.info(f"Environment at {env_path} already exists, skipping.")
             return
 
         conda_exe = f"{self.get_conda_exe(update=True)}"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.touch()
         with self.get_environment_file() as file:
             cmd = [
                 conda_exe,
@@ -775,6 +805,8 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 logger.debug(f"Running {' '.join(cmd)}")
                 subprocess.run(cmd, check=True, env=self._launch_env())  # noqa: S603
 
+        marker.unlink()
+
     def run(self, cmd: Iterable[str]) -> None:
         """
         Run a command.
@@ -791,7 +823,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
 
         """
         env_path = self.env_path
-        if not env_path.exists():
+        if not self.env_is_installed():
             msg = (
                 f"Conda environment for provider `{self.slug}` not available at "
                 f"{env_path}. Please install it by running the command "
@@ -853,8 +885,12 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         env_path = self.env_path
         if not conda_exe.exists():
             return [f"micromamba is not available at {conda_exe}. {remedy}"]
-        if not env_path.exists():
-            return [f"Conda environment for {self.slug} is not available at {env_path}. {remedy}"]
+        if not self.env_is_installed():
+            if env_path.exists():
+                problem = f"Conda environment for {self.slug} at {env_path} was not created completely."
+            else:
+                problem = f"Conda environment for {self.slug} is not available at {env_path}."
+            return [f"{problem} {remedy}"]
 
         cmd = self._run_command(conda_exe, env_path, ["python", "-c", "pass"])
         try:

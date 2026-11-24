@@ -47,7 +47,7 @@ def list_(
         env = ""
         if isinstance(provider, CondaDiagnosticProvider):
             env = f"{provider.env_path}"
-            if not provider.env_path.exists():
+            if not provider.env_is_installed():
                 env += " (not installed)"
         return env
 

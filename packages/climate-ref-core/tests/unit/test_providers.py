@@ -531,6 +531,92 @@ class TestCondaDiagnosticProvider:
 
         assert f"Environment at {env_path} already exists, skipping." in caplog.text
 
+    @pytest.fixture
+    def mock_create_env(self, mocker, tmp_path, provider):
+        """Patch everything `create_env` touches, returning the env path and the `subprocess.run` mock."""
+        lockfile = tmp_path / "conda-lock.yml"
+        env_path = provider.prefix / "mock-env"
+
+        @contextmanager
+        def lockfile_context():
+            yield lockfile
+
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "get_environment_file",
+            create_autospec=True,
+            side_effect=lambda *_: lockfile_context(),
+        )
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "get_conda_exe",
+            create_autospec=True,
+            return_value=tmp_path / "conda" / "micromamba",
+        )
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "env_path",
+            new_callable=mocker.PropertyMock,
+            return_value=env_path,
+        )
+        run = mocker.patch.object(climate_ref_core.providers.subprocess, "run", create_autospec=True)
+        return env_path, run
+
+    def test_create_env_marks_completion(self, mock_create_env, provider):
+        env_path, run = mock_create_env
+        marker_seen_during_create = []
+        run.side_effect = lambda *args, **kwargs: marker_seen_during_create.append(
+            CondaDiagnosticProvider._incomplete_marker(env_path).exists()
+        )
+        provider.pip_packages = ["git+https://example.com/tool.git@abc123"]
+
+        provider.create_env()
+
+        assert marker_seen_during_create == [True, True]
+        assert not CondaDiagnosticProvider._incomplete_marker(env_path).exists()
+
+    def test_create_env_interrupted_leaves_incomplete_env(self, mock_create_env, provider):
+        env_path, run = mock_create_env
+        provider.pip_packages = ["git+https://example.com/tool.git@abc123"]
+
+        def fail_on_pip(cmd, **kwargs):
+            if "pip" in cmd:
+                raise subprocess.CalledProcessError(1, cmd)
+            env_path.mkdir(parents=True)
+
+        run.side_effect = fail_on_pip
+
+        with pytest.raises(subprocess.CalledProcessError):
+            provider.create_env()
+
+        assert env_path.exists()
+        assert not provider.env_is_installed()
+
+    def test_create_env_rebuilds_incomplete_env(self, mock_create_env, provider, caplog):
+        env_path, run = mock_create_env
+        env_path.mkdir(parents=True)
+        (env_path / "partial-file").touch()
+        CondaDiagnosticProvider._incomplete_marker(env_path).touch()
+        caplog.set_level(logging.WARNING)
+
+        provider.create_env()
+
+        assert f"Environment at {env_path} was not created completely, recreating it." in caplog.text
+        assert not (env_path / "partial-file").exists()
+        assert run.call_args.args[0][1] == "create"
+        assert provider.env_is_installed() is False  # `conda create` is mocked, so nothing was created
+        assert not CondaDiagnosticProvider._incomplete_marker(env_path).exists()
+
+    def test_env_is_installed(self, mock_create_env, provider):
+        env_path, _ = mock_create_env
+        assert not provider.env_is_installed()
+
+        env_path.mkdir(parents=True)
+        assert provider.env_is_installed()
+
+        CondaDiagnosticProvider._incomplete_marker(env_path).touch()
+        assert not provider.env_is_installed()
+
     @pytest.mark.parametrize(
         ("env_exists", "raised"),
         [
@@ -797,6 +883,16 @@ class TestLifecycleHooks:
 
         assert len(problems) == 1
         assert "Conda environment for test is not available" in problems[0]
+
+    def test_conda_check_health_incomplete_env(self, conda_provider, mocker):
+        self._install_micromamba(conda_provider, "exit 0")
+        conda_provider.env_path.mkdir(parents=True)
+        CondaDiagnosticProvider._incomplete_marker(conda_provider.env_path).touch()
+
+        problems = conda_provider.check_health(mocker.Mock())
+
+        assert len(problems) == 1
+        assert "was not created completely" in problems[0]
 
     def test_conda_check_health_launch_fails(self, conda_provider, mocker):
         self._install_micromamba(

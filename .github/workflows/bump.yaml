@@ -1,6 +1,12 @@
 # Bump the project's version
 # This will generate a commit with the new version and a changelog entry
 # This also tags the commit with the new version
+#
+# By default the bump is gated on CI: the `wait-for-ci` job waits until the latest run of each
+# workflow in REQUIRED_WORKFLOWS for the dispatched commit has completed, and only bumps if all succeeded.
+# The integration tests are slow, so the bump can be dispatched straight after a merge and will run once they finish.
+# If another commit lands on the branch while waiting, the bump is aborted and must be dispatched again.
+# Set `skip_ci_gate` to bump immediately without waiting.
 
 name: Bump version
 
@@ -16,11 +22,96 @@ on:
           - major
 #          - prerelease
         required: true
+      skip_ci_gate:
+        type: boolean
+        description: Bump immediately without waiting for CI to pass on this commit
+        default: false
+
+# Only one bump at a time
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+# The bump is pushed with the PAT, so GITHUB_TOKEN only needs read access
+permissions:
+  contents: read
 
 jobs:
+  wait-for-ci:
+    name: "Wait for CI to pass"
+    if: ${{ !inputs.skip_ci_gate }}
+    runs-on: ubuntu-latest
+    # GitHub-hosted jobs are capped at 6 hours
+    timeout-minutes: 350
+    permissions:
+      actions: read
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BRANCH: ${{ github.ref_name }}
+      SHA: ${{ github.sha }}
+      # Workflow files that must have succeeded on the commit being released
+      REQUIRED_WORKFLOWS: "ci.yaml ci-integration.yaml packaging.yaml"
+      # Fail if a required workflow has not started a run for the commit after this long
+      RUN_START_TIMEOUT_SECONDS: 900
+      POLL_INTERVAL_SECONDS: 60
+    steps:
+      - name: Wait for required workflows
+        run: |
+          set -euo pipefail
+          echo "Waiting for CI on $BRANCH@$SHA: $REQUIRED_WORKFLOWS"
+          start=$(date +%s)
+
+          while true; do
+            head=$(gh api "repos/$GH_REPO/commits/$BRANCH" --jq .sha)
+            if [ "$head" != "$SHA" ]; then
+              echo "::error::$BRANCH moved from $SHA to $head while waiting for CI. Dispatch the bump again to release the new HEAD."
+              exit 1
+            fi
+
+            all_done=1
+            for wf in $REQUIRED_WORKFLOWS; do
+              # Latest run for this commit, from any event (a scheduled run may have superseded the push run)
+              run=$(gh run list --workflow "$wf" --commit "$SHA" --limit 1 \
+                --json status,conclusion,url --jq '.[0] // empty')
+
+              if [ -z "$run" ]; then
+                if [ $(( $(date +%s) - start )) -gt "$RUN_START_TIMEOUT_SECONDS" ]; then
+                  echo "::error::No run of $wf was found for $SHA after ${RUN_START_TIMEOUT_SECONDS}s."
+                  exit 1
+                fi
+                echo "$wf: no run yet"
+                all_done=0
+                continue
+              fi
+
+              status=$(jq -r .status <<<"$run")
+              conclusion=$(jq -r .conclusion <<<"$run")
+              url=$(jq -r .url <<<"$run")
+              if [ "$status" != "completed" ]; then
+                echo "$wf: $status ($url)"
+                all_done=0
+              elif [ "$conclusion" != "success" ]; then
+                echo "::error::$wf concluded '$conclusion' for $SHA: $url"
+                exit 1
+              else
+                echo "$wf: success ($url)"
+              fi
+            done
+
+            if [ "$all_done" = 1 ]; then
+              echo "All required workflows passed for $SHA"
+              break
+            fi
+            sleep "$POLL_INTERVAL_SECONDS"
+          done
+
   bump_version:
     name: "Bump version and create changelog"
-    if: "!startsWith(github.event.head_commit.message, 'bump:')"
+    needs: [wait-for-ci]
+    # Run when the gate passed, or was skipped via `skip_ci_gate`
+    if: ${{ !cancelled() && (needs.wait-for-ci.result == 'success' || needs.wait-for-ci.result == 'skipped') }}
     runs-on: ubuntu-latest
     env:
       CI_COMMIT_EMAIL: "ci-runner@climate-ref.invalid"
@@ -31,16 +122,31 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PAT }}
 
+      - name: Check the branch has not moved
+        if: ${{ !inputs.skip_ci_gate }}
+        env:
+          SHA: ${{ github.sha }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git fetch origin "$BRANCH"
+          remote_head=$(git rev-parse "origin/$BRANCH")
+          if [ "$(git rev-parse HEAD)" != "$SHA" ] || [ "$remote_head" != "$SHA" ]; then
+            echo "::error::$BRANCH moved from $SHA to $remote_head after CI passed. Dispatch the bump again."
+            exit 1
+          fi
+
       - uses: ./.github/actions/setup
         with:
           python-version: 3.12
 
       - name: Create bump and changelog
-
+        env:
+          BUMP_RULE: ${{ inputs.bump_rule }}
         run: |
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "$CI_COMMIT_EMAIL"
 
           # Bump
-          uv run bump-my-version bump ${{ github.event.inputs.bump_rule }} -vv --tag --commit
+          # The push is rejected (and no tag is pushed) if the branch moved in the meantime
+          uv run bump-my-version bump "$BUMP_RULE" -vv --tag --commit
           git push && git push --tags

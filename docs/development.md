@@ -353,7 +353,11 @@ The steps required are the following:
 1. Bump the version: manually trigger the "bump" workflow from the main branch
    (see here: [bump workflow](https://github.com/Climate-REF/climate-ref/actions/workflows/bump.yaml)).
    A valid "bump_rule" will need to be specified.
-   This will then trigger a draft release.
+   By default the workflow waits until CI, the integration tests and packaging have passed
+   on the current HEAD of main, so it can be triggered straight after the last merge.
+   If another commit is pushed to main while it waits, the bump is aborted and must be triggered again.
+   Tick "skip_ci_gate" to bump immediately without waiting.
+   The bump then triggers a draft release.
 
 1. Edit the draft release which has been created
    (see here: [project releases](https://github.com/Climate-REF/climate-ref/releases)).

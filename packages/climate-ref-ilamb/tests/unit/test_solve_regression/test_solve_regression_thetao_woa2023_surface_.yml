@@ -22,31 +22,26 @@ cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_gn_WOA-23_thetao_v20251024:
 cmip6_historical_gn_r1i1p1f1_AWI-CM-1-1-MR__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
   - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.historical.r1i1p1f1.Ofx.areacello.gn.v20181218
-  - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.historical.r1i1p1f1.Omon.thetao.gn.v20181218
   - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.historical.r1i1p1f1.Omon.tos.gn.v20181218
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
 cmip6_historical_gn_r1i1p1f1_AWI-ESM-1-1-LR__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
-  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Omon.thetao.gn.v20200212
   - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Omon.tos.gn.v20200212
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
 cmip6_historical_gn_r1i1p1f1_BCC-CSM2-MR__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
-  - CMIP6.CMIP.BCC.BCC-CSM2-MR.historical.r1i1p1f1.Omon.thetao.gn.v20181126
   - CMIP6.CMIP.BCC.BCC-CSM2-MR.historical.r1i1p1f1.Omon.tos.gn.v20181126
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
 cmip6_historical_gn_r1i1p1f1_BCC-ESM1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
-  - CMIP6.CMIP.BCC.BCC-ESM1.historical.r1i1p1f1.Omon.thetao.gn.v20181129
   - CMIP6.CMIP.BCC.BCC-ESM1.historical.r1i1p1f1.Omon.tos.gn.v20181129
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
 cmip6_historical_gn_r1i1p1f1_CAMS-CSM1-0__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
-  - CMIP6.CMIP.CAMS.CAMS-CSM1-0.historical.r1i1p1f1.Omon.thetao.gn.v20190708
   - CMIP6.CMIP.CAMS.CAMS-CSM1-0.historical.r1i1p1f1.Omon.tos.gn.v20190708
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -54,7 +49,6 @@ cmip6_historical_gn_r1i1p1f1_CAS-ESM2-0__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
   - CMIP6.CMIP.CAS.CAS-ESM2-0.historical.r1i1p1f1.Ofx.areacello.gn.v20201228
   - CMIP6.CMIP.CAS.CAS-ESM2-0.historical.r1i1p1f1.Ofx.volcello.gn.v20201228
-  - CMIP6.CMIP.CAS.CAS-ESM2-0.historical.r1i1p1f1.Omon.thetao.gn.v20201228
   - CMIP6.CMIP.CAS.CAS-ESM2-0.historical.r1i1p1f1.Omon.tos.gn.v20201228
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -117,7 +111,6 @@ cmip6_historical_gn_r1i1p1f1_CanESM5-1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
   - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Ofx.areacello.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Ofx.volcello.gn.v20190429
-  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Omon.thetao.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Omon.tos.gn.v20190429
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -125,7 +118,6 @@ cmip6_historical_gn_r1i1p1f1_CanESM5__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.areacello.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.sftof.gn.v20190429
-  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Omon.thetao.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Omon.tos.gn.v20190429
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -168,7 +160,6 @@ cmip6_historical_gn_r1i1p1f1_FGOALS-f3-L__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
   - CMIP6.CMIP.CAS.FGOALS-f3-L.historical.r1i1p1f1.Ofx.areacello.gn.v20190918
   - CMIP6.CMIP.CAS.FGOALS-f3-L.historical.r1i1p1f1.Ofx.volcello.gn.v20190918
-  - CMIP6.CMIP.CAS.FGOALS-f3-L.historical.r1i1p1f1.Omon.thetao.gn.v20191007
   - CMIP6.CMIP.CAS.FGOALS-f3-L.historical.r1i1p1f1.Omon.tos.gn.v20191007
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -176,7 +167,6 @@ cmip6_historical_gn_r1i1p1f1_FGOALS-g3__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
   - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.Ofx.areacello.gn.v20200917
   - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.Ofx.volcello.gn.v20200917
-  - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.Omon.thetao.gn.v20191012
   - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.Omon.tos.gn.v20191107
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -329,7 +319,6 @@ cmip6_historical_gn_r1i1p1f1_TaiESM1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
   - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Ofx.areacello.gn.v20210212
   - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Ofx.volcello.gn.v20210212
-  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Omon.thetao.gn.v20200630
   - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Omon.tos.gn.v20200630
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -382,7 +371,6 @@ cmip6_historical_gn_r1i1p2f1_CanESM5-CanOE__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip6:
   - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Ofx.areacello.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Ofx.sftof.gn.v20190429
-  - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Omon.thetao.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Omon.tos.gn.v20190429
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -525,7 +513,6 @@ cmip6_historical_gr_r2i1p1f1_EC-Earth3__obs4mips_gn_WOA-23_thetao_v20251024:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
 cmip7_esm-hist_g102_CNRM-ESM2-1e_r6i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
-  - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1e.esm-hist.r6i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g102.v20261016
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1e.esm-hist.r6i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g102.v20261016
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -533,7 +520,6 @@ cmip7_esm-hist_g102_EC-Earth3-ESM-1-1_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v20251
   cmip7:
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-ESM-1-1.esm-hist.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.g102.v20261022
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-ESM-1-1.esm-hist.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.g102.v20261022
-  - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-ESM-1-1.esm-hist.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g102.v20261022
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-ESM-1-1.esm-hist.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g102.v20261022
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -541,7 +527,6 @@ cmip7_esm-hist_g102_EC-Earth3-ESM-1-1_r4i1p1f1__obs4mips_gn_WOA-23_thetao_v20251
   cmip7:
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-ESM-1-1.esm-hist.r4i1p1f1.glb.fx.areacello.ti-u-hxy-u.g102.v20260713
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-ESM-1-1.esm-hist.r4i1p1f1.glb.fx.sftof.ti-u-hxy-u.g102.v20260713
-  - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-ESM-1-1.esm-hist.r4i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g102.v20260713
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-ESM-1-1.esm-hist.r4i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g102.v20260713
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -549,7 +534,6 @@ cmip7_esm-hist_g118_ACCESS-ESM1-6_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.g118.v20261009
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.g118.v20261009
-  - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g118.v20261009
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g118.v20261009
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r1i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g118.v20261009
   obs4mips:
@@ -558,14 +542,12 @@ cmip7_esm-hist_g118_ACCESS-ESM1-6_r2i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r2i1p1f1.glb.fx.areacello.ti-u-hxy-u.g118.v20261009
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r2i1p1f1.glb.fx.sftof.ti-u-hxy-u.g118.v20261009
-  - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r2i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g118.v20261009
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r2i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g118.v20261009
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.esm-hist.r2i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g118.v20261009
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
 cmip7_esm-hist_g126_UKESM1-3-LL_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
-  - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g126.v20260817
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g126.v20260817
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r1i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g126.v20260817
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-piControl.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.g126.v20261109
@@ -576,7 +558,6 @@ cmip7_esm-hist_g126_UKESM1-3-LL_r2i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r2i1p1f1.glb.fx.areacello.ti-u-hxy-u.g126.v20261002
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r2i1p1f1.glb.fx.sftof.ti-u-hxy-u.g126.v20261002
-  - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r2i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g126.v20261002
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r2i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g126.v20261002
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.esm-hist.r2i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g126.v20261002
   obs4mips:
@@ -586,7 +567,6 @@ cmip7_esm-hist_g127_CanESM5-1_r1i1p2f1__obs4mips_gn_WOA-23_thetao_v20251024:
   - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r1i1p2f1.glb.fx.areacello.ti-u-hxy-u.g127.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r1i1p2f1.glb.fx.sftof.ti-u-hxy-u.g127.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r1i1p2f1.glb.fx.volcello.ti-ol-hxy-sea.g127.v20190429
-  - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r1i1p2f1.glb.mon.thetao.tavg-ol-hxy-sea.g127.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r1i1p2f1.glb.mon.tos.tavg-u-hxy-sea.g127.v20190429
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -595,7 +575,6 @@ cmip7_esm-hist_g127_CanESM5-1_r2i1p2f1__obs4mips_gn_WOA-23_thetao_v20251024:
   - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r2i1p2f1.glb.fx.areacello.ti-u-hxy-u.g127.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r2i1p2f1.glb.fx.sftof.ti-u-hxy-u.g127.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r2i1p2f1.glb.fx.volcello.ti-ol-hxy-sea.g127.v20190429
-  - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r2i1p2f1.glb.mon.thetao.tavg-ol-hxy-sea.g127.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-1.esm-hist.r2i1p2f1.glb.mon.tos.tavg-u-hxy-sea.g127.v20190429
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -603,7 +582,6 @@ cmip7_esm-hist_g147_CanESM6-0-MR_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.esm-hist.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.g147.v20260629
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.esm-hist.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.g147.v20260629
-  - CMIP7.CMIP.CCCma.CanESM6-0-MR.esm-hist.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g147.v20260629
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.esm-hist.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g147.v20260629
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -611,7 +589,6 @@ cmip7_esm-hist_g147_CanESM6-0-MR_r2i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.esm-hist.r2i1p1f1.glb.fx.areacello.ti-u-hxy-u.g147.v20260629
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.esm-hist.r2i1p1f1.glb.fx.sftof.ti-u-hxy-u.g147.v20260629
-  - CMIP7.CMIP.CCCma.CanESM6-0-MR.esm-hist.r2i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g147.v20260629
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.esm-hist.r2i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g147.v20260629
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -619,7 +596,6 @@ cmip7_historical_g118_ACCESS-ESM1-6_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v2025102
   cmip7:
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.g118.v20261008
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.g118.v20261008
-  - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g118.v20261008
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g118.v20261008
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r1i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g118.v20261008
   obs4mips:
@@ -628,7 +604,6 @@ cmip7_historical_g118_ACCESS-ESM1-6_r2i1p1f1__obs4mips_gn_WOA-23_thetao_v2025102
   cmip7:
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r2i1p1f1.glb.fx.areacello.ti-u-hxy-u.g118.v20261008
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r2i1p1f1.glb.fx.sftof.ti-u-hxy-u.g118.v20261008
-  - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r2i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g118.v20261008
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r2i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g118.v20261008
   - CMIP7.CMIP.ACCESS-Consortium.ACCESS-ESM1-6.historical.r2i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g118.v20261008
   obs4mips:
@@ -637,7 +612,6 @@ cmip7_historical_g126_UKCM2-0-LL_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.g126.v20260910
   - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.g126.v20260910
-  - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g126.v20260909
   - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g126.v20260909
   - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r1i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g126.v20260909
   obs4mips:
@@ -646,7 +620,6 @@ cmip7_historical_g126_UKCM2-0-LL_r2i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r2i1p1f1.glb.fx.areacello.ti-u-hxy-u.g126.v20260918
   - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r2i1p1f1.glb.fx.sftof.ti-u-hxy-u.g126.v20260918
-  - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r2i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g126.v20260918
   - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r2i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g126.v20260918
   - CMIP7.CMIP.UKNCSP.UKCM2-0-LL.historical.r2i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g126.v20260918
   obs4mips:
@@ -655,7 +628,6 @@ cmip7_historical_g126_UKESM1-3-LL_r1i1p1f2__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r1i1p1f2.glb.fx.areacello.ti-u-hxy-u.g126.v20261004
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r1i1p1f2.glb.fx.sftof.ti-u-hxy-u.g126.v20261004
-  - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r1i1p1f2.glb.mon.thetao.tavg-ol-hxy-sea.g126.v20261004
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r1i1p1f2.glb.mon.tos.tavg-u-hxy-sea.g126.v20261004
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r1i1p1f2.glb.mon.volcello.tavg-ol-hxy-sea.g126.v20261004
   obs4mips:
@@ -664,7 +636,6 @@ cmip7_historical_g126_UKESM1-3-LL_r2i1p1f2__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r2i1p1f2.glb.fx.areacello.ti-u-hxy-u.g126.v20261020
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r2i1p1f2.glb.fx.sftof.ti-u-hxy-u.g126.v20261020
-  - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r2i1p1f2.glb.mon.thetao.tavg-ol-hxy-sea.g126.v20261020
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r2i1p1f2.glb.mon.tos.tavg-u-hxy-sea.g126.v20261020
   - CMIP7.CMIP.UKNCSP.UKESM1-3-LL.historical.r2i1p1f2.glb.mon.volcello.tavg-ol-hxy-sea.g126.v20261020
   obs4mips:
@@ -673,7 +644,6 @@ cmip7_historical_g147_CanESM6-0-MR_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024
   cmip7:
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.g147.v20260629
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.g147.v20260629
-  - CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g147.v20260629
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g147.v20260629
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
@@ -681,13 +651,11 @@ cmip7_historical_g147_CanESM6-0-MR_r2i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024
   cmip7:
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r2i1p1f1.glb.fx.areacello.ti-u-hxy-u.g147.v20260629
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r2i1p1f1.glb.fx.sftof.ti-u-hxy-u.g147.v20260629
-  - CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r2i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g147.v20260629
   - CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r2i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g147.v20260629
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
 cmip7_historical_g154_UKCM2a-0-HH_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
-  - CMIP7.CMIP.UKNCSP.UKCM2a-0-HH.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g154.v20261015
   - CMIP7.CMIP.UKNCSP.UKCM2a-0-HH.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g154.v20261015
   - CMIP7.CMIP.UKNCSP.UKCM2a-0-HH.historical.r1i1p1f1.glb.mon.volcello.tavg-ol-hxy-sea.g154.v20261015
   obs4mips:
@@ -700,7 +668,6 @@ cmip7_historical_g154_UKCM2a-0-HH_r2i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
 cmip7_historical_g207_CAS-ESM2-1-CSM_r1i1p1f1__obs4mips_gn_WOA-23_thetao_v20251024:
   cmip7:
-  - CMIP7.CMIP.CAS.CAS-ESM2-1-CSM.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.g207.v20260910
   - CMIP7.CMIP.CAS.CAS-ESM2-1-CSM.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.g207.v20260910
   obs4mips:
   - obs4REF.obs4REF.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024

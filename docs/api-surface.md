@@ -81,6 +81,7 @@ The primary module providers interact with.
 | `RequireOverlappingTimerange` | Class (attrs) | Require overlapping time ranges             |
 | `AddParentDataset`            | Class (attrs) | Add each dataset's parent experiment data   |
 | `SelectFirstMember`           | Class (attrs) | Keep one ensemble member per group          |
+| `SelectPreferredFacet`        | Class (attrs) | Keep the most preferred of several values   |
 | `PartialDateTime`             | Class         | Partial datetime for time range constraints |
 | `apply_constraint`            | Function      | Apply a constraint to grouped data          |
 

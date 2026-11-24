@@ -1,5 +1,5 @@
 _metadata:
-  hash: abae4385704e26ebc1936adbe0d6b0402d2ce0a1
+  hash: 4224b427103d6c79f4b11deeb43cdddcaa1aebab
 cmip6:
   slug_column: instance_id
   selector:
@@ -8,46 +8,6 @@ cmip6:
     member_id: r1i1p1f1
     source_id: CanESM5
   datasets:
-  - activity_id: CMIP
-    branch_method: Spin-up documentation
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
-    calendar: 365_day
-    end_time: '2014-12-16 12:00:00'
-    experiment: all-forcing simulation of the recent past
-    experiment_id: historical
-    filename: mrsol_Emon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
-    finalised: true
-    frequency: mon
-    grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
-      49 levels; top level 1 hPa
-    grid_label: gn
-    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Emon.mrsol.gn.v20190429
-    institution_id: CCCma
-    long_name: Total Water Content of Soil Layer
-    member_id: r1i1p1f1
-    nominal_resolution: 500 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
-    parent_variant_label: r1i1p1f1
-    product: model-output
-    realm: land
-    source_id: CanESM5
-    source_type: AOGCM
-    standard_name: mass_content_of_water_in_soil_layer
-    start_time: '1850-01-16 12:00:00'
-    sub_experiment: none
-    sub_experiment_id: none
-    table_id: Emon
-    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
-    time_units: days since 1850-01-01 0:0:0.0
-    units: kg m-2
-    variable_id: mrsol
-    variant_label: r1i1p1f1
-    version: v20190429
-    vertical_levels: 3
   - activity_id: CMIP
     branch_method: Spin-up documentation
     branch_time_in_child: 0.0

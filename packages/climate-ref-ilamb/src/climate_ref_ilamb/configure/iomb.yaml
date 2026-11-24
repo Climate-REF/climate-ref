@@ -14,8 +14,11 @@ thetao-WOA2023-surface:
   transforms:
   - select_depth:
       value: 0
-  alternate_vars:
-  - tos
+  # Model variables, most preferred first: the surface field covers the reference period more often
+  # and avoids loading the full 3D thetao.
+  model_variables:
+  - Omon.tos
+  - Omon.thetao
 
 so-WOA2023-surface:
   version: 3
@@ -31,8 +34,11 @@ so-WOA2023-surface:
   - select_depth:
       value: 0
   variable_cmap: YlGn
-  alternate_vars:
-  - sos
+  # Model variables, most preferred first: the surface field covers the reference period more often
+  # and avoids loading the full 3D so.
+  model_variables:
+  - Omon.sos
+  - Omon.so
 
 amoc-RAPID:
   version: 5

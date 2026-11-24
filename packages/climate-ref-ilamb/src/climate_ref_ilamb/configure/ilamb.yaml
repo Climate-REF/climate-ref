@@ -37,15 +37,18 @@ mrro-LORA:
 mrsos-WangMao:
   sources:
     mrsol: ilamb/mrsol/WangMao/mrsol_olc.nc
-  alternate_vars:
-  - mrsos
+  # Model variables, most preferred first: a model is compared using the first one it publishes.
+  # CMIP7 calls both `mrsol` and tells them apart by branding (tavg-d10cm-hxy-lnd, tavg-sl-hxy-lnd).
+  model_variables:
+  - Lmon.mrsos  # top 10 cm
+  - Emon.mrsol  # all soil layers, compared at the top one (select_depth)
   transforms:
   - select_depth:
       value: 0
   - soil_moisture_to_vol_fraction
   variable_cmap: Blues
   test_cmip7:
-    # The only published CMIP7 model with both mrsol variants (mrsos and mrsol in CMIP6)
+    # Publishes both mrsol variants (mrsos and mrsol in CMIP6); the test case fetches the preferred one
     source_id: CanESM6-0-MR
     # r1i1p1f1-r5i1p1f1 cannot be pinned: ESGF indexes their fx fields without a base_id
     variant_label: r6i1p1f1

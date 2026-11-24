@@ -1,5 +1,5 @@
 _metadata:
-  hash: 30482c1bddd4a4ad9887e2ac955792d1cc307c16
+  hash: e7249347e97ae8de24c8df11c6cecc9ae00ef054
 cmip7:
   slug_column: instance_id
   selector:
@@ -189,117 +189,6 @@ cmip7:
     time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
     time_units: days since 1850-01-01
     tracking_id: hdl:21.14107/0ce239e3-6522-4894-a5c8-bbbece2c7c3b
-    units: kg m-2
-    variable_id: mrsol
-    variant_label: r6i1p1f1
-    version: v20260629
-  - activity_id: CMIP
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 1350865.0
-    branded_variable: mrsol_tavg-sl-hxy-lnd
-    branding_suffix: tavg-sl-hxy-lnd
-    calendar: 365_day
-    end_time: '1900-12-16 12:00:00'
-    experiment_id: historical
-    external_variables: areacella
-    filename: mrsol_tavg-sl-hxy-lnd_mon_glb_g150_CanESM6-0-MR_historical_r6i1p1f1_185001-190012.nc
-    finalised: true
-    frequency: mon
-    grid_label: g150
-    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r6i1p1f1.glb.mon.mrsol.tavg-sl-hxy-lnd.g150.v20260629
-    institution_id: CCCma
-    license_id: CC-BY-4.0
-    long_name: Total Water Content of Soil Layer
-    mip_era: CMIP7
-    nominal_resolution: 100 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_mip_era: CMIP7
-    parent_source_id: CanESM6-0-MR
-    parent_time_units: days since 1850-01-01
-    parent_variant_label: r1i1p1f1
-    realm: land
-    region: glb
-    source_id: CanESM6-0-MR
-    standard_name: mass_content_of_water_in_soil_layer
-    start_time: '1850-01-16 12:00:00'
-    time_range: 1850-01-16 12:00:00-1900-12-16 12:00:00
-    time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/d59956ac-648d-4c2f-abc0-d97bca711159
-    units: kg m-2
-    variable_id: mrsol
-    variant_label: r6i1p1f1
-    version: v20260629
-  - activity_id: CMIP
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 1350865.0
-    branded_variable: mrsol_tavg-sl-hxy-lnd
-    branding_suffix: tavg-sl-hxy-lnd
-    calendar: 365_day
-    end_time: '2000-12-16 12:00:00'
-    experiment_id: historical
-    external_variables: areacella
-    filename: mrsol_tavg-sl-hxy-lnd_mon_glb_g150_CanESM6-0-MR_historical_r6i1p1f1_190101-200012.nc
-    finalised: true
-    frequency: mon
-    grid_label: g150
-    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r6i1p1f1.glb.mon.mrsol.tavg-sl-hxy-lnd.g150.v20260629
-    institution_id: CCCma
-    license_id: CC-BY-4.0
-    long_name: Total Water Content of Soil Layer
-    mip_era: CMIP7
-    nominal_resolution: 100 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_mip_era: CMIP7
-    parent_source_id: CanESM6-0-MR
-    parent_time_units: days since 1850-01-01
-    parent_variant_label: r1i1p1f1
-    realm: land
-    region: glb
-    source_id: CanESM6-0-MR
-    standard_name: mass_content_of_water_in_soil_layer
-    start_time: '1901-01-16 12:00:00'
-    time_range: 1901-01-16 12:00:00-2000-12-16 12:00:00
-    time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/617c6d7a-ce6b-4c02-9e72-573a94f22999
-    units: kg m-2
-    variable_id: mrsol
-    variant_label: r6i1p1f1
-    version: v20260629
-  - activity_id: CMIP
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 1350865.0
-    branded_variable: mrsol_tavg-sl-hxy-lnd
-    branding_suffix: tavg-sl-hxy-lnd
-    calendar: 365_day
-    end_time: '2021-12-16 12:00:00'
-    experiment_id: historical
-    external_variables: areacella
-    filename: mrsol_tavg-sl-hxy-lnd_mon_glb_g150_CanESM6-0-MR_historical_r6i1p1f1_200101-202112.nc
-    finalised: true
-    frequency: mon
-    grid_label: g150
-    instance_id: CMIP7.CMIP.CCCma.CanESM6-0-MR.historical.r6i1p1f1.glb.mon.mrsol.tavg-sl-hxy-lnd.g150.v20260629
-    institution_id: CCCma
-    license_id: CC-BY-4.0
-    long_name: Total Water Content of Soil Layer
-    mip_era: CMIP7
-    nominal_resolution: 100 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_mip_era: CMIP7
-    parent_source_id: CanESM6-0-MR
-    parent_time_units: days since 1850-01-01
-    parent_variant_label: r1i1p1f1
-    realm: land
-    region: glb
-    source_id: CanESM6-0-MR
-    standard_name: mass_content_of_water_in_soil_layer
-    start_time: '2001-01-16 12:00:00'
-    time_range: 2001-01-16 12:00:00-2021-12-16 12:00:00
-    time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/58ef03ef-f845-49d8-9b3a-b23af4c08e5f
     units: kg m-2
     variable_id: mrsol
     variant_label: r6i1p1f1

@@ -3,7 +3,7 @@ import os
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import dask.config
 import ilamb3
@@ -20,7 +20,7 @@ from ilamb3.transform.amoc import msftmz_to_rapid
 from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
-from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets
+from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets, SelectPreferredFacet
 from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.data_request import DReqVariableMapping, get_dreq_entry
 from climate_ref_core.dataset_registry import dataset_registry_manager
@@ -338,38 +338,50 @@ def _lookup_dreq_entries(
     return found
 
 
-def _keep_primary_branding(model_datasets: pd.DataFrame, variable_id: str, realm: str) -> pd.DataFrame:
-    """
-    Keep one branded variant of a CMIP7 variable that several CMIP6 variables map onto.
+class _ModelVariables(NamedTuple):
+    """The model variables a diagnostic accepts, most preferred first."""
 
-    The Data Request folds some CMIP6 variables into one CMIP7 ``variable_id`` that only the
-    branding tells apart, e.g. ``Lmon.mrsos`` and ``Emon.mrsol`` both become ``mrsol``.
-    ilamb3 cannot combine those into one field, so where the diagnostic's own variable is
-    among them, only its variant is kept.
-    """
-    primary = set(_get_branded_variable((variable_id,), realm))
-    keep = pd.Series(True, index=model_datasets.index)
-    for _, group in model_datasets.groupby("variable_id"):
-        brandings = set(group["branded_variable"])
-        if len(brandings) > 1 and brandings & primary:
-            keep[group.index] = group["branded_variable"].isin(primary)
-    return model_datasets[keep]
+    cmip6_variable_ids: tuple[str, ...]
+    cmip7_variable_ids: tuple[str, ...]
+    cmip7_branded_variables: tuple[str, ...]
 
 
-def _variables_replaced_by_alternates(
-    variable_id: str, alternate_vars: Sequence[str], realm: str
-) -> tuple[str, ...]:
+def _resolve_model_variables(variable_id: str, model_variables: Sequence[str], realm: str) -> _ModelVariables:
     """
-    Name the primary variable if ``execute`` would drop it for an alternate in CMIP7 data.
+    Name a diagnostic's model variables in CMIP6 and CMIP7.
 
-    ``execute`` drops the primary variable (e.g. 3D ``so``) when an alternate (``sos``) is
-    present, by ``variable_id``. Where the Data Request folds both into one variable_id
-    (``mrsol`` for ``mrsos``), they are told apart by branding instead and both are kept.
+    ``model_variables`` lists the model variables a diagnostic accepts, most preferred first,
+    as CMIP6 compound names (``Lmon.mrsos``).
+    Each names exactly one CMIP6 variable and one CMIP7 branded variable,
+    which tells apart variables the Data Request folds into one CMIP7 ``variable_id``
+    (``Lmon.mrsos`` and ``Emon.mrsol`` both become ``mrsol``).
+    Without ``model_variables`` the diagnostic only accepts its analysis variable ``variable_id``,
+    whose table is looked up in the realm's CMIP6 tables.
     """
-    alternates = set(_get_cmip7_variable_ids(tuple(alternate_vars), realm))
-    if alternates and _get_cmip7_variable_ids((variable_id,), realm)[0] not in alternates:
-        return (variable_id,)
-    return ()
+    if not model_variables:
+        return _ModelVariables(
+            cmip6_variable_ids=(variable_id,),
+            cmip7_variable_ids=_get_cmip7_variable_ids((variable_id,), realm),
+            cmip7_branded_variables=_get_branded_variable((variable_id,), realm),
+        )
+
+    entries: list[DReqVariableMapping] = []
+    for name in model_variables:
+        table_id, separator, cmip6_variable_id = name.partition(".")
+        if not separator:
+            raise ValueError(
+                f"model_variables entries are CMIP6 compound names such as 'Lmon.mrsos', not {name!r}"
+            )
+        entries.append(get_dreq_entry(table_id, cmip6_variable_id))
+
+    cmip6_variable_ids = tuple(name.partition(".")[2] for name in model_variables)
+    if len(set(cmip6_variable_ids)) != len(cmip6_variable_ids):
+        raise ValueError(f"model_variables names a CMIP6 variable_id more than once: {list(model_variables)}")
+    return _ModelVariables(
+        cmip6_variable_ids=cmip6_variable_ids,
+        cmip7_variable_ids=tuple(dict.fromkeys(entry.variable_id for entry in entries)),
+        cmip7_branded_variables=tuple(entry.branded_variable for entry in entries),
+    )
 
 
 def _get_cmip7_variable_ids(variable_ids: tuple[str, ...], realm: str) -> tuple[str, ...]:
@@ -652,6 +664,7 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
     relationship_variable_ids: tuple[str, ...],
     is_land: bool,
     related_variable_ids: tuple[str, ...] = (),
+    preference: SelectPreferredFacet | None = None,
 ) -> DataRequirement:
     """
     Build a CMIP data requirement with shared constraint logic.
@@ -669,27 +682,33 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
     group_by
         Columns to group executions by
     primary_variable_ids
-        Variables the diagnostic requires (primary + alternates + related), any one of which is enough
+        Variables the diagnostic requires (model variables + related), any one of which is enough
     relationship_variable_ids
         Variables used in relationship analyses
     is_land
         Whether this is a land diagnostic (determines supplementary variables)
     related_variable_ids
         Model variables the analysis variable is derived from (``related_vars``).
-        Unlike alternates these are all needed, so every one of them must be present.
+        Unlike the model variables these are all needed, so every one of them must be present.
+    preference
+        Which of several interchangeable model variables (``model_variables``) to keep
+        when a model publishes more than one of them.
 
     Returns
     -------
     :
         A DataRequirement for the given CMIP source type
     """
-    constraints: list[RequireFacets | AddSupplementaryDataset] = [
+    constraints: list[RequireFacets | SelectPreferredFacet | AddSupplementaryDataset] = [
         RequireFacets(
             "variable_id",
             primary_variable_ids,
             operator="any",
         ),
     ]
+
+    if preference is not None:
+        constraints.append(preference)
 
     if related_variable_ids:
         constraints.append(
@@ -733,13 +752,13 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
 
 def _build_test_data_spec(  # noqa: PLR0913
     all_variable_ids: tuple[str, ...],
-    realm: str,
+    cmip7_variable_ids: tuple[str, ...],
+    cmip7_branded_variables: tuple[str, ...],
     test_source_id: str,
     is_land: bool,
     obs_filters: Mapping[str, tuple[str, ...]],
     obs_source: str | None = "obs4mips",
     test_cmip7: Mapping[str, Any] | None = None,
-    unused_variable_ids: tuple[str, ...] = (),
 ) -> TestDataSpecification:
     """
     Build a TestDataSpecification for an ILAMB diagnostic.
@@ -747,9 +766,12 @@ def _build_test_data_spec(  # noqa: PLR0913
     Parameters
     ----------
     all_variable_ids
-        All variable IDs used by the diagnostic (primary + alternate + related + relationships)
-    realm
-        Diagnostic realm, ``"land"`` or ``"ocean"``
+        All CMIP6 variable IDs used by the diagnostic (model variables + related + relationships)
+    cmip7_variable_ids
+        The CMIP7 variable IDs to request, without the supplementary variables
+    cmip7_branded_variables
+        The CMIP7 branded variables to request, without the supplementary variables.
+        Of several interchangeable model variables only the most preferred one is requested.
     test_source_id
         CMIP source_id to use in test cases (e.g. "CanESM5")
     is_land
@@ -766,8 +788,6 @@ def _build_test_data_spec(  # noqa: PLR0913
         CMIP7 model to test with (default ACCESS-ESM1-6 r1i1p1f1), and ``xfail``, the reason the
         case is expected to fail (see :attr:`TestCase.xfail`), e.g. while its variables are not
         published as CMIP7 yet.
-    unused_variable_ids
-        Variables the diagnostic would not use when it runs, left out of the CMIP7 request.
 
     Returns
     -------
@@ -804,19 +824,16 @@ def _build_test_data_spec(  # noqa: PLR0913
 
     test_cmip7 = test_cmip7 or {}
     # volcello is only an optional supplement, and its monthly CMIP7 variant is a full 3D field.
-    cmip7_variable_ids = tuple(
-        v for v in test_variable_ids if v != "volcello" and v not in unused_variable_ids
-    )
+    cmip7_supplementary_vars = [v for v in supplementary_vars if v != "volcello"]
     cmip7_request = CMIP7Request(
         slug="cmip7",
         facets={
             "experiment_id": "historical",
             "source_id": test_cmip7.get("source_id", "ACCESS-ESM1-6"),
-            "variable_id": _get_cmip7_variable_ids(cmip7_variable_ids, realm),
+            "variable_id": tuple(sorted(set(cmip7_variable_ids) | set(cmip7_supplementary_vars))),
             # The fx supplements (areacella, sftlf, ...) are not in the realm's DReq tables.
             "branding_suffix": sorted(
-                {"ti-u-hxy-u"}
-                | {name.split("_", 1)[1] for name in _get_branded_variable(cmip7_variable_ids, realm)}
+                {"ti-u-hxy-u"} | {name.split("_", 1)[1] for name in cmip7_branded_variables}
             ),
             "variant_label": test_cmip7.get("variant_label", "r1i1p1f1"),
             "frequency": ["fx", "mon"],
@@ -988,6 +1005,22 @@ class ILAMBStandard(Diagnostic):
         test_source_id = ilamb_kwargs.pop("test_source_id", "CanESM5")
         test_cmip7 = ilamb_kwargs.pop("test_cmip7", None)
 
+        if "alternate_vars" in ilamb_kwargs:
+            raise ValueError(
+                f"{metric_name}: list the model variables in `model_variables`, most preferred first, "
+                "instead of `alternate_vars`"
+            )
+        model_variables = tuple(ilamb_kwargs.pop("model_variables", ()))
+        model_vars = _resolve_model_variables(self.variable_id, model_variables, realm)
+        # The solver passes only one of the model variables, which ilamb3 renames to the analysis variable
+        alternate_vars = [
+            v
+            for v in dict.fromkeys((*model_vars.cmip6_variable_ids, *model_vars.cmip7_variable_ids))
+            if v != self.variable_id
+        ]
+        if alternate_vars:
+            ilamb_kwargs["alternate_vars"] = alternate_vars
+
         diagnostic_version = ilamb_kwargs.pop("version", None)
         if diagnostic_version is not None:
             self.version = diagnostic_version
@@ -998,36 +1031,40 @@ class ILAMBStandard(Diagnostic):
         self.name = metric_name
         self.slug = self.name.lower().replace(" ", "-")
 
-        # Collect all variable IDs used by this diagnostic
-        all_variable_ids = (
-            self.variable_id,
-            *ilamb_kwargs.get("alternate_vars", []),
-            *ilamb_kwargs.get("related_vars", []),
-            *ilamb_kwargs.get("relationships", {}).keys(),
-        )
-
-        # Variables that the primary diagnostic requires (not relationship vars)
-        primary_variable_ids = (
-            self.variable_id,
-            *ilamb_kwargs.get("alternate_vars", []),
-            *ilamb_kwargs.get("related_vars", []),
-        )
-
-        # Look up CMIP7 branded variable names
-        branded_variables = _get_branded_variable(all_variable_ids, realm)
-
-        # Determine realm/region for CMIP7 filter
         is_land = realm == "land"
 
         relationship_variable_ids = tuple(ilamb_kwargs.get("relationships", {}).keys())
 
         # Model variables the analysis variable is computed from, e.g. by an `expression` transform.
-        # Unlike `alternate_vars` (synonyms) the diagnostic needs every one of them.
+        # Unlike `model_variables` (interchangeable) the diagnostic needs every one of them.
         related_variable_ids = tuple(ilamb_kwargs.get("related_vars", []))
 
-        cmip7_primary_variable_ids = _get_cmip7_variable_ids(primary_variable_ids, realm)
+        other_variable_ids = (*related_variable_ids, *relationship_variable_ids)
+
+        # Collect all variable IDs used by this diagnostic
+        all_variable_ids = (*model_vars.cmip6_variable_ids, *other_variable_ids)
+
+        # Variables that the primary diagnostic requires (not relationship vars)
+        primary_variable_ids = (*model_vars.cmip6_variable_ids, *related_variable_ids)
+
+        cmip7_primary_variable_ids = tuple(
+            dict.fromkeys(
+                (*model_vars.cmip7_variable_ids, *_get_cmip7_variable_ids(related_variable_ids, realm))
+            )
+        )
         cmip7_relationship_variable_ids = _get_cmip7_variable_ids(relationship_variable_ids, realm)
         cmip7_related_variable_ids = _get_cmip7_variable_ids(related_variable_ids, realm)
+        branded_variables = tuple(
+            dict.fromkeys(
+                (*model_vars.cmip7_branded_variables, *_get_branded_variable(other_variable_ids, realm))
+            )
+        )
+
+        # Of several model variables, keep only the most preferred one a model publishes
+        cmip6_preference = cmip7_preference = None
+        if len(model_variables) > 1:
+            cmip6_preference = SelectPreferredFacet("variable_id", model_vars.cmip6_variable_ids)
+            cmip7_preference = SelectPreferredFacet("branded_variable", model_vars.cmip7_branded_variables)
 
         # Create the data requirement for the dataset under test
         cmip6_requirement = _build_cmip_data_requirement(
@@ -1053,6 +1090,7 @@ class ILAMBStandard(Diagnostic):
             relationship_variable_ids=relationship_variable_ids,
             is_land=is_land,
             related_variable_ids=related_variable_ids,
+            preference=cmip6_preference,
         )
 
         cmip7_requirement = _build_cmip_data_requirement(
@@ -1068,6 +1106,7 @@ class ILAMBStandard(Diagnostic):
             relationship_variable_ids=cmip7_relationship_variable_ids,
             is_land=is_land,
             related_variable_ids=cmip7_related_variable_ids,
+            preference=cmip7_preference,
         )
 
         # Observational data requirement, normally ilamb3 expects the `sources` to
@@ -1119,17 +1158,24 @@ class ILAMBStandard(Diagnostic):
             "statistic",
         )
 
+        # The CMIP7 test case fetches only the most preferred model variable,
+        # so e.g. so-woa2023-surface does not download the full 3D so next to sos.
+        test_model_vars = _resolve_model_variables(self.variable_id, model_variables[:1], realm)
         self.test_data_spec = _build_test_data_spec(
             all_variable_ids=all_variable_ids,
-            realm=realm,
+            cmip7_variable_ids=(
+                *test_model_vars.cmip7_variable_ids,
+                *_get_cmip7_variable_ids(other_variable_ids, realm),
+            ),
+            cmip7_branded_variables=(
+                *test_model_vars.cmip7_branded_variables,
+                *_get_branded_variable(other_variable_ids, realm),
+            ),
             test_source_id=test_source_id,
             is_land=is_land,
             obs_filters=filters,
             obs_source=obs_source,
             test_cmip7=test_cmip7,
-            unused_variable_ids=_variables_replaced_by_alternates(
-                self.variable_id, ilamb_kwargs.get("alternate_vars", []), realm
-            ),
         )
 
         # Setup ILAMB data and options
@@ -1206,24 +1252,6 @@ class ILAMBStandard(Diagnostic):
         if cmip_source == SourceDatasetType.CMIP7 and "member_id" not in model_datasets.columns:
             model_datasets = model_datasets.copy()
             model_datasets["member_id"] = model_datasets["variant_label"]
-
-        # When both a 3D primary variable (e.g. thetao) and its 2D alternate
-        # (e.g. tos) are present, drop the primary so ilamb3 uses the alternate.
-        # This avoids two problems with merging datasets of different time ranges:
-        # 1) time_bnds gets NaN-filled for the shorter variable's missing steps,
-        #    corrupting the time frequency calculation in ilamb3
-        # 2) The 3D variable may not cover the reference period (e.g. thetao
-        #    covers 1850-1860 but WOA2023 reference covers 2005-2014)
-        # The alternate surface variable is equivalent after select_depth and
-        # typically has full temporal coverage.
-        alternate_vars = ilamb_kwargs.get("alternate_vars", [])
-        if alternate_vars:
-            available_alternates = [v for v in alternate_vars if v in model_datasets["variable_id"].values]
-            if available_alternates and self.variable_id in model_datasets["variable_id"].values:
-                model_datasets = model_datasets[model_datasets["variable_id"] != self.variable_id]
-
-        if cmip_source == SourceDatasetType.CMIP7:
-            model_datasets = _keep_primary_branding(model_datasets, self.variable_id, self.realm)
 
         # In ilamb3, this is run with all the models that we know about to
         # create different colors. For REF this will at least make the model

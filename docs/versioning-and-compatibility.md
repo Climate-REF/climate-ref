@@ -116,6 +116,9 @@ The value is append-only: always increment, never reuse a previous number.
 - Older versions remain reachable for audit via
   ``include_superseded=True`` on any results filter, e.g. ``ExecutionGroupFilter(include_superseded=True)``.
 
+Record the bump in a `diagnostics` changelog fragment (see `changelog/README.md`),
+so the release notes list the diagnostics that will be rerun.
+
 ### Provider version stamping
 
 Each ``Execution`` records ``provider_version`` -- a snapshot of the worker-installed ``DiagnosticProvider.version`` at run time.

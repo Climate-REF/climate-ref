@@ -43,8 +43,9 @@ from loguru import logger
 from climate_ref.datasets import CMIP7DatasetAdapter
 from climate_ref.datasets.cmip7_parsers import parse_cmip7_dataset
 from climate_ref.solve_helpers import write_catalog_parquet
-from climate_ref_core.data_request import dreq_entries
 
+DATA_REQUEST_VARIABLES = Path(__file__).resolve().parent / "cmip6_cmip7_variable_map.json"
+"""The Data Request variables the providers use, written by ``extract-data-request-mappings.py``."""
 STAC_INDICES = ("discovery.east.esgf.io", "discovery.west.esgf.io")
 PAGE_SIZE = 200
 READ_BLOCK_SIZE = 2**16
@@ -378,9 +379,9 @@ def main(
     per_host: int = typer.Option(12, help="Headers read at the same time from one data node"),
 ) -> None:
     """Generate the CMIP7 parquet catalog from CMIP7 data published on ESGF."""
-    mappings = dreq_entries()
-    wanted = {(entry.branded_variable, entry.frequency, entry.region) for entry in mappings}
-    variable_ids = {entry.variable_id for entry in mappings}
+    mappings = json.loads(DATA_REQUEST_VARIABLES.read_text())["variables"].values()
+    wanted = {(entry["branded_variable"], entry["frequency"], entry["region"]) for entry in mappings}
+    variable_ids = {entry["variable_id"] for entry in mappings}
 
     items = _search_any_index(variable_ids)
     if not items:

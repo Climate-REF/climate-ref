@@ -457,7 +457,7 @@ class TestVersionOverride:
 
 
 class TestCmip7VariableRequirements:
-    def test_uses_dreq_variable_id_without_changing_cmip6(self):
+    def test_derived_analysis_variable_requires_only_its_inputs(self):
         diagnostic = next(
             diagnostic for diagnostic in provider.diagnostics() if diagnostic.slug == "amoc-rapid"
         )
@@ -465,8 +465,8 @@ class TestCmip7VariableRequirements:
         cmip6_requirement = diagnostic.data_requirements[0][0]
         cmip7_requirement = diagnostic.data_requirements[1][0]
 
-        assert cmip6_requirement.constraints[0].required_facets == ("amoc", "msftmz")
-        assert cmip7_requirement.constraints[0].required_facets == ("amoc", "msftm")
+        assert cmip6_requirement.constraints[0].required_facets == ("msftmz",)
+        assert cmip7_requirement.constraints[0].required_facets == ("msftm",)
 
 
 class TestModelVariables:
@@ -522,16 +522,34 @@ class TestModelVariables:
                 alternate_vars=["ts"],
             )
 
+    def test_duplicate_model_variables_are_rejected(self):
+        with pytest.raises(ValueError, match="more than once"):
+            ILAMBStandard(
+                realm="land",
+                metric_name="test-duplicate",
+                sources={"mrsol": "ilamb/test/Site/tas.nc"},
+                ilamb_registry="ilamb-test",
+                model_variables=["mrsos", "mrsos"],
+            )
+
     @pytest.mark.parametrize(
-        ("model_variables", "match"),
+        "kwargs",
         [
-            (["mrsos"], "compound names"),
-            (["Amon.ta", "CFmon.ta"], "more than once"),
+            pytest.param({}, id="analysis_variable"),
+            pytest.param({"model_variables": ["Lmon.mrsos"]}, id="model_variables"),
+            pytest.param({"related_vars": ["ta"]}, id="related_vars"),
+            pytest.param({"relationships": {"ta": "ilamb/test/Grid/ta.nc"}}, id="relationships"),
         ],
     )
-    def test_invalid_model_variables(self, model_variables, match):
-        with pytest.raises(ValueError, match=match):
-            standard._resolve_model_variables("ta", model_variables, "land")
+    def test_variable_without_a_cmip7_branded_variable_is_rejected(self, kwargs):
+        with pytest.raises(KeyError, match="CMIP7_BRANDED_VARIABLES"):
+            ILAMBStandard(
+                realm="land",
+                metric_name="test-undeclared",
+                sources={"hfls": "ilamb/test/Site/tas.nc"},
+                ilamb_registry="ilamb-test",
+                **kwargs,
+            )
 
     def test_solver_keeps_the_preferred_variant(self, diagnostic):
         rows = [
@@ -670,6 +688,7 @@ class TestObs4MIPsSourceRewrite:
                 }
             },
             analysis_variable="amoc",
+            related_vars=["msftmz"],
         )
 
     def _definition(self, tmp_path, *refs: tuple[str, str, int]):

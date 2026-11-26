@@ -40,8 +40,8 @@ mrsos-WangMao:
   # Model variables, most preferred first: a model is compared using the first one it publishes.
   # CMIP7 calls both `mrsol` and tells them apart by branding (tavg-d10cm-hxy-lnd, tavg-sl-hxy-lnd).
   model_variables:
-  - Lmon.mrsos  # top 10 cm
-  - Emon.mrsol  # all soil layers, compared at the top one (select_depth)
+  - mrsos  # top 10 cm
+  - mrsol  # all soil layers, compared at the top one (select_depth)
   transforms:
   - select_depth:
       value: 0

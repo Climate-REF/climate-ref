@@ -17,7 +17,6 @@ from climate_ref_core.data import PackagedResource
 # Every data file the REF reads out of an installed package at runtime.
 BUNDLED_FILES = [
     ("climate_ref_core.pycmec", "cv_cmip7_aft.yaml"),
-    ("climate_ref_core", "data/cmip6_cmip7_variable_map.json"),
     ("climate_ref", "default_ignore_datasets.yaml"),
     ("climate_ref.dataset_registry", "obs4ref_reference.txt"),
     ("climate_ref.dataset_registry", "sample_data.txt"),

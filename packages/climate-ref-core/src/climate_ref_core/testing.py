@@ -81,7 +81,9 @@ class TestCase:
 
     Fetching tolerates its data not being found, ``mint``, ``run`` and ``replay`` skip it,
     and its regression test is marked as a strict ``xfail``.
-    Remove it once the case works, which a newly fetched catalog or an XPASS points out.
+    Without a baseline that test cannot pass, so fetching reports when data resolves
+    for a case that has no committed catalog, and ``--strict`` fails on it.
+    Remove it then, or once the reason it fails is fixed.
     """
 
 

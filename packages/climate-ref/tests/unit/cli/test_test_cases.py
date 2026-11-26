@@ -531,6 +531,36 @@ class TestFetchTestDataCommand:
 
         assert "catalog points at missing files" in result.stderr
 
+    def test_fetch_strict_fails_when_an_expected_failure_gains_data(self, invoke_cli, mocker, tmp_path):
+        """A strict xfail without a baseline cannot XPASS, so the fetch reports the data instead."""
+        self._expected_failure(mocker, requests=[MagicMock()])
+        paths = MagicMock(catalog=tmp_path / "catalog.yaml", catalog_paths=tmp_path / "paths.yaml")
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog", return_value=(MagicMock(), True)
+        )
+        mocker.patch("climate_ref.cli.test_cases.discovery.validate_catalog_paths")
+
+        result = invoke_cli(["test-cases", "fetch", "--strict"], expected_exit_code=1)
+
+        assert "Data now resolves for cmip7, which is expected to fail (no CMIP7 data yet)" in result.stderr
+        assert "example/test-diag/cmip7" in result.stderr
+
+    def test_fetch_reports_an_expected_failure_gaining_data_without_failing(
+        self, invoke_cli, mocker, tmp_path
+    ):
+        self._expected_failure(mocker, requests=[MagicMock()])
+        paths = MagicMock(catalog=tmp_path / "catalog.yaml", catalog_paths=tmp_path / "paths.yaml")
+        mocker.patch("climate_ref.cli.test_cases.discovery.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog", return_value=(MagicMock(), True)
+        )
+        mocker.patch("climate_ref.cli.test_cases.discovery.validate_catalog_paths")
+
+        result = invoke_cli(["test-cases", "fetch"])
+
+        assert "expected to fail now have data: example/test-diag/cmip7" in result.stderr
+
     def test_fetch_strict_accepts_an_expected_failure_without_requests_or_catalog(
         self, invoke_cli, mocker, tmp_path
     ):

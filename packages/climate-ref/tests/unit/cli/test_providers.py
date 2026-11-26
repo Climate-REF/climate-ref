@@ -36,6 +36,7 @@ class TestProvidersList:
         mock_provider.slug = "conda-test"
         mock_provider.version = "1.0.0"
         mock_provider.env_path = tmp_path / "nonexistent_env"
+        mock_provider.env_is_installed.return_value = False
         mock_provider.get_data_path.return_value = None
 
         mock_registry = mocker.MagicMock(spec=ProviderRegistry)
@@ -74,6 +75,7 @@ class TestProvidersList:
         mock_provider.slug = "installed-conda"
         mock_provider.version = "1.0.0"
         mock_provider.env_path = env_path
+        mock_provider.env_is_installed.return_value = True
         mock_provider.get_data_path.return_value = None
 
         mock_registry = mocker.MagicMock(spec=ProviderRegistry)

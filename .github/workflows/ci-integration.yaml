@@ -16,22 +16,25 @@ name: CI Integration Tests
 on:
   # Allow manual triggering of this workflow
   workflow_dispatch:
-  # Run on each push to main and tagged version
+  # Run on each push to main.
   push:
     branches: [main]
-    tags: ['v*']
-  # Runs every day at 2:15am (UTC) (~ midday in AEST)
+  # Weekly run to catch breakage from outside the repo (ESGF, downloaded data, runner state)
+  # when nothing has been pushed. Runs Saturdays at 15:02 UTC; failures open an issue.
   schedule:
-    - cron: '2 15 * * *'
+    - cron: '2 15 * * 6'
 
 permissions:
   contents: read
 
 # Serialise integration runs so only one `populate-cache` ever writes to the shared ESGF/dataset cache at a time.
-# Queue rather than cancel the in-flight run
+# A push to main cancels the in-flight run (whatever triggered it), as only the latest main commit is worth testing.
+# Other triggers wait for the in-flight run instead.
+# Either way, GitHub keeps at most one pending run per group, so a newer queued run replaces an older pending one.
+# Cancelling mid-fetch is safe: the orphaned-download cleanup step runs with `if: always()`.
 concurrency:
   group: ${{ github.workflow }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
 jobs:
   populate-cache:
@@ -128,8 +131,9 @@ jobs:
       matrix:
         provider: [example, esmvaltool, ilamb, pmp]
         include:
-          # PMP has 21 slow cases at roughly 5 minutes each, so 60 minutes is not enough.
           - provider: pmp
+            timeout: 120
+          - provider: esmvaltool
             timeout: 120
     name: test-cases (${{ matrix.provider }})
     defaults:
@@ -156,3 +160,30 @@ jobs:
             test-case-outputs/
             test-case-results.xml
           retention-days: 7
+
+  # Open an issue when the scheduled run fails, or comment on the existing one if it is still open.
+  report-failure:
+    needs: [populate-cache, tests-slow, test-cases]
+    if: failure() && github.event_name == 'schedule' && github.repository == 'Climate-REF/climate-ref'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      SHA: ${{ github.sha }}
+      TITLE: "Scheduled integration tests failed"
+    steps:
+      - name: Create or update failure issue
+        run: |
+          body="The scheduled [CI Integration Tests run]($RUN_URL) failed on \`$SHA\`."
+          existing=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$TITLE" --body "$body
+
+          Close this issue once the cause is fixed; the next failure will open a new one."
+          fi

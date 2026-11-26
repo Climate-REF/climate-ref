@@ -3,7 +3,7 @@ Extract CMIP6-to-CMIP7 variable mappings from a variable mapping file exported f
 
 Downloads a JSON file from GitHub and extracts a subset
 containing only the variables used by Climate REF diagnostic providers.
-The output is written to the climate-ref-core package data directory.
+The output is written next to this script, for `generate_cmip7_catalog.py` to select test data with.
 
 Usage
 -----
@@ -52,24 +52,35 @@ import pathlib
 import urllib.request
 from collections import Counter, defaultdict
 
+import attrs
 import typer
-
-from climate_ref_core.data_request import DReqVariableMapping
 
 app = typer.Typer(help="Extract CMIP6-to-CMIP7 variable mappings from the CMIP7 Data Request.")
 
 DATA_REQUEST_VERSION = "v1.2.2.3"
 DATA_REQUEST_URL = f"https://raw.githubusercontent.com/CMIP-Data-Request/CMIP7_DReq_Software/refs/heads/main/scripts/examples/variables_{DATA_REQUEST_VERSION}_cmip6names.json"
 
-DEFAULT_OUTPUT_PATH = (
-    pathlib.Path(__file__).resolve().parent.parent
-    / "packages"
-    / "climate-ref-core"
-    / "src"
-    / "climate_ref_core"
-    / "data"
-    / "cmip6_cmip7_variable_map.json"
-)
+DEFAULT_OUTPUT_PATH = pathlib.Path(__file__).resolve().parent / "cmip6_cmip7_variable_map.json"
+
+
+@attrs.frozen
+class DReqVariableMapping:
+    """A variable of the Data Request under its CMIP6 and its CMIP7 name."""
+
+    table_id: str
+    variable_id: str
+    cmip6_compound_name: str
+    cmip7_compound_name: str
+    branded_variable: str
+    branding_suffix: str
+    temporal_label: str
+    vertical_label: str
+    horizontal_label: str
+    area_label: str
+    realm: str
+    region: str
+    frequency: str
+
 
 # Variable IDs used by Climate REF diagnostic providers.
 # Sourced from DataRequirement definitions across ESMValTool, PMP, ILAMB, and example providers.
@@ -308,7 +319,7 @@ def main(
                 "Regenerate with: uv run python scripts/extract-data-request-mappings.py "
             ),
         },
-        "variables": {k: v.to_dict() for k, v in sorted(filtered.items())},
+        "variables": {k: attrs.asdict(v) for k, v in sorted(filtered.items())},
     }
 
     output.parent.mkdir(parents=True, exist_ok=True)

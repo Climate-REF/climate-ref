@@ -3,7 +3,7 @@ import os
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any
 
 import dask.config
 import ilamb3
@@ -22,7 +22,6 @@ from loguru import logger
 
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets, SelectPreferredFacet
 from climate_ref_core.data import resolve_cache_dir
-from climate_ref_core.data_request import DReqVariableMapping, get_dreq_entry
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import (
     DatasetCollection,
@@ -45,10 +44,6 @@ from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_ilamb.datasets import (
     registry_to_collection,
 )
-
-# CMIP6 tables to search, ordered by likelihood for land vs ocean registries
-_LAND_TABLES = ("Lmon", "Emon", "LImon", "Amon", "CFmon", "AERmonZ", "EmonZ")
-_OCEAN_TABLES = ("Omon", "SImon", "Ofx")
 
 
 class _RelationshipTimeTransform(ILAMBTransform):
@@ -290,108 +285,56 @@ class _CoarsenSpatial(ILAMBTransform):
 ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_coarsen_spatial", _CoarsenSpatial)
 
 
-def _get_branded_variable(
-    variable_ids: tuple[str, ...],
-    realm: str,
-) -> tuple[str, ...]:
+CMIP7_BRANDED_VARIABLES: dict[str, str] = {
+    "burntFractionAll": "burntFractionAll_tavg-u-hxy-u",
+    "cSoil": "cSoil_tavg-u-hxy-lnd",
+    "evspsbl": "evspsbl_tavg-u-hxy-u",
+    "gpp": "gpp_tavg-u-hxy-lnd",
+    "lai": "lai_tavg-u-hxy-lnd",
+    "mrro": "mrro_tavg-u-hxy-lnd",
+    "mrsol": "mrsol_tavg-sl-hxy-lnd",
+    "mrsos": "mrsol_tavg-d10cm-hxy-lnd",
+    "msftmz": "msftm_tavg-ol-hyb-sea",
+    "nbp": "nbp_tavg-u-hxy-lnd",
+    "pr": "pr_tavg-u-hxy-u",
+    "snc": "snc_tavg-u-hxy-lnd",
+    "so": "so_tavg-ol-hxy-sea",
+    "sos": "sos_tavg-u-hxy-sea",
+    "tas": "tas_tavg-h2m-hxy-u",
+    "thetao": "thetao_tavg-ol-hxy-sea",
+    "tos": "tos_tavg-u-hxy-sea",
+}
+"""
+The CMIP7 branded variable each CMIP6 model variable is compared as, keyed by CMIP6 ``variable_id``.
+
+CMIP7 folds some CMIP6 variables into one ``variable_id`` that only the branding tells apart
+(``mrsos`` and ``mrsol`` both become ``mrsol``).
+"""
+
+
+def _cmip7_names(cmip6_variable_ids: Sequence[str]) -> tuple[tuple[str, ...], tuple[str, ...]]:
     """
-    Look up CMIP7 branded variable names for a set of CMIP6 variable IDs.
-
-    Tries the most relevant CMIP6 tables based on realm (land vs ocean).
-    Variables without a Data Request mapping are silently skipped.
-
-    Parameters
-    ----------
-    variable_ids
-        CMIP6 variable IDs to look up
-    realm
-        Diagnostic realm, ``"land"`` or ``"ocean"``
+    Name CMIP6 model variables in CMIP7.
 
     Returns
     -------
     :
-        Branded variable names found in the Data Request
+        The CMIP7 ``variable_id`` values, deduplicated, and the CMIP7 branded variables
+
+    Raises
+    ------
+    KeyError
+        If a variable is not in :data:`CMIP7_BRANDED_VARIABLES`
     """
     branded: list[str] = []
-    for var_id, entries in _lookup_dreq_entries(variable_ids, realm):
-        if not entries:
-            logger.debug(f"No CMIP7 branded variable name found for {var_id}")
-        branded.extend(entry.branded_variable for entry in entries)
-
-    return tuple(branded)
-
-
-def _lookup_dreq_entries(
-    variable_ids: tuple[str, ...], realm: str
-) -> list[tuple[str, list[DReqVariableMapping]]]:
-    """Find the Data Request entries for each CMIP6 variable ID across the realm's tables."""
-    tables = _LAND_TABLES if realm == "land" else _OCEAN_TABLES
-    found: list[tuple[str, list[DReqVariableMapping]]] = []
-    for var_id in variable_ids:
-        entries: list[DReqVariableMapping] = []
-        for table in tables:
-            try:
-                entries.append(get_dreq_entry(table, var_id))
-            except KeyError:
-                continue
-        found.append((var_id, entries))
-    return found
-
-
-class _ModelVariables(NamedTuple):
-    """The model variables a diagnostic accepts, most preferred first."""
-
-    cmip6_variable_ids: tuple[str, ...]
-    cmip7_variable_ids: tuple[str, ...]
-    cmip7_branded_variables: tuple[str, ...]
-
-
-def _resolve_model_variables(variable_id: str, model_variables: Sequence[str], realm: str) -> _ModelVariables:
-    """
-    Name a diagnostic's model variables in CMIP6 and CMIP7.
-
-    ``model_variables`` lists the model variables a diagnostic accepts, most preferred first,
-    as CMIP6 compound names (``Lmon.mrsos``).
-    Each names exactly one CMIP6 variable and one CMIP7 branded variable,
-    which tells apart variables the Data Request folds into one CMIP7 ``variable_id``
-    (``Lmon.mrsos`` and ``Emon.mrsol`` both become ``mrsol``).
-    Without ``model_variables`` the diagnostic only accepts its analysis variable ``variable_id``,
-    whose table is looked up in the realm's CMIP6 tables.
-    """
-    if not model_variables:
-        return _ModelVariables(
-            cmip6_variable_ids=(variable_id,),
-            cmip7_variable_ids=_get_cmip7_variable_ids((variable_id,), realm),
-            cmip7_branded_variables=_get_branded_variable((variable_id,), realm),
-        )
-
-    entries: list[DReqVariableMapping] = []
-    for name in model_variables:
-        table_id, separator, cmip6_variable_id = name.partition(".")
-        if not separator:
-            raise ValueError(
-                f"model_variables entries are CMIP6 compound names such as 'Lmon.mrsos', not {name!r}"
+    for variable_id in cmip6_variable_ids:
+        if variable_id not in CMIP7_BRANDED_VARIABLES:
+            raise KeyError(
+                f"No CMIP7 branded variable for {variable_id!r}: add it to CMIP7_BRANDED_VARIABLES"
             )
-        entries.append(get_dreq_entry(table_id, cmip6_variable_id))
-
-    cmip6_variable_ids = tuple(name.partition(".")[2] for name in model_variables)
-    if len(set(cmip6_variable_ids)) != len(cmip6_variable_ids):
-        raise ValueError(f"model_variables names a CMIP6 variable_id more than once: {list(model_variables)}")
-    return _ModelVariables(
-        cmip6_variable_ids=cmip6_variable_ids,
-        cmip7_variable_ids=tuple(dict.fromkeys(entry.variable_id for entry in entries)),
-        cmip7_branded_variables=tuple(entry.branded_variable for entry in entries),
-    )
-
-
-def _get_cmip7_variable_ids(variable_ids: tuple[str, ...], realm: str) -> tuple[str, ...]:
-    """Translate CMIP6 variable IDs to their CMIP7 Data Request IDs."""
-    translated: list[str] = []
-    for var_id, entries in _lookup_dreq_entries(variable_ids, realm):
-        cmip7_id = entries[0].variable_id if entries else var_id
-        if cmip7_id not in translated:
-            translated.append(cmip7_id)
-    return tuple(translated)
+        branded.append(CMIP7_BRANDED_VARIABLES[variable_id])
+    variable_ids = tuple(dict.fromkeys(name.partition("_")[0] for name in branded))
+    return variable_ids, tuple(branded)
 
 
 def _get_cmip_source_type(
@@ -831,7 +774,7 @@ def _build_test_data_spec(  # noqa: PLR0913
             "experiment_id": "historical",
             "source_id": test_cmip7.get("source_id", "ACCESS-ESM1-6"),
             "variable_id": tuple(sorted(set(cmip7_variable_ids) | set(cmip7_supplementary_vars))),
-            # The fx supplements (areacella, sftlf, ...) are not in the realm's DReq tables.
+            # The fx supplements (areacella, sftlf, ...) are not in CMIP7_BRANDED_VARIABLES.
             "branding_suffix": sorted(
                 {"ti-u-hxy-u"} | {name.split("_", 1)[1] for name in cmip7_branded_variables}
             ),
@@ -959,8 +902,7 @@ class ILAMBStandard(Diagnostic):
         ----------
         realm
             Diagnostic realm, ``"land"`` or ``"ocean"``.
-            Drives the CMIP6 table set / CMIP7 branded-variable lookup and the
-            supplementary land vs ocean ancillary variables.
+            Selects the land vs ocean supplementary variables.
         metric_name
             Name of the ILAMB diagnostic, used to build the REF slug.
         sources
@@ -1010,12 +952,20 @@ class ILAMBStandard(Diagnostic):
                 f"{metric_name}: list the model variables in `model_variables`, most preferred first, "
                 "instead of `alternate_vars`"
             )
+        # Model variables the analysis variable is computed from, e.g. by an `expression` transform.
+        # Unlike `model_variables` (interchangeable) the diagnostic needs every one of them.
+        related_variable_ids = tuple(ilamb_kwargs.get("related_vars", []))
+
         model_variables = tuple(ilamb_kwargs.pop("model_variables", ()))
-        model_vars = _resolve_model_variables(self.variable_id, model_variables, realm)
+        if len(set(model_variables)) != len(model_variables):
+            raise ValueError(f"{metric_name}: model_variables lists a variable more than once")
+        # By default a model publishes the analysis variable, unless it is derived from `related_vars`
+        model_variable_ids = model_variables or (() if related_variable_ids else (self.variable_id,))
+        cmip7_model_variable_ids, cmip7_model_branded = _cmip7_names(model_variable_ids)
         # The solver passes only one of the model variables, which ilamb3 renames to the analysis variable
         alternate_vars = [
             v
-            for v in dict.fromkeys((*model_vars.cmip6_variable_ids, *model_vars.cmip7_variable_ids))
+            for v in dict.fromkeys((*model_variable_ids, *cmip7_model_variable_ids))
             if v != self.variable_id
         ]
         if alternate_vars:
@@ -1034,37 +984,27 @@ class ILAMBStandard(Diagnostic):
         is_land = realm == "land"
 
         relationship_variable_ids = tuple(ilamb_kwargs.get("relationships", {}).keys())
-
-        # Model variables the analysis variable is computed from, e.g. by an `expression` transform.
-        # Unlike `model_variables` (interchangeable) the diagnostic needs every one of them.
-        related_variable_ids = tuple(ilamb_kwargs.get("related_vars", []))
-
         other_variable_ids = (*related_variable_ids, *relationship_variable_ids)
 
         # Collect all variable IDs used by this diagnostic
-        all_variable_ids = (*model_vars.cmip6_variable_ids, *other_variable_ids)
+        all_variable_ids = (*model_variable_ids, *other_variable_ids)
 
         # Variables that the primary diagnostic requires (not relationship vars)
-        primary_variable_ids = (*model_vars.cmip6_variable_ids, *related_variable_ids)
+        primary_variable_ids = (*model_variable_ids, *related_variable_ids)
 
+        cmip7_related_variable_ids, cmip7_related_branded = _cmip7_names(related_variable_ids)
+        cmip7_relationship_variable_ids, cmip7_relationship_branded = _cmip7_names(relationship_variable_ids)
         cmip7_primary_variable_ids = tuple(
-            dict.fromkeys(
-                (*model_vars.cmip7_variable_ids, *_get_cmip7_variable_ids(related_variable_ids, realm))
-            )
+            dict.fromkeys((*cmip7_model_variable_ids, *cmip7_related_variable_ids))
         )
-        cmip7_relationship_variable_ids = _get_cmip7_variable_ids(relationship_variable_ids, realm)
-        cmip7_related_variable_ids = _get_cmip7_variable_ids(related_variable_ids, realm)
-        branded_variables = tuple(
-            dict.fromkeys(
-                (*model_vars.cmip7_branded_variables, *_get_branded_variable(other_variable_ids, realm))
-            )
-        )
+        cmip7_other_branded = (*cmip7_related_branded, *cmip7_relationship_branded)
+        branded_variables = tuple(dict.fromkeys((*cmip7_model_branded, *cmip7_other_branded)))
 
         # Of several model variables, keep only the most preferred one a model publishes
         cmip6_preference = cmip7_preference = None
         if len(model_variables) > 1:
-            cmip6_preference = SelectPreferredFacet("variable_id", model_vars.cmip6_variable_ids)
-            cmip7_preference = SelectPreferredFacet("branded_variable", model_vars.cmip7_branded_variables)
+            cmip6_preference = SelectPreferredFacet("variable_id", model_variable_ids)
+            cmip7_preference = SelectPreferredFacet("branded_variable", cmip7_model_branded)
 
         # Create the data requirement for the dataset under test
         cmip6_requirement = _build_cmip_data_requirement(
@@ -1160,17 +1100,15 @@ class ILAMBStandard(Diagnostic):
 
         # The CMIP7 test case fetches only the most preferred model variable,
         # so e.g. so-woa2023-surface does not download the full 3D so next to sos.
-        test_model_vars = _resolve_model_variables(self.variable_id, model_variables[:1], realm)
+        test_variable_ids, test_branded = _cmip7_names(model_variable_ids[:1])
         self.test_data_spec = _build_test_data_spec(
             all_variable_ids=all_variable_ids,
             cmip7_variable_ids=(
-                *test_model_vars.cmip7_variable_ids,
-                *_get_cmip7_variable_ids(other_variable_ids, realm),
+                *test_variable_ids,
+                *cmip7_related_variable_ids,
+                *cmip7_relationship_variable_ids,
             ),
-            cmip7_branded_variables=(
-                *test_model_vars.cmip7_branded_variables,
-                *_get_branded_variable(other_variable_ids, realm),
-            ),
+            cmip7_branded_variables=(*test_branded, *cmip7_other_branded),
             test_source_id=test_source_id,
             is_land=is_land,
             obs_filters=filters,

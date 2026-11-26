@@ -11,6 +11,7 @@ from climate_ref.results.datasets import DatasetsReader
 from climate_ref.results.diagnostics import DiagnosticsReader
 from climate_ref.results.executions import ExecutionsReader
 from climate_ref.results.resources import ResourcesReader
+from climate_ref.results.solves import SolvesReader
 from climate_ref.results.values import ValuesReader
 
 
@@ -27,6 +28,7 @@ class Reader:
     * [datasets][climate_ref.results.reader.Reader.datasets]: the datasets that have been ingested.
     * [diagnostics][climate_ref.results.reader.Reader.diagnostics]: diagnostics and how many groups succeeded.
     * [resources][climate_ref.results.reader.Reader.resources]: CPU and memory use of executions.
+    * [solves][climate_ref.results.reader.Reader.solves]: past solves and what each one ran.
     * [artifacts][climate_ref.results.reader.Reader.artifacts]: paths of output files (needs ``results``).
 
     Parameters
@@ -97,6 +99,11 @@ class Reader:
     def resources(self) -> ResourcesReader:
         """Reader for the CPU and memory use of executions."""
         return ResourcesReader(self._db, session=self._session)
+
+    @functools.cached_property
+    def solves(self) -> SolvesReader:
+        """Reader for past solves, their executions and the datasets each one saw first."""
+        return SolvesReader(self._db, session=self._session)
 
     @functools.cached_property
     def artifacts(self) -> ArtifactsReader:

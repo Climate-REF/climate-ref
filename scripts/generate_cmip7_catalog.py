@@ -228,12 +228,18 @@ def read_header(url: str, path: str) -> dict[str, Any]:
 
 
 def _load_cache(cache: Path) -> dict[str, dict[str, Any]]:
+    if not cache.exists():
+        return {}
+    complete, _, partial = cache.read_text().rpartition("\n")
+    if partial:
+        # Every record ends in a newline, so this one was cut off by an interrupted run
+        logger.warning(f"Dropping an incomplete record at the end of {cache}")
+        cache.write_text(f"{complete}\n" if complete else "")
     rows: dict[str, dict[str, Any]] = {}
-    if cache.exists():
-        for line in cache.read_text().splitlines():
-            if line.strip():
-                record = json.loads(line)
-                rows[record["path"]] = record
+    for line in complete.splitlines():
+        if line.strip():
+            record = json.loads(line)
+            rows[record["path"]] = record
     return rows
 
 

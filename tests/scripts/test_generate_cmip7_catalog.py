@@ -149,3 +149,12 @@ def test_complete_datasets_leaves_out_partly_read_datasets(script):
     rows = {f"{{data_dir}}/{path}": {"path": path} for path in ("a/1.nc", "a/2.nc", "b/1.nc")}
 
     assert script.complete_datasets(files_by_dataset, rows) == [{"path": "a/1.nc"}, {"path": "a/2.nc"}]
+
+
+def test_load_cache_drops_a_record_cut_off_by_an_interrupted_run(script, tmp_path):
+    cache = tmp_path / "headers.jsonl"
+    cache.write_text('{"path": "a.nc"}\n{"path": "b.n')
+
+    assert list(script._load_cache(cache)) == ["a.nc"]
+    # The next append starts on its own line
+    assert cache.read_text() == '{"path": "a.nc"}\n'

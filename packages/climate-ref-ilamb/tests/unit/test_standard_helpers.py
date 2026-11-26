@@ -23,6 +23,8 @@ from ilamb3.dataset import coarsen_dataset, convert
 from ilamb3.run import find_related_variables, setup_transforms
 from ilamb3.transform.amoc import msftmz_to_rapid
 
+from climate_ref.solver import solve_executions
+from climate_ref_core.constraints import SelectPreferredFacet
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 
@@ -455,7 +457,7 @@ class TestVersionOverride:
 
 
 class TestCmip7VariableRequirements:
-    def test_uses_dreq_variable_id_without_changing_cmip6(self):
+    def test_derived_analysis_variable_requires_only_its_inputs(self):
         diagnostic = next(
             diagnostic for diagnostic in provider.diagnostics() if diagnostic.slug == "amoc-rapid"
         )
@@ -463,8 +465,149 @@ class TestCmip7VariableRequirements:
         cmip6_requirement = diagnostic.data_requirements[0][0]
         cmip7_requirement = diagnostic.data_requirements[1][0]
 
-        assert cmip6_requirement.constraints[0].required_facets == ("amoc", "msftmz")
-        assert cmip7_requirement.constraints[0].required_facets == ("amoc", "msftm")
+        assert cmip6_requirement.constraints[0].required_facets == ("msftmz",)
+        assert cmip7_requirement.constraints[0].required_facets == ("msftm",)
+
+
+class TestModelVariables:
+    """
+    ``model_variables`` names the interchangeable model variables, most preferred first.
+
+    CMIP7 folds ``Lmon.mrsos`` and ``Emon.mrsol`` into one ``mrsol`` that only the branding tells apart.
+    """
+
+    @pytest.fixture
+    def diagnostic(self):
+        return next(d for d in provider.diagnostics() if d.slug == "mrsos-wangmao")
+
+    @staticmethod
+    def _preference(requirement):
+        (preference,) = [c for c in requirement.constraints if isinstance(c, SelectPreferredFacet)]
+        return preference
+
+    def test_cmip6_prefers_the_top_10cm_variable(self, diagnostic):
+        preference = self._preference(diagnostic.data_requirements[0][0])
+
+        assert preference.dimension == "variable_id"
+        assert preference.preference == ("mrsos", "mrsol")
+
+    def test_cmip7_tells_the_variants_apart_by_branding(self, diagnostic):
+        requirement = diagnostic.data_requirements[1][0]
+        preference = self._preference(requirement)
+
+        assert preference.dimension == "branded_variable"
+        assert preference.preference == ("mrsol_tavg-d10cm-hxy-lnd", "mrsol_tavg-sl-hxy-lnd")
+        assert requirement.filters[0].facets["branded_variable"] == preference.preference
+
+    def test_ilamb3_renames_the_variable_to_the_analysis_variable(self, diagnostic):
+        assert diagnostic.variable_id == "mrsol"
+        assert diagnostic.ilamb_kwargs["alternate_vars"] == ["mrsos"]
+        assert "model_variables" not in diagnostic.ilamb_kwargs
+
+    def test_without_model_variables_there_is_no_preference(self):
+        diagnostic = next(d for d in provider.diagnostics() if d.slug == "gpp-wecann")
+
+        constraints = [c for reqs in diagnostic.data_requirements for c in reqs[0].constraints]
+
+        assert not any(isinstance(c, SelectPreferredFacet) for c in constraints)
+        assert "alternate_vars" not in diagnostic.ilamb_kwargs
+
+    def test_alternate_vars_is_rejected(self):
+        with pytest.raises(ValueError, match="model_variables"):
+            ILAMBStandard(
+                realm="land",
+                metric_name="test-alternates",
+                sources={"tas": "ilamb/test/Site/tas.nc"},
+                ilamb_registry="ilamb-test",
+                alternate_vars=["ts"],
+            )
+
+    def test_duplicate_model_variables_are_rejected(self):
+        with pytest.raises(ValueError, match="more than once"):
+            ILAMBStandard(
+                realm="land",
+                metric_name="test-duplicate",
+                sources={"mrsol": "ilamb/test/Site/tas.nc"},
+                ilamb_registry="ilamb-test",
+                model_variables=["mrsos", "mrsos"],
+            )
+
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            pytest.param({}, id="analysis_variable"),
+            pytest.param({"model_variables": ["Lmon.mrsos"]}, id="model_variables"),
+            pytest.param({"related_vars": ["ta"]}, id="related_vars"),
+            pytest.param({"relationships": {"ta": "ilamb/test/Grid/ta.nc"}}, id="relationships"),
+        ],
+    )
+    def test_variable_without_a_cmip7_branded_variable_is_rejected(self, kwargs):
+        with pytest.raises(KeyError, match="CMIP7_BRANDED_VARIABLES"):
+            ILAMBStandard(
+                realm="land",
+                metric_name="test-undeclared",
+                sources={"hfls": "ilamb/test/Site/tas.nc"},
+                ilamb_registry="ilamb-test",
+                **kwargs,
+            )
+
+    def test_solver_keeps_the_preferred_variant(self, diagnostic):
+        rows = [
+            {
+                "variable_id": variable_id,
+                "branded_variable": branded_variable,
+                "source_id": "MODEL",
+                "experiment_id": "historical",
+                "variant_label": "r1i1p1f1",
+                "frequency": frequency,
+                "grid_label": "g1",
+                "region": "glb",
+                "realm": "land",
+                "version": "v20260101",
+                "path": f"{branded_variable}.nc",
+            }
+            for variable_id, branded_variable, frequency in (
+                ("mrsol", "mrsol_tavg-sl-hxy-lnd", "mon"),
+                ("mrsol", "mrsol_tavg-d10cm-hxy-lnd", "mon"),
+                ("areacella", "areacella_ti-u-hxy-u", "fx"),
+                ("sftlf", "sftlf_ti-u-hxy-u", "fx"),
+            )
+        ]
+        data_catalog = {SourceDatasetType.CMIP7: pd.DataFrame(rows)}
+
+        (execution,) = solve_executions(data_catalog, diagnostic, provider=provider)
+
+        assert sorted(execution.datasets[SourceDatasetType.CMIP7].datasets["branded_variable"]) == [
+            "areacella_ti-u-hxy-u",
+            "mrsol_tavg-d10cm-hxy-lnd",
+            "sftlf_ti-u-hxy-u",
+        ]
+
+
+class TestCmip7TestCase:
+    def _request(self, slug: str):
+        diagnostic = next(diagnostic for diagnostic in provider.diagnostics() if diagnostic.slug == slug)
+        return diagnostic.test_data_spec.get_case("cmip7").requests[0]
+
+    def test_uses_published_cmip7_data(self):
+        request = self._request("mrsos-wangmao")
+
+        assert type(request).__name__ == "CMIP7Request"
+        assert request.facets["source_id"] == "CanESM6-0-MR"
+        assert request.facets["variable_id"] == ("areacella", "mrsol", "sftlf")
+        # Only the preferred of the two mrsol variants is fetched
+        assert request.facets["branding_suffix"] == ["tavg-d10cm-hxy-lnd", "ti-u-hxy-u"]
+
+    def test_is_expected_to_fail_where_no_data_is_published(self):
+        diagnostic = next(d for d in provider.diagnostics() if d.slug == "amoc-rapid")
+        case = diagnostic.test_data_spec.get_case("cmip7")
+
+        assert type(case.requests[0]).__name__ == "CMIP7Request"
+        assert "msftm" in case.xfail
+
+    def test_leaves_out_a_3d_variable_less_preferred_than_its_surface_field(self):
+        """so-woa2023-surface prefers sos, so the full 3D so is not downloaded."""
+        assert self._request("so-woa2023-surface").facets["variable_id"] == ("areacello", "sftof", "sos")
 
 
 class TestRealmMaskDecoupling:
@@ -545,6 +688,7 @@ class TestObs4MIPsSourceRewrite:
                 }
             },
             analysis_variable="amoc",
+            related_vars=["msftmz"],
         )
 
     def _definition(self, tmp_path, *refs: tuple[str, str, int]):
@@ -636,3 +780,91 @@ class TestObs4MIPsSourceRewrite:
             "/data/obs.v10_0.nc",
             "/data/obs.v10_1.nc",
         ]
+
+
+class TestEmpComputesEMinusPForTheModel:
+    """
+    emp-gleamgpcp2.3 compares E - P, which the model has to be given both inputs for.
+
+    The model side used to fall back on ``evspsbl`` as an alternate name for ``emp``,
+    so the model was scored on evaporation alone against the reference's E - P.
+    """
+
+    @pytest.fixture
+    def diagnostic(self):
+        return next(d for d in provider.diagnostics() if d.slug == "emp-gleamgpcp2.3")
+
+    @staticmethod
+    def _dataset(**values: float) -> xr.Dataset:
+        time = pd.date_range("2001-01-01", periods=2, freq="MS")
+        ds = xr.Dataset({name: ("time", np.full(len(time), value)) for name, value in values.items()})
+        ds = ds.assign_coords(time=time)
+        for name in values:
+            ds[name].attrs["units"] = "kg m-2 s-1"
+        return ds
+
+    @pytest.mark.parametrize("cmip_era", [0, 1], ids=["cmip6", "cmip7"])
+    def test_requires_evaporation_and_precipitation(self, diagnostic, cmip_era):
+        constraints = diagnostic.data_requirements[cmip_era][0].constraints
+
+        all_of = [c for c in constraints if getattr(c, "operator", None) == "all"]
+
+        assert [c.required_facets for c in all_of] == [("evspsbl", "pr")]
+
+    def test_model_without_precipitation_is_not_selected(self, diagnostic):
+        rows = [
+            [
+                variable_id,
+                source_id,
+                "historical",
+                "r1i1p1f1",
+                "mon",
+                "gn",
+                table_id,
+                "v20191115",
+                f"{source_id}/{variable_id}.nc",
+            ]
+            for source_id, variables in (
+                ("ACCESS-ESM1-5", ("evspsbl", "pr")),
+                ("CanESM5", ("evspsbl",)),
+            )
+            for variable_id, table_id in (
+                *((variable_id, "Amon") for variable_id in variables),
+                ("areacella", "fx"),
+                ("sftlf", "fx"),
+            )
+        ]
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                rows,
+                columns=(
+                    "variable_id",
+                    "source_id",
+                    "experiment_id",
+                    "member_id",
+                    "frequency",
+                    "grid_label",
+                    "table_id",
+                    "version",
+                    "path",
+                ),
+            ),
+        }
+
+        executions = list(solve_executions(data_catalog, diagnostic, provider=provider))
+
+        assert [dict(e.datasets[SourceDatasetType.CMIP6].selector)["source_id"] for e in executions] == [
+            "ACCESS-ESM1-5"
+        ]
+
+    def test_reference_and_model_both_get_e_minus_p(self, diagnostic):
+        transforms = setup_transforms(diagnostic.ilamb_kwargs)
+
+        reference = self._dataset(et=3.0, pr=5.0)
+        model = self._dataset(evspsbl=2.0, pr=7.0)
+        for transform in transforms:
+            reference = transform(reference)
+            model = transform(model)
+
+        np.testing.assert_allclose(reference["emp"].values, -2.0)
+        np.testing.assert_allclose(model["emp"].values, -5.0)

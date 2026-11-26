@@ -97,45 +97,45 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: ACCESS-ESM1-6
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g118
+          institute: ACCESS-Consortium
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: MPI-ESM1-2-LR
-          ensemble: r1i1p1f1
-          exp: historical
+          dataset: CanESM5-1
+          ensemble: r1i1p2f1
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: MPI-M
+          grid: g127
+          institute: CCCma
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: CESM2
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: NCAR
+          grid: g102
+          institute: EC-Earth-Consortium
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: GFDL-ESM4
+          dataset: UKESM1-3-LL
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: NOAA-GFDL
+          grid: g126
+          institute: UKNCSP
           region: glb
           timerange: 1979/2014
       tas:
@@ -145,45 +145,45 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: ACCESS-ESM1-6
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g115
+          institute: ACCESS-Consortium
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: MPI-ESM1-2-LR
-          ensemble: r1i1p1f1
-          exp: historical
+          dataset: CanESM5-1
+          ensemble: r1i1p2f1
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: MPI-M
+          grid: g120
+          institute: CCCma
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: CESM2
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: NCAR
+          grid: g114
+          institute: EC-Earth-Consortium
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: GFDL-ESM4
+          dataset: UKESM1-3-LL
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gr1
-          institute: NOAA-GFDL
+          grid: g110
+          institute: UKNCSP
           region: glb
           timerange: 1979/2014
     scripts:
@@ -208,45 +208,45 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: ACCESS-ESM1-6
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g118
+          institute: ACCESS-Consortium
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: MPI-ESM1-2-LR
-          ensemble: r1i1p1f1
-          exp: historical
+          dataset: CanESM5-1
+          ensemble: r1i1p2f1
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: MPI-M
+          grid: g127
+          institute: CCCma
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: CESM2
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: NCAR
+          grid: g102
+          institute: EC-Earth-Consortium
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: GFDL-ESM4
+          dataset: UKESM1-3-LL
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: NOAA-GFDL
+          grid: g126
+          institute: UKNCSP
           region: glb
           timerange: 1979/2014
       tas:
@@ -256,45 +256,45 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
+          dataset: ACCESS-ESM1-6
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g115
+          institute: ACCESS-Consortium
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: MPI-ESM1-2-LR
-          ensemble: r1i1p1f1
-          exp: historical
+          dataset: CanESM5-1
+          ensemble: r1i1p2f1
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: MPI-M
+          grid: g120
+          institute: CCCma
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: CESM2
+          dataset: EC-Earth3-ESM-1-1
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: NCAR
+          grid: g114
+          institute: EC-Earth-Consortium
           region: glb
           timerange: 1979/2014
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-h2m-hxy-u
-          dataset: GFDL-ESM4
+          dataset: UKESM1-3-LL
           ensemble: r1i1p1f1
-          exp: historical
+          exp: esm-hist
           frequency: mon
-          grid: gr1
-          institute: NOAA-GFDL
+          grid: g110
+          institute: UKNCSP
           region: glb
           timerange: 1979/2014
     scripts:

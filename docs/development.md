@@ -174,6 +174,7 @@ avoiding the need to download sample data.
 ```
 tests/test-data/esgf-catalog/
 ├── cmip6_catalog.parquet             # ~96k CMIP6 entries
+├── cmip7_catalog.parquet             # CMIP7 entries read from ESGF
 ├── obs4mips_catalog.parquet          # ~176 obs4MIPs entries
 └── pmp_climatology_catalog.parquet   # ~25 PMP climatology entries
 ```
@@ -197,6 +198,15 @@ python scripts/generate_esgf_catalog.py \
     --pmp-climatology-dir /path/to/PMP_obs4MIPsClims \
     --output-dir tests/test-data/esgf-catalog/ \
     --strip-prefix /path/to/data/root
+```
+
+The CMIP7 catalog is generated from the CMIP7 data published on ESGF instead,
+without downloading it: the files are listed by ESGF's search index
+and only their headers are read over HTTP.
+See the script's docstring for which datasets it selects.
+
+```bash
+uv run --with h5netcdf --with h5py --with aiohttp python scripts/generate_cmip7_catalog.py
 ```
 
 ### Solver regression tests

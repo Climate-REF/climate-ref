@@ -20,16 +20,16 @@
       "size": 89562
     },
     "executions/recipe/run/polar_cap_time_series_NH/plot/diagnostic_provenance.yml": {
-      "sha256": "2a5b8da1e921ba21c1c6c48a7730c485d815b2ed265dbc7009c087f8f117b8f8",
+      "sha256": "cf593bb7ebcc717d4553797cf2275c555ac0b6453493765f92def49d1d404e6c",
       "size": 650
     },
     "executions/recipe/work/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.nc": {
-      "sha256": "5bb043ec660e4a6b5b6a5ea19f5642ac2285ca55c6995657c1f9f11908b12974",
+      "sha256": "8706ee586bef19892190ec02699a0e5f9c78fafec58ca237287d10c13763f4d2",
       "size": 10128
     },
     "output.json": {
-      "sha256": "20c4d99738604059dacdadc537600c2b0fbbcb5be3574734f855ab022cac4c86",
-      "size": 1394
+      "sha256": "508fff0749018897cb27cb567f0b485b183e21796ddcddb229ec3a20aa38cd60",
+      "size": 1342
     },
     "series.json": {
       "sha256": "2c737657feb6b647c8ed3d08d3b766813aa44d24ecb8348e81a5b4dce9a432bd",

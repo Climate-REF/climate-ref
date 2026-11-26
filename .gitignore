@@ -179,3 +179,4 @@ packages/*/NOTICE
 
 # Helm dependencies
 helm/charts/*
+cmip7-catalog-headers.jsonl

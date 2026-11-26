@@ -13,15 +13,15 @@ datasets:
 - project: CMIP7
   activity: CMIP
   branding_suffix: tavg-u-hxy-sea
-  dataset: ACCESS-ESM1-5
+  dataset: ACCESS-ESM1-6
   ensemble: r1i1p1f1
-  exp: historical
+  exp: esm-hist
   frequency: mon
-  grid: gn
-  institute: CSIRO
+  grid: g118
+  institute: ACCESS-Consortium
   mip: ocean
   region: glb
-  timerange: 18500116T120000/20211216T120000
+  timerange: 18500116T120000/20221216T120000
 - dataset: TROPFLUX
   version: v2
   project: OBS6

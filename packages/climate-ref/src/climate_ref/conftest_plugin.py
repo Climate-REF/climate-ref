@@ -213,14 +213,17 @@ def esgf_data_catalog_trimmed(
     """
     Trimmed ESGF catalog for integration tests.
 
-    Uses a fixed set of CMIP6 source_ids to keep the catalog small and tests fast,
+    Uses a fixed set of models per source type to keep the catalog small and tests fast,
     while still covering multiple models.
     """
+    source_ids = {
+        SourceDatasetType.CMIP6: ["ACCESS-ESM1-5", "CESM2", "MPI-ESM1-2-LR", "GFDL-ESM4"],
+        SourceDatasetType.CMIP7: ["ACCESS-ESM1-6", "CanESM5-1", "UKESM1-3-LL", "EC-Earth3-ESM-1-1"],
+    }
     result: dict[SourceDatasetType, pd.DataFrame] = {}
     for source_type, df in esgf_solve_catalog.items():
-        if source_type in (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7):
-            source_ids = ["ACCESS-ESM1-5", "CESM2", "MPI-ESM1-2-LR", "GFDL-ESM4"]
-            result[source_type] = df[df["source_id"].isin(source_ids)]
+        if source_type in source_ids:
+            result[source_type] = df[df["source_id"].isin(source_ids[source_type])]
         else:
             result[source_type] = df
 

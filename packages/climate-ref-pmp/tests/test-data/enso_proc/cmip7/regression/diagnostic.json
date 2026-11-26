@@ -4,7 +4,7 @@
       "historical": {}
     },
     "grid_label": {
-      "gn": {}
+      "g109,g115": {}
     },
     "json_structure": [
       "kind",
@@ -45,13 +45,13 @@
       "Tropflux_Tropflux": {}
     },
     "source_id": {
-      "ACCESS-ESM1-5": {}
+      "ACCESS-ESM1-6": {}
     }
   },
   "DISCLAIMER": null,
   "NOTES": null,
   "PROVENANCE": {
-    "commandLine": "<SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_proc --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
+    "commandLine": "<SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_proc --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_proc_ACCESS-ESM1-6_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
     "conda": {
       "Platform": "<CONDA_PLATFORM>"
     },
@@ -87,39 +87,39 @@
   "RESULTS": {
     "model": {
       "cmip7": {
-        "ACCESS-ESM1-5": {
+        "ACCESS-ESM1-6": {
           "r1i1p1f1": {
-            "gn": {
+            "g109,g115": {
               "historical": {
                 "BiasSstLonRmse": {
-                  "HadISST": 0.5005934,
-                  "Tropflux": 0.5874832
+                  "HadISST": 0.6146508,
+                  "Tropflux": 0.7596812
                 },
                 "BiasTauxLonRmse": {
-                  "Tropflux": 7.612243
+                  "Tropflux": 8.016951
                 },
                 "EnsoAmpl": {
-                  "HadISST": 4.52348,
-                  "Tropflux": 11.96119
+                  "HadISST": 23.46353,
+                  "Tropflux": 3.991773
                 },
                 "EnsoFbSshSst": {},
                 "EnsoFbSstTaux": {
-                  "HadISST_Tropflux": 72.7547,
-                  "Tropflux_Tropflux": 71.91379
+                  "HadISST_Tropflux": 57.63755,
+                  "Tropflux_Tropflux": 56.33005
                 },
                 "EnsoFbSstThf": {},
                 "EnsoFbTauxSsh": {},
                 "EnsoSeasonality": {
-                  "HadISST": 36.56286,
-                  "Tropflux": 46.42259
+                  "HadISST": 20.30547,
+                  "Tropflux": 32.69202
                 },
                 "EnsoSstLonRmse": {
-                  "HadISST": 0.2034639,
-                  "Tropflux": 0.2045797
+                  "HadISST": 0.262448,
+                  "Tropflux": 0.2464942
                 },
                 "EnsoSstSkew": {
-                  "HadISST": 217.1323,
-                  "Tropflux": 223.0273
+                  "HadISST": 305.6556,
+                  "Tropflux": 316.0058
                 },
                 "EnsodSstOce_2": {}
               }

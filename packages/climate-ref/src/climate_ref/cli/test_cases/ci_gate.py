@@ -189,7 +189,10 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
     repo_root_resolved = repo_root.resolve()
     source_root_cache: dict[str, str | None] = {}
 
-    driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
+    # The gate decides on expected failures itself, recording why they are skipped
+    driver = VerbDriver(
+        ctx, provider=provider, diagnostic=diagnostic, test_case=test_case, skip_expected_failures=False
+    )
     cases = driver.cases
 
     decisions: list[dict[str, str]] = []
@@ -203,6 +206,10 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
 
     for diag, tc in cases:
         case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
+        if tc.xfail:
+            # Such a case has no baseline to verify, and may have just lost one when marked
+            record(case_id, Action.SKIP, f"expected to fail: {tc.xfail}")
+            continue
         paths = TestCasePaths.from_diagnostic(diag, tc.name)
 
         # A corrupt manifest authored in this change is a hard failure for that case,

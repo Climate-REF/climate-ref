@@ -134,68 +134,93 @@ def parse_cmip7_complete(file: str, **kwargs: Any) -> dict[str, Any]:
     :
         Dictionary with extracted metadata
     """
-    # We don't extract all attributes (subvalues of the branding_suffix and variant_label components)
-    # These can be added later if needed or derived
     try:
         with netCDF4.Dataset(file, "r") as ds:
-            start_time, end_time = read_time_bounds(ds)
-            time_units, calendar = read_time_metadata(ds)
-
-            variable_id = read_mandatory_attr(ds, "variable_id")
-            var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
-
-            return {
-                # Core DRS attributes
-                "activity_id": read_mandatory_attr(ds, "activity_id"),
-                "institution_id": read_mandatory_attr(ds, "institution_id"),
-                "source_id": read_mandatory_attr(ds, "source_id"),
-                "experiment_id": read_mandatory_attr(ds, "experiment_id"),
-                "variant_label": read_mandatory_attr(ds, "variant_label"),
-                "variable_id": variable_id,
-                "grid_label": read_mandatory_attr(ds, "grid_label"),
-                "frequency": read_mandatory_attr(ds, "frequency"),
-                "region": read_mandatory_attr(ds, "region"),
-                "branding_suffix": read_mandatory_attr(ds, "branding_suffix"),
-                "branded_variable": read_mandatory_attr(ds, "branded_variable"),
-                "version": extract_version_from_path(str(Path(file).parent)),
-                # Additional mandatory attributes
-                "mip_era": read_mandatory_attr(ds, "mip_era"),
-                "realm": read_mandatory_attr(ds, "realm"),
-                "nominal_resolution": read_mandatory_attr(ds, "nominal_resolution"),
-                "license_id": read_mandatory_attr(ds, "license_id"),
-                # Parent info (nullable)
-                "branch_time_in_child": getattr(ds, "branch_time_in_child", None),
-                "branch_time_in_parent": getattr(ds, "branch_time_in_parent", None),
-                "parent_activity_id": getattr(ds, "parent_activity_id", None),
-                "parent_experiment_id": getattr(ds, "parent_experiment_id", None),
-                "parent_mip_era": getattr(ds, "parent_mip_era", None),
-                "parent_source_id": getattr(ds, "parent_source_id", None),
-                "parent_time_units": getattr(ds, "parent_time_units", None),
-                "parent_variant_label": getattr(ds, "parent_variant_label", None),
-                # Conditionally required attributes
-                "external_variables": getattr(ds, "external_variables", None),
-                # Variable metadata
-                "standard_name": var_attrs["standard_name"],
-                "long_name": var_attrs["long_name"],
-                "units": var_attrs["units"],
-                # File-level metadata
-                "tracking_id": read_mandatory_attr(ds, "tracking_id"),
-                # Time information
-                "start_time": start_time,
-                "end_time": end_time,
-                "time_range": f"{start_time}-{end_time}" if start_time and end_time else None,
-                "time_units": time_units,
-                "calendar": calendar,
-                # Path
-                "path": file,
-                # Finalisation status
-                "finalised": True,
-            }
+            return parse_cmip7_dataset(ds, file)
     except Exception:
         return {
             "INVALID_ASSET": file,
             "TRACEBACK": traceback.format_exc(),
         }
+
+
+def parse_cmip7_dataset(ds: Any, path: str) -> dict[str, Any]:
+    """
+    Extract the metadata of an open CMIP7 file
+
+    Parameters
+    ----------
+    ds
+        The open file, a ``netCDF4.Dataset`` or anything with the same interface
+        (such as ``h5netcdf.legacyapi.Dataset``)
+    path
+        Where the file is, recorded as its ``path`` and used to read its version from the DRS directory
+
+    Returns
+    -------
+    :
+        Dictionary with extracted metadata
+
+    Raises
+    ------
+    ValueError
+        If a mandatory attribute is missing
+    """
+    # We don't extract all attributes (subvalues of the branding_suffix and variant_label components)
+    # These can be added later if needed or derived
+    start_time, end_time = read_time_bounds(ds)
+    time_units, calendar = read_time_metadata(ds)
+
+    variable_id = read_mandatory_attr(ds, "variable_id")
+    var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
+
+    return {
+        # Core DRS attributes
+        "activity_id": read_mandatory_attr(ds, "activity_id"),
+        "institution_id": read_mandatory_attr(ds, "institution_id"),
+        "source_id": read_mandatory_attr(ds, "source_id"),
+        "experiment_id": read_mandatory_attr(ds, "experiment_id"),
+        "variant_label": read_mandatory_attr(ds, "variant_label"),
+        "variable_id": variable_id,
+        "grid_label": read_mandatory_attr(ds, "grid_label"),
+        "frequency": read_mandatory_attr(ds, "frequency"),
+        "region": read_mandatory_attr(ds, "region"),
+        "branding_suffix": read_mandatory_attr(ds, "branding_suffix"),
+        "branded_variable": read_mandatory_attr(ds, "branded_variable"),
+        "version": extract_version_from_path(str(Path(path).parent)),
+        # Additional mandatory attributes
+        "mip_era": read_mandatory_attr(ds, "mip_era"),
+        "realm": read_mandatory_attr(ds, "realm"),
+        "nominal_resolution": read_mandatory_attr(ds, "nominal_resolution"),
+        "license_id": read_mandatory_attr(ds, "license_id"),
+        # Parent info (nullable)
+        "branch_time_in_child": getattr(ds, "branch_time_in_child", None),
+        "branch_time_in_parent": getattr(ds, "branch_time_in_parent", None),
+        "parent_activity_id": getattr(ds, "parent_activity_id", None),
+        "parent_experiment_id": getattr(ds, "parent_experiment_id", None),
+        "parent_mip_era": getattr(ds, "parent_mip_era", None),
+        "parent_source_id": getattr(ds, "parent_source_id", None),
+        "parent_time_units": getattr(ds, "parent_time_units", None),
+        "parent_variant_label": getattr(ds, "parent_variant_label", None),
+        # Conditionally required attributes
+        "external_variables": getattr(ds, "external_variables", None),
+        # Variable metadata
+        "standard_name": var_attrs["standard_name"],
+        "long_name": var_attrs["long_name"],
+        "units": var_attrs["units"],
+        # File-level metadata
+        "tracking_id": read_mandatory_attr(ds, "tracking_id"),
+        # Time information
+        "start_time": start_time,
+        "end_time": end_time,
+        "time_range": f"{start_time}-{end_time}" if start_time and end_time else None,
+        "time_units": time_units,
+        "calendar": calendar,
+        # Path
+        "path": path,
+        # Finalisation status
+        "finalised": True,
+    }
 
 
 def parse_cmip7_drs(file: str, **kwargs: Any) -> dict[str, Any]:

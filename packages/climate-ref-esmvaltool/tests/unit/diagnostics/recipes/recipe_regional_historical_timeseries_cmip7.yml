@@ -323,11 +323,11 @@ preprocessors:
     area_statistics:
       operator: mean
 diagnostics:
-  sea_level_pressure_anomalies:
+  near-surface_air_temperature_anomalies:
     description: Plot "classical" time series of global mean anomalies including a
       reference dataset.
     variables:
-      psl:
+      tas:
         start_year: 1980
         end_year: 2014
         preprocessor: pp
@@ -335,13 +335,13 @@ diagnostics:
         additional_datasets:
         - project: CMIP7
           activity: CMIP
-          branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r10i1p1f1
-          exp: historical
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g115
+          institute: ACCESS-Consortium
           mip: atmos
           region: glb
     scripts:
@@ -386,6 +386,384 @@ diagnostics:
             pyplot_kwargs:
               title: '{long_name} Anomalies {shape_id}'
               ylabel: '{short_name} [{units}]'
+  precipitation_anomalies:
+    description: Plot "classical" time series of global mean anomalies including a
+      reference dataset.
+    variables:
+      pr:
+        start_year: 1980
+        end_year: 2014
+        preprocessor: pp
+        mip: atmos
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g115
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+    scripts:
+      figures:
+        script: monitor/multi_datasets.py
+        plot_folder: '{plot_dir}'
+        group_variables_by: shape_id
+        plot_filename: '{plot_type}_{real_name}_{dataset}_{ensemble}_{grid}_{shape_id}'
+        plots:
+          timeseries:
+            plot_kwargs:
+              default:
+                color: red
+                label: '{dataset}_{ensemble}_{grid}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 4
+              HadCRUT5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA-5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              GPCP-V2.3:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+            pyplot_kwargs:
+              title: '{long_name} Anomalies {shape_id}'
+              ylabel: '{short_name} [{units}]'
+  sea_level_pressure_anomalies:
+    description: Plot "classical" time series of global mean anomalies including a
+      reference dataset.
+    variables:
+      psl:
+        start_year: 1980
+        end_year: 2014
+        preprocessor: pp
+        mip: atmos
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g115
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+    scripts:
+      figures:
+        script: monitor/multi_datasets.py
+        plot_folder: '{plot_dir}'
+        group_variables_by: shape_id
+        plot_filename: '{plot_type}_{real_name}_{dataset}_{ensemble}_{grid}_{shape_id}'
+        plots:
+          timeseries:
+            plot_kwargs:
+              default:
+                color: red
+                label: '{dataset}_{ensemble}_{grid}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 4
+              HadCRUT5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA-5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              GPCP-V2.3:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+            pyplot_kwargs:
+              title: '{long_name} Anomalies {shape_id}'
+              ylabel: '{short_name} [{units}]'
+  specific_humidity_anomalies:
+    description: Plot "classical" time series of global mean anomalies including a
+      reference dataset.
+    variables:
+      hus_200:
+        start_year: 1980
+        end_year: 2014
+        preprocessor: pp_200
+        mip: atmos
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-p19-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g110
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+        short_name: hus
+    scripts:
+      figures:
+        script: monitor/multi_datasets.py
+        plot_folder: '{plot_dir}'
+        group_variables_by: shape_id
+        plot_filename: '{plot_type}_{real_name}_{dataset}_{ensemble}_{grid}_{shape_id}'
+        plots:
+          timeseries:
+            plot_kwargs:
+              default:
+                color: red
+                label: '{dataset}_{ensemble}_{grid}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 4
+              HadCRUT5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA-5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              GPCP-V2.3:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+            pyplot_kwargs:
+              title: '{long_name} Anomalies {shape_id}'
+              ylabel: '{short_name} [{units}]'
+  eastward_wind_anomalies:
+    description: Plot "classical" time series of global mean anomalies including a
+      reference dataset.
+    variables:
+      ua_200:
+        start_year: 1980
+        end_year: 2014
+        preprocessor: pp_200
+        mip: atmos
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-p19-hxy-air
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g110
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+        short_name: ua
+    scripts:
+      figures:
+        script: monitor/multi_datasets.py
+        plot_folder: '{plot_dir}'
+        group_variables_by: shape_id
+        plot_filename: '{plot_type}_{real_name}_{dataset}_{ensemble}_{grid}_{shape_id}'
+        plots:
+          timeseries:
+            plot_kwargs:
+              default:
+                color: red
+                label: '{dataset}_{ensemble}_{grid}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 4
+              HadCRUT5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA-5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              GPCP-V2.3:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+            pyplot_kwargs:
+              title: '{long_name} Anomalies {shape_id}'
+              ylabel: '{short_name} [{units}]'
+  near-surface_air_temperature:
+    description: Plot "classical" time series of global mean including a reference
+      dataset.
+    variables:
+      tas:
+        start_year: 1980
+        end_year: 2014
+        preprocessor: pp_abs
+        mip: atmos
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g115
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+    scripts:
+      figures:
+        script: monitor/multi_datasets.py
+        plot_folder: '{plot_dir}'
+        group_variables_by: shape_id
+        plot_filename: '{plot_type}_{real_name}_{dataset}_{ensemble}_{grid}_{shape_id}'
+        plots:
+          timeseries:
+            plot_kwargs:
+              default:
+                color: red
+                label: '{dataset}_{ensemble}_{grid}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 4
+              HadCRUT5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA-5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              GPCP-V2.3:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+            pyplot_kwargs:
+              title: '{long_name} {shape_id}'
+  precipitation:
+    description: Plot "classical" time series of global mean including a reference
+      dataset.
+    variables:
+      pr:
+        start_year: 1980
+        end_year: 2014
+        preprocessor: pp_abs
+        mip: atmos
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g115
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+    scripts:
+      figures:
+        script: monitor/multi_datasets.py
+        plot_folder: '{plot_dir}'
+        group_variables_by: shape_id
+        plot_filename: '{plot_type}_{real_name}_{dataset}_{ensemble}_{grid}_{shape_id}'
+        plots:
+          timeseries:
+            plot_kwargs:
+              default:
+                color: red
+                label: '{dataset}_{ensemble}_{grid}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 4
+              HadCRUT5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA-5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              GPCP-V2.3:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+            pyplot_kwargs:
+              title: '{long_name} {shape_id}'
   sea_level_pressure:
     description: Plot "classical" time series of global mean including a reference
       dataset.
@@ -399,14 +777,140 @@ diagnostics:
         - project: CMIP7
           activity: CMIP
           branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r10i1p1f1
-          exp: historical
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
           frequency: mon
-          grid: gn
-          institute: CSIRO
+          grid: g115
+          institute: ACCESS-Consortium
           mip: atmos
           region: glb
+    scripts:
+      figures:
+        script: monitor/multi_datasets.py
+        plot_folder: '{plot_dir}'
+        group_variables_by: shape_id
+        plot_filename: '{plot_type}_{real_name}_{dataset}_{ensemble}_{grid}_{shape_id}'
+        plots:
+          timeseries:
+            plot_kwargs:
+              default:
+                color: red
+                label: '{dataset}_{ensemble}_{grid}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 4
+              HadCRUT5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA-5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              GPCP-V2.3:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+            pyplot_kwargs:
+              title: '{long_name} {shape_id}'
+  specific_humidity:
+    description: Plot "classical" time series of global mean including a reference
+      dataset.
+    variables:
+      hus_200:
+        start_year: 1980
+        end_year: 2014
+        preprocessor: pp_abs_200
+        mip: atmos
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-p19-hxy-u
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g110
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+        short_name: hus
+    scripts:
+      figures:
+        script: monitor/multi_datasets.py
+        plot_folder: '{plot_dir}'
+        group_variables_by: shape_id
+        plot_filename: '{plot_type}_{real_name}_{dataset}_{ensemble}_{grid}_{shape_id}'
+        plots:
+          timeseries:
+            plot_kwargs:
+              default:
+                color: red
+                label: '{dataset}_{ensemble}_{grid}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 4
+              HadCRUT5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              ERA-5:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+              GPCP-V2.3:
+                color: black
+                label: '{dataset}'
+                linestyle: '-'
+                linewidth: 2
+                zorder: 3
+            pyplot_kwargs:
+              title: '{long_name} {shape_id}'
+  eastward_wind:
+    description: Plot "classical" time series of global mean including a reference
+      dataset.
+    variables:
+      ua_200:
+        start_year: 1980
+        end_year: 2014
+        preprocessor: pp_abs_200
+        mip: atmos
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-p19-hxy-air
+          dataset: ACCESS-ESM1-6
+          ensemble: r1i1p1f1
+          exp: esm-hist
+          frequency: mon
+          grid: g110
+          institute: ACCESS-Consortium
+          mip: atmos
+          region: glb
+        short_name: ua
     scripts:
       figures:
         script: monitor/multi_datasets.py

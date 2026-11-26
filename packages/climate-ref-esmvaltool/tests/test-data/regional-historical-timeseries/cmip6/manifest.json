@@ -5,7 +5,7 @@
     "output.json": "fb1523cca2c2f34b82734f51b132f347796c8a48bd1c090f87e43314fe3ff7eb",
     "series.json": "75841c4b1a754e0fed255efcdd214d37368f76e0415e71891f52e952e5ee1fad"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -16,51 +16,51 @@
       "size": 39778
     },
     "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png": {
-      "sha256": "3ada155f87b77d24c39ca236720f02b6d19dd8849707adc490a5955bb6b37eaa",
+      "sha256": "c13db6caa7dee7befc478277bdf7cc0301db105b6221c58a6b4c38bcb26eb90e",
       "size": 246483
     },
     "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.png": {
-      "sha256": "4e638f1b89b0f129f467de562659089dad09b2a6b2f52977b0b8b81e8ff6ead8",
+      "sha256": "4fea9a71eae7ead71f066ae483419543dbd68dbc843d2c34b85392b3be620e50",
       "size": 251890
     },
     "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.png": {
-      "sha256": "4a3b5da5097ff28a5680502e620a6ba282dbc05ed6897b8e00b5745aa06b4e91",
+      "sha256": "09dddc553e348b759206d4478af5527bfb143cd86f82262cbcada9f8d1a055cc",
       "size": 233981
     },
     "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png": {
-      "sha256": "573ecd20d21b18b3a0f148844bd383da08f89d4d8d215da55c285ac190920f34",
+      "sha256": "d1c6625a3ed8d2b40cf248c5ef7e6989e75fa120fd0a2a68c749a08cc23e29ae",
       "size": 167926
     },
     "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.png": {
-      "sha256": "97e86404e95bb65862141d6bf6be2d3553535f9bddc03eb86a0149bc71658fe1",
+      "sha256": "9b72ab935704fda4e806b806eda0bcd30843c5985ee8f67c57a0fa836ff8da21",
       "size": 186150
     },
     "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.png": {
-      "sha256": "3366b3ac65173ca141bbd158832112ee6c3c0891b493108bf7c2b7b59aeaabf6",
+      "sha256": "bb6a385d570d0f71ea94a295d9a7a3ef076ef8e6d6a67555fefba1b48ad18999",
       "size": 165076
     },
     "executions/recipe/plots/precipitation/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png": {
-      "sha256": "bb4aae6771eef591c27b03928f5623a265243d2ec5e1f0a7ad432c71a901ef63",
+      "sha256": "b89df570962c34f9b766b71c2049c4a383b532926385dc6c1d2450bdb19fda7f",
       "size": 209011
     },
     "executions/recipe/plots/precipitation/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_C-North-America.png": {
-      "sha256": "f64d6a9463ba098cda2f83a6fce06a0232c7b887a83474254438e6da2f81dddd",
+      "sha256": "5eebee9bcbcca281cdbbca8a36e40192ec82d18b658564a019030b84af03376b",
       "size": 196172
     },
     "executions/recipe/plots/precipitation/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_Mediterranean.png": {
-      "sha256": "829717c60c2dab14cc9461459df6d5a39da9e20ec96f6ee2e7f065bb75f64501",
+      "sha256": "50e79ac754c5bcbd1af3c4f293d01c3a23a22823516a88c0cc658f16f9a93193",
       "size": 197838
     },
     "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png": {
-      "sha256": "153c03d90dc9778fdb827696d8feca4aa45670a205926da1aaece819038c1948",
+      "sha256": "d7d01e471b0c77b0a0b036cd5c5ac503bd5c5b63c8e126ac2a1650a7eb1c06fa",
       "size": 186429
     },
     "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_C-North-America.png": {
-      "sha256": "df05d26d42107a7ee8eda6209f039a261b19b01e1f5a05f4907af4396550c752",
+      "sha256": "fd76ce486507fb1ec24c952158485c8e9c1c1c421e3705e04156793b822a050e",
       "size": 178753
     },
     "executions/recipe/plots/precipitation_anomalies/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_Mediterranean.png": {
-      "sha256": "b7231b4e81578cafc47fddde49be8cc5682344fc027b760503bfe84964020d18",
+      "sha256": "e74b04e0a9d56862ba5d1c1072acc66710c2ee796af521aa5c760fc6c84b355a",
       "size": 169324
     },
     "executions/recipe/run/near-surface_air_temperature/figures/diagnostic_provenance.yml": {
@@ -80,60 +80,60 @@
       "size": 1652
     },
     "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc": {
-      "sha256": "5a53efbed3314c5c0e9b5c9a9371131fd516cfe447e5041de52f79d3814eb133",
-      "size": 24644
+      "sha256": "e33b266bad592b4c7dd28202e8fc5c3cb7c0f4ab5ad3c9eff5273a205709e30f",
+      "size": 24760
     },
     "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.nc": {
-      "sha256": "16112e76a524010a62e6a43b45eff29de85fefccc938cc6c51e74a8f9657eb75",
-      "size": 24647
+      "sha256": "ed338c1b74afc5e4656784b7c460f170f073014e0b94bb17af83e23f2d3b7e10",
+      "size": 24760
     },
     "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.nc": {
-      "sha256": "430980858d650939dc17466cdffacee841d2e938a94fbed7ff95840755754cf2",
-      "size": 24645
+      "sha256": "b6e28a3061535e7fe5d927e54da0bc41daef969ecbc1dca3e59736c44b445147",
+      "size": 24760
     },
     "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc": {
-      "sha256": "5c7bbc1ad8c9e4be658745c148226c52d8e0a86cb7b3798390e6724942019033",
-      "size": 24654
+      "sha256": "749307f4b7a1c5032b6365aaa38d1dc5748e2319128c9b70e91f3adb3b8392d2",
+      "size": 24801
     },
     "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.nc": {
-      "sha256": "2424c5cfd9b083f269a124f0ee9ad2dc7c84a301db5a667a65fb10d21a02a355",
-      "size": 24657
+      "sha256": "5c02a0280703ec9cb98c247da4d3f63d5d91430be76f3363ab107be33cfa7bea",
+      "size": 24801
     },
     "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.nc": {
-      "sha256": "fea6d12d41c354d2e1dc662a8228fd1dcc488ceebcbadfb70a4742fa8ce1887f",
-      "size": 24655
+      "sha256": "d7ed3d04a03e71062a48f388d537321f5d3673da0971a8c4c12361361c30d58c",
+      "size": 24801
     },
     "executions/recipe/work/precipitation/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc": {
-      "sha256": "6c887aae14ff7b6942f00957e924dd583bc99713244138626f71ca72c72f95ab",
-      "size": 24835
+      "sha256": "bdc88a368ca7b46843fc3d50a479bc93e6ddf7e8ab917e1f28ab14a72c1611f6",
+      "size": 24762
     },
     "executions/recipe/work/precipitation/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_C-North-America.nc": {
-      "sha256": "5a3899e6b0903d4cd1a40a6a1aae4950d68b30ad2e489b9d3274603d5e8c407a",
-      "size": 24838
+      "sha256": "716ae45de9009ec2efe1497226943a561d175b7f6cf2f6c0e0812d90a45080f4",
+      "size": 24762
     },
     "executions/recipe/work/precipitation/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_Mediterranean.nc": {
-      "sha256": "c679da341904a870d91dd538db504406ae59982006b586ecfd48c89784e7b8c8",
-      "size": 24836
+      "sha256": "07780182b4abbc4351b283519f2ad34034cbd7c9d77a32be02add42e24b1bdb2",
+      "size": 24762
     },
     "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc": {
-      "sha256": "ddfe728eb0621e8cf17d2eb45392e78d87d87dbdae58fb99b92813e039fc26c5",
-      "size": 24845
+      "sha256": "8c28584d7804b121b6e98a7af48e97bf14d61d0f8a325ca4680277f1b14652b8",
+      "size": 24762
     },
     "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_C-North-America.nc": {
-      "sha256": "00947c8f89f3685eee44cf8314dbff9c720a5e8aafc5e4e301548d51afd6c1a0",
-      "size": 24848
+      "sha256": "81d2cccd1584d3aa0b73c7f4b566338b9207ec1e2d588cd9cb14d794d13e95fa",
+      "size": 24701
     },
     "executions/recipe/work/precipitation_anomalies/figures/timeseries_pr_CanESM5_r1i1p1f1_gn_Mediterranean.nc": {
-      "sha256": "27006715adebc624b6b6065580f7410b10ab60723211c0a86e973d24336dbe60",
-      "size": 24846
+      "sha256": "73dac91730bd902fcd9989d1f9ddf74114670f59829ba45b4726301c726efd90",
+      "size": 24762
     },
     "output.json": {
-      "sha256": "b500747cdfa538101b5cf8857901409c4eb07c7ac486efde3b11449e8895b243",
-      "size": 12316
+      "sha256": "023f8215e228f5e89d1ea2072462db74d6c33104058b0009baadd37136592857",
+      "size": 12264
     },
     "series.json": {
-      "sha256": "e69e7bc081b0331cd3fa9c7c68060160219cd2e5b17445172d041fce77dfa9d6",
-      "size": 291052
+      "sha256": "29d33f7f3810314bbb0ca4e8a1237cf9b0c3c2b5cdd3ff5e8f8a9cb933ebde74",
+      "size": 291496
     }
   },
   "schema": 2,

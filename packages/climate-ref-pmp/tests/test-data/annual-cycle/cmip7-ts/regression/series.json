@@ -6,7 +6,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "bias_xy",
       "variable_id": "ts"
     },
@@ -26,18 +26,18 @@
     ],
     "index_name": "month_number",
     "values": [
-      0.83024,
-      0.888938,
-      0.940329,
-      0.876511,
-      0.886283,
-      0.915831,
-      0.835711,
-      0.748402,
-      0.716891,
-      0.857496,
-      0.989866,
-      0.880752
+      0.484557,
+      0.516588,
+      0.51039,
+      0.544231,
+      0.550873,
+      0.526587,
+      0.502742,
+      0.428021,
+      0.397967,
+      0.547374,
+      0.665682,
+      0.544673
     ]
   },
   {
@@ -47,7 +47,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "cor_xy",
       "variable_id": "ts"
     },
@@ -67,18 +67,18 @@
     ],
     "index_name": "month_number",
     "values": [
-      0.991933,
-      0.991889,
-      0.992892,
-      0.993243,
-      0.993426,
-      0.992663,
-      0.992672,
-      0.992923,
-      0.993154,
-      0.992912,
-      0.992009,
-      0.991992
+      0.988261,
+      0.990829,
+      0.992077,
+      0.992142,
+      0.992634,
+      0.992355,
+      0.992349,
+      0.992198,
+      0.992922,
+      0.993655,
+      0.992542,
+      0.989292
     ]
   },
   {
@@ -88,7 +88,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "mae_xy",
       "variable_id": "ts"
     },
@@ -108,18 +108,18 @@
     ],
     "index_name": "month_number",
     "values": [
-      1.64074,
-      1.67958,
-      1.61997,
-      1.5052,
-      1.42585,
-      1.5183,
-      1.5149,
-      1.45399,
-      1.41104,
-      1.43857,
-      1.52491,
-      1.58091
+      1.7113,
+      1.6364,
+      1.51468,
+      1.44677,
+      1.34244,
+      1.38138,
+      1.39041,
+      1.35388,
+      1.27888,
+      1.21518,
+      1.3096,
+      1.52655
     ]
   },
   {
@@ -129,7 +129,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "mean-obs_xy",
       "variable_id": "ts"
     },
@@ -170,7 +170,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "mean_xy",
       "variable_id": "ts"
     },
@@ -190,18 +190,18 @@
     ],
     "index_name": "month_number",
     "values": [
-      286.862,
-      287.232,
-      287.999,
-      288.93,
-      289.881,
-      290.632,
-      290.807,
-      290.6,
-      289.878,
-      288.923,
-      287.936,
-      287.143
+      286.516,
+      286.86,
+      287.569,
+      288.598,
+      289.545,
+      290.242,
+      290.474,
+      290.28,
+      289.559,
+      288.612,
+      287.612,
+      286.807
     ]
   },
   {
@@ -211,7 +211,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "rms_xy",
       "variable_id": "ts"
     },
@@ -231,18 +231,18 @@
     ],
     "index_name": "month_number",
     "values": [
-      2.32144,
-      2.36309,
-      2.20611,
-      2.0496,
-      1.95071,
-      2.08718,
-      2.08804,
-      1.9934,
-      1.94187,
-      2.00253,
-      2.20757,
-      2.24545
+      2.66111,
+      2.38884,
+      2.17881,
+      2.05644,
+      1.92247,
+      1.95401,
+      1.99095,
+      2.00387,
+      1.86986,
+      1.78443,
+      2.02482,
+      2.4511
     ]
   },
   {
@@ -252,7 +252,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "rmsc_xy",
       "variable_id": "ts"
     },
@@ -272,18 +272,18 @@
     ],
     "index_name": "month_number",
     "values": [
-      2.1679,
-      2.18952,
-      1.99567,
-      1.85272,
-      1.73775,
-      1.87551,
-      1.91351,
-      1.84757,
-      1.8047,
-      1.80964,
-      1.97321,
-      2.06551
+      2.61663,
+      2.33231,
+      2.11819,
+      1.98312,
+      1.84185,
+      1.88171,
+      1.92643,
+      1.95762,
+      1.82702,
+      1.6984,
+      1.91226,
+      2.38982
     ]
   },
   {
@@ -293,7 +293,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "std-obs_xy",
       "variable_id": "ts"
     },
@@ -334,7 +334,7 @@
       "member_id": "r1i1p1f1",
       "reference_source_id": "ERA-5",
       "region": "global",
-      "source_id": "ACCESS-ESM1-5",
+      "source_id": "ACCESS-ESM1-6",
       "statistic": "std_xy",
       "variable_id": "ts"
     },
@@ -354,18 +354,18 @@
     ],
     "index_name": "month_number",
     "values": [
-      17.1005,
-      17.2109,
-      16.7665,
-      15.9588,
-      15.1658,
-      15.0891,
-      15.335,
-      15.2974,
-      15.2708,
-      15.2209,
-      15.4301,
-      16.2932
+      17.127,
+      17.2435,
+      16.8461,
+      15.8324,
+      15.187,
+      14.9973,
+      15.2624,
+      15.3719,
+      15.2449,
+      15.0833,
+      15.3464,
+      16.3196
     ]
   }
 ]

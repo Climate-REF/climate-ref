@@ -4,7 +4,7 @@
       "historical": {}
     },
     "grid_label": {
-      "gn": {}
+      "g150": {}
     },
     "json_structure": [
       "kind",
@@ -21,9 +21,10 @@
       "model": {}
     },
     "member_id": {
-      "r1i1p1f1": {}
+      "r6i1p1f1": {}
     },
     "metric": {
+      "Annual Cycle": {},
       "Bias": {},
       "RMSE": {},
       "Spatial Distribution": {}
@@ -44,7 +45,7 @@
       }
     },
     "source_id": {
-      "CESM2": {}
+      "CanESM6-0-MR": {}
     },
     "statistic": {
       "Bias": {
@@ -67,11 +68,19 @@
         "type": "scalar",
         "units": "%"
       },
+      "Phase Shift": {
+        "type": "scalar",
+        "units": "month"
+      },
       "RMSE": {
         "type": "scalar",
         "units": "%"
       },
       "RMSE Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Seasonal Cycle Score": {
         "type": "score",
         "units": "1"
       },
@@ -88,39 +97,47 @@
     "model": {
       "GFED": {
         "historical": {
-          "CESM2": {
-            "r1i1p1f1": {
-              "gn": {
+          "CanESM6-0-MR": {
+            "r6i1p1f1": {
+              "g150": {
                 "global": {
+                  "Annual Cycle": {
+                    "Phase Shift": 0.4109061,
+                    "Seasonal Cycle Score": 0.6363822
+                  },
                   "Bias": {
-                    "Bias": -0.2108951,
-                    "Bias Score": 0.6535135,
-                    "Period Mean": 0.2677682
+                    "Bias": -0.2318802,
+                    "Bias Score": 0.6262671,
+                    "Period Mean": 0.201892
                   },
                   "RMSE": {
-                    "RMSE": 1.480511,
-                    "RMSE Score": 0.2711507
+                    "RMSE": 1.32508,
+                    "RMSE Score": 0.2738993
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.5171004,
-                    "Normalized Standard Deviation": 0.5344691,
-                    "Spatial Distribution Score": 0.5243715
+                    "Correlation": 0.5517098,
+                    "Normalized Standard Deviation": 0.376777,
+                    "Spatial Distribution Score": 0.3378366
                   }
                 },
                 "tropical": {
+                  "Annual Cycle": {
+                    "Phase Shift": 0.6000882,
+                    "Seasonal Cycle Score": 0.70265
+                  },
                   "Bias": {
-                    "Bias": -0.8124007,
-                    "Bias Score": 0.6626345,
-                    "Period Mean": 0.5826839
+                    "Bias": -0.7526207,
+                    "Bias Score": 0.6172382,
+                    "Period Mean": 0.5599572
                   },
                   "RMSE": {
-                    "RMSE": 3.433232,
-                    "RMSE Score": 0.2925237
+                    "RMSE": 3.049551,
+                    "RMSE Score": 0.3051713
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.4483419,
-                    "Normalized Standard Deviation": 0.4787737,
-                    "Spatial Distribution Score": 0.4394398
+                    "Correlation": 0.4676499,
+                    "Normalized Standard Deviation": 0.3842697,
+                    "Spatial Distribution Score": 0.3290757
                   }
                 }
               }

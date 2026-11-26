@@ -1,8 +1,8 @@
 {
-  "catalog_hash": "82ee685124acc6f4f9b7400d05fae30f2ab4cfa2",
+  "catalog_hash": "ffa0a67bde4819fa5bdefbd2137e19b4640fe7f1",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "adf49c4372a1ec07feffd8df694914e0ec8cd2da2d268d93ae48785090506cba",
+    "output.json": "8532445120e9219a3f8b83541eed7a402325cdc2f5fc9a6c3f6c709764108990",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "diagnostic_version": 3,
@@ -12,32 +12,32 @@
       "size": 128
     },
     "executions/recipe/index.html": {
-      "sha256": "87e24e78a16a63b2faeb4d8fb84224069937863f5ba732a05bf84948996fb581",
-      "size": 14659
+      "sha256": "c9fc28ebbd6c36a24990d24fc3e3fb4670c03d7b08d0db20dd8a8d169ae4ae3c",
+      "size": 14803
     },
-    "executions/recipe/plots/fire_evaluation/fire_evaluation/burnt_fraction_CanESM5_historical_2002_2021.png": {
-      "sha256": "14c88e942e24dcdf2d897761f43fd2f964638cadb808089c08adfa6c2c879ed3",
-      "size": 354302
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/burnt_fraction_UKESM1-3-LL_historical_2002_2021.png": {
+      "sha256": "94431ac46ce55c0952a184e41cf1db2130e6b4b2c7431d2c810bce94450fd636",
+      "size": 349506
     },
-    "executions/recipe/plots/fire_evaluation/fire_evaluation/fire_weather_control_CanESM5_historical_2002_2021.png": {
-      "sha256": "ef6149ae9e86c88bff3cacdcd20d57bf8a5de1ec31f9ec4ac59d93c83b176e72",
-      "size": 358759
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/fire_weather_control_UKESM1-3-LL_historical_2002_2021.png": {
+      "sha256": "4e03ed387582a79b2338cb33b612eb89addad0315fcf6d726430bab2be29f449",
+      "size": 364198
     },
-    "executions/recipe/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_CanESM5_historical_2002_2021.png": {
-      "sha256": "e37c1c67b5fb17a163bfb3321d09caad2d54f19f3d4e2b93772e8263874fcc16",
-      "size": 367250
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_UKESM1-3-LL_historical_2002_2021.png": {
+      "sha256": "8e81dcb23c3e5a42a7481079743559974ebe87bfb40d6042066d6b3a7012c964",
+      "size": 370152
     },
     "executions/recipe/run/fire_evaluation/fire_evaluation/diagnostic_provenance.yml": {
-      "sha256": "a008bdb886d37bbc3c65c957a68c6cb7fa5047e7fe45de2597a18581baab1f07",
-      "size": 4739
+      "sha256": "f12ae551ba9663a12bd748f4eae4c29f50954de1f1011506d1f5a9c03bd3a31b",
+      "size": 4929
     },
-    "executions/recipe/work/fire_evaluation/fire_evaluation/tas_tavg-h2m-hxy-u_Amon_glb_gn_CanESM5_vpd_r1i1p1f1_2002-2021.nc": {
-      "sha256": "c5c5ea3990279764a3fdc1d3853bcb335857d91db65b40a6a4cf54621ea35acf",
-      "size": 9981855
+    "executions/recipe/work/fire_evaluation/fire_evaluation/vpd_tavg-h2m-hxy-u_mon_glb_g110_UKESM1-3-LL_historical_r1i1p1f2_2002-2021.nc": {
+      "sha256": "4f9152876c84234bc8946528e8d67126c2449c6c12a454222b9c2b0563404a31",
+      "size": 9981538
     },
     "output.json": {
-      "sha256": "98cb09d7af578eb33ce0ee02868fc040b114bd5c792ea84b3f76e8494a3039b5",
-      "size": 2480
+      "sha256": "1c408fd3bd199fe526d784aed418b3f4a33d205a83ac8351279f2c4e6959745b",
+      "size": 2488
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
@@ -45,5 +45,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 5
+  "test_case_version": 6
 }

@@ -8,11 +8,11 @@
   "diagnostic_version": 6,
   "native": {
     "diagnostic.json": {
-      "sha256": "06b3dc1ff798751de4d648663a9cd78b39cb44dddc33d3d7f98cf5efac67801f",
+      "sha256": "3e37dd43ee289e05d14bd1b6696cf9df8f05692dc0e33a5210fc55434ae8a459",
       "size": 8320
     },
     "output.json": {
-      "sha256": "55ead5cf6fcd8eb45f8e89f3bac0341b68389902300b80944f559be0d5e628d2",
+      "sha256": "c38976ee58920cc2bc0e04f351e5b7b9abf4c21104a39a6d7ad23e3155449bfc",
       "size": 7161
     },
     "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_doubleITCZ_AC_basicTest.png": {
@@ -56,7 +56,7 @@
       "size": 390513
     },
     "pr_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
-      "sha256": "bea4690cc57d231bd6a065400ea6a3a0a0b59835a95362e3d1e6cf2c6bcab545",
+      "sha256": "a9e80f73bd7218f040fc63446dbe57e4b129c26e466d6824a36cf70d515f4903",
       "size": 21771
     },
     "pr_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v6.nc": {

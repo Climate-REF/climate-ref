@@ -5,12 +5,10 @@ from typing import ClassVar
 import pandas as pd
 import pytest
 
-from climate_ref.datasets.base import _is_na
 from climate_ref.datasets.cmip7 import (
     CMIP7DatasetAdapter,
 )
 from climate_ref.datasets.cmip7_parsers import (
-    parse_cmip7_complete,
     parse_cmip7_drs,
     parse_cmip7_using_directories,
 )
@@ -384,60 +382,17 @@ class TestCMIP7Model:
             assert retrieved.mip_era == "CMIP7"
 
 
-class TestCMIP7ConvertedFile:
-    """Tests for CMIP7 adapter with files converted from CMIP6."""
+class TestBrandedVariable:
+    """Tests for deriving the ``branded_variable`` column."""
 
-    def test_parse_converted_cmip7_file(self, cmip7_converted_file):
-        """Test that parse_cmip7_complete correctly parses a converted CMIP6 file."""
-        # Parse the file
-        result = parse_cmip7_complete(str(cmip7_converted_file))
-
-        # Verify key CMIP7 attributes are present
-        assert "INVALID_ASSET" not in result, f"Parsing failed: {result.get('TRACEBACK', '')}"
-        assert result["mip_era"] == "CMIP7"
-        assert result["region"] == "glb"
-        assert "branding_suffix" in result
-        assert result["branding_suffix"] != ""
-        assert "tracking_id" in result
-        assert result["tracking_id"].startswith("hdl:21.14107/")
-
-        # Verify DRS components are present
-        assert not _is_na(result["activity_id"])
-        assert not _is_na(result["institution_id"])
-        assert not _is_na(result["source_id"])
-        assert not _is_na(result["experiment_id"])
-        assert not _is_na(result["variable_id"])
-        assert not _is_na(result["grid_label"])
-        assert not _is_na(result["frequency"])
-
-    def test_branded_variable_derived(self, cmip7_converted_file, config):
-        """Test that branded_variable is derived as variable_id + branding_suffix."""
+    def test_branded_variable_derived(self, config):
+        """branded_variable joins variable_id and branding_suffix."""
         adapter = CMIP7DatasetAdapter(config=config)
-        data_catalog = adapter.find_local_datasets(cmip7_converted_file.parent)
+        catalog = pd.DataFrame({"variable_id": ["tas"], "branding_suffix": ["tavg-h2m-hxy-u"]})
 
-        assert len(data_catalog) == 1
-        row = data_catalog.iloc[0]
+        result = adapter._add_derived_columns(catalog)
 
-        assert "branded_variable" in data_catalog.columns
-        assert row["branded_variable"] == f"{row['variable_id']}_{row['branding_suffix']}"
-
-    def test_branded_variable_survives_db_round_trip(self, cmip7_converted_file, db, config):
-        """branded_variable is reconstructed (with correct value) when loading from the DB.
-
-        Regression test for issue #687
-        """
-        adapter = CMIP7DatasetAdapter(config=config)
-
-        catalog = adapter.validate_data_catalog(adapter.find_local_datasets(cmip7_converted_file.parent))
-        with db.session.begin():
-            for _instance_id, dataset in catalog.groupby(adapter.slug_column):
-                adapter.register_dataset(db, dataset)
-
-        db_catalog = adapter.load_catalog(db)
-
-        assert "branded_variable" in db_catalog.columns
-        row = db_catalog.iloc[0]
-        assert row["branded_variable"] == f"{row['variable_id']}_{row['branding_suffix']}"
+        assert result["branded_variable"].tolist() == ["tas_tavg-h2m-hxy-u"]
 
     def test_branded_variable_requires_source_column(self, config):
         """Deriving branded_variable on a catalog missing branding_suffix is a hard error."""

@@ -148,6 +148,7 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
     # A failure for one test case must not abort the loop,
     # because later diagnostics would be left without catalogs and paths sidecars.
     failed_cases: list[str] = []
+    recovered_cases: list[str] = []
     for diag in diagnostics_to_process:  # pragma: no cover
         logger.info(f"Checking data for: {diag.provider.slug}/{diag.slug}")
         if diag.test_data_spec:
@@ -158,7 +159,10 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                 case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
                 existing_catalog = paths.catalog if paths is not None and paths.catalog.exists() else None
                 if not tc.requests or (only_missing and existing_catalog is not None):
-                    if strict and (error := _existing_catalog_error(paths)):
+                    if tc.xfail and existing_catalog is None:
+                        # No catalog is expected while the case cannot work, see TestCase.xfail
+                        logger.info(f"  No catalog for {tc.name}, as expected ({tc.xfail})")
+                    elif strict and (error := _existing_catalog_error(paths)):
                         failed_cases.append(case_id)
                         logger.warning(f"  Existing catalog is not usable for {tc.name}: {error}")
                     if tc.requests:
@@ -185,11 +189,34 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                     continue
                 try:
                     _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force, regen=regen)
+                except (DatasetResolutionError, InvalidDiagnosticException) as e:
+                    if tc.xfail:
+                        # Its data is expected to be missing or incomplete, see TestCase.xfail
+                        logger.info(f"  No usable data for {tc.name}, as expected ({tc.xfail}): {e}")
+                    else:
+                        failed_cases.append(case_id)
+                        logger.warning(f"  Could not build catalog for {tc.name}: {e}")
+                    continue
+                except (OSError, AttributeError, yaml.YAMLError, ValueError) as e:
+                    failed_cases.append(case_id)
+                    logger.warning(f"  Could not build catalog for {tc.name}: {e}")
+                    continue
+
+                # A catalog that was written must be usable, whether or not the case is marked xfail
+                try:
                     if paths is None:
                         if strict:
                             raise ValueError("Could not determine where to write the test-case catalog")
                     else:
                         validate_catalog_paths(paths.catalog, paths.catalog_paths)
+                        if tc.xfail and existing_catalog is None:
+                            # The data it was expected to lack now resolves, see TestCase.xfail
+                            recovered_cases.append(case_id)
+                            logger.warning(
+                                f"  Data now resolves for {tc.name}, which is expected to fail ({tc.xfail}). "
+                                "Remove its `xfail`, commit the catalog and mint a baseline"
+                            )
+                            continue
                         # An unchanged save leaves the file untouched, so only a rewrite needs comparing.
                         if strict and (
                             catalog_before is None
@@ -201,14 +228,7 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                             )
                     if not catalog_written:
                         logger.info(f"  Catalog unchanged for {tc.name}")
-                except (
-                    OSError,
-                    AttributeError,
-                    yaml.YAMLError,
-                    DatasetResolutionError,
-                    InvalidDiagnosticException,
-                    ValueError,
-                ) as e:
+                except (OSError, AttributeError, yaml.YAMLError, DatasetResolutionError, ValueError) as e:
                     failed_cases.append(case_id)
                     logger.warning(f"  Could not build catalog for {tc.name}: {e}")
 
@@ -216,8 +236,13 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
         logger.warning(
             f"Could not build catalogs for {len(failed_cases)} test case(s): {', '.join(failed_cases)}"
         )
-        if strict:
-            raise typer.Exit(code=1)
+    if recovered_cases:
+        logger.warning(
+            f"{len(recovered_cases)} test case(s) expected to fail now have data: "
+            f"{', '.join(recovered_cases)}"
+        )
+    if strict and (failed_cases or recovered_cases):
+        raise typer.Exit(code=1)
 
 
 @app.command(name="list")

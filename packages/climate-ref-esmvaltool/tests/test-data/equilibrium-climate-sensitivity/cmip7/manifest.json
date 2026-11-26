@@ -1,49 +1,49 @@
 {
-  "catalog_hash": "95c8bb609ff2eb71a7eb3e7981575756a9695a48",
+  "catalog_hash": "04eddac30414012f7e10a5b72998e4da98a2d1a6",
   "committed": {
-    "diagnostic.json": "979a71a941e050af7f3da4f81bc2a032ef89288fba5bbe979af7cdf8572ba055",
-    "output.json": "ea9a47058057a58265acc1b016067c06783b87e5b9aba0258483ba0bbb1ac3d4",
-    "series.json": "baee6fee7225b89f1cd0423a00bf8624b96f6b1ac3648cb08846b7731e78c072"
+    "diagnostic.json": "5aa0906acc9d3e0fe7ad3e6c7189a6028018508c8993d7288f651fda5cbf9611",
+    "output.json": "a3ce7457e723aa6c5d20dc99e56895c99d25339203b36979569284f195e73baf",
+    "series.json": "0d15371a082ea957a3276eeeb1593636c25a5907ce7e159ee6f105edaa6332f4"
   },
   "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
-      "sha256": "5dd9a70c019e43ba9580996d7a43c2951c667559920d88183eb7da33c593dbab",
-      "size": 659
+      "sha256": "406ffcaa1b8c216110d6f2054f75fa68033ee32869c037d6a2179fee8959c51b",
+      "size": 676
     },
     "executions/recipe/index.html": {
-      "sha256": "0b0f4161a6be85de16bbe9fdff79bd39bc7ac4cd1a3fc3772744cdc679de1761",
-      "size": 15205
+      "sha256": "88835cebc681ddbdc78d612aaf5d66e10e213d39aa5077cca3298475b14c8c7f",
+      "size": 15283
     },
-    "executions/recipe/plots/ecs/calculate/CanESM5.png": {
-      "sha256": "c3dab462a48757c7c336e00ea9b2d7ff277602f45374159ceff894f91427fd64",
-      "size": 134252
+    "executions/recipe/plots/ecs/calculate/ACCESS-ESM1-6.png": {
+      "sha256": "228cddd7bbe25569539a608c6d3239aa3ec0854fa16ad8fa23b59bc5fea8f344",
+      "size": 126679
     },
     "executions/recipe/run/ecs/calculate/diagnostic_provenance.yml": {
-      "sha256": "1b710d448790e46ef37467f28f7326a5e2c38dd9bea09fb4b073ae7e90d1f0d3",
-      "size": 3194
+      "sha256": "c7af20b1807715da157c6ceeafa82c9d9c9c9552e3ca4a6435dd6d4b81ea3b04",
+      "size": 3308
     },
     "executions/recipe/work/ecs/calculate/ecs.nc": {
-      "sha256": "782e88bb305e3cc09557690f4ee035b1f4af6d2024e3a7fcc6b6b36cd9b32bb6",
-      "size": 9035
+      "sha256": "e22052723e0ed0afe3b49c30208b8104692607e93a1052e20daf3d179a925c62",
+      "size": 9003
     },
-    "executions/recipe/work/ecs/calculate/ecs_regression_CanESM5.nc": {
-      "sha256": "f799dd3aa247580e3c64c3a1595fe644f55fe21bcd2060b71d612bdeeddd8b02",
-      "size": 27063
+    "executions/recipe/work/ecs/calculate/ecs_regression_ACCESS-ESM1-6.nc": {
+      "sha256": "28e87beece55d33a2193d5faab53a6b12d9dffcc6970f4fbf222f65a8c032b2d",
+      "size": 25948
     },
     "executions/recipe/work/ecs/calculate/lambda.nc": {
-      "sha256": "03b2fcd029b23f9ae7cecebd3694a915f5fabc28275cbc9408d1b59807186082",
-      "size": 9014
+      "sha256": "b474473597f38a0da8560f7e309c053c1005074e3b79b320a28cafda342cde5a",
+      "size": 8982
     },
     "output.json": {
-      "sha256": "b3c1e8bbfcefe56cdd3baf55ca6c8332df81a267fb8981c6397c6ba916a17cca",
-      "size": 3099
+      "sha256": "e8b4f444b338b7bee8b5d6a8ad7dd8450e8550f695140ff0061e78d113726e96",
+      "size": 3083
     },
     "series.json": {
-      "sha256": "d6b345e8d921eb95f3040301266385421512dd997e811d0f2193ece1ca9abeb1",
-      "size": 8884
+      "sha256": "5e82f9fe9da9682b50cab69df163f1f25971add1f09e89cc7800efcac5d02161",
+      "size": 8947
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

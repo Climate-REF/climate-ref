@@ -19,6 +19,7 @@ from climate_ref_core.constraints import (
     RequireOverlappingTimerange,
     RequireTimerange,
     SelectFirstMember,
+    SelectPreferredFacet,
     SelectSingleGrid,
     apply_constraint,
 )
@@ -1608,6 +1609,78 @@ class TestSelectFirstMember:
 
     def test_is_group_constraint(self):
         assert isinstance(SelectFirstMember(), GroupConstraint)
+
+
+def _branded_rows(*rows: tuple[str, str]) -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            {
+                "source_id": source_id,
+                "branded_variable": branded_variable,
+                "path": f"{source_id}_{branded_variable}.nc",
+            }
+            for source_id, branded_variable in rows
+        ]
+    )
+
+
+class TestSelectPreferredFacet:
+    constraint = SelectPreferredFacet(
+        dimension="branded_variable",
+        preference=("mrsol_tavg-d10cm-hxy-lnd", "mrsol_tavg-sl-hxy-lnd"),
+    )
+
+    def test_keeps_the_most_preferred_value(self):
+        data = _branded_rows(
+            ("MODEL", "mrsol_tavg-sl-hxy-lnd"),
+            ("MODEL", "mrsol_tavg-d10cm-hxy-lnd"),
+            ("MODEL", "mrsol_tavg-d10cm-hxy-lnd"),
+            ("MODEL", "areacella_ti-u-hxy-u"),
+        )
+
+        result = self.constraint.apply(data, data)
+
+        assert list(result["branded_variable"]) == [
+            "mrsol_tavg-d10cm-hxy-lnd",
+            "mrsol_tavg-d10cm-hxy-lnd",
+            "areacella_ti-u-hxy-u",
+        ]
+
+    def test_falls_back_to_a_less_preferred_value(self):
+        data = _branded_rows(("MODEL", "mrsol_tavg-sl-hxy-lnd"), ("MODEL", "areacella_ti-u-hxy-u"))
+        assert_frame_equal(self.constraint.apply(data, data), data)
+
+    def test_without_any_preferred_value(self):
+        data = _branded_rows(("MODEL", "areacella_ti-u-hxy-u"))
+        assert_frame_equal(self.constraint.apply(data, data), data)
+
+    def test_chooses_per_subgroup(self):
+        constraint = SelectPreferredFacet(
+            dimension="branded_variable", preference=self.constraint.preference, group_by="source_id"
+        )
+        data = _branded_rows(
+            ("A", "mrsol_tavg-sl-hxy-lnd"),
+            ("A", "mrsol_tavg-d10cm-hxy-lnd"),
+            ("B", "mrsol_tavg-sl-hxy-lnd"),
+        )
+
+        result = constraint.apply(data, data)
+
+        assert list(zip(result["source_id"], result["branded_variable"])) == [
+            ("A", "mrsol_tavg-d10cm-hxy-lnd"),
+            ("B", "mrsol_tavg-sl-hxy-lnd"),
+        ]
+
+    def test_missing_dimension_returns_group_unchanged(self):
+        data = pd.DataFrame({"source_id": ["A"], "path": ["a.nc"]})
+        assert_frame_equal(self.constraint.apply(data, data), data)
+
+    def test_empty_group(self):
+        data = pd.DataFrame(columns=["source_id", "branded_variable", "path"])
+        assert self.constraint.apply(data, data).empty
+
+    def test_is_group_constraint(self):
+        assert isinstance(self.constraint, GroupConstraint)
 
 
 def _grid_rows(*rows: tuple[str, str, str, str | None]) -> pd.DataFrame:

@@ -11,7 +11,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -152,6 +152,26 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                         remove_ensembles=True,
                     ),
                 ),
+            ),
+            TestCase(
+                name="cmip7",
+                description="Test with CMIP7 data.",
+                requests=(
+                    CMIP7Request(
+                        slug="cmip7",
+                        facets={
+                            "experiment_id": ["esm-flat10", "esm-piControl"],
+                            "source_id": "CanESM5-1",
+                            "variable_id": ["areacella", "fco2antt", "tas"],
+                            "branding_suffix": ["tavg-h2m-hxy-u", "tavg-u-hxy-u", "ti-u-hxy-u"],
+                            "variant_label": "r1i1p2f1",
+                            "frequency": ["fx", "mon"],
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
+                    ),
+                ),
+                xfail="No CMIP7 model publishes fco2antt for esm-flat10 on ESGF yet",
             ),
         )
     )

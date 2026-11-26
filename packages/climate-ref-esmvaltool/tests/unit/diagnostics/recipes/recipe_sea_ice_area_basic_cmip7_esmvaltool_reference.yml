@@ -11,12 +11,12 @@ datasets:
 - project: CMIP7
   activity: CMIP
   branding_suffix: tavg-u-hxy-u
-  dataset: ACCESS-ESM1-5
+  dataset: ACCESS-ESM1-6
   ensemble: r1i1p1f1
-  exp: historical
+  exp: esm-hist
   frequency: mon
-  grid: gn
-  institute: CSIRO
+  grid: g118
+  institute: ACCESS-Consortium
   mip: seaIce
   region: glb
 preprocessors:
@@ -121,7 +121,7 @@ diagnostics:
         plots:
           annual_cycle:
             caption: 20-year average seasonal cycle of the sea ice area in million
-              km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.
+              km2 from ACCESS-ESM1-6.r1i1p1f1.g118 compared with OSI-450.
             pyplot_kwargs:
               title: Sea ice area (million km2)
             plot_kwargs:
@@ -179,7 +179,7 @@ diagnostics:
         plots:
           timeseries:
             caption: Time series of NH September/SH February sea ice area in million
-              km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.
+              km2 from ACCESS-ESM1-6.r1i1p1f1.g118 compared with OSI-450.
             pyplot_kwargs:
               title: Sea ice area (million km2)
             plot_kwargs:

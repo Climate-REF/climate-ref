@@ -14,8 +14,11 @@ thetao-WOA2023-surface:
   transforms:
   - select_depth:
       value: 0
-  alternate_vars:
+  # Model variables, most preferred first: the surface field covers the reference period more often
+  # and avoids loading the full 3D thetao.
+  model_variables:
   - tos
+  - thetao
 
 so-WOA2023-surface:
   version: 3
@@ -31,8 +34,11 @@ so-WOA2023-surface:
   - select_depth:
       value: 0
   variable_cmap: YlGn
-  alternate_vars:
+  # Model variables, most preferred first: the surface field covers the reference period more often
+  # and avoids loading the full 3D so.
+  model_variables:
   - sos
+  - so
 
 amoc-RAPID:
   version: 5
@@ -50,3 +56,5 @@ amoc-RAPID:
       variable_id: msftmz
       grid_label: gm
       version: v20250902
+  test_cmip7:
+    xfail: No CMIP7 overturning streamfunction (msftm) is published yet

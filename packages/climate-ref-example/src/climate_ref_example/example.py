@@ -11,7 +11,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, ConvertedCMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -198,27 +198,31 @@ class GlobalMeanTimeseries(Diagnostic):
             ),
             TestCase(
                 name="cmip7",
-                description="CMIP7 test case with converted historical tas from ACCESS-ESM1-5",
+                description="CMIP7 test case with historical tas from ACCESS-ESM1-6",
                 requests=(
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="example-tas-cmip7",
                         facets={
-                            "source_id": "ACCESS-ESM1-5",
+                            "source_id": "ACCESS-ESM1-6",
                             "experiment_id": "historical",
                             "variable_id": "tas",
+                            "branding_suffix": "tavg-h2m-hxy-u",
                             "variant_label": "r1i1p1f1",
-                            "table_id": "Amon",
+                            "frequency": "mon",
+                            "region": "glb",
                         },
                         time_span=("2000-01", "2014-12"),
                     ),
-                    ConvertedCMIP7Request(
+                    CMIP7Request(
                         slug="example-areacella-cmip7",
                         facets={
-                            "source_id": "ACCESS-ESM1-5",
+                            "source_id": "ACCESS-ESM1-6",
                             "experiment_id": "historical",
                             "variable_id": "areacella",
+                            "branding_suffix": "ti-u-hxy-u",
                             "variant_label": "r1i1p1f1",
-                            "table_id": "fx",
+                            "frequency": "fx",
+                            "region": "glb",
                         },
                     ),
                 ),

@@ -693,6 +693,56 @@ class SelectFirstMember:
         return group[keep]
 
 
+@frozen
+class SelectPreferredFacet:
+    """
+    Keep only the most preferred of several interchangeable facet values.
+
+    Some diagnostics accept one of several variables, e.g. sea surface temperature as ``tos``
+    or as the top level of ``thetao``.
+    When a model publishes more than one of them,
+    only the datasets of the first value in ``preference`` that is present are kept.
+    Datasets whose ``dimension`` is not listed in ``preference`` (cell measures, other variables)
+    are never removed.
+    """
+
+    dimension: str
+    """The facet the preference is about, e.g. ``variable_id`` or ``branded_variable``."""
+
+    preference: tuple[str, ...] = field(converter=_to_tuple)
+    """The interchangeable facet values, most preferred first."""
+
+    group_by: tuple[str, ...] | None = field(converter=_to_tuple, default=None)
+    """
+    The facets defining each subgroup within which one value is chosen.
+
+    By default the choice is made once for the whole group.
+    """
+
+    def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Drop the datasets of the less preferred values.
+        """
+        if group.empty or self.dimension not in group.columns:
+            return group
+
+        keep = pd.Series(True, index=group.index)
+        subgroups = [group] if not self.group_by else (g for _, g in group.groupby(list(self.group_by)))
+        for subgroup in subgroups:
+            values = subgroup[self.dimension]
+            chosen = next((value for value in self.preference if (values == value).any()), None)
+            if chosen is None:
+                continue
+            dropped = values.isin(self.preference) & (values != chosen)
+            if dropped.any():
+                logger.debug(
+                    f"Using {self.dimension}={chosen!r} and dropping {sorted(set(values[dropped]))} "
+                    f"because of {self}"
+                )
+            keep.loc[subgroup.index[dropped]] = False
+        return group[keep]
+
+
 _RESOLUTION_KM_RE = re.compile(r"\s*([0-9.]+)\s*km\s*")
 
 

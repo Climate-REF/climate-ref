@@ -4,7 +4,7 @@
       "historical": {}
     },
     "grid_label": {
-      "gn": {}
+      "g115": {}
     },
     "json_structure": [
       "kind",
@@ -24,9 +24,7 @@
     },
     "metric": {
       "EnsoAmpl": {},
-      "EnsoPrMapDjfCorr": {},
-      "EnsoPrMapDjfRmse": {},
-      "EnsoPrMapDjfStd": {},
+      "EnsoPrMapDjf": {},
       "EnsoPrMapJjaCorr": {},
       "EnsoPrMapJjaRmse": {},
       "EnsoPrMapJjaStd": {},
@@ -45,13 +43,13 @@
       "Tropflux_GPCP-Monthly-3-2": {}
     },
     "source_id": {
-      "ACCESS-ESM1-5": {}
+      "ACCESS-ESM1-6": {}
     }
   },
   "DISCLAIMER": null,
   "NOTES": null,
   "PROVENANCE": {
-    "commandLine": "<SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
+    "commandLine": "<SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_tel_ACCESS-ESM1-6_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
     "conda": {
       "Platform": "<CONDA_PLATFORM>"
     },
@@ -87,45 +85,34 @@
   "RESULTS": {
     "model": {
       "cmip7": {
-        "ACCESS-ESM1-5": {
+        "ACCESS-ESM1-6": {
           "r1i1p1f1": {
-            "gn": {
+            "g115": {
               "historical": {
                 "EnsoAmpl": {
-                  "HadISST": 4.52348,
-                  "Tropflux": 11.96119
+                  "HadISST": 23.46353,
+                  "Tropflux": 3.991773
                 },
-                "EnsoPrMapDjfCorr": {
-                  "HadISST_GPCP-Monthly-3-2": 0.9741749,
-                  "Tropflux_GPCP-Monthly-3-2": 0.9832219
-                },
-                "EnsoPrMapDjfRmse": {
-                  "HadISST_GPCP-Monthly-3-2": 0.3348309,
-                  "Tropflux_GPCP-Monthly-3-2": 0.3413493
-                },
-                "EnsoPrMapDjfStd": {
-                  "HadISST_GPCP-Monthly-3-2": 0.2571479,
-                  "Tropflux_GPCP-Monthly-3-2": 0.2525129
-                },
+                "EnsoPrMapDjf": {},
                 "EnsoPrMapJjaCorr": {
-                  "HadISST_GPCP-Monthly-3-2": 0.9429066,
-                  "Tropflux_GPCP-Monthly-3-2": 0.9242876
+                  "HadISST_GPCP-Monthly-3-2": 0.7651887,
+                  "Tropflux_GPCP-Monthly-3-2": 0.7795951
                 },
                 "EnsoPrMapJjaRmse": {
-                  "HadISST_GPCP-Monthly-3-2": 0.3940487,
-                  "Tropflux_GPCP-Monthly-3-2": 0.3707593
+                  "HadISST_GPCP-Monthly-3-2": 0.485766,
+                  "Tropflux_GPCP-Monthly-3-2": 0.4775215
                 },
                 "EnsoPrMapJjaStd": {
-                  "HadISST_GPCP-Monthly-3-2": 0.3491082,
-                  "Tropflux_GPCP-Monthly-3-2": 0.3713275
+                  "HadISST_GPCP-Monthly-3-2": 1.085726,
+                  "Tropflux_GPCP-Monthly-3-2": 1.154828
                 },
                 "EnsoSeasonality": {
-                  "HadISST": 36.56286,
-                  "Tropflux": 46.42259
+                  "HadISST": 20.30547,
+                  "Tropflux": 32.69202
                 },
                 "EnsoSstLonRmse": {
-                  "HadISST": 0.2034639,
-                  "Tropflux": 0.2045797
+                  "HadISST": 0.262448,
+                  "Tropflux": 0.2464942
                 },
                 "EnsoSstMapDjf": {},
                 "EnsoSstMapJja": {}

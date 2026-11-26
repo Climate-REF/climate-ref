@@ -13,12 +13,12 @@ datasets:
 - project: CMIP7
   activity: CMIP
   branding_suffix: tavg-u-hxy-u
-  dataset: ACCESS-ESM1-5
+  dataset: ACCESS-ESM1-6
   ensemble: r1i1p1f1
-  exp: historical
+  exp: esm-hist
   frequency: mon
-  grid: gn
-  institute: CSIRO
+  grid: g115
+  institute: ACCESS-Consortium
   mip: atmos
   region: glb
 timerange_for_models:

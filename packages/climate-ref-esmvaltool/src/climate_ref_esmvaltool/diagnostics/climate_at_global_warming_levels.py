@@ -175,31 +175,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            # Disabling test until we have scenarios available for CMIP7
-            # TestCase(
-            #     name="cmip7",
-            #     description="Test with CMIP7 data.",
-            #     requests=(
-            #         ConvertedCMIP7Request(
-            #             slug="cmip7",
-            #             facets={
-            #                 "experiment_id": ["ssp245", "historical"],
-            #                 "source_id": "CanESM5",
-            #                 "variable_id": ["areacella", "pr", "tas"],
-            #                 "branded_variable": [
-            #                     "areacella_ti-u-hxy-u",
-            #                     "pr_tavg-u-hxy-u",
-            #                     "tas_tavg-h2m-hxy-u",
-            #                 ],
-            #                 "variant_label": "r1i1p1f1",
-            #                 "frequency": ["fx", "mon"],
-            #                 "region": "glb",
-            #             },
-            #             remove_ensembles=True,
-            #             time_span=("1850", "2100"),
-            #         ),
-            #     ),
-            # ),
+            # No CMIP7 test case until data requirements are fixed.
         )
     )
 

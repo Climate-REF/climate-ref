@@ -24,12 +24,12 @@
       "size": 650
     },
     "executions/recipe/work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc": {
-      "sha256": "b1c9afe93085c1f13e914cda858da2f277b03bbf52693c24d0debc2dc7d36368",
+      "sha256": "c330f726ca5687a63da2ed869c85af7fc4afad0f2c65c1576072375b2977acc3",
       "size": 10128
     },
     "output.json": {
-      "sha256": "85f5de5ad39e01de85c3bf9c35f255edf678dc014986df5e033cec81a8522f63",
-      "size": 1398
+      "sha256": "dfcf80462b6bfa77c58a41fbbf5849950edfb9f1119765a8a98dfaacff7e49d2",
+      "size": 1346
     },
     "series.json": {
       "sha256": "c18da9d662e1b212b8afa3fda5ce2be75b6663357814f84ec06168f6775d816f",

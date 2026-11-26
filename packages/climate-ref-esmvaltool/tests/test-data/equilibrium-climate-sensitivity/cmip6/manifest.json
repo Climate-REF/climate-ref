@@ -1,43 +1,43 @@
 {
   "catalog_hash": "761b5a311592688458d59d254486b5cc70aa374f",
   "committed": {
-    "diagnostic.json": "bbb19a4619b55caa275c3714517e6d60242c8f5886d617cbcccc180653d16864",
+    "diagnostic.json": "f02da46c40a524fdf5b00c69be3e618c4d45efdea1e78aba6f951e169013cfcc",
     "output.json": "ea9a47058057a58265acc1b016067c06783b87e5b9aba0258483ba0bbb1ac3d4",
     "series.json": "cac18de7ea3575ad34111d4e3402545ba358959e2037e5bc8c48fdf22f264267"
   },
   "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
-      "sha256": "4253b68b6116fc9afc5970a9186b20c82be9975330842a8e61efe812b1c2d0aa",
-      "size": 652
+      "sha256": "56801b868c7f5afb62cb26378f8a002377f38cd60e0f5eb35c420ba0a34a541b",
+      "size": 651
     },
     "executions/recipe/index.html": {
       "sha256": "0b0f4161a6be85de16bbe9fdff79bd39bc7ac4cd1a3fc3772744cdc679de1761",
       "size": 15205
     },
     "executions/recipe/plots/ecs/calculate/CanESM5.png": {
-      "sha256": "eadfe66066e4c0db4d4a3be46f55df120d88a039841feeecefa55a3b1af3df50",
-      "size": 134226
+      "sha256": "d37d6b1cf9e670f5f9834e43d56b77062ad97e3fe8f6603024fbfd08e63cca56",
+      "size": 132712
     },
     "executions/recipe/run/ecs/calculate/diagnostic_provenance.yml": {
-      "sha256": "745779fc2f28cfa647e1b7f770bab71ed35dc732a0284a9149e93605a3bfd31b",
+      "sha256": "7967ab8145c1568c7708e3790dcee6e05ee3a7e7da876612a59bacda5b261dc4",
       "size": 3062
     },
     "executions/recipe/work/ecs/calculate/ecs.nc": {
-      "sha256": "de1f7cb247a3bef9fa64a131c949cd1ecbb2e8c8e59d2bb4d8d9f8fd990a16cd",
-      "size": 9035
+      "sha256": "a7c654de1b69cca780acd48630e76c573229e87915b452a1bb91050b2cbe318b",
+      "size": 9003
     },
     "executions/recipe/work/ecs/calculate/ecs_regression_CanESM5.nc": {
-      "sha256": "f3cb94049198e5e9339b511f646c8667aa881601488d1fe1382d920921b5f070",
-      "size": 27071
+      "sha256": "79dbe7654050b5a0d55c600824870cc2ef9e534114427e93fe13082a737aafb1",
+      "size": 25827
     },
     "executions/recipe/work/ecs/calculate/lambda.nc": {
-      "sha256": "4c8772a4570bdf5a5d9068887494ae1243928d2745f76c0ba23e67ba702b5bdd",
-      "size": 9014
+      "sha256": "4bb2fc72e86491938a0f5285f9ee7722be266fd8d547df18c3e0ee1bf17dd946",
+      "size": 8982
     },
     "output.json": {
-      "sha256": "b3c1e8bbfcefe56cdd3baf55ca6c8332df81a267fb8981c6397c6ba916a17cca",
-      "size": 3099
+      "sha256": "e1a6b5663f939861f60d08ce2adc3843d4467b3f47eb74c53e4388ab81e79a5f",
+      "size": 3047
     },
     "series.json": {
       "sha256": "9b8566ba879532aaea4f9d68cc0e96cbcf9bb0e96a2bc28208d431090e9c4ef9",
@@ -45,5 +45,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }

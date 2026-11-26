@@ -182,9 +182,10 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("1979", "2014"),
+                        time_span=("1979-01", "2014-12"),
                     ),
-                    # intake-esgf cannot filter fx files by time, so they are fetched separately.
+                    # fx files are time-independent and thus cannot be filtered by time_span,
+                    # so they are fetched separately.
                     CMIP7Request(
                         slug="cmip7-fx",
                         facets={

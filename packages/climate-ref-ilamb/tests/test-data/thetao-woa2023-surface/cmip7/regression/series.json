@@ -1,1 +1,93 @@
-[]
+[
+  {
+    "attributes": {
+      "long_name": "Sea Surface Temperature",
+      "standard_name": "sea_surface_temperature",
+      "units": "°C"
+    },
+    "dimensions": {
+      "experiment_id": "historical",
+      "grid_label": "g118",
+      "member_id": "r1i1p1f1",
+      "metric": "cycle",
+      "reference_source_id": "WOA2023",
+      "region": "None",
+      "source_id": "ACCESS-ESM1-6"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "value_long_name": "Sea Surface Temperature",
+    "value_units": "°C",
+    "values": [
+      18.73815,
+      18.95844,
+      18.83465,
+      18.63296,
+      18.45109,
+      18.41886,
+      18.48804,
+      18.54555,
+      18.41817,
+      18.2318,
+      18.1937,
+      18.35256
+    ]
+  },
+  {
+    "attributes": {
+      "long_name": "Objectively analyzed mean fields for sea_water_temperature at standard depth levels.",
+      "standard_name": "sea_water_temperature",
+      "units": "°C"
+    },
+    "dimensions": {
+      "metric": "cycle",
+      "reference_source_id": "WOA2023",
+      "region": "None"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "kind": "reference",
+    "value_long_name": "Objectively analyzed mean fields for sea_water_temperature at standard depth levels.",
+    "value_units": "°C",
+    "values": [
+      18.30662,
+      18.46799,
+      18.48432,
+      18.41169,
+      18.2905,
+      18.21923,
+      18.2773,
+      18.32334,
+      18.24848,
+      18.09249,
+      18.01216,
+      18.10669
+    ]
+  }
+]

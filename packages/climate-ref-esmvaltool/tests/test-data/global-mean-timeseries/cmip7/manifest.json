@@ -1,9 +1,9 @@
 {
-  "catalog_hash": "3b6315910c01b7243bd1f9f7808642d14e42d431",
+  "catalog_hash": "365c8097d6937c8ba308e2fe4148889e2ff288b6",
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
-    "output.json": "a4b1c9211f92ebecbb7dd04f84f8452d439c4388fe7c8d7e49fa8c0bd4ecb229",
-    "series.json": "30b664467549cef4af8a5cb11736fa8aa7b8c1042ea0401192bf6d7c03a9ac0b"
+    "output.json": "39379f71d84bc2132c4baf62f8cd371c98621ea30a7bc887e7a06f3dd1d398bf",
+    "series.json": "c5bef6faad5eec27cbf0522bee99b4454e426729c7d5d88860c0fc1ef440e221"
   },
   "diagnostic_version": 1,
   "native": {
@@ -12,30 +12,30 @@
       "size": 128
     },
     "executions/recipe/index.html": {
-      "sha256": "b3279883f9e05c7755b58ba248e02fdb87026bc35da2e1e5cdf30f581026004c",
-      "size": 13389
+      "sha256": "26d74bcdb306a6da709647a535afb15360872c266ded29e020431ea6a337e7d6",
+      "size": 13487
     },
-    "executions/recipe/plots/timeseries/script1/png/tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_18500116T120000-20141216T120000.png": {
-      "sha256": "14afa7cab9cbb8d18da6068bc4141985c4d8a6c9e7cbdbc9a9be55e64d4b7cef",
-      "size": 37100
+    "executions/recipe/plots/timeseries/script1/png/tas_tavg-h2m-hxy-u_mon_glb_g115_ACCESS-ESM1-6_historical_r1i1p1f1_18500116T120000-20221216T120000.png": {
+      "sha256": "a56c1e0581848fe5156f9892e53d65113da7eef13c9289593800ec87947b8e40",
+      "size": 36579
     },
     "executions/recipe/run/timeseries/script1/diagnostic_provenance.yml": {
-      "sha256": "688723e7d4bd1b9a0f3f2a5df65fa80c50ff1d76ec208877201c09d91e4f134a",
-      "size": 1090
+      "sha256": "0d7e5ae5457eb1f8c6ba3f22846bc5f6e5d5ed1f0578d0c86dbd4a1cacafd9c1",
+      "size": 1134
     },
-    "executions/recipe/work/timeseries/script1/tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_18500116T120000-20141216T120000.nc": {
-      "sha256": "39c5891e4f94911f0c926a63063e33ed7da50aa4620a8fabdf8c28eece27b919",
-      "size": 31009
+    "executions/recipe/work/timeseries/script1/tas_tavg-h2m-hxy-u_mon_glb_g115_ACCESS-ESM1-6_historical_r1i1p1f1_18500116T120000-20221216T120000.nc": {
+      "sha256": "607320b46dd0a1efc64a9974fdca7a7869324299c1ca1aae3e63f8dffacd127b",
+      "size": 32292
     },
     "output.json": {
-      "sha256": "3576872e709a4b08970db33e4f8da695e04eaebd86599dd32f42aa57e4377a78",
-      "size": 1662
+      "sha256": "6c0bc169f719ef55bba26e4b3ff5af1ac889625437e51f9c7e14289b05ffba8c",
+      "size": 1654
     },
     "series.json": {
-      "sha256": "7a610fb1ab0d59df354e137f4f630fa3841ab821f3174ca852c1e363486b2892",
-      "size": 8800
+      "sha256": "53b3fdecfb97d5ecb71129b71b04494b08987e473fe43f20335844f4130d4e0f",
+      "size": 10282
     }
   },
   "schema": 2,
-  "test_case_version": 3
+  "test_case_version": 4
 }
